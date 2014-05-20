@@ -13,8 +13,18 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    rawreader.cpp \
+    rawdemos.cpp \
+    rawdisplay.cpp \
+    imagewriter.cpp \
+    rawimage.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    rawreader.h \
+    rawdemos.h \
+    rawdisplay.h \
+    imagewriter.h \
+    rawimage.h
 
 FORMS    += mainwindow.ui
