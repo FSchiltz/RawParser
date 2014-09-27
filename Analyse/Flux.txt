@@ -1,0 +1,12 @@
+Data flux of the application
+
+-> Choose file
+-> Open file
+-> Select correct parser
+-> Parse the file
+-> Choose the correct demosacicer
+-> Demosaic the image
+-> Display the image
+-> modify the image
+-> Choose a path to export
+-> Export the file
