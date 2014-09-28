@@ -56,8 +56,7 @@ namespace RawParser
         {
             try
             {
-                TreeView treeView = (TreeView)sender; 
-                FileChooser.addSubfolder(treeView.SelectedNode);
+                FileChooser.addSubfolder(e.Node);
             }
             catch (Exception ex)
             {

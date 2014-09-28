@@ -33,7 +33,7 @@ namespace RawParser.Model.FileHelper
                 node.Nodes.Add(childDirectoryNode);
 
             }
-            foreach (var file in directoryInfo.GetFiles())
+            foreach (var file in directoryInfo.GetFiles(".NEF"))
             {
                 node.Nodes.Add(new TreeNode(file.Name));
 
@@ -47,15 +47,17 @@ namespace RawParser.Model.FileHelper
             {
                 try
                 {
-
+                    node.Nodes.Clear();
                     var directoryInfo = (DirectoryInfo)node.Tag;
+                   
                     foreach (var directory in directoryInfo.GetDirectories())
                     {
                         var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
                         node.Nodes.Add(childDirectoryNode);
                     }
-                    foreach (var file in directoryInfo.GetFiles())
+                    foreach (var file in directoryInfo.GetFiles(".NEF"))
                     {
+                        //genreate exception, To fix
                         node.Nodes.Add(new TreeNode(file.Name));
                     }
                 }
