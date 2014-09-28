@@ -33,7 +33,9 @@ namespace RawParser.Model.FileHelper
                 node.Nodes.Add(childDirectoryNode);
 
             }
-            foreach (var file in directoryInfo.GetFiles(".NEF"))
+
+            string fileTypeRegex = "*.nef";
+            foreach (var file in directoryInfo.GetFiles(fileTypeRegex))
             {
                 node.Nodes.Add(new TreeNode(file.Name));
 
@@ -55,7 +57,9 @@ namespace RawParser.Model.FileHelper
                         var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
                         node.Nodes.Add(childDirectoryNode);
                     }
-                    foreach (var file in directoryInfo.GetFiles(".NEF"))
+
+                    string fileTypeRegex = "*.nef";
+                    foreach (var file in directoryInfo.GetFiles(fileTypeRegex))
                     {
                         //genreate exception, To fix
                         node.Nodes.Add(new TreeNode(file.Name));

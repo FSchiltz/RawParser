@@ -68,5 +68,13 @@ namespace RawParser
         {
 
         }
+
+        private void fileView_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Node.Tag == null)
+            {
+                MessageBox.Show(e.Node.Name, "Image cliked");
+            }
+        }
     }
 }
