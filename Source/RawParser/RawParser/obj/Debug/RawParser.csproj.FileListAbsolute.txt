@@ -17,13 +17,6 @@ C:\Users\Francois\Desktop\Projet\Source\RawParser\RawParser\obj\Debug\RawParser.
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\RawParser.exe.config
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\RawParser.exe
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\RawParser.pdb
-C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\mscorlib.dll
-C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\fr\mscorlib.resources.dll
-C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\normidna.nlp
-C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\normnfc.nlp
-C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\normnfd.nlp
-C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\normnfkc.nlp
-C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\bin\Debug\normnfkd.nlp
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\obj\Debug\RawParser.csprojResolveAssemblyReference.cache
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\obj\Debug\RawParser.Properties.Resources.resources
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\obj\Debug\RawParser.UI.resources
