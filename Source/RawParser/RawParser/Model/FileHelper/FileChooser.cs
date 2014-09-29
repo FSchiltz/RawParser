@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RawParser.Model.ImageDisplay;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,8 +35,8 @@ namespace RawParser.Model.FileHelper
 
             }
 
-            string fileTypeRegex = "*.nef";
-            foreach (var file in directoryInfo.GetFiles(fileTypeRegex))
+            //string fileTypeRegex = "*.nef";
+            foreach (var file in directoryInfo.GetFiles())
             {
                 node.Nodes.Add(new TreeNode(file.Name));
 
@@ -47,28 +48,40 @@ namespace RawParser.Model.FileHelper
         {
             foreach (TreeNode node in treeNode.Nodes)
             {
-                try
-                {
-                    node.Nodes.Clear();
-                    var directoryInfo = (DirectoryInfo)node.Tag;
+                if (node.Tag != null)
+                    {
+                        node.Nodes.Clear();
+                        var directoryInfo = (DirectoryInfo)node.Tag;
+                        try
+                        {
+
+                            foreach (var directory in directoryInfo.GetDirectories())
+                            {
+                                var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
+                                node.Nodes.Add(childDirectoryNode);
+                            }
+                        }
+                        catch (UnauthorizedAccessException ex)
+                        {
+                            
+                        }
+
+
+                        //string fileTypeRegex = "*.nef";
+                        try
+                        {
+                            foreach (var file in directoryInfo.GetFiles())
+                            {
+                                node.Nodes.Add(new TreeNode(file.Name));
+                            }
+                        }
+                        catch (UnauthorizedAccessException ex)
+                        {
+
+                        }
+                    }
                    
-                    foreach (var directory in directoryInfo.GetDirectories())
-                    {
-                        var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
-                        node.Nodes.Add(childDirectoryNode);
-                    }
-
-                    string fileTypeRegex = "*.nef";
-                    foreach (var file in directoryInfo.GetFiles(fileTypeRegex))
-                    {
-                        //genreate exception, To fix
-                        node.Nodes.Add(new TreeNode(file.Name));
-                    }
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-
-                }
+           
              }
        }
 
@@ -88,27 +101,46 @@ namespace RawParser.Model.FileHelper
                     var directoryInfo = (DirectoryInfo)currentNode.Tag;
                     foreach (var directory in directoryInfo.GetDirectories())
                     {
-                       
-                            var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
-                            currentNode.Nodes.Add(childDirectoryNode);
-                            stack.Push(childDirectoryNode);
-                       
+
+                        var childDirectoryNode = new TreeNode(directory.Name) { Tag = directory };
+                        currentNode.Nodes.Add(childDirectoryNode);
+                        stack.Push(childDirectoryNode);
+
                     }
                     foreach (var file in directoryInfo.GetFiles())
                     {
-                        
-                          currentNode.Nodes.Add(new TreeNode(file.Name));
-                        
+                        currentNode.Nodes.Add(new TreeNode(file.Name));
                     }
                 }
                 catch (UnauthorizedAccessException ex)
                 {
-         
+
                 }
-                
+
             }
 
             treeView.Nodes.Add(node);
+        }
+
+        public static string openFile(string path)
+        {
+            //check permission
+
+            //extract file type (extension)
+            string[] extension = path.Split('.');
+            string regex = "";
+            if (regex.Contains(extension.Last())) throw new Exception("Format not supported");
+
+            //open file
+
+            //check file type ( content)
+
+            //if both correct trensfer to the correct handler
+
+            //return the image
+
+            return null;
+
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using RawParser.Model.FileHelper;
+using RawParser.Model.ImageDisplay;
+using RawParser.Model.Parser;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,6 +15,7 @@ namespace RawParser
 {
     public partial class UI : Form
     {
+        private RawImage currentRawImage { set; get; }
         public UI()
         {
             InitializeComponent();
@@ -64,16 +67,25 @@ namespace RawParser
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void fileView_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
+            //if tag is null, it's a file
             if (e.Node.Tag == null)
             {
-                MessageBox.Show(e.Node.Name, "Image cliked");
+                try
+                {
+                    //Open the file with the correct parser
+                    string fileExension = FileChooser.openFile(e.Node.FullPath);
+                    switch (fileExension)
+                    {
+                        case "NEF": this.currentRawImage = new Nefparser().parse(e.Node.FullPath);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message + ex.StackTrace, "Error");
+                }
             }
         }
     }

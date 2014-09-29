@@ -51,6 +51,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\ImageDisplay\RawImage.cs" />
+    <Compile Include="Model\Parser\Nefparser.cs" />
+    <Compile Include="Model\Parser\Parser.cs" />
     <Compile Include="UI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,7 +91,6 @@
   <ItemGroup>
     <Folder Include="Model\Demosaic\" />
     <Folder Include="Model\Export\" />
-    <Folder Include="Model\Parser\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
