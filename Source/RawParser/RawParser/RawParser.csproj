@@ -54,8 +54,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\ImageDisplay\RawImage.cs" />
+    <Compile Include="Model\Parser\BinaryReaderBE.cs" />
+    <Compile Include="Model\Parser\DNGParser.cs" />
     <Compile Include="Model\Parser\Nefparser.cs" />
     <Compile Include="Model\Parser\Parser.cs" />
+    <Compile Include="Model\Parser\Rational.cs" />
+    <Compile Include="Model\Parser\TIFFParser.cs" />
     <Compile Include="UI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -93,6 +97,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Model\Demosaic\" />
+    <Folder Include="Model\Exception\" />
     <Folder Include="Model\Export\" />
   </ItemGroup>
   <ItemGroup>

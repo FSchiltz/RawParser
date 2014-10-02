@@ -75,12 +75,17 @@ namespace RawParser
                 try
                 {
                     //Open the file with the correct parser
-                    string fileExension = FileChooser.openFile(e.Node.FullPath);
+                    string fileExension = FileChooser.getExtension(e.Node.FullPath);
+                    Parser parser;
                     switch (fileExension)
                     {
-                        case "NEF": this.currentRawImage = new Nefparser().parse(e.Node.FullPath);
+                        case "NEF": parser = new Nefparser();
                             break;
+                        case "DNG": parser = new DNGParser();
+                            break;
+                        default: throw new Exception("File not supported");//todo change exception types
                     }
+                    this.currentRawImage = parser.parse(e.Node.FullPath);
                 }
                 catch (Exception ex)
                 {

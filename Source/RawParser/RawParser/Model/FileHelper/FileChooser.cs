@@ -122,25 +122,10 @@ namespace RawParser.Model.FileHelper
             treeView.Nodes.Add(node);
         }
 
-        public static string openFile(string path)
-        {
-            //check permission
-
-            //extract file type (extension)
+        public static string getExtension(string path)
+        {            
             string[] extension = path.Split('.');
-            string regex = "";
-            if (regex.Contains(extension.Last())) throw new Exception("Format not supported");
-
-            //open file
-
-            //check file type ( content)
-
-            //if both correct trensfer to the correct handler
-
-            //return the image
-
-            return null;
-
+            return extension.Last().ToUpper() ;
         }
     }
 }

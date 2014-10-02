@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,34 +9,21 @@ using System.Windows.Forms;
 
 namespace RawParser.Model.Parser
 {
-    class Nefparser : TIFFParser
+    class DNGParser : TIFFParser
     {
-
-        protected class NEFHeader : Header
-        {
-           
-        }
-
-        protected class NEFIFD : IFD
+        protected class DNGHeader : Header
         {
             
         }
 
-        protected class NikonMarkerNote : MarkerNote
+        protected class DNGIFD : IFD
         {
-            
+          
         }
-
         override public RawImage parse(string path)
         {
-            NEFHeader header = new NEFHeader();
-            NEFIFD ifd = new NEFIFD();
-
-            NEFIFD subifd0 = new NEFIFD();
-            NEFIFD subifd1 = new NEFIFD();
-
-            NikonMarkerNote markernote = new NikonMarkerNote();
-
+            DNGHeader header = new DNGHeader();
+            DNGIFD ifd = new DNGIFD();
             BinaryReader fileStream = new BinaryReader(new FileStream(path, FileMode.Open, FileAccess.Read));
             try
             {
@@ -52,24 +38,21 @@ namespace RawParser.Model.Parser
                 }
                 
                 header.TIFFMagic = fileStream.ReadUInt16();
-                header.TIFFoffset = fileStream.ReadUInt32();
-                                
+                if (header.TIFFMagic != 42) throw new Exception();
+
+                header.TIFFoffset = fileStream.ReadUInt16();
+
                 //read the IFD
-                base.readIFD(fileStream, header.TIFFoffset,ifd, true);
+                base.readIFD(fileStream, header.TIFFoffset, ifd, false);
+                
 
-                //read the second IFD
-                base.readIFD(fileStream,(uint)ifd.findTag(330).data[0], subifd0, true);
 
-                //read the third IFD    
-                base.readIFD(fileStream, (uint)ifd.findTag(330).data[1], subifd1, true);
-
-                base.readMarkerNote(fileStream, (uint)ifd.findTag(34665).data[0], markernote);
             }
             finally
             {
                 fileStream.Close();
             }
-            
+
             string tempstr = " ";
             for (int i = 0; i < ifd.tagNumber; i++)
             {
@@ -80,16 +63,16 @@ namespace RawParser.Model.Parser
                 }
                 tempstr += "]";
             }
-            Console.Write(
+            MessageBox.Show(
                 header.byteOrder
                 + " " + header.TIFFMagic
                 + " " + header.TIFFoffset +
-                tempstr);
+                tempstr, "Result");
 
             // Pixel [][] pixelBuffer = new Pixel ()[][];
             //RawImage rawImage = new RawImage(new Exif(), new Dimension(), pixelBuffer);
             //return rawImage;
-            return null;
+            return null;           
         }
     }
 }
