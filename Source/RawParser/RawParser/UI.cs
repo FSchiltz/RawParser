@@ -79,7 +79,7 @@ namespace RawParser
                     Parser parser;
                     switch (fileExension)
                     {
-                        case "NEF": parser = new Nefparser();
+                        case "NEF": parser = new NEFParser();
                             break;
                         case "DNG": parser = new DNGParser();
                             break;
@@ -92,6 +92,56 @@ namespace RawParser
                     MessageBox.Show(ex.Message + ex.StackTrace, "Error");
                 }
             }
+        }
+
+        private void groupBox3_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void groupBox5_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void fileView_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+
+        }
+
+        private void splitContainer2_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+
+        }
+
+        private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+
+        }
+
+        private void groupBox2_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void groupBox1_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void groupBox4_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void folderBrowserDialog1_HelpRequest(object sender, EventArgs e)
+        {
+
         }
     }
 }

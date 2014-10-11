@@ -1,4 +1,7 @@
-﻿using RawParser.Model.ImageDisplay;
+﻿using RawParser.Model.Format;
+using RawParser.Model.Format.Base;
+using RawParser.Model.Format.Image.IFD;
+using RawParser.Model.ImageDisplay;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,86 +13,71 @@ using System.Windows.Forms;
 
 namespace RawParser.Model.Parser
 {
-    class Nefparser : TIFFParser
+    class NEFParser : TIFFParser
     {
+        protected NEFIFD ifd;
 
-        protected class NEFHeader : Header
-        {
-           
-        }
+        protected NEFIFD subifd0; 
+        protected NEFIFD subifd1;
+        protected NEFIFD exif;
+        protected NikonMakerNote makerNote;
 
-        protected class NEFIFD : IFD
-        {
-            
-        }
-
-        protected class NikonMarkerNote : MarkerNote
-        {
-            
-        }
+        protected Pixel[][] rawData;
+        protected Pixel[][] previewData;
 
         override public RawImage parse(string path)
         {
-            NEFHeader header = new NEFHeader();
-            NEFIFD ifd = new NEFIFD();
-
-            NEFIFD subifd0 = new NEFIFD();
-            NEFIFD subifd1 = new NEFIFD();
-
-            NikonMarkerNote markernote = new NikonMarkerNote();
-
             BinaryReader fileStream = new BinaryReader(new FileStream(path, FileMode.Open, FileAccess.Read));
             try
-            {
-                //read the header
-                header.byteOrder = fileStream.ReadUInt16();
-
+            {                
+                Header header = new Header(fileStream, 0);
                 if (header.byteOrder == 0x4D4D)
                 {
                     //File is in reverse bit order
-                    fileStream = new BinaryReaderBE(new FileStream(path, FileMode.Open, FileAccess.Read), System.Text.Encoding.BigEndianUnicode);
-                    fileStream.ReadUInt16();
+                    fileStream = new BinaryReaderBE(new FileStream(path, FileMode.Open, FileAccess.Read));
+                    header = new Header(fileStream, 0);
                 }
+                ifd = new NEFIFD(fileStream, header.TIFFoffset,  true);
+
+                Tag subifdoffsetTag ;
+                Tag exifoffsetTag ;
+                ifd.tags.TryGetValue(330,out subifdoffsetTag);
+                ifd.tags.TryGetValue(34665,out exifoffsetTag);
+
+                subifd0 = new NEFIFD(fileStream, (uint)subifdoffsetTag.data[0], true);
+                subifd1 = new NEFIFD(fileStream, (uint)subifdoffsetTag.data[1],  true);
+                exif = new NEFIFD(fileStream, (uint)exifoffsetTag.data[0], true);
+
+                MemoryStream ms = new MemoryStream();
+                MemoryStream headerms = new MemoryStream();
+                Tag makerNoteOffsetTag;
+                exif.tags.TryGetValue(37500, out makerNoteOffsetTag);
+                object[] binMakerNoteObj = makerNoteOffsetTag.data;
+                byte[] binMakerNote = binMakerNoteObj.Cast<byte>().ToArray();
+                ms.Write(binMakerNote, 10, binMakerNote.Length-10);
+                ms.Position = 0; //reset the stream after populate
+
+                headerms.Write(binMakerNote, 0, 10);
+                headerms.Position = 0;
+                makerNote = new NikonMakerNote(new BinaryReaderBE(ms), new BinaryReaderBE(headerms),0, true);  
+
+                //Get image data
+                //get Preview Data
                 
-                header.TIFFMagic = fileStream.ReadUInt16();
-                header.TIFFoffset = fileStream.ReadUInt32();
-                                
-                //read the IFD
-                base.readIFD(fileStream, header.TIFFoffset,ifd, true);
+                //get Raw Data
 
-                //read the second IFD
-                base.readIFD(fileStream,(uint)ifd.findTag(330).data[0], subifd0, true);
-
-                //read the third IFD    
-                base.readIFD(fileStream, (uint)ifd.findTag(330).data[1], subifd1, true);
-
-                base.readMarkerNote(fileStream, (uint)ifd.findTag(34665).data[0], markernote);
+                
             }
             finally
             {
                 fileStream.Close();
             }
             
-            string tempstr = " ";
-            for (int i = 0; i < ifd.tagNumber; i++)
-            {
-                tempstr += "[" + ifd.tags[i].tagId + ":";
-                for (int j = 0; j < ifd.tags[i].dataCount; j++)
-                {
-                    tempstr += ifd.tags[i].data[j] + ":";
-                }
-                tempstr += "]";
-            }
-            Console.Write(
-                header.byteOrder
-                + " " + header.TIFFMagic
-                + " " + header.TIFFoffset +
-                tempstr);
-
-            // Pixel [][] pixelBuffer = new Pixel ()[][];
-            //RawImage rawImage = new RawImage(new Exif(), new Dimension(), pixelBuffer);
-            //return rawImage;
-            return null;
+            //parse to RawImage
+            Tag[] makernoteTag = makerNote.parseToStandardExifTag();
+            Exif exifTemp = new Exif(makernoteTag);
+            RawImage rawImage = new RawImage(exifTemp,rawData,previewData,path);
+            return rawImage;
         }
     }
 }
