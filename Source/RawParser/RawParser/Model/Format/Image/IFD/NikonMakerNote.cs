@@ -34,6 +34,7 @@ namespace RawParser.Model.Format.Image.IFD
 
         public Tag[] parseToStandardExifTag()
         {
+
             return null;
         }
     }

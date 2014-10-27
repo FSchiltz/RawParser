@@ -1,5 +1,6 @@
 ﻿using RawParser.Model.Format;
 using RawParser.Model.Format.Base;
+using RawParser.Model.Format.Image.Base;
 using RawParser.Model.Format.Image.IFD;
 using RawParser.Model.ImageDisplay;
 using System;
@@ -77,7 +78,15 @@ namespace RawParser.Model.Parser
             Tag[] makernoteTag = makerNote.parseToStandardExifTag();
             Exif exifTemp = new Exif(makernoteTag);
             RawImage rawImage = new RawImage(exifTemp,rawData,previewData,path);
+            //get the imagedata
+
+            rawImage.setImageData(new Image(
+                ));
+
+            //get the preview data ( faster than rezising )
+            rawImage.setImagePreviewData(new Image());
             return rawImage;
         }
+        public Image getfromfile(int x, int y, )
     }
 }
