@@ -23,8 +23,8 @@ namespace RawParser.Model.Parser
         protected NEFIFD exif;
         protected NikonMakerNote makerNote;
 
-        protected Pixel[][] rawData;
-        protected Pixel[][] previewData;
+        protected Image rawData;
+        protected Image previewData;
 
         override public RawImage parse(string path)
         {
@@ -63,8 +63,9 @@ namespace RawParser.Model.Parser
                 makerNote = new NikonMakerNote(new BinaryReaderBE(ms), new BinaryReaderBE(headerms),0, true);  
 
                 //Get image data
+                previewData = this.getfromfile();
                 //get Preview Data
-                
+                rawData = this.getfromfile();
                 //get Raw Data
 
                 
@@ -87,6 +88,9 @@ namespace RawParser.Model.Parser
             rawImage.setImagePreviewData(new Image());
             return rawImage;
         }
-        public Image getfromfile(int x, int y, )
+        public Image getfromfile(int x, int y, int offset, int bitdept, bool raw, )
+        {
+            return null;
+        }
     }
 }
