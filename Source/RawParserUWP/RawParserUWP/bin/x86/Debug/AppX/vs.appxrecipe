@@ -22,13 +22,13 @@
     <AppXManifest Include="E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\bin\x86\Debug\Core\AppxManifest.xml">
       <PackagePath>AppxManifest.xml</PackagePath>
       <ReRegisterAppIfChanged>true</ReRegisterAppIfChanged>
-      <Modified>2016-05-10T16:09:15.432</Modified>
+      <Modified>2016-05-10T18:29:21.540</Modified>
     </AppXManifest>
   </ItemGroup>
   <ItemGroup>
     <AppxPackagedFile Include="E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\bin\x86\Debug\RawParserUWP.exe">
       <PackagePath>entrypoint\RawParserUWP.exe</PackagePath>
-      <Modified>2016-05-10T16:09:14.469</Modified>
+      <Modified>2016-05-10T18:29:21.041</Modified>
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Users\franc\.nuget\packages\Microsoft.ApplicationInsights\1.0.0\lib\portable-win81+wpa81\Microsoft.ApplicationInsights.dll">
       <PackagePath>Microsoft.ApplicationInsights.dll</PackagePath>
@@ -506,11 +506,11 @@
     </AppxPackagedFile>
     <AppxPackagedFile Include="E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\bin\x86\Debug\resources.pri">
       <PackagePath>resources.pri</PackagePath>
-      <Modified>2016-05-10T16:09:15.187</Modified>
+      <Modified>2016-05-10T18:22:25.883</Modified>
     </AppxPackagedFile>
     <AppxPackagedFile Include="E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\bin\x86\Debug\Core\RawParserUWP.exe">
       <PackagePath>RawParserUWP.exe</PackagePath>
-      <Modified>2016-05-10T16:09:15.426</Modified>
+      <Modified>2016-05-10T18:29:21.535</Modified>
     </AppxPackagedFile>
   </ItemGroup>
   <ItemGroup>

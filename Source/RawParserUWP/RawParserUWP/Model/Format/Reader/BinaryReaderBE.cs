@@ -11,7 +11,7 @@ namespace RawParser.Model.Parser
     {
         public BinaryReaderBE(Stream s) : base(s)
         {
-
+            
         }
 
         public BinaryReaderBE(Stream s, Encoding e) : base (s,e)

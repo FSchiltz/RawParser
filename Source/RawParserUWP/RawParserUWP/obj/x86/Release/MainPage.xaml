@@ -11,7 +11,7 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
-            <AppBarButton x:Name="appBarImageChoose" 
+            <AppBarButton x:ConnectionId='1' x:Name="appBarImageChoose" 
                           Icon="BrowsePhotos"
                           Label="appbarOpenImage" 
                           VerticalAlignment="Top"/>
@@ -21,12 +21,12 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
-                <VisualState x:Name="wideState">
+                <VisualState x:ConnectionId='2' x:Name="wideState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="641" />
                     </VisualState.StateTriggers>
                 </VisualState>
-                <VisualState x:Name="narrowState">
+                <VisualState x:ConnectionId='3' x:Name="narrowState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
@@ -36,6 +36,9 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Image x:Name="imageBox" HorizontalAlignment="Left" Height="583" VerticalAlignment="Top" Width="360"/>
+        <Image x:ConnectionId='4' x:Name="image" HorizontalAlignment="Left" Height="583" VerticalAlignment="Top" Width="360"/>
+
+
     </Grid>
 </Page>
+

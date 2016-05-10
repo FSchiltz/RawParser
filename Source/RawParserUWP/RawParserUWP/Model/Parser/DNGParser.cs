@@ -6,9 +6,9 @@ namespace RawParser.Model.Parser
 {
     class DNGParser : Parser
     {
-        public RawImage parse(string path)
+        public RawImage parse(Stream file)
         {
-            BinaryReader fileStream = new BinaryReader(new FileStream(path, FileMode.Open, FileAccess.Read));
+            BinaryReader fileStream = new BinaryReader(file);
                       
             try
             {
@@ -16,7 +16,7 @@ namespace RawParser.Model.Parser
                 if (header.byteOrder == 0x4D4D)
                 {
                     //File is in reverse bit order
-                    fileStream = new BinaryReaderBE(new FileStream(path, FileMode.Open, FileAccess.Read), System.Text.Encoding.BigEndianUnicode);
+                    fileStream = new BinaryReaderBE(file, System.Text.Encoding.BigEndianUnicode);
                     header = new Header(fileStream, 0);
                 }
                 DNGIFD ifd = new DNGIFD(fileStream, header.TIFFoffset, false);  

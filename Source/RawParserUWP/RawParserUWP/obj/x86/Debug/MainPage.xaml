@@ -36,9 +36,7 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Image x:ConnectionId='4' x:Name="image" HorizontalAlignment="Left" Height="583" VerticalAlignment="Top" Width="360"/>
-
-
+        <Image x:ConnectionId='4' x:Name="imageBox" HorizontalAlignment="Left" Height="583" VerticalAlignment="Top" Width="360"/>
     </Grid>
 </Page>
 

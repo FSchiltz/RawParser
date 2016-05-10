@@ -3,9 +3,11 @@ using RawParser.Model.Format.Base;
 using RawParser.Model.Format.Image.Base;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI.Xaml.Media;
 
 namespace RawParser.Model.ImageDisplay
 {
@@ -16,12 +18,11 @@ namespace RawParser.Model.ImageDisplay
         private Exif exif;
         protected Image imageData;
         protected Image imagePreviewData;
-        public RawImage(Exif e ,Image d, Image p, string name)
+        public RawImage(Exif e ,Image d, Image p)
         {
             exif = e;
             imageData = d;
-            imagePreviewData = p;
-            fileName = name;            
+            imagePreviewData = p;           
         }
 
         public void setImageData(Image i)
@@ -32,6 +33,11 @@ namespace RawParser.Model.ImageDisplay
         public void setImagePreviewData(Image i)
         {
             imagePreviewData = i;
+        }
+
+        internal ImageSource getImageasBitMap()
+        {
+            throw new NotImplementedException();
         }
     }
 }

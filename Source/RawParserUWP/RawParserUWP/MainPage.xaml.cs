@@ -1,12 +1,13 @@
-﻿using System;
-using Windows.UI.Xaml.Controls;
-
-using RawParser.Model.ImageDisplay;
+﻿using RawParser.Model.ImageDisplay;
 using RawParser.Model.Parser;
-using Windows.Storage.Pickers;
-using Windows.Storage;
 using RawParserUWP.Model.Exception;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 // Pour plus d'informations sur le modèle d'élément Page vierge, consultez la page http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -27,7 +28,7 @@ namespace RawParserUWP
             imageSelected = false;
         }
 
-        private  void appBarImageChooseClick(object sender, RoutedEventArgs e)
+        private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
         {
             FileOpenPicker filePicker = new FileOpenPicker();
             filePicker.ViewMode = PickerViewMode.Thumbnail;
@@ -56,7 +57,12 @@ namespace RawParserUWP
                             break;
                         default: throw new Exception("File not supported");//todo change exception types
                     }
-                    this.currentRawImage = parser.parse(file.Path);
+                    Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
+                    Task t = Task.Run(() => this.currentRawImage = parser.parse(stream));
+                    t.Wait();
+                    ExceptionDisplay.display("test");
+                    //display the image
+                    imageBox.Source = currentRawImage.getImageasBitMap();
                 }
                 catch (Exception ex)
                 {
