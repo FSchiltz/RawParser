@@ -1,0 +1,10 @@
+/out:"E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\obj\x86\Release\ilc\intermediate\SgGenerated\\"
+/int:"E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\obj\x86\Release\ilc\intermediate\\"
+/ref:"E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\obj\x86\Release\ilc\intermediate\PreMergeILTransformed\\"
+/ref:"E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\obj\x86\Release\ilc\intermediate\TransformedSRWR\\"
+/ref:"E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\obj\x86\Release\ilc\in\\"
+/ref:"E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\obj\x86\Release\ilc\in\\"
+/ref:"E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\obj\x86\Release\ilc\in\\"
+/ref:"C:\Program Files (x86)\MSBuild\Microsoft\.NetNative\x86\ilc\lib\Private\\"
+/ref:"E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\obj\x86\Release\ilc\in\WinMetadata\\"
+/ca:System.Private.CoreLib

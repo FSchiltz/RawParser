@@ -89,7 +89,8 @@ namespace RawParser
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message + ex.StackTrace, "Error");
+                    var dialog = new MessageDialog("Your message here");
+await dialog.ShowAsync();
                 }
             }
         }

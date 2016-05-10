@@ -23,3 +23,5 @@ C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\obj\Debug\RawParser.U
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\obj\Debug\RawParser.csproj.GenerateResource.Cache
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\obj\Debug\RawParser.exe
 C:\Data\Progra\GitHub\RawParser\Source\RawParser\RawParser\obj\Debug\RawParser.pdb
+E:\Data\Progra\C#\RawParser\Source\RawParser\RawParser\bin\Debug\RawParser.exe.config
+E:\Data\Progra\C#\RawParser\Source\RawParser\RawParser\obj\Debug\RawParser.pdb
