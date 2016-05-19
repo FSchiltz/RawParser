@@ -8,6 +8,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Imaging;
 
 // Pour plus d'informations sur le modèle d'élément Page vierge, consultez la page http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -60,13 +61,17 @@ namespace RawParserUWP
                     Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
                     Task t = Task.Run(() => this.currentRawImage = parser.parse(stream));
                     t.Wait();
-                    ExceptionDisplay.display("test");
                     //display the image
-                    imageBox.Source = currentRawImage.getImageasBitMap();
+                    var image = new WriteableBitmap(this.currentRawImage.imagePreviewData.x, this.currentRawImage.imagePreviewData.y);
+                    MemoryStream ms = new MemoryStream();
+                    ms.Write(this.currentRawImage.imagePreviewData.data, 0, this.currentRawImage.imagePreviewData.data.Length);
+                    ms.Position = 0; //reset the stream after populate
+                    image.SetSource(ms.AsRandomAccessStream());
+                    imageBox.Source = image;
                 }
                 catch (Exception ex)
                 {
-                    ExceptionDisplay.display(ex.Message + ex.StackTrace + file.FileType.ToUpper());
+                    ExceptionDisplay.display(ex.Message + ex.StackTrace);
                 }
             }
             else

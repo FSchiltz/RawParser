@@ -1,17 +1,14 @@
 ﻿using RawParser.Model.Format.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
+using Windows.UI.Xaml.Media.Imaging;
 
-namespace RawParser.Model.Format.Image.Base
+namespace RawParser.Model.Format
 {
     class Image
     {
-        private Pixel[][] data;
-        private int x;
-        private int y;
+        public byte[] data { get; set; }
+        public int x { set; get; }
+        public int y { set; get; }
         private int deep;
         private bool compressed;
         private bool demos;
@@ -22,14 +19,27 @@ namespace RawParser.Model.Format.Image.Base
             demos = true;
         }
 
-        public Image ( int x, int y, int deep, bool compressed, bool demos, Pixel[][] data)
+        public Image ( int x, int y, int deep, bool compressed, bool demos, WriteableBitmap data)
         {
             this.x = x;
             this.y = y;
             this.deep = deep;
             this.compressed = compressed;
             this.demos = demos;
-            this.data = data;
+            //this.data = data;
         }
+
+        public Image(double x, double y, uint size, bool raw,BinaryReader reader,uint offset)
+        {
+            //this.x = x;
+            //this.y = y;
+            demos = !raw;
+            long tempoffset = reader.BaseStream.Position;
+            reader.BaseStream.Seek(offset, SeekOrigin.Begin);
+            
+            data = new byte[size];
+            reader.Read(data,0, (int)size);
+        }
+ 
     }
 }

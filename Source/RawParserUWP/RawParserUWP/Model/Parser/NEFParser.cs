@@ -1,7 +1,8 @@
 ﻿using RawParser.Model.Format;
-using RawParser.Model.Format.Image.Base;
-using RawParser.Model.Format.Image.IFD;
+using RawParser.Model.Format.Base;
+using RawParser.Model.Format.Nikon;
 using RawParser.Model.ImageDisplay;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -9,11 +10,11 @@ namespace RawParser.Model.Parser
 {
     class NEFParser : Parser
     {
-        protected NEFIFD ifd;
-
-        protected NEFIFD subifd0;
-        protected NEFIFD subifd1;
-        protected NEFIFD exif;
+        protected IFD ifd;
+        protected Header header;
+        protected IFD subifd0;
+        protected IFD subifd1;
+        protected IFD exif;
         protected NikonMakerNote makerNote;
 
         protected Image rawData;
@@ -21,61 +22,78 @@ namespace RawParser.Model.Parser
 
         public RawImage parse(Stream file) 
         {
+            //Open a binary stream on the file
             BinaryReader fileStream = new BinaryReader(file);
-            Header header = new Header(fileStream, 0);
-            if (header.byteOrder == 0x4D4D)
+
+            //read the first bit to get the endianness of the file           
+            if (fileStream.ReadUInt16() == 0x4D4D)
             {
                 //File is in reverse bit order
-                fileStream = new BinaryReaderBE(file);
-                header = new Header(fileStream, 0);
+                fileStream = new BinaryReaderBE(file);   
             }
-            ifd = new NEFIFD(fileStream, header.TIFFoffset, true);
+
+            //read the header
+            header = new Header(fileStream, 0); // OK
+
+            //Read the IFD
+            ifd = new IFD(fileStream, header.TIFFoffset, true); // OK
 
             Tag subifdoffsetTag;
             Tag exifoffsetTag;
-            ifd.tags.TryGetValue(330, out subifdoffsetTag);
-            ifd.tags.TryGetValue(34665, out exifoffsetTag);
+            ifd.tags.TryGetValue(0x14A, out subifdoffsetTag);
+            ifd.tags.TryGetValue(0x8769, out exifoffsetTag);
 
-            subifd0 = new NEFIFD(fileStream, (uint)subifdoffsetTag.data[0], true);
-            subifd1 = new NEFIFD(fileStream, (uint)subifdoffsetTag.data[1], true);
-            exif = new NEFIFD(fileStream, (uint)exifoffsetTag.data[0], true);
+            subifd0 = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true);
+            subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true);
+            //todo third IFD
+            exif = new IFD(fileStream, (uint)exifoffsetTag.data[0], true); //OK
 
             MemoryStream ms = new MemoryStream();
-            MemoryStream headerms = new MemoryStream();
+          
             Tag makerNoteOffsetTag;
-            exif.tags.TryGetValue(37500, out makerNoteOffsetTag);
+            exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag);
             object[] binMakerNoteObj = makerNoteOffsetTag.data;
             byte[] binMakerNote = binMakerNoteObj.Cast<byte>().ToArray();
             ms.Write(binMakerNote, 10, binMakerNote.Length - 10);
             ms.Position = 0; //reset the stream after populate
 
-            headerms.Write(binMakerNote, 0, 10);
-            headerms.Position = 0;
-            makerNote = new NikonMakerNote(new BinaryReaderBE(ms), new BinaryReaderBE(headerms), 0, true);
+            makerNote = new NikonMakerNote(new BinaryReader(ms), 0, true);
 
             //Get image data
-            previewData = this.getImagefromfile(0, 0, 0, 0, true);
+            Tag imagepreviewOffsetTags,imagepreviewX,imagepreviewY,imagepreviewSize;
+            makerNote.preview.tags.TryGetValue(0x201,out imagepreviewOffsetTags);
+            makerNote.preview.tags.TryGetValue(0x11A, out imagepreviewX);
+            makerNote.preview.tags.TryGetValue(0x11B, out imagepreviewY);
+            makerNote.preview.tags.TryGetValue(0x202, out imagepreviewSize);
+
             //get Preview Data
-            rawData = this.getImagefromfile(0, 0, 0, 0, true);
+            rawData = new Image(0, 0, 0, true,fileStream, 0);
             //get Raw Data
 
             //parse to RawImage
-            Tag[] makernoteTag = makerNote.parseToStandardExifTag();
-            Exif exifTemp = new Exif(makernoteTag);
-            RawImage rawImage = new RawImage(exifTemp, rawData, previewData);
+            Dictionary<ushort, Tag>exifTag = parseToStandardExifTag();
+            RawImage rawImage = new RawImage(exifTag, rawData, previewData);
             //get the imagedata
 
-            rawImage.setImageData(new Image(
-                ));
+            rawImage.imageData = new Image(
+                );
 
             //get the preview data ( faster than rezising )
-            rawImage.setImagePreviewData(new Image());
+            rawImage.imagePreviewData = new Image(
+                (double)imagepreviewX.data[0],
+                (double)imagepreviewY.data[0],
+                (uint)imagepreviewSize.data[0],
+                false,
+                fileStream,
+                (uint)imagepreviewOffsetTags.data[0]);
             return rawImage;
         }
 
-        public Image getImagefromfile(int x, int y, int offset, int bitdept, bool raw)
+        public Dictionary<ushort, Tag> parseToStandardExifTag()
         {
-            return null;
+            Dictionary<ushort, Tag> temp = new Dictionary <ushort,Tag>();
+            
+            return temp;
         }
     }
 }
