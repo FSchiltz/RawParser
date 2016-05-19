@@ -1,0 +1,1 @@
+E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\RawParserUWP.csproj;arm
