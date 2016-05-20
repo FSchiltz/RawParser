@@ -2,6 +2,7 @@
 using RawParser.Model.Format.Base;
 using RawParser.Model.Format.Nikon;
 using RawParser.Model.ImageDisplay;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,8 +18,8 @@ namespace RawParser.Model.Parser
         protected IFD exif;
         protected NikonMakerNote makerNote;
 
-        protected Image rawData;
-        protected Image previewData;
+        protected byte[] rawData;
+        protected byte[] previewData;
 
         public RawImage parse(Stream file) 
         {
@@ -48,44 +49,35 @@ namespace RawParser.Model.Parser
             //todo third IFD
             exif = new IFD(fileStream, (uint)exifoffsetTag.data[0], true); //OK
 
-            MemoryStream ms = new MemoryStream();
-          
+            //optimize (stop ifd from loaoding the makernote
+            
             Tag makerNoteOffsetTag;
             exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag);
-            object[] binMakerNoteObj = makerNoteOffsetTag.data;
-            byte[] binMakerNote = binMakerNoteObj.Cast<byte>().ToArray();
-            ms.Write(binMakerNote, 10, binMakerNote.Length - 10);
-            ms.Position = 0; //reset the stream after populate
-
-            makerNote = new NikonMakerNote(new BinaryReader(ms), 0, true);
+                       
+            makerNote = new NikonMakerNote(fileStream, makerNoteOffsetTag.dataOffset, true);
 
             //Get image data
             Tag imagepreviewOffsetTags,imagepreviewX,imagepreviewY,imagepreviewSize;
-            makerNote.preview.tags.TryGetValue(0x201,out imagepreviewOffsetTags);
+            makerNote.preview.tags.TryGetValue(0x201,out imagepreviewOffsetTags );
             makerNote.preview.tags.TryGetValue(0x11A, out imagepreviewX);
             makerNote.preview.tags.TryGetValue(0x11B, out imagepreviewY);
             makerNote.preview.tags.TryGetValue(0x202, out imagepreviewSize);
 
             //get Preview Data
-            rawData = new Image(0, 0, 0, true,fileStream, 0);
+           
             //get Raw Data
+            rawData = new byte[0];
+
+            //get the preview data ( faster than rezising )
+            fileStream.BaseStream.Position = (uint)imagepreviewOffsetTags.data[0] + makerNoteOffsetTag.dataOffset + 10;
+            previewData = fileStream.ReadBytes(Convert.ToInt32(imagepreviewSize.data[0]));
+            
 
             //parse to RawImage
             Dictionary<ushort, Tag>exifTag = parseToStandardExifTag();
             RawImage rawImage = new RawImage(exifTag, rawData, previewData);
             //get the imagedata
 
-            rawImage.imageData = new Image(
-                );
-
-            //get the preview data ( faster than rezising )
-            rawImage.imagePreviewData = new Image(
-                (double)imagepreviewX.data[0],
-                (double)imagepreviewY.data[0],
-                (uint)imagepreviewSize.data[0],
-                false,
-                fileStream,
-                (uint)imagepreviewOffsetTags.data[0]);
             return rawImage;
         }
 
