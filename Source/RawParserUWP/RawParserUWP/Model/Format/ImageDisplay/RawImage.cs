@@ -1,11 +1,9 @@
 ﻿using RawParser.Model.Format;
-using RawParserUWP.Model.Exception;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace RawParser.Model.ImageDisplay
 {

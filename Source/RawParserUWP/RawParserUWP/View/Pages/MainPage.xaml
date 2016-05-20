@@ -7,14 +7,35 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <Page.BottomAppBar>
-        <CommandBar Height="43">
+        <CommandBar Height="40">
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
+            <AppBarButton x:Name="appbarRotateLeft" 
+                          Icon="Undo"
+                          Label="Turn left" 
+                          VerticalAlignment="Top"/>
+            <AppBarButton x:Name="appbarRotateRight" 
+                          Icon="Redo"
+                          Label="Rotate right" 
+                          VerticalAlignment="Top"/>
+            <AppBarSeparator/>
             <AppBarButton x:Name="appBarImageChoose" 
                           Icon="BrowsePhotos"
-                          Label="appbarOpenImage" 
+                          Label="Open an Image" 
                           VerticalAlignment="Top"/>
+            <AppBarButton x:Name="appbarSaveImg" 
+                          Icon="SaveLocal"
+                          Label="Save" 
+                          VerticalAlignment="Top"/>
+            <AppBarButton x:Name="appbarShare" 
+                          Icon="Link"
+                          Label="Share" 
+                          VerticalAlignment="Top"/>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Icon="Setting" Label="Setting" Click="appbarSettingClick"/>
+                <AppBarButton Icon="Document" Label="About" Click="appbarAboutClick"/>
+            </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
 
@@ -36,6 +57,21 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Image x:Name="imageBox"/>
+        <SplitView>
+            <SplitView.Pane >
+                <ListView />
+            </SplitView.Pane>
+            <SplitView.Content>
+                <Image x:Name="imageBox" HorizontalAlignment="Left" />
+            </SplitView.Content>
+        </SplitView>
+
+        <ProgressRing x:Name="progressDisplay" 
+                      HorizontalAlignment="Center"  
+                      VerticalAlignment="Center" 
+                      Background="{x:Null}" 
+                      Foreground="#FF003C6C" 
+                      Width="100" Height="100" MinWidth="60" MinHeight="60"/>
+
     </Grid>
 </Page>

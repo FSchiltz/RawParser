@@ -1,5 +1,4 @@
-﻿using RawParser.Model.Format.Base;
-using System.IO;
+﻿using System.IO;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace RawParser.Model.Format

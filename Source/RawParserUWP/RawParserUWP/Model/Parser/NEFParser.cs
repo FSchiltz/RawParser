@@ -1,11 +1,9 @@
 ﻿using RawParser.Model.Format;
-using RawParser.Model.Format.Base;
 using RawParser.Model.Format.Nikon;
 using RawParser.Model.ImageDisplay;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace RawParser.Model.Parser
 {

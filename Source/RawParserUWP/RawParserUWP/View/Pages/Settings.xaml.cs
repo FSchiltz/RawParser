@@ -8,9 +8,9 @@ namespace RawParserUWP.View.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class About : Page
+    public sealed partial class Settings : Page
     {
-        public About()
+        public Settings()
         {
             InitializeComponent();
 
@@ -22,7 +22,7 @@ namespace RawParserUWP.View.Pages
                     Frame.GoBack();
                     a.Handled = true;
                 }
-            };           
+            };
         }
     }
 }

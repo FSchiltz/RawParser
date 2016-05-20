@@ -11,12 +11,11 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 
-// Pour plus d'informations sur le modèle d'élément Page vierge, consultez la page http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace RawParserUWP
 {
     /// <summary>
-    /// Une page vide peut être utilisée seule ou constituer une page de destination au sein d'un frame.
+    /// The main class of the appliation
     /// </summary>
     public sealed partial class MainPage : Page
     {
@@ -26,6 +25,7 @@ namespace RawParserUWP
         public MainPage()
         {
             InitializeComponent();
+            NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
             appBarImageChoose.Click += new RoutedEventHandler(appBarImageChooseClick);
             imageSelected = false;
         }
@@ -61,6 +61,8 @@ namespace RawParserUWP
                     }
 
                     //TODO Add a loading screen
+                    progressDisplay.IsActive = true;
+                    progressDisplay.Visibility = Visibility.Visible;
                     Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
                     Task t = Task.Run(async() =>
                     {
@@ -74,14 +76,10 @@ namespace RawParserUWP
                             image.CopyToBuffer(bitmap.PixelBuffer);
                             imageBox.Source = bitmap;
                             //TODO Hide the loading screen
+                            progressDisplay.Visibility = Visibility.Collapsed;
+                            progressDisplay.IsActive = false;
                         });       
-                    });
-                    
-
-                    
-                    
-                   
-                    
+                    });                    
                 }
                 catch (Exception ex)
                 {
@@ -92,6 +90,17 @@ namespace RawParserUWP
             {
                 //TODO
             }
+        }
+
+
+        private void appbarAboutClick(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(View.Pages.About), null);
+        }
+
+        private void appbarSettingClick(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(View.Pages.Settings), null);
         }
     }
 }
