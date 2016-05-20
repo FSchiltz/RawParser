@@ -61,13 +61,16 @@ namespace RawParserUWP
                     Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
                     Task t = Task.Run(() => this.currentRawImage = parser.parse(stream));
                     t.Wait();
+
                     //display the image
+                    /*
                     var image = new WriteableBitmap(this.currentRawImage.imagePreviewData.x, this.currentRawImage.imagePreviewData.y);
                     MemoryStream ms = new MemoryStream();
                     ms.Write(this.currentRawImage.imagePreviewData.data, 0, this.currentRawImage.imagePreviewData.data.Length);
                     ms.Position = 0; //reset the stream after populate
                     image.SetSource(ms.AsRandomAccessStream());
                     imageBox.Source = image;
+                    */
                 }
                 catch (Exception ex)
                 {

@@ -36,6 +36,6 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Image x:Name="imageBox" HorizontalAlignment="Left" Height="583" VerticalAlignment="Top" Width="360"/>
+        
     </Grid>
 </Page>
