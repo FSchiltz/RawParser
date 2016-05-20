@@ -4,6 +4,7 @@ using RawParserUWP.Model.Exception;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
@@ -24,7 +25,7 @@ namespace RawParserUWP
 
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             appBarImageChoose.Click += new RoutedEventHandler(appBarImageChooseClick);
             imageSelected = false;
         }
@@ -58,19 +59,29 @@ namespace RawParserUWP
                             break;
                         default: throw new Exception("File not supported");//todo change exception types
                     }
-                    Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
-                    Task t = Task.Run(() => this.currentRawImage = parser.parse(stream));
-                    t.Wait();
 
-                    //display the image
-                    /*
-                    var image = new WriteableBitmap(this.currentRawImage.imagePreviewData.x, this.currentRawImage.imagePreviewData.y);
-                    MemoryStream ms = new MemoryStream();
-                    ms.Write(this.currentRawImage.imagePreviewData.data, 0, this.currentRawImage.imagePreviewData.data.Length);
-                    ms.Position = 0; //reset the stream after populate
-                    image.SetSource(ms.AsRandomAccessStream());
-                    imageBox.Source = image;
-                    */
+                    //TODO Add a loading screen
+                    Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
+                    Task t = Task.Run(async() =>
+                    {
+                        currentRawImage = parser.parse(stream);
+                        SoftwareBitmap image = currentRawImage.getImageAsBitmap();
+                        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            //display the image
+                            WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                            image.CopyToBuffer(bitmap.PixelBuffer);
+                            imageBox.Source = bitmap;
+                            //TODO Hide the loading screen
+                        });       
+                    });
+                    
+
+                    
+                    
+                   
+                    
                 }
                 catch (Exception ex)
                 {

@@ -5,8 +5,8 @@ namespace RawParser.Model.Format.Nikon
 {
     class NikonMakerNote
     {
-        protected Header header;
-        protected IFD ifd;
+        public Header header { get; set; }
+        public IFD ifd { get; set; }
         public IFD preview { get; }
         public string stringMagic { set; get; }
         public ushort version { set; get; }
@@ -20,19 +20,19 @@ namespace RawParser.Model.Format.Nikon
                 stringMagic += buffer.ReadChar();
             }
             version = buffer.ReadUInt16();
-            buffer.BaseStream.Seek(2, SeekOrigin.Current);//jump the padding
+            buffer.BaseStream.Position = 2 + offset;//jump the padding
 
-            header = new Header(buffer, offset);
+            header = new Header(buffer,0); //0 car beggining of the stream
             if(header.byteOrder == 0x4D4D)
             {
                 buffer = new BinaryReaderBE(buffer.BaseStream);
                 //TODO see if need to move
             }
-            ifd = new IFD(buffer, header.TIFFoffset, true);
+            ifd = new IFD(buffer, header.TIFFoffset + 10 + offset, true);
 
             Tag previewOffsetTag;
             ifd.tags.TryGetValue(17, out previewOffsetTag);
-            preview = new IFD(buffer, (uint)previewOffsetTag.data[0], true);
+            preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + offset + 10, true);
         }
     }
 }

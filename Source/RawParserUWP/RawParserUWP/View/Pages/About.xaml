@@ -1,22 +1,11 @@
 ﻿<Page
-    x:Class="RawParserUWP.MainPage"
+    x:Class="RawParserUWP.View.Pages.BlankPage1"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:RawParserUWP"
+    xmlns:local="using:RawParserUWP.View.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-    <Page.BottomAppBar>
-        <CommandBar Height="43">
-            <CommandBar.Content>
-                <Grid/>
-            </CommandBar.Content>
-            <AppBarButton x:Name="appBarImageChoose" 
-                          Icon="BrowsePhotos"
-                          Label="appbarOpenImage" 
-                          VerticalAlignment="Top"/>
-        </CommandBar>
-    </Page.BottomAppBar>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <VisualStateManager.VisualStateGroups>

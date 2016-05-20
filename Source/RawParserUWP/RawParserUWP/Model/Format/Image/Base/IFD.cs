@@ -14,9 +14,9 @@ namespace RawParser.Model.Format
 
         public ushort nextOffset { get; set; }
 
-        public IFD(BinaryReader fileStream, uint offset, bool compression)
+        public IFD(BinaryReader fileStream, long offset, bool compression)
         {
-            fileStream.BaseStream.Seek(offset, SeekOrigin.Begin);
+            fileStream.BaseStream.Position = offset;
             tagNumber = fileStream.ReadUInt16();
             tags = new Dictionary<ushort, Tag>();
             for (int i = 0; i < tagNumber; i++)

@@ -10,6 +10,7 @@ namespace RawParserUWP.Model.Exception
             dialog.Title = "Error";
             dialog.Commands.Add(new UICommand { Label = "Ok", Id = 0 });
             var res = await dialog.ShowAsync();
+
         }
     }
 }
