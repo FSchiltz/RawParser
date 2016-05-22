@@ -64,7 +64,7 @@ namespace RawParser.Model.Format
                             break;
                         case 11: temp.data[j] = fileStream.ReadBytes(4);
                             break;
-                        case 12: temp.data[j] = fileStream.ReadBytes(8);
+                        case 12: temp.data[j] = fileStream.ReadDouble();
                             break;
                     }
                 }

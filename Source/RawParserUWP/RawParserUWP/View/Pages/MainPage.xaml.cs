@@ -109,12 +109,7 @@ namespace RawParserUWP
                     image.CopyToBuffer(bitmap.PixelBuffer);
                     imageBox.Source = bitmap;
                     //set exif datasource
-                    List<Tag> temp = new List<Tag>();
-                    foreach(Tag temptag in currentRawImage.exif.Values)
-                    {
-                        temp.Add(temptag);
-                    }
-                    exifDisplay.ItemsSource = temp;
+                    exifDisplay.ItemsSource = currentRawImage.exif.Values;
                     //TODO Hide the loading screen
                     progressDisplay.Visibility = Visibility.Collapsed;
                     progressDisplay.IsActive = false;
