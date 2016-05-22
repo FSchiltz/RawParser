@@ -22,6 +22,9 @@ namespace RawParser.Model.Format
             {
                 Tag temp = new Tag();
                 temp.tagId = fileStream.ReadUInt16();
+                //add the displayname 
+                temp.displayName = null;
+
                 temp.dataType = fileStream.ReadUInt16();
                 temp.dataCount = fileStream.ReadUInt32();
                 
