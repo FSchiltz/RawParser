@@ -1,4 +1,5 @@
 ﻿using RawParser.Model.Parser;
+using System;
 using System.IO;
 
 namespace RawParser.Model.Format.Nikon
@@ -31,7 +32,10 @@ namespace RawParser.Model.Format.Nikon
             ifd = new IFD(buffer, header.TIFFoffset + 10 + offset, true);
 
             Tag previewOffsetTag;
-            ifd.tags.TryGetValue(17, out previewOffsetTag);
+            if (!ifd.tags.TryGetValue(17, out previewOffsetTag))
+            {
+                throw new Exception("Preview Offset not found");
+            }
             preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + offset + 10, true);
         }
     }
