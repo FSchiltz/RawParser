@@ -1,0 +1,2 @@
+MainPackage=E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\bin\x64\Release\RawParserUWP_0.1.0.0_x64.appx
+SymbolPackage=E:\Data\Progra\C#\RawParser\Source\RawParserUWP\RawParserUWP\AppPackages\RawParserUWP_0.1.0.0_Test\RawParserUWP_0.1.0.0_x64.appxsym

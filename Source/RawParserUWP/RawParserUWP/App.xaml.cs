@@ -18,9 +18,6 @@ namespace RawParserUWP
         /// </summary>
         public App()
         {
-            Microsoft.ApplicationInsights.WindowsAppInitializer.InitializeAsync(
-                Microsoft.ApplicationInsights.WindowsCollectors.Metadata |
-                Microsoft.ApplicationInsights.WindowsCollectors.Session);
             InitializeComponent();
             Suspending += OnSuspending;
         }
@@ -94,6 +91,15 @@ namespace RawParserUWP
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: enregistrez l'état de l'application et arrêtez toute activité en arrière-plan
             deferral.Complete();
+        }
+
+        protected override void OnFileActivated(FileActivatedEventArgs args)
+        {
+            base.OnFileActivated(args);
+            var rootFrame = new Frame();
+            rootFrame.Navigate(typeof(MainPage), args);
+            Window.Current.Content = rootFrame;
+            Window.Current.Activate();
         }
     }
 }
