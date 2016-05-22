@@ -25,6 +25,12 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        
+        <ListView x:Name="listView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+            <TextBlock x:Name="textBlock" TextWrapping="Wrap" FontSize="48">
+            Abouts
+            </TextBlock>
+
+        </ListView>
+
     </Grid>
 </Page>

@@ -7,23 +7,23 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <Page.BottomAppBar>
-        <CommandBar Height="40">
+        <CommandBar >
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
             <AppBarButton x:Name="appbarRotateLeft" 
                           Icon="Undo"
                           Label="Turn left" 
-                          VerticalAlignment="Top"/>
+                          VerticalAlignment="Top" FontSize="12" Width="48"/>
             <AppBarButton x:Name="appbarRotateRight" 
                           Icon="Redo"
                           Label="Rotate right" 
-                          VerticalAlignment="Top"/>
+                          VerticalAlignment="Top" FontSize="12" Width="48"/>
             <AppBarSeparator/>
             <AppBarButton x:Name="appBarImageChoose" 
                           Icon="BrowsePhotos"
                           Label="Open an Image" 
-                          VerticalAlignment="Top"/>
+                          VerticalAlignment="Top" FontSize="12" Width="40"/>
             <AppBarButton x:Name="appbarSaveImg" 
                           Icon="SaveLocal"
                           Label="Save" 
@@ -32,19 +32,25 @@
                           Icon="Link"
                           Label="Share" 
                           VerticalAlignment="Top"/>
+            <AppBarButton x:Name="appbarShowSplit"
+                          Label="Show sidepanel" 
+                          VerticalAlignment="Top" Visibility="Collapsed"
+                          Click="appbarShowSplitClick" Icon="Back" FontSize="12" Width="40"/>
             <CommandBar.SecondaryCommands>
                 <AppBarButton Icon="Setting" Label="Setting" Click="appbarSettingClick"/>
                 <AppBarButton Icon="Document" Label="About" Click="appbarAboutClick"/>
+                <AppBarButton x:Name="appbarSaveImgSecond" Icon="SaveLocal" Label="Save" VerticalAlignment="Top"/>
+                <AppBarButton x:Name="appbarShareSecond" Icon="Link" Label="Share" VerticalAlignment="Top"/>
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid >
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="wideState">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="641" />
+                        <AdaptiveTrigger MinWindowWidth="1200" />
                     </VisualState.StateTriggers>
                 </VisualState>
                 <VisualState x:Name="narrowState">
@@ -52,26 +58,78 @@
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
+                        <!-- To make the panel hidable when not enough screen size -->
+                        <Setter Target="splitView.DisplayMode" Value="Overlay" />
+                        <Setter Target="appbarShowSplit.Visibility" Value="Visible" />
+                        <Setter Target="appbarSaveImg.Visibility" Value="Collapsed" />
+                        <Setter Target="appbarShare.Visibility" Value="Collapsed" />
+                        <Setter Target="appbarSaveImgSecond.Visibility" Value="Visible" />
+                        <Setter Target="appbarShareSecond.Visibility" Value="Visible" />
+                        <Setter Target="splitView.IsPaneOpen" Value="False" />
 
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <SplitView>
-            <SplitView.Pane >
-                <ListView />
-            </SplitView.Pane>
+        <SplitView x:Name="splitView" PanePlacement="Right" DisplayMode="Inline" IsPaneOpen="True">
             <SplitView.Content>
-                <Image x:Name="imageBox" HorizontalAlignment="Left" />
+                <Image x:Name="imageBox" />
             </SplitView.Content>
+            <SplitView.Pane >
+                <Pivot Background="#FFF0F0F0">
+                    <PivotItem Header="Exposure">
+                        <ListView Background="#FFE4E4E4" Margin="-12,0" >
+                            <!--The histogram-->
+                            <TextBlock Foreground="Black">
+                                Histogram
+                            </TextBlock>
+                            <Border BorderBrush="#FF818181" BorderThickness="1">
+                                <Canvas x:Name="histogramCanvas" Width="300" Height="200">
+
+                                </Canvas>
+                            </Border>
+                        </ListView>
+                    </PivotItem>
+                    <PivotItem Header="Tools">
+                        <ListView Background="#FFF0F0F0">
+                        </ListView>
+                    </PivotItem>
+                    <PivotItem Header="Presets">
+                        <GridView Background="White" ></GridView>
+                    </PivotItem>
+                    <PivotItem Header="Exifs">
+                        <ListView Background="#FFF0F0F0">
+                            <TextBlock>Exifs data:</TextBlock>
+                            <ItemsControl x:Name="exifDisplay">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid >
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.Resources>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Margin" Value="5,0" />
+                                                </Style>
+                                            </Grid.Resources>
+                                            <TextBlock Grid.Column="0" Text="{Binding tagId}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding data}" />                                  
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ListView>
+                    </PivotItem>
+                </Pivot>
+            </SplitView.Pane>
         </SplitView>
 
         <ProgressRing x:Name="progressDisplay" 
                       HorizontalAlignment="Center"  
-                      VerticalAlignment="Center" 
+                      VerticalAlignment="Bottom" 
                       Background="{x:Null}" 
                       Foreground="#FF003C6C" 
-                      Width="100" Height="100" MinWidth="60" MinHeight="60"/>
-
+                      Width="100" Height="100" MinWidth="60" MinHeight="60" Margin="910,0,910,490"/>
     </Grid>
 </Page>

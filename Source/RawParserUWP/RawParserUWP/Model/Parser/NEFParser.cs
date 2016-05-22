@@ -81,7 +81,7 @@ namespace RawParser.Model.Parser
 
         public Dictionary<ushort, Tag> parseToStandardExifTag()
         {
-            Dictionary<ushort, Tag> temp = new Dictionary <ushort,Tag>();
+            Dictionary<ushort, Tag> temp = makerNote.ifd.tags;
             
             return temp;
         }
