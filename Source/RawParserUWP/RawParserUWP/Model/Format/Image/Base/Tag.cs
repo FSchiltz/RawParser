@@ -15,24 +15,68 @@
                 switch (dataType)
                 {
                     case 1:
-                    case 2:
                     case 6:
                     case 7:
-                        size = 1;
+                        foreach (object t in data)
+                        {
+                            temp += (byte)t;
+                            temp += ":";
+                        }
+                        temp += "\0";
+                        break;
+                    case 2:
+                        temp = (string)data[0];
                         break;
                     case 3:
-                    case 8:
-                        size = 2;
+                        foreach (object t in data)
+                        {
+                            temp += (ushort)t;
+                            temp += ":";
+                        }
+                        temp += "\0";
                         break;
                     case 4:
-                    case 9:
-                    case 11:
-                        temp
+                        foreach (object t in data)
+                        {
+                            temp += (uint)t;
+                            temp += ":";
+                        }
+                        temp += "\0";
                         break;
-                    case 10:
+                    case 8:
+                        foreach (object t in data)
+                        {
+                            temp += (short)t;
+                            temp += ":";
+                        }
+                        temp += "\0";
+                        break;
+                    case 9:
+                        foreach (object t in data)
+                        {
+                            temp += (int)t;
+                            temp += ":";
+                        }
+                        temp += "\0";
+                        break;
+                    case 11:
+                        foreach (object t in data)
+                        {
+                            temp += (int)t;
+                            temp += ":";
+                        }
+                        temp += "\0";
+                        break;
+
                     case 5:
+                    case 10:                   
                     case 12:
-                        temp = 
+                        foreach (object t in data)
+                        {
+                            temp += (double)t;
+                            temp += ":";
+                        }
+                        temp += "\0";
                         break;
                 }
                 return temp;

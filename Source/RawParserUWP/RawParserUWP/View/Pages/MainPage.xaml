@@ -114,7 +114,7 @@
                                                 </Style>
                                             </Grid.Resources>
                                             <TextBlock Grid.Column="0" Text="{Binding tagId}" />
-                                            <TextBlock Grid.Column="1" Text="{Binding data}" />                                  
+                                            <TextBlock Grid.Column="1" Text="{Binding dataAsString}" />                                  
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
