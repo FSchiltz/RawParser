@@ -1,16 +1,12 @@
-﻿using RawParser.Model.Format;
-using RawParser.Model.ImageDisplay;
+﻿using RawParser.Model.ImageDisplay;
 using RawParser.Model.Parser;
 using RawParserUWP.Model.Exception;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
@@ -24,13 +20,15 @@ namespace RawParserUWP
     public sealed partial class MainPage : Page
     {
         private RawImage currentRawImage { set; get; }
-        private bool imageSelected { set; get; }
+        public bool imageSelected { set; get; }
+        public double pageWidth;
+        public double pageHeight;
 
         public MainPage()
         {
             InitializeComponent();
 
-            NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
+            NavigationCacheMode = NavigationCacheMode.Enabled;
             appBarImageChoose.Click += new RoutedEventHandler(appBarImageChooseClick);
             imageSelected = false;
         }
@@ -73,6 +71,16 @@ namespace RawParserUWP
             exifDisplay.ItemsSource = null;
             //empty the histogram
 
+        }
+
+        /*
+         * For the zoom of the image
+         * 
+         */
+        private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            pageWidth = e.NewSize.Width;
+            pageHeight = e.NewSize.Height;
         }
 
         private async void OpenFile(StorageFile file)

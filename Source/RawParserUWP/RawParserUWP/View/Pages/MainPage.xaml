@@ -5,7 +5,8 @@
     xmlns:local="using:RawParserUWP"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    SizeChanged="Page_SizeChanged">
     <Page.BottomAppBar>
         <CommandBar >
             <CommandBar.Content>
@@ -73,7 +74,15 @@
         </VisualStateManager.VisualStateGroups>
         <SplitView x:Name="splitView" PanePlacement="Right" DisplayMode="Inline" IsPaneOpen="True">
             <SplitView.Content>
-                <Image x:Name="imageBox" />
+                <ScrollViewer ZoomMode="Enabled" 
+                            MinZoomFactor="1" 
+                            MaxZoomFactor="4"
+                            HorizontalScrollBarVisibility="Auto"
+                            VerticalScrollBarVisibility="Auto">
+                    <Image x:Name="imageBox" 
+                           MaxWidth="{Binding PageWidth}"
+                           MaxHeight="{Binding PageHeight}" />
+                </ScrollViewer>
             </SplitView.Content>
             <SplitView.Pane >
                 <Pivot Background="#FFF0F0F0">

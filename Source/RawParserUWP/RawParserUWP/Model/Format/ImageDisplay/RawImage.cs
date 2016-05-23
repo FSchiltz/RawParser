@@ -11,7 +11,7 @@ namespace RawParser.Model.ImageDisplay
     class RawImage
     {
         private string fileName {get;set;}
-        public Dictionary<ushort, Tag> exif;
+        public Dictionary<ushort, Tag> exif { get; set; }
         public byte[] imageData { set; get; }
         public byte[] imagePreviewData { get; set; }
 
@@ -22,7 +22,7 @@ namespace RawParser.Model.ImageDisplay
             imagePreviewData = p;           
         }
 
-        internal SoftwareBitmap getImageAsBitmap()
+        public SoftwareBitmap getImageAsBitmap()
         {
             MemoryStream ms = new MemoryStream();
             ms.Write(imagePreviewData, 0, imagePreviewData.Length);
