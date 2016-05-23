@@ -105,6 +105,7 @@ namespace RawParser.Model.Parser
                     { }
                     break;
                 case 4:
+                    //Compression(Compression = 34713) is a Huffman tree and a quantization table. The quantization tables are at 0x8c and 0x96 tag from the MakerNote.
                     //lossy type2
                     { }
                     break;
