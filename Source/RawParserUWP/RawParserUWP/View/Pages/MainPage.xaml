@@ -98,12 +98,12 @@
                         <GridView Background="White" ></GridView>
                     </PivotItem>
                     <PivotItem Header="Exifs">
-                        <ListView Background="#FFF0F0F0">
-                            <TextBlock>Exifs data:</TextBlock>
-                            <ItemsControl x:Name="exifDisplay">
+                        <ListView Background="#FFF0F0F0" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <TextBlock IsTapEnabled="False" IsRightTapEnabled="False" IsHoldingEnabled="False" IsDoubleTapEnabled="False" IsHitTestVisible="False">Exifs data:</TextBlock>
+                            <ItemsControl x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid >
+                                        <Grid BorderBrush="#FF6A6A6A" BorderThickness="0,1,0,0" Background="{x:Null}" >
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition />
                                                 <ColumnDefinition />
@@ -113,8 +113,8 @@
                                                     <Setter Property="Margin" Value="5,0" />
                                                 </Style>
                                             </Grid.Resources>
-                                            <TextBlock Grid.Column="0" Text="{Binding tagId}" />
-                                            <TextBlock Grid.Column="1" Text="{Binding dataAsString}" />                                  
+                                            <TextBlock Grid.Column="0" Text="{Binding displayName}" IsDoubleTapEnabled="False" IsTapEnabled="False" IsTextSelectionEnabled="True" />
+                                            <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

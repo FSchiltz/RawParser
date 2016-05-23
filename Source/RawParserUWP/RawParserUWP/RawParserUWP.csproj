@@ -96,14 +96,21 @@
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\Dic\NikonToStandard.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Dic\StandardExif.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Model\Format\Image\Nikon\NikonTagDictionnary.cs" />
-    <Compile Include="Model\Format\Image\Base\StandardExifNameDictionnary.cs" />
+    <Compile Include="Model\Format\Base\DictionnaryFromFileString.cs" />
+    <Compile Include="Model\Format\Base\DictionnaryFromFileUShort.cs" />
+    <Compile Include="Model\Format\Base\DictionnaryFromFile.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

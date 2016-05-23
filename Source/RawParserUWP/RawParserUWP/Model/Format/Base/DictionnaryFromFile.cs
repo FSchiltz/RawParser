@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.Storage.Streams;
 
 namespace RawParser.Model.Parser
 {
@@ -13,34 +15,51 @@ namespace RawParser.Model.Parser
             ReadFile(file);
         }
 
-        public async void ReadFile(string fileName)
+        public void ReadFile(string fileName)
         {
-            StorageFolder store = ApplicationData.Current.LocalFolder;
+            int lineread = 0, linediscarder = 0;
+            StorageFolder installationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;            
             StorageFile file = null;
-            file = await store.GetFileAsync(fileName);
-            // Open the file into a streamreader
-            using (StreamReader stream = new StreamReader((await file.OpenReadAsync()).AsStreamForRead()))
+            IRandomAccessStream tempvar = null;
+
+            Task t = Task.Run(async () =>
             {
+                file = await installationFolder.GetFileAsync(fileName);
+            });
+            t.Wait();
+
+            t = Task.Run(async () =>
+            {
+                tempvar = await file.OpenReadAsync();
+            });
+            t.Wait();
+
+
+            // Open the file into a streamreader
+            using (StreamReader stream = new StreamReader(tempvar.AsStreamForRead()))
+            {
+
                 while (!stream.EndOfStream) // Keep reading until we get to the end
                 {
+                    lineread++;
                     string splitMe = stream.ReadLine();
-                    string[] tempString = splitMe.Split(new char[] { ' ' }); //Split at the space
-
-                    if (tempString.Length < 2) // If we get less than 2 results, discard them
-                        continue;
-                    else if (tempString.Length == 2)
-                    { // Easy part. If there are 2 results, add them to the dictionary
-                        AddTocontent(Convert.ToUInt16(tempString[0].Trim()), tempString[1].Trim());
-
-                    }
-                    else if (tempString.Length > 2)
+                    if (splitMe.Trim() != "")
                     {
-                        string temp = "";
-                        for (int i = 0; i < tempString.Length - 1; i++)
-                        {
-                            temp += tempString[i];
+                        string[] tempString = splitMe.Split(new char[] { ' ' }); //Split at the space
+
+                        if (tempString.Length < 2)
+                        { // If we get less than 2 results, discard them
+                            linediscarder++;
                         }
-                        AddTocontent(Convert.ToUInt16(tempString[0].Trim()), temp);
+                        else
+                        {
+                            string temp = "";
+                            for (int i = 1; i < tempString.Length; i++)
+                            {
+                                temp += tempString[i];
+                            }
+                            AddTocontent(Convert.ToUInt16(tempString[0].Trim(), 16), temp);
+                        }
                     }
                 }
             }
