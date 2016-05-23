@@ -114,7 +114,7 @@
                                                 </Style>
                                             </Grid.Resources>
                                             <TextBlock Grid.Column="0" Text="{Binding displayName}" IsDoubleTapEnabled="False" IsTapEnabled="False" IsTextSelectionEnabled="True" />
-                                            <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" />
+                                            <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" TextAlignment="Right" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -130,6 +130,6 @@
                       VerticalAlignment="Bottom" 
                       Background="{x:Null}" 
                       Foreground="#FF003C6C" 
-                      Width="100" Height="100" MinWidth="60" MinHeight="60" Margin="910,0,910,490"/>
+                      Width="100" Height="100" MinWidth="60" MinHeight="60" Margin="910,0,910,490" Canvas.ZIndex="99"/>
     </Grid>
 </Page>

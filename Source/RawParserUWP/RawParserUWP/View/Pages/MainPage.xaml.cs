@@ -68,8 +68,9 @@ namespace RawParserUWP
             currentRawImage = null;
             //empty the image display
             imageBox.Source = null;
+            imageBox.UpdateLayout();
             //empty the exif data
-
+            exifDisplay.ItemsSource = null;
             //empty the histogram
 
         }

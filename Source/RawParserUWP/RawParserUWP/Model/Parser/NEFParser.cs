@@ -39,8 +39,8 @@ namespace RawParser.Model.Parser
 
             Tag subifdoffsetTag;
             Tag exifoffsetTag;
-            ifd.tags.TryGetValue(0x14A, out subifdoffsetTag);
-            ifd.tags.TryGetValue(0x8769, out exifoffsetTag);
+            if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
+            if(!ifd.tags.TryGetValue(0x8769, out exifoffsetTag)) throw new FormatException("File not correct");
 
             subifd0 = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true);
             subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true);
@@ -50,7 +50,7 @@ namespace RawParser.Model.Parser
             //optimize (stop ifd from loaoding the makernote
 
             Tag makerNoteOffsetTag;
-            exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag);
+            if(!exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag)) throw new FormatException("File not correct");
 
             makerNote = new NikonMakerNote(fileStream, makerNoteOffsetTag.dataOffset, true);
 
