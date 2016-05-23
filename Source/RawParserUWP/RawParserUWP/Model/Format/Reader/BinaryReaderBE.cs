@@ -43,5 +43,12 @@ namespace RawParser.Model.Parser
             Array.Reverse(temp);
             return BitConverter.ToInt32(temp, 0);
         }
+
+        public override double ReadDouble()
+        {
+            byte[] temp = BitConverter.GetBytes(base.ReadDouble());
+            Array.Reverse(temp);
+            return BitConverter.ToInt32(temp, 0);
+        }
     }
 }
