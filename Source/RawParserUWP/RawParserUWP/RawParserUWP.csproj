@@ -102,6 +102,8 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Model\Format\Image\Nikon\NikonTagDictionnary.cs" />
+    <Compile Include="Model\Format\Image\Base\StandardExifNameDictionnary.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

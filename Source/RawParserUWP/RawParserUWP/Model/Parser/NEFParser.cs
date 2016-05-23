@@ -81,8 +81,33 @@ namespace RawParser.Model.Parser
 
         public Dictionary<ushort, Tag> parseToStandardExifTag()
         {
-            Dictionary<ushort, Tag> temp = makerNote.ifd.tags;
-            
+            Dictionary<ushort, Tag> temp = new Dictionary<ushort, Tag>();
+            Dictionary<ushort, ushort> nikonToStandard = new NikonTagDictionnary();
+            Dictionary<ushort, string> standardExifName = new StandardExifNameDictionnary();
+            foreach(ushort nikonTagId in nikonToStandard.Values)
+            {
+                Tag tempTag = null;
+                if(ifd.tags.TryGetValue(nikonTagId, out tempTag))
+                {
+
+                }
+                else if (makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag)) //search in MakerNote
+                {
+
+                }
+                else if (subifd0.tags.TryGetValue(nikonTagId, out tempTag))
+                {
+
+                }
+                else if (subifd1.tags.TryGetValue(nikonTagId, out tempTag))
+                {
+
+                }else
+                {
+                    continue;
+                }
+                //tag is found
+            }
             return temp;
         }
     }
