@@ -109,21 +109,27 @@ namespace RawParserUWP
             Task t = Task.Run(async () =>
             {
                 currentRawImage = parser.parse(stream);
-                SoftwareBitmap image = currentRawImage.getImageAsBitmap();
+                SoftwareBitmap image = currentRawImage.getImageAsBitmap(false);
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     //Do some UI-code that must be run on the UI thread.
-                    //display the image
+                    //display the image preview
                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                     image.CopyToBuffer(bitmap.PixelBuffer);
                     imageBox.Source = bitmap;
-                    imageDisplayScroll.ZoomToFactor((float)0.1);
-                    pageWidth = ActualWidth;
-                    pageHeight = ActualHeight;
                     //set exif datasource
                     exifDisplay.ItemsSource = currentRawImage.exif.Values;
 
-                    //TODO Hide the loading screen
+                    //display the raw
+                    //TODO set Async
+                    //fill rectangle
+                    /*
+                    SoftwareBitmap Rawimage = currentRawImage.getImageAsBitmap(true);
+                    WriteableBitmap rawBitmap = new WriteableBitmap((int)currentRawImage.width, (int)currentRawImage.height);
+                    Rawimage.CopyToBuffer(rawBitmap.PixelBuffer);
+                    imageBox.Source = rawBitmap;
+                    imageDisplayScroll.ZoomToFactor((float)0.1);*/
+                    //Hide the loading screen
                     progressDisplay.Visibility = Visibility.Collapsed;
                     progressDisplay.IsActive = false;
                 });
@@ -177,6 +183,13 @@ namespace RawParserUWP
         {
             splitView.IsPaneOpen = !splitView.IsPaneOpen;
 
+        }
+
+        private void imageBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
+        {
+            imageDisplayScroll.ZoomToFactor((float)0.1);
+            imageDisplayScroll.ScrollToVerticalOffset(imageDisplayScroll.ScrollableHeight / 2);
+            imageDisplayScroll.ScrollToHorizontalOffset(imageDisplayScroll.ScrollableWidth / 2);
         }
     }
 }

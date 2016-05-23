@@ -80,9 +80,9 @@
                             
                             HorizontalScrollBarVisibility="Auto"
                             VerticalScrollBarVisibility="Auto">
-                    <Image x:Name="imageBox" 
+                    <Image x:Name="imageBox" DataContextChanged="imageBox_DataContextChanged"
                            MaxWidth="{Binding PageWidth}"
-                           MaxHeight="{Binding PageHeight}" />
+                           MaxHeight="{Binding PageHeight}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </ScrollViewer>
             </SplitView.Content>
             <SplitView.Pane >
