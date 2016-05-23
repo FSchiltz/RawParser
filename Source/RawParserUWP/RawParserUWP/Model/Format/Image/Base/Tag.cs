@@ -21,7 +21,7 @@
                         foreach (object t in data)
                         {
                             temp += (byte)t;
-                            temp += ":";
+                            temp += " ";
                         }
                         temp += "\0";
                         break;
@@ -32,7 +32,7 @@
                         foreach (object t in data)
                         {
                             temp += (ushort)t;
-                            temp += ":";
+                            temp += " ";
                         }
                         temp += "\0";
                         break;
@@ -40,7 +40,7 @@
                         foreach (object t in data)
                         {
                             temp += (uint)t;
-                            temp += ":";
+                            temp += " ";
                         }
                         temp += "\0";
                         break;
@@ -48,7 +48,7 @@
                         foreach (object t in data)
                         {
                             temp += (short)t;
-                            temp += ":";
+                            temp += " ";
                         }
                         temp += "\0";
                         break;
@@ -56,7 +56,7 @@
                         foreach (object t in data)
                         {
                             temp += (int)t;
-                            temp += ":";
+                            temp += " ";
                         }
                         temp += "\0";
                         break;
@@ -64,7 +64,7 @@
                         foreach (object t in data)
                         {
                             temp += (int)t;
-                            temp += ":";
+                            temp += " ";
                         }
                         temp += "\0";
                         break;
@@ -75,7 +75,7 @@
                         foreach (object t in data)
                         {
                             temp += (double)t;
-                            temp += ":";
+                            temp += " ";
                         }
                         temp += "\0";
                         break;
@@ -84,6 +84,14 @@
             }
         }
 
+        public Tag()
+        {
+            data = new object[1];
+            dataCount = 1;
+            dataType = 1;
+            displayName = "";
+            
+        }
         public int getTypeSize(ushort id)
         {
             int size = 0;

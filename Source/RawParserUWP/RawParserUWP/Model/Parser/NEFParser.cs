@@ -83,28 +83,27 @@ namespace RawParser.Model.Parser
         {
             Dictionary<ushort, Tag> temp = new Dictionary<ushort, Tag>();
             Dictionary<ushort, ushort> nikonToStandard = new DictionnaryFromFileUShort(@"Assets\Dic\NikonToStandard.dic");
-            Dictionary<ushort, string> standardExifName = new DictionnaryFromFileString(@"Assets\\Dic\standartExif.dic");
+            Dictionary<ushort, string> standardExifName = new DictionnaryFromFileString(@"Assets\\Dic\StandardExif.dic");
             foreach (ushort exifTag in standardExifName.Keys)
             {
-                Tag tempTag = null;
+                Tag tempTag;
                 ushort nikonTagId;
                 if (nikonToStandard.TryGetValue(exifTag, out nikonTagId))
                 {
-                    if (!ifd.tags.TryGetValue(nikonTagId, out tempTag)
-                        || !makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag)
-                        || !subifd0.tags.TryGetValue(nikonTagId, out tempTag)
-                        || !subifd1.tags.TryGetValue(nikonTagId, out tempTag))
+                    ifd.tags.TryGetValue(nikonTagId, out tempTag);
+                    makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag);
+                    subifd0.tags.TryGetValue(nikonTagId, out tempTag);
+                    subifd1.tags.TryGetValue(nikonTagId, out tempTag);
+                    if (tempTag == null)
                     {
                         tempTag = new Tag();
                         tempTag.dataType = 2;
                         tempTag.data[0] = "";
                     }
-                    else
-                    {
-                        string t = "";
-                        standardExifName.TryGetValue(exifTag, out t );
-                        tempTag.displayName = t;
-                    }
+                    string t = "";
+                    standardExifName.TryGetValue(exifTag, out t);
+                    tempTag.displayName = t;
+
                     temp.Add(nikonTagId, tempTag);
                 }
             }

@@ -11,7 +11,7 @@ namespace RawParser.Model.Parser
 
         override public void AddTocontent(ushort key, string contentAsString)
         {
-            Add(key, Convert.ToUInt16(contentAsString));
+            Add(key, Convert.ToUInt16(contentAsString,16));
         }
     }
 }
