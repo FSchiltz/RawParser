@@ -111,13 +111,14 @@
     <Compile Include="Model\Format\Base\DictionnaryFromFileString.cs" />
     <Compile Include="Model\Format\Base\DictionnaryFromFileUShort.cs" />
     <Compile Include="Model\Format\Base\DictionnaryFromFile.cs" />
+    <Compile Include="Model\Format\Image\Nikon\LinearisationTable.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\Exception\ExceptionDisplay.cs" />
     <Compile Include="Model\Format\Base\Dimension.cs" />
     <Compile Include="Model\Format\Base\Pixel.cs" />
-    <Compile Include="Model\Format\ImageDisplay\RawImage.cs" />
+    <Compile Include="Model\Format\Image\Base\RawImage.cs" />
     <Compile Include="Model\Format\Image\Base\Header.cs" />
     <Compile Include="Model\Format\Image\Base\Image.cs" />
     <Compile Include="Model\Format\Image\Base\Tag.cs" />
