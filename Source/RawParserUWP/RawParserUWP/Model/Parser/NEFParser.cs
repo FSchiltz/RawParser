@@ -103,45 +103,50 @@ namespace RawParser.Model.Parser
             //decompress the linearisationtable
             Tag lineTag = new Tag();
             makerNote.ifd.tags.TryGetValue(0x0096, out lineTag);
-            LinearisationTable line = new LinearisationTable(lineTag.data, compressionType);
+            LinearisationTable line = new LinearisationTable(lineTag.data, compressionType, colordepth);
 
-            //huffman tree for the different copression type
-            byte[][] nikon_tree =
-                {
-                    new byte[]{ 0,1,5,1,1,1,1,1,1,2,0,0,0,0,0,0,	/* 12-bit lossy */
-                      5,4,3,6,2,7,1,0,8,9,11,10,12 },
-                    new byte[]{ 0,1,5,1,1,1,1,1,1,2,0,0,0,0,0,0,	/* 12-bit lossy after split */
-                      0x39,0x5a,0x38,0x27,0x16,5,4,3,2,1,0,11,12,12 },
-                    new byte[] { 0,1,4,2,3,1,2,0,0,0,0,0,0,0,0,0,  /* 12-bit lossless */
-                      5,4,6,3,7,2,8,1,9,0,10,11,12 },
-                    new byte[]{ 0,1,4,3,1,1,1,1,1,2,0,0,0,0,0,0,	/* 14-bit lossy */
-                      5,6,4,7,8,3,9,2,1,0,10,11,12,13,14 },
-                    new byte[]{ 0,1,5,1,1,1,1,1,1,1,2,0,0,0,0,0,	/* 14-bit lossy after split */
-                      8,0x5c,0x4b,0x3a,0x29,7,6,5,4,3,2,1,0,13,14 },
-                    new byte [] { 0,1,4,2,2,3,1,2,0,0,0,0,0,0,0,0,	/* 14-bit lossless */
-                      7,6,8,5,9,4,10,3,11,12,2,0,1,13,14 }
-            };
+            ushort[] huff;
 
-            switch (compressionType)
+            int tree = 0, row, col, len, shl, diff;
+
+            if (line.version0 == 0x46) tree = 2;
+            if (colordepth == 14) tree += 3;
+
+
+            while (line.curve[line.max - 2] == line.curve[line.max - 1]) line.max--;
+            huff = line.makeDecoder(tree);
+            //fseek(ifp, data_offset, SEEK_SET);
+            //getbits(-1);
+
+            int i = 0;
+            for (line.min = row = 0; row < height; row++)
             {
-                case 1:
-                    //lossy
+                if (line.splitValue > 1 && row == line.splitValue)
+                {
+                    huff = line.makeDecoder(tree + 1);
+                    line.max += (line.min = 16) << 1;
+                }
+                for (col = 0; col < width; col++)
+                {
+                    i = (int)line.gethuff(huff);
+                    len = i & 15;
+                    shl = i >> 4;
+                    diff = (int)((line.getbithuff(len - shl, null) << 1) + 1) << shl >> 1;
+                    if ((diff & (1 << (len - 1))) == 0)
+                        diff -= (1 << len) - ((shl != 0) ? 1 : 1);
+                    if (col < 2)
                     {
+                        line.hpred[col] = (ushort)((line.vpreds[row & 1][col]) + (short)diff);
                     }
-                    break;
-                case 3:
-                    //Lossless
+                    else
                     {
+                        line.hpred[col & 1] += (ushort)diff;
+                    }
+                    if ((ushort)(line.hpred[col & 1] + line.min) >= line.max) throw new Exception("Error during deflate");
 
-                    }
-                    break;
-                case 4:
-                    //Compression(Compression = 34713) is a Huffman tree and a quantization table. The quantization tables are at 0x8c and 0x96 tag from the MakerNote.
-                    //lossy type2
-                    {
-                    }
-                    break;
-                default: throw new FormatException("Comrpession Type not correct");
+                    //TODO
+                    //RAW(row, col) = line.curve[LIM((short)line.hpred[col & 1], 0, 0x3fff)];
+                }
             }
             return rawData;
         }
