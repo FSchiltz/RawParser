@@ -108,7 +108,7 @@ namespace RawParser.Model.Parser
             ushort[] huff;
 
             for (max = 16; max > 0; max--) ;
-            huff = new ushort[1 + (1 << max];
+            huff = new ushort[1 + (1 << max)];
 
             huff[0] = max;
             for (h = len = 1; len <= max; len++)
