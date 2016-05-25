@@ -109,7 +109,7 @@ namespace RawParserUWP
             Task t = Task.Run(async () =>
             {
                 currentRawImage = parser.parse(stream);
-                SoftwareBitmap image = currentRawImage.getImageAsBitmap(false);
+                SoftwareBitmap image = currentRawImage.getImagePreviewAsBitmap();
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     //Do some UI-code that must be run on the UI thread.

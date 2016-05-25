@@ -29,7 +29,7 @@ namespace RawParser.Model.ImageDisplay
             colorDepth =c;
         }
 
-        public SoftwareBitmap getImagePreviewAsBitmap(bool raw)
+        public SoftwareBitmap getImagePreviewAsBitmap()
         {
             MemoryStream ms = new MemoryStream();
             ms.Write(imagePreviewData, 0, imagePreviewData.Length);
