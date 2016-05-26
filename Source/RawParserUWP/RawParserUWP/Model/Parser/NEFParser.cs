@@ -99,7 +99,7 @@ namespace RawParser.Model.Parser
          */
         private BitArray uncompressed(BitArray rawData, int height, int width, ushort compressionType, ushort colordepth)
         {
-            byte[] uncompressedData = new byte[height * width]; //add pixel*
+            BitArray uncompressedData = new BitArray(height * width*colordepth); //add pixel*
             //decompress the linearisationtable
             Tag lineTag = new Tag();
             makerNote.ifd.tags.TryGetValue(0x0096, out lineTag);
@@ -145,10 +145,21 @@ namespace RawParser.Model.Parser
                     if ((ushort)(line.hpred[col & 1] + line.min) >= line.max) throw new Exception("Error during deflate");
 
                     //TODO
-                    //RAW(row, col) = line.curve[LIM((short)line.hpred[col & 1], 0, 0x3fff)];
+                    var t= new BitArray(line.curve[Lim((short)line.hpred[col & 1], 0, 0x3fff)]);
+
+                    for(int k =0; k<colordepth; k++)
+                    {
+                        uncompressedData[row + col + i] = t[i];
+                    }
                 }
             }
-            return rawData;
+            return uncompressedData;
+        }
+
+        private int Lim(short x, int min, int max)
+        {            
+            var t = ((x) < (max) ? (x) : (max));
+            return ((min) > (t) ? (min) : (t));
         }
 
         public Dictionary<ushort, Tag> parseToStandardExifTag()
