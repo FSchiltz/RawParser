@@ -123,8 +123,7 @@ namespace RawParserUWP
 
                 //Display the full size preview
                 SoftwareBitmap image = currentRawImage.getImagePreviewAsBitmap();
-                //set exif datasource
-                exifDisplay.ItemsSource = currentRawImage.exif.Values;
+                
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     //Do some UI-code that must be run on the UI thread.
@@ -139,7 +138,8 @@ namespace RawParserUWP
                 SoftwareBitmap rawImage = currentRawImage.getImageAsBitmap();                
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-
+                    //set exif datasource
+                    exifDisplay.ItemsSource = currentRawImage.exif.Values;
                     WriteableBitmap rawBitmap = new WriteableBitmap((int)currentRawImage.width, (int)currentRawImage.height);
                     imageBox.Source = rawBitmap;
                     imageDisplayScroll.ZoomToFactor((float)0.1);
