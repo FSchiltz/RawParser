@@ -66,11 +66,17 @@ namespace RawParser.Model.Parser
             max = 1 << colordepth & 0x7fff;
             step = max / (curveSize - 1);
 
+            max = curveSize;
+            if (curveSize == 257 && compressionType == 4)
+            {
+                curveSize = (short)(1 + curveSize * 2);
+            }
+            curve = new short[curveSize];
             //if certain version
             if (version0 == 0x44 && version1 == 0x20 && step > 0)
             {
                 for (int i = 0; i < curveSize * 2; i += 2)
-                    curve[i / 2 * step] = BitConverter.ToInt16(new byte[2] { (byte)table[11 + i], (byte)table[12 + i] }, 0);
+                    curve[i / 2 * step] = BitConverter.ToInt16(new byte[2] { (byte)table[12 + i], (byte)table[13 + i] }, 0);
                 for (int i = 0; i < max; i++)
                     curve[i] = (short)((curve[i - i % step] * (step - i % step) +
                          curve[i - i % step + step] * (i % step)) / step);
@@ -81,19 +87,8 @@ namespace RawParser.Model.Parser
             {
                 for (int i = 0; i < curveSize * 2; i += 2)
                 {
-                    curve[i] = BitConverter.ToInt16(new byte[2] { (byte)table[11 + i], (byte)table[12 + i] }, 0);
+                    curve[i] = BitConverter.ToInt16(new byte[2] { (byte)table[12 + i], (byte)table[13 + i] }, 0);
                 }
-            }
-            max = curveSize;
-
-            if (curveSize == 257 && compressionType == 4)
-            {
-                curveSize = (short)(1 + curveSize * 2);
-            }
-            curve = new short[curveSize];
-            for (int i = 0; i < curveSize; i++)
-            {
-                curve[i] = (byte)table[i + 12];
             }
 
             if (compressionType == 4)

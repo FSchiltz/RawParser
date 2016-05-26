@@ -68,7 +68,7 @@ namespace RawParser.Model.Parser
             if (!subifd1.tags.TryGetValue(0x0101, out imageRAWHeight)) throw new FormatException("File not correct");
             if (!subifd1.tags.TryGetValue(0x0102, out imageRAWDepth)) throw new FormatException("File not correct");
             if (!subifd1.tags.TryGetValue(0x0117, out imageRAWSize)) throw new FormatException("File not correct");
-            if (!subifd1.tags.TryGetValue(0x0117, out imageRAWCompressed)) throw new FormatException("File not correct");
+            if (!subifd1.tags.TryGetValue(0x0103, out imageRAWCompressed)) throw new FormatException("File not correct");
 
             //get the preview data ( faster than rezising )
             fileStream.BaseStream.Position = (uint)imagepreviewOffsetTags.data[0];
@@ -79,12 +79,12 @@ namespace RawParser.Model.Parser
             rawData = new BitArray(fileStream.ReadBytes(Convert.ToInt32(imageRAWSize.data[0])));
 
             //Check if uncompressed
-            if ((uint)imageRAWCompressed.data[0] == 34713)
+            if ((ushort)imageRAWCompressed.data[0] == 34713)
             {
                 Tag compressionType;
                 if (!makerNote.ifd.tags.TryGetValue(0x0093, out compressionType)) throw new FormatException("File not correct");
                 //uncompress the image
-                rawData = uncompressed(new BitArray(rawData), (int)imageRAWHeight.data[0], (int)imageRAWWidth.data[0], (ushort)compressionType.data[0], (ushort)imageRAWDepth.data[0]);
+                rawData = uncompressed(new BitArray(rawData), (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)compressionType.data[0], (ushort)imageRAWDepth.data[0]);
             }
             //parse to RawImage
             Dictionary<ushort, Tag> exifTag = parseToStandardExifTag();
@@ -97,9 +97,9 @@ namespace RawParser.Model.Parser
          * Only lossless for the moment
          * 
          */
-        private BitArray uncompressed(BitArray rawData, int height, int width, ushort compressionType, ushort colordepth)
+        private BitArray uncompressed(BitArray rawData, uint height, uint width, ushort compressionType, ushort colordepth)
         {
-            BitArray uncompressedData = new BitArray(height * width*colordepth); //add pixel*
+            BitArray uncompressedData = new BitArray((int)(height * width * colordepth)); //add pixel*
             //decompress the linearisationtable
             Tag lineTag = new Tag();
             makerNote.ifd.tags.TryGetValue(0x0096, out lineTag);
@@ -144,10 +144,10 @@ namespace RawParser.Model.Parser
                     }
                     if ((ushort)(line.hpred[col & 1] + line.min) >= line.max) throw new Exception("Error during deflate");
 
-                    
-                    var t= new BitArray(line.curve[Lim((short)line.hpred[col & 1], 0, 0x3fff)]);
 
-                    for(int k =0; k<colordepth; k++)
+                    var t = new BitArray(line.curve[Lim((short)line.hpred[col & 1], 0, 0x3fff)]);
+
+                    for (int k = 0; k < colordepth; k++)
                     {
                         uncompressedData[row + col + i] = t[i];
                     }
@@ -157,7 +157,7 @@ namespace RawParser.Model.Parser
         }
 
         private int Lim(short x, int min, int max)
-        {            
+        {
             var t = ((x) < (max) ? (x) : (max));
             return ((min) > (t) ? (min) : (t));
         }
