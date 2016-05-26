@@ -116,8 +116,8 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\Exception\ExceptionDisplay.cs" />
-    <Compile Include="Model\Format\Base\Dimension.cs" />
-    <Compile Include="Model\Format\Base\Pixel.cs" />
+    <Compile Include="Model\Format\Image\Base\Dimension.cs" />
+    <Compile Include="Model\Format\Image\Base\Pixel.cs" />
     <Compile Include="Model\Format\Image\Base\RawImage.cs" />
     <Compile Include="Model\Format\Image\Base\Header.cs" />
     <Compile Include="Model\Format\Image\Base\Image.cs" />
