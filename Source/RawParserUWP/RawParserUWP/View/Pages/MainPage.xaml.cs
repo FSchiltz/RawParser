@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
@@ -109,7 +110,21 @@ namespace RawParserUWP
             Task t = Task.Run(async () =>
             {
                 currentRawImage = parser.parse(stream);
+
+                //Display the ThumbNail
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    //Do some UI-code that must be run on the UI thread.
+                    //display the image thumbnail
+                    //TODO
+                    
+                });
+
+
+                //Display the full size preview
                 SoftwareBitmap image = currentRawImage.getImagePreviewAsBitmap();
+                //set exif datasource
+                exifDisplay.ItemsSource = currentRawImage.exif.Values;
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     //Do some UI-code that must be run on the UI thread.
@@ -117,22 +132,22 @@ namespace RawParserUWP
                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                     image.CopyToBuffer(bitmap.PixelBuffer);
                     imageBox.Source = bitmap;
-                    //set exif datasource
-                    exifDisplay.ItemsSource = currentRawImage.exif.Values;
+                });
 
-                    //display the raw
-                    //TODO set Async
-                    //fill rectangle
-                    /*
-                    SoftwareBitmap Rawimage = currentRawImage.getImageAsBitmap(true);
+
+                //Display the full raw
+                SoftwareBitmap rawImage = currentRawImage.getImageAsBitmap();                
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+
                     WriteableBitmap rawBitmap = new WriteableBitmap((int)currentRawImage.width, (int)currentRawImage.height);
-                    Rawimage.CopyToBuffer(rawBitmap.PixelBuffer);
                     imageBox.Source = rawBitmap;
-                    imageDisplayScroll.ZoomToFactor((float)0.1);*/
+                    imageDisplayScroll.ZoomToFactor((float)0.1);
                     //Hide the loading screen
                     progressDisplay.Visibility = Visibility.Collapsed;
                     progressDisplay.IsActive = false;
                 });
+                
             });
         }
 
