@@ -51,9 +51,20 @@
             <VisualStateGroup>
                 <VisualState x:Name="wideState">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1200" />
+                        <AdaptiveTrigger MinWindowWidth="720" />
                     </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <!-- To make the panel hidable when not enough screen size -->
+                        <Setter Target="splitView.DisplayMode" Value="Inline" />
+                        <Setter Target="appbarShowSplit.Visibility" Value="Collapsed" />
+                        <Setter Target="appbarSaveImg.Visibility" Value="Visible" />
+                        <Setter Target="appbarShare.Visibility" Value="Visible" />
+                        <Setter Target="appbarSaveImgSecond.Visibility" Value="Visible" />
+                        <Setter Target="appbarShareSecond.Visibility" Value="Visible" />
+                        <Setter Target="splitView.IsPaneOpen" Value="true" />
+                    </VisualState.Setters>
                 </VisualState>
+                
                 <VisualState x:Name="narrowState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="0" />
