@@ -101,7 +101,7 @@ namespace RawParserUWP
                 default: throw new Exception("File not supported");//todo change exception types
             }
 
-            //TODO Add a loading screen
+            //Add a loading screen
             progressDisplay.IsActive = true;
             progressDisplay.Visibility = Visibility.Visible;
             emptyImage();

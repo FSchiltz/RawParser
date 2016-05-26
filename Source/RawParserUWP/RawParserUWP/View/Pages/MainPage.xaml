@@ -137,9 +137,10 @@
 
         <ProgressRing x:Name="progressDisplay" 
                       HorizontalAlignment="Center"  
-                      VerticalAlignment="Bottom" 
+                      VerticalAlignment="Center" 
                       Background="{x:Null}" 
-                      Foreground="#FF003C6C" 
-                      Width="100" Height="100" MinWidth="60" MinHeight="60" Margin="910,0,910,490" Canvas.ZIndex="99"/>
+                      Foreground="#FF001A2E" 
+                      Width="60" Height="60" MinWidth="40" MinHeight="40"  
+                      Canvas.ZIndex="99" IsActive="false"/>
     </Grid>
 </Page>
