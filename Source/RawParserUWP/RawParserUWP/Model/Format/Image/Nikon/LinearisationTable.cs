@@ -66,6 +66,7 @@ namespace RawParser.Model.Parser
             max = 1 << colordepth & 0x7fff;
             step = max / (curveSize - 1);
 
+            //if certain version
             if (version0 == 0x44 && version1 == 0x20 && step > 0)
             {
                 for (int i = 0; i < curveSize * 2; i += 2)
@@ -75,6 +76,7 @@ namespace RawParser.Model.Parser
                          curve[i - i % step + step] * (i % step)) / step);
 
             }
+            //else if otherversion
             else if (version0 != 0x46 && curveSize <= 0x4001)
             {
                 for (int i = 0; i < curveSize * 2; i += 2)
