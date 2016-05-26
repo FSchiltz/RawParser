@@ -28,27 +28,29 @@ namespace RawParser.Model.ImageDisplay
             imagePreviewData = p;
             height = h;
             width = w;
-            colorDepth =c;
+            colorDepth = c;
         }
 
         public SoftwareBitmap getImagePreviewAsBitmap()
         {
             MemoryStream ms = new MemoryStream();
             ms.Write(imagePreviewData, 0, imagePreviewData.Length);
-            
+
             ms.Position = 0; //reset the stream after populate
             return getBitmapFromStream(ms.AsRandomAccessStream());
         }
 
         public SoftwareBitmap getImageAsBitmap()
         {
-            SoftwareBitmap image = new SoftwareBitmap(new BitmapPixelFormat(), (int)width, (int)height);
+            SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Gray16, (int)width, (int)height);
+            Windows.Storage.Streams.Buffer buffer = new Windows.Storage.Streams.Buffer(width * height * 2);
 
             throw new NotImplementedException();
-            for(int i = 0; i < width*height; i++)
+            for (int i = 0; i < width * height; i++)
             {
-                
+                            
             }
+            image.CopyFromBuffer(buffer);
             return image;
         }
 
