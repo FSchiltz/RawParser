@@ -144,7 +144,7 @@ namespace RawParser.Model.Parser
                     }
                     if ((ushort)(line.hpred[col & 1] + line.min) >= line.max) throw new Exception("Error during deflate");
 
-                    //TODO
+                    
                     var t= new BitArray(line.curve[Lim((short)line.hpred[col & 1], 0, 0x3fff)]);
 
                     for(int k =0; k<colordepth; k++)
