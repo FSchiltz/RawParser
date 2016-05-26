@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace RawParser.Model.ImageDisplay
 {
@@ -43,34 +44,32 @@ namespace RawParser.Model.ImageDisplay
         public SoftwareBitmap getImageAsBitmap()
         {
             SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Gray16, (int)width, (int)height);
-            Windows.Storage.Streams.Buffer buffer = new Windows.Storage.Streams.Buffer(width * height * 2);
-
             byte[] tempByteArray = new byte[width * height * 2];
-            throw new NotImplementedException();
+
             for (int i = 0; i < width * height * 2; i++)
             {
                 //get the pixel
-                byte firstBits;
-                byte lastBits;
+                byte firstBits = 0;
+                byte lastBits = 0;
 
                 int k = 0;
                 for (; k < 8; k++)
                 {
-
+                    if (imageData[(i * colorDepth) + k])
+                        firstBits |= (byte)(1 << k);
                 }
 
                 for (; k < colorDepth; k++)
                 {
-
+                    if (imageData[(i * colorDepth) + k])
+                        lastBits |= (byte)(1 << (k - 8));
                 }
 
                 tempByteArray[i] = firstBits;
                 tempByteArray[++i] = lastBits;
-
             }
 
-
-            image.CopyFromBuffer(buffer);
+            image.CopyFromBuffer(tempByteArray.AsBuffer());
             return image;
         }
 

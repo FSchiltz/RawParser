@@ -102,7 +102,6 @@ namespace RawParserUWP
             }
 
             //Add a loading screen
-            progressDisplay.IsActive = true;
             progressDisplay.Visibility = Visibility.Visible;
             emptyImage();
             Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
@@ -113,7 +112,7 @@ namespace RawParserUWP
                 //Display thumbnail
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    
+
                 });
 
 
@@ -139,10 +138,9 @@ namespace RawParserUWP
                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                     image.CopyToBuffer(bitmap.PixelBuffer);
                     imageBox.Source = bitmap;
-                    
+
                     //Hide the loading screen
                     progressDisplay.Visibility = Visibility.Collapsed;
-                    progressDisplay.IsActive = false;
                 });
             });
         }
