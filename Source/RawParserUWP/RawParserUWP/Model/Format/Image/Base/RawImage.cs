@@ -45,11 +45,31 @@ namespace RawParser.Model.ImageDisplay
             SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Gray16, (int)width, (int)height);
             Windows.Storage.Streams.Buffer buffer = new Windows.Storage.Streams.Buffer(width * height * 2);
 
+            byte[] tempByteArray = new byte[width * height * 2];
             throw new NotImplementedException();
-            for (int i = 0; i < width * height; i++)
+            for (int i = 0; i < width * height * 2; i++)
             {
-                            
+                //get the pixel
+                byte firstBits;
+                byte lastBits;
+
+                int k = 0;
+                for (; k < 8; k++)
+                {
+
+                }
+
+                for (; k < colorDepth; k++)
+                {
+
+                }
+
+                tempByteArray[i] = firstBits;
+                tempByteArray[++i] = lastBits;
+
             }
+
+
             image.CopyFromBuffer(buffer);
             return image;
         }
