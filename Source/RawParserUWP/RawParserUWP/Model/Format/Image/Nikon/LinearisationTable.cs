@@ -131,7 +131,9 @@ namespace RawParser.Model.Parser
 
         internal uint gethuff(ushort[] huff)
         {
-            throw new NotImplementedException();
+            ushort[] temp = new ushort[huff.Length- 1];
+            huff.CopyTo(temp, 1);
+            return getbithuff(huff[0],temp);
         }
 
         public uint getbithuff(int nbits, ushort[] huff)
