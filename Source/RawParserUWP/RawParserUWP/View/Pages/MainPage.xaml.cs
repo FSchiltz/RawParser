@@ -109,7 +109,16 @@ namespace RawParserUWP
             Task t = Task.Run(async () =>
             {
                 currentRawImage = parser.parse(stream);
-                SoftwareBitmap image = currentRawImage.getImageAsBitmap(false);
+
+                //Display thumbnail
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    
+                });
+
+
+                //DIsplay preview Image
+                SoftwareBitmap image = currentRawImage.getImagePreviewAsBitmap();
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     //Do some UI-code that must be run on the UI thread.
@@ -119,16 +128,18 @@ namespace RawParserUWP
                     imageBox.Source = bitmap;
                     //set exif datasource
                     exifDisplay.ItemsSource = currentRawImage.exif.Values;
+                });
 
-                    //display the raw
-                    //TODO set Async
-                    //fill rectangle
-                    /*
-                    SoftwareBitmap Rawimage = currentRawImage.getImageAsBitmap(true);
-                    WriteableBitmap rawBitmap = new WriteableBitmap((int)currentRawImage.width, (int)currentRawImage.height);
-                    Rawimage.CopyToBuffer(rawBitmap.PixelBuffer);
-                    imageBox.Source = rawBitmap;
-                    imageDisplayScroll.ZoomToFactor((float)0.1);*/
+                //Display the raw image
+                SoftwareBitmap rawImage = currentRawImage.getImageAsBitmap();
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    //Do some UI-code that must be run on the UI thread.
+                    //display the image preview
+                    WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                    image.CopyToBuffer(bitmap.PixelBuffer);
+                    imageBox.Source = bitmap;
+                    
                     //Hide the loading screen
                     progressDisplay.Visibility = Visibility.Collapsed;
                     progressDisplay.IsActive = false;
