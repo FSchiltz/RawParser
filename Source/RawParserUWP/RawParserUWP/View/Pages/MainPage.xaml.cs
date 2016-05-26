@@ -87,68 +87,84 @@ namespace RawParserUWP
         private async void OpenFile(StorageFile file)
         {
             //Open the file with the correct parser
-            Parser parser;
-            switch (file.FileType.ToUpper())
+            try
             {
-                case ".NEF":
-                    parser = new NEFParser();
-                    break;
-                case ".DNG":
-                    parser = new DNGParser();
-                    break;
-                case ".TIFF":
-                    parser = new DNGParser();
-                    break;
-                default: throw new Exception("File not supported");//todo change exception types
+                Parser parser;
+                switch (file.FileType.ToUpper())
+                {
+                    case ".NEF":
+                        parser = new NEFParser();
+                        break;
+                    case ".DNG":
+                        parser = new DNGParser();
+                        break;
+                    case ".TIFF":
+                        parser = new DNGParser();
+                        break;
+                    default: throw new Exception("File not supported");//todo change exception types
+                }
+
+                //TODO Add a loading screen
+                progressDisplay.IsActive = true;
+                progressDisplay.Visibility = Visibility.Visible;
+                emptyImage();
+                Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
+                Task t = Task.Run(async () =>
+                {
+                    try
+                    {
+                        currentRawImage = parser.parse(stream);
+
+                        //Display the ThumbNail
+                        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                            {
+                                //Do some UI-code that must be run on the UI thread.
+                                //display the image thumbnail
+                                //TODO
+
+                            });
+
+
+                        //Display the full size preview
+                        SoftwareBitmap image = currentRawImage.getImagePreviewAsBitmap();
+
+                        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            //display the image preview
+                            WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                            image.CopyToBuffer(bitmap.PixelBuffer);
+                            imageBox.Source = bitmap;
+                        });
+
+
+                        //Display the full raw
+                        SoftwareBitmap rawImage = currentRawImage.getImageAsBitmap();
+                        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            //set exif datasource
+                            exifDisplay.ItemsSource = currentRawImage.exif.Values;
+                            WriteableBitmap rawBitmap = new WriteableBitmap((int)currentRawImage.width, (int)currentRawImage.height);
+                            imageBox.Source = rawBitmap;
+                            imageDisplayScroll.ZoomToFactor((float)0.1);
+                            //Hide the loading screen
+                            progressDisplay.Visibility = Visibility.Collapsed;
+                            progressDisplay.IsActive = false;
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            ExceptionDisplay.display(ex.Message);
+                        });
+                    }
+                });
             }
-
-            //TODO Add a loading screen
-            progressDisplay.IsActive = true;
-            progressDisplay.Visibility = Visibility.Visible;
-            emptyImage();
-            Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
-            Task t = Task.Run(async () =>
+            catch (Exception ex)
             {
-                currentRawImage = parser.parse(stream);
-
-                //Display the ThumbNail
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    //Do some UI-code that must be run on the UI thread.
-                    //display the image thumbnail
-                    //TODO
-                    
-                });
-
-
-                //Display the full size preview
-                SoftwareBitmap image = currentRawImage.getImagePreviewAsBitmap();
-                
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    //Do some UI-code that must be run on the UI thread.
-                    //display the image preview
-                    WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                    image.CopyToBuffer(bitmap.PixelBuffer);
-                    imageBox.Source = bitmap;
-                });
-
-
-                //Display the full raw
-                SoftwareBitmap rawImage = currentRawImage.getImageAsBitmap();                
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    //set exif datasource
-                    exifDisplay.ItemsSource = currentRawImage.exif.Values;
-                    WriteableBitmap rawBitmap = new WriteableBitmap((int)currentRawImage.width, (int)currentRawImage.height);
-                    imageBox.Source = rawBitmap;
-                    imageDisplayScroll.ZoomToFactor((float)0.1);
-                    //Hide the loading screen
-                    progressDisplay.Visibility = Visibility.Collapsed;
-                    progressDisplay.IsActive = false;
-                });
-                
-            });
+                ExceptionDisplay.display(ex.Message);
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
