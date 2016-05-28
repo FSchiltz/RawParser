@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace RawParser.Model.Parser
 {
@@ -12,7 +13,7 @@ namespace RawParser.Model.Parser
         public short splitValue;
         public int max;
         public int min;
-        public ushort[] hpred;
+        public ushort[] hpred = new ushort[2] ;
         private object[] rawdata;
         //huffman tree for the different compression type
         public byte[][] nikonTree =
@@ -65,8 +66,7 @@ namespace RawParser.Model.Parser
             int step = 0;
             max = 1 << colordepth & 0x7fff;
             step = max / (curveSize - 1);
-
-            max = curveSize;
+                       
             if (curveSize == 257 && compressionType == 4)
             {
                 curveSize = (short)(1 + curveSize * 2);
@@ -91,6 +91,8 @@ namespace RawParser.Model.Parser
                 }
             }
 
+            max = curveSize;
+
             if (compressionType == 4)
             {
                 splitValue = BitConverter.ToInt16(new byte[2] { (byte)table[562], (byte)table[563] }, 0);
@@ -101,20 +103,20 @@ namespace RawParser.Model.Parser
         public ushort[] makeDecoder(int index)
         {
             byte[] source = nikonTree[index];
-            ushort max, len, h, i, j;
+            ushort maxt, len, h, i, j;
             ushort[] huff;
 
-            for (max = 16; max > 0; max--) ;
-            huff = new ushort[1 + (1 << max)];
+            for (maxt = 16; maxt > 0; maxt--) ;
+            huff = new ushort[1 + (1 << maxt)];
 
-            huff[0] = max;
-            for (h = len = 1; len <= max; len++)
+            huff[0] = maxt;
+            for (h = len = 1; len <= maxt; len++)
             {
                 for (i = 0; i < source[len]; i++)
                 {
-                    for (j = 0; j < 1 << (max - len); j++)
+                    for (j = 0; j < 1 << (maxt - len); j++)
                     {
-                        if (h <= 1 << max)
+                        if (h <= 1 << maxt)
                         {
                             huff[h++] = (ushort)(len << 8 | source[i]);
                         }
@@ -126,9 +128,8 @@ namespace RawParser.Model.Parser
 
         internal uint gethuff(ushort[] huff)
         {
-            ushort[] temp = new ushort[huff.Length- 1];
-            huff.CopyTo(temp, 1);
-            return getbithuff(huff[0],temp);
+            huff = huff.Skip(1).ToArray();
+            return getbithuff(huff[0],huff);
         }
 
         public uint getbithuff(int nbits, ushort[] huff)

@@ -36,17 +36,17 @@ namespace RawParser.Model.Parser
             header = new Header(fileStream, 0); // OK
 
             //Read the IFD
-            ifd = new IFD(fileStream, header.TIFFoffset, true); // OK
+            ifd = new IFD(fileStream, header.TIFFoffset, true, false); // OK
 
             Tag subifdoffsetTag;
             Tag exifoffsetTag;
             if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
             if (!ifd.tags.TryGetValue(0x8769, out exifoffsetTag)) throw new FormatException("File not correct");
 
-            subifd0 = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true);
-            subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true);
+            subifd0 = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
+            subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true, false);
             //todo third IFD
-            exif = new IFD(fileStream, (uint)exifoffsetTag.data[0], true); //OK
+            exif = new IFD(fileStream, (uint)exifoffsetTag.data[0], true, false); //OK
 
             //optimize (stop ifd from loaoding the makernote
 
@@ -80,16 +80,14 @@ namespace RawParser.Model.Parser
 
             //Check if uncompressed
             if ((ushort)imageRAWCompressed.data[0] == 34713)
-            {
-                Tag compressionType;
-                if (!makerNote.ifd.tags.TryGetValue(0x0093, out compressionType)) throw new FormatException("File not correct");
-                //uncompress the image
-                rawData = uncompressed(new BitArray(rawData), (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)compressionType.data[0], (ushort)imageRAWDepth.data[0]);
+            {                
+                rawData = uncompressed(new BitArray(rawData), (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)imageRAWDepth.data[0]);
             }
             //parse to RawImage
             Dictionary<ushort, Tag> exifTag = parseToStandardExifTag();
             RawImage rawImage = new RawImage(exifTag, rawData, previewData, (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)imageRAWDepth.data[0]);
 
+            fileStream.Dispose();
             return rawImage;
         }
 
@@ -97,13 +95,16 @@ namespace RawParser.Model.Parser
          * Only lossless for the moment
          * 
          */
-        private BitArray uncompressed(BitArray rawData, uint height, uint width, ushort compressionType, ushort colordepth)
+        private BitArray uncompressed(BitArray rawData, uint height, uint width, ushort colordepth)
         {
             BitArray uncompressedData = new BitArray((int)(height * width * colordepth)); //add pixel*
             //decompress the linearisationtable
             Tag lineTag = new Tag();
             makerNote.ifd.tags.TryGetValue(0x0096, out lineTag);
-            LinearisationTable line = new LinearisationTable(lineTag.data, compressionType, colordepth);
+            Tag compressionType;
+            if (!makerNote.ifd.tags.TryGetValue(0x0093, out compressionType)) throw new FormatException("File not correct");
+            //uncompress the image<
+            LinearisationTable line = new LinearisationTable(lineTag.data, (ushort)compressionType.data[0], colordepth);
 
             ushort[] huff;
 
@@ -113,7 +114,7 @@ namespace RawParser.Model.Parser
             if (colordepth == 14) tree += 3;
 
 
-            while (line.curve[line.max - 2] == line.curve[line.max - 1]) line.max--;
+            while (line.max - 2 >= 0 && line.curve[line.max - 2] == line.curve[line.max - 1]) line.max--;
             huff = line.makeDecoder(tree);
             //fseek(ifp, data_offset, SEEK_SET);
             //getbits(-1);
@@ -124,7 +125,7 @@ namespace RawParser.Model.Parser
                 if (line.splitValue > 1 && row == line.splitValue)
                 {
                     huff = line.makeDecoder(tree + 1);
-                    line.max += (line.min = 16) << 1;
+                    line.max += ((line.min = 16) << 1);
                 }
                 for (col = 0; col < width; col++)
                 {
@@ -177,6 +178,7 @@ namespace RawParser.Model.Parser
                     makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag);
                     subifd0.tags.TryGetValue(nikonTagId, out tempTag);
                     subifd1.tags.TryGetValue(nikonTagId, out tempTag);
+                    exif.tags.TryGetValue(nikonTagId, out tempTag);
                     if (tempTag == null)
                     {
                         tempTag = new Tag();
