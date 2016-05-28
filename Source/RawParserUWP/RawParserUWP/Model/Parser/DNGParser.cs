@@ -19,7 +19,7 @@ namespace RawParser.Model.Parser
                     fileStream = new BinaryReaderBE(file, System.Text.Encoding.BigEndianUnicode);
                     header = new Header(fileStream, 0);
                 }
-                IFD ifd = new IFD(fileStream, header.TIFFoffset, false);  
+                IFD ifd = new IFD(fileStream, header.TIFFoffset, false, false);  
             }
             finally
             {
