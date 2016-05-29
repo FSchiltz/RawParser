@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace RawParser.Model.Parser
@@ -7,13 +8,20 @@ namespace RawParser.Model.Parser
     {
         public byte version0;
         public byte version1;
+        private BinaryReader reader;
+        private uint offset;
+        private long pixels = 0;
+
+        private uint bitbuf = 0;
+        private int vbits = 0, reset = 0;
+
         public short[][] vpreds;
         public short curveSize;
-        public short[] curve;
+        public ushort[] curve;
         public short splitValue;
         public int max;
         public int min;
-        public ushort[] hpred = new ushort[2] ;
+        public ushort[] hpred = new ushort[2];
         private object[] rawdata;
         //huffman tree for the different compression type
         public byte[][] nikonTree =
@@ -36,8 +44,10 @@ namespace RawParser.Model.Parser
          * Source from DCRaw
          * 
          */
-        public LinearisationTable(object[] table, ushort compressionType, int colordepth)
+        public LinearisationTable(object[] table, ushort compressionType, int colordepth, uint offset, BinaryReader reader)
         {
+            this.reader = reader;
+            this.offset = offset;
             rawdata = table;
             //get the version
             version0 = (byte)table[0];
@@ -50,6 +60,7 @@ namespace RawParser.Model.Parser
             vpreds[1] = new short[2];
 
             //(when ver0 == 0x49 || ver1 == 0x58, fseek (ifp, 2110, SEEK_CUR) before)
+
             if (version0 == 0x49 || version1 == 0x58)
             {
                 //fseek(ifp, 2110, SEEK_CUR) before));
@@ -66,33 +77,41 @@ namespace RawParser.Model.Parser
             int step = 0;
             max = 1 << colordepth & 0x7fff;
             step = max / (curveSize - 1);
-                       
+
             if (curveSize == 257 && compressionType == 4)
             {
                 curveSize = (short)(1 + curveSize * 2);
             }
-            curve = new short[curveSize];
+
+            curve = new ushort[curveSize];
+            for (ushort i = 0; i < curveSize; i++)
+            {
+                curve[i] = i;
+            }
+
             //if certain version
             if (version0 == 0x44 && version1 == 0x20 && step > 0)
             {
                 for (int i = 0; i < curveSize * 2; i += 2)
-                    curve[i / 2 * step] = BitConverter.ToInt16(new byte[2] { (byte)table[12 + i], (byte)table[13 + i] }, 0);
+                {
+                    curve[i / 2 * step] = BitConverter.ToUInt16(new byte[2] { (byte)table[12 + i], (byte)table[13 + i] }, 0);
+                }
                 for (int i = 0; i < max; i++)
-                    curve[i] = (short)((curve[i - i % step] * (step - i % step) +
+                {
+                    curve[i] = (ushort)((curve[i - i % step] * (step - i % step) +
                          curve[i - i % step + step] * (i % step)) / step);
-
+                }
             }
+
             //else if otherversion
+
             else if (version0 != 0x46 && curveSize <= 0x4001)
             {
                 for (int i = 0; i < curveSize * 2; i += 2)
                 {
-                    curve[i] = BitConverter.ToInt16(new byte[2] { (byte)table[12 + i], (byte)table[13 + i] }, 0);
+                    curve[i] = BitConverter.ToUInt16(new byte[2] { (byte)table[12 + i], (byte)table[13 + i] }, 0);
                 }
             }
-
-            max = curveSize;
-
             if (compressionType == 4)
             {
                 splitValue = BitConverter.ToInt16(new byte[2] { (byte)table[562], (byte)table[563] }, 0);
@@ -100,25 +119,56 @@ namespace RawParser.Model.Parser
 
         }
 
+        /*
+           Construct a decode tree according the specification in *source.
+           The first 16 bytes specify how many codes should be 1-bit, 2-bit
+           3-bit, etc.  Bytes after that are the leaf values.
+
+           For example, if the source is
+
+            { 0,1,4,2,3,1,2,0,0,0,0,0,0,0,0,0,
+              0x04,0x03,0x05,0x06,0x02,0x07,0x01,0x08,0x09,0x00,0x0a,0x0b,0xff  },
+
+           then the code is
+
+	        00		0x04
+	        010		0x03
+	        011		0x05
+	        100		0x06
+	        101		0x02
+	        1100		0x07
+	        1101		0x01
+	        11100		0x08
+	        11101		0x09
+	        11110		0x00
+	        111110		0x0a
+	        1111110		0x0b
+	        1111111		0xff
+         */
         public ushort[] makeDecoder(int index)
         {
-            byte[] source = nikonTree[index];
-            ushort maxt, len, h, i, j;
-            ushort[] huff;
+            byte[] count = new byte[nikonTree[index].Length + 1];
+            byte[] source = nikonTree[index].Skip(16).ToArray();
+            count[0] = 0;
+            nikonTree[index].CopyTo(count, 1);
 
-            for (maxt = 16; maxt > 0; maxt--) ;
-            huff = new ushort[1 + (1 << maxt)];
+            int len, maxt = 16;
 
-            huff[0] = maxt;
-            for (h = len = 1; len <= maxt; len++)
+            for (; maxt >= 0 && count[maxt] == 0; maxt--) ;
+            ushort[] huff = new ushort[1 + (1 << maxt)];
+
+            huff[0] = (ushort)maxt;
+            int xy = 0;
+            for (int h = len = 1; len <= maxt; len++)
             {
-                for (i = 0; i < source[len]; i++)
+                for (int i = 0; i < count[len]; i++, xy++)
                 {
-                    for (j = 0; j < 1 << (maxt - len); j++)
+                    for (int j = 0; j < 1 << (maxt - len); j++)
                     {
                         if (h <= 1 << maxt)
                         {
-                            huff[h++] = (ushort)(len << 8 | source[i]);
+                            //TODO fix
+                            huff[h++] = (ushort)((len << 8) | source[xy]);
                         }
                     }
                 }
@@ -128,29 +178,41 @@ namespace RawParser.Model.Parser
 
         internal uint gethuff(ushort[] huff)
         {
-            huff = huff.Skip(1).ToArray();
-            return getbithuff(huff[0],huff);
+            return getbithuff(huff[0], huff.Skip(1).ToArray());
         }
 
+        /*
+         * read a byte from the raw data
+         * 
+         */
         public uint getbithuff(int nbits, ushort[] huff)
         {
-            uint bitbuf = 0;
-            int vbits = 0, reset = 0;
             uint c = 0;
             int i = 0;
 
-            if (nbits > 25) return 0;
+            if (nbits > 25) { return 0; }
             if (nbits < 0)
+            {
+                vbits = 0;
+                reset = 0;
+                bitbuf = 0;
                 return 0;
-            if (nbits == 0 || vbits < 0) return 0;
+            }
+            if (nbits == 0 || vbits < 0) { return 0; }
 
-            while (reset != 0 && vbits < nbits && i < rawdata.Length)
+            long currentpos = reader.BaseStream.Position;
+            reader.BaseStream.Position = offset + pixels;
+
+            //!reset && vbits < nbits && (c = fgetc(ifp)) != EOF && !(reset = zero_after_ff && c == 0xff && fgetc(ifp))
+            while (reset == 0 && vbits < nbits && i < rawdata.Length)
             {
                 i++;
-                c = (byte)rawdata[i++ + 10];//todo check
+                c = reader.ReadByte();
+                pixels++;
                 bitbuf = (bitbuf << 8) + (byte)c;
                 vbits += 8;
             }
+            reader.BaseStream.Position = currentpos;
             c = bitbuf << (32 - vbits) >> (32 - nbits);
             if (huff != null)
             {
