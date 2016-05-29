@@ -4,6 +4,7 @@ using RawParser.Model.ImageDisplay;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace RawParser.Model.Parser
@@ -81,7 +82,7 @@ namespace RawParser.Model.Parser
             //Check if uncompressed
             if ((ushort)imageRAWCompressed.data[0] == 34713)
             {                
-                rawData = uncompressed(new BitArray(rawData), (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)imageRAWDepth.data[0]);
+                rawData = uncompressed(new BitArray(rawData), (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)imageRAWDepth.data[0], (uint)imageRAWOffsetTags.data[0], fileStream);
             }
             //parse to RawImage
             Dictionary<ushort, Tag> exifTag = parseToStandardExifTag();
@@ -92,10 +93,17 @@ namespace RawParser.Model.Parser
         }
 
         /*
-         * Only lossless for the moment
+         * Clean implementation
+         * First for 14bit lossless
+         * 
+         * ver0 = 70 (0x48)
+         * ver1 = 48 (0x30)
+         * 
+         * From DCraw
+         * Not working
          * 
          */
-        private BitArray uncompressed(BitArray rawData, uint height, uint width, ushort colordepth)
+        private BitArray uncompressed(BitArray rawData, uint height, uint width, ushort colordepth, uint dataoffset, BinaryReader reader)
         {
             BitArray uncompressedData = new BitArray((int)(height * width * colordepth)); //add pixel*
             //decompress the linearisationtable
@@ -104,7 +112,7 @@ namespace RawParser.Model.Parser
             Tag compressionType;
             if (!makerNote.ifd.tags.TryGetValue(0x0093, out compressionType)) throw new FormatException("File not correct");
             //uncompress the image<
-            LinearisationTable line = new LinearisationTable(lineTag.data, (ushort)compressionType.data[0], colordepth);
+            LinearisationTable line = new LinearisationTable(lineTag.data, (ushort)compressionType.data[0], colordepth, dataoffset, reader);
 
             ushort[] huff;
 
@@ -113,11 +121,11 @@ namespace RawParser.Model.Parser
             if (line.version0 == 0x46) tree = 2;
             if (colordepth == 14) tree += 3;
 
-
-            while (line.max - 2 >= 0 && line.curve[line.max - 2] == line.curve[line.max - 1]) line.max--;
+            int maxcounter = line.curveSize;
+            while (maxcounter - 2 >= 0 && line.curve[maxcounter - 2] == line.curve[maxcounter - 1]) line.max--;
             huff = line.makeDecoder(tree);
-            //fseek(ifp, data_offset, SEEK_SET);
-            //getbits(-1);
+
+            line.getbithuff(-1, null);
 
             int i = 0;
             for (line.min = row = 0; row < height; row++)
@@ -129,15 +137,19 @@ namespace RawParser.Model.Parser
                 }
                 for (col = 0; col < width; col++)
                 {
+                    Debug.WriteLine("Col: " + col + " of: " + width + " | Row: " + row + " of: " + height);
                     i = (int)line.gethuff(huff);
-                    len = i & 15;
+
+                    len = (i & 15);        
                     shl = i >> 4;
+                    
                     diff = (int)((line.getbithuff(len - shl, null) << 1) + 1) << shl >> 1;
                     if ((diff & (1 << (len - 1))) == 0)
                         diff -= (1 << len) - ((shl != 0) ? 1 : 1);
                     if (col < 2)
                     {
-                        line.hpred[col] = (ushort)((line.vpreds[row & 1][col]) + (short)diff);
+                        line.vpreds[row & 1][col] += (short)diff;
+                        line.hpred[col] = (ushort)(line.vpreds[row & 1][col]);
                     }
                     else
                     {
@@ -145,9 +157,19 @@ namespace RawParser.Model.Parser
                     }
                     if ((ushort)(line.hpred[col & 1] + line.min) >= line.max) throw new Exception("Error during deflate");
 
-
-                    var t = new BitArray(line.curve[Lim((short)line.hpred[col & 1], 0, 0x3fff)]);
-
+                                        
+                    //TODO change variable names
+                    ushort xy;
+                    if(Lim((short)line.hpred[col & 1], 0, 0x3fff) > line.curveSize)
+                    {
+                        xy = (ushort)Lim((short)line.hpred[col & 1], 0, 0x3fff);
+                    }
+                    else
+                    {
+                        xy = line.curve[x];
+                    }
+                    BitArray t = new BitArray(xy);                                       
+                    
                     for (int k = 0; k < colordepth; k++)
                     {
                         uncompressedData[row + col + i] = t[i];
@@ -157,7 +179,7 @@ namespace RawParser.Model.Parser
             return uncompressedData;
         }
 
-        private int Lim(short x, int min, int max)
+        private short Lim(short x, short min, short max)
         {
             var t = ((x) < (max) ? (x) : (max));
             return ((min) > (t) ? (min) : (t));
