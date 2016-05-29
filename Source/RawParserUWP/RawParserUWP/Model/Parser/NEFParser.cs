@@ -157,12 +157,13 @@ namespace RawParser.Model.Parser
                     }
                     if ((ushort)(line.hpred[col & 1] + line.min) >= line.max) throw new Exception("Error during deflate");
 
-                                        
+                    var x = Lim((short)line.hpred[col & 1], 0, 0x3fff);
+                    
                     //TODO change variable names
                     ushort xy;
-                    if(Lim((short)line.hpred[col & 1], 0, 0x3fff) > line.curveSize)
+                    if(x > line.curveSize)
                     {
-                        xy = (ushort)Lim((short)line.hpred[col & 1], 0, 0x3fff);
+                        xy = (ushort)x;
                     }
                     else
                     {
