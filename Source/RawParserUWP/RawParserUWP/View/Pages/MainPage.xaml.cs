@@ -108,6 +108,7 @@ namespace RawParserUWP
             Task t = Task.Run(async () =>
             {
                 currentRawImage = parser.parse(stream);
+                parser = null;
 
                 //Display thumbnail
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -134,9 +135,25 @@ namespace RawParserUWP
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     //Do some UI-code that must be run on the UI thread.
+
+
                     //display the image preview
-                    WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                    image.CopyToBuffer(bitmap.PixelBuffer);
+                    WriteableBitmap bitmap = new WriteableBitmap(rawImage.PixelWidth, rawImage.PixelHeight);
+
+                    //rawImage.CopyToBuffer(bitmap.PixelBuffer);
+
+                    // test
+                    byte[] temp = currentRawImage.getImageAsByteArray();
+                    var bitmapContext = bitmap.GetBitmapContext();
+
+                    for (int x = 0; x < currentRawImage.width; x++)
+                    {
+                        for (int y = 0; y < currentRawImage.height; y++)
+                        {
+                            bitmap.SetPixel(x, y, temp[x + (y * currentRawImage.width)], temp[x + (y * currentRawImage.width)], temp[x + (y * currentRawImage.width)]);
+                        }
+                    }
+                    bitmapContext.Dispose();
                     imageBox.Source = bitmap;
 
                     //Hide the loading screen

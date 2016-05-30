@@ -147,10 +147,12 @@
         </SplitView>
 
         <ProgressBar x:Name="progressDisplay"  
-                      VerticalAlignment="Bottom" 
+                      VerticalAlignment="Top" 
                       Background="{x:Null}" 
                       Foreground="#FF00589C" 
-                      IsIndeterminate="True" Margin="-2,0,2,49" RenderTransformOrigin="0.5,0.5" Visibility="Collapsed" >
+                      IsIndeterminate="True" Margin="0"
+                     RenderTransformOrigin="0.5,0.5"
+                     Visibility="Collapsed">
             <ProgressBar.RenderTransform>
                 <CompositeTransform ScaleY="-1"/>
             </ProgressBar.RenderTransform>
