@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace RawParser.Model.Parser
 {
@@ -113,77 +114,7 @@ namespace RawParser.Model.Parser
             if (!makerNote.ifd.tags.TryGetValue(0x0093, out compressionType)) throw new FormatException("File not correct");
             //uncompress the image<
             LinearisationTable line = new LinearisationTable(lineTag.data, (ushort)compressionType.data[0], colordepth, dataoffset, reader);
-
-            ushort[] huff;
-
-            int tree = 0, row, col, len, shl, diff;
-
-            if (line.version0 == 0x46) tree = 2;
-            if (colordepth == 14) tree += 3;
-
-            int maxcounter = line.curveSize;
-            while (maxcounter - 2 >= 0 && line.curve[maxcounter - 2] == line.curve[maxcounter - 1]) line.max--;
-            huff = line.makeDecoder(tree);
-
-            line.getbithuff(-1, null);
-
-            int i = 0;
-            for (line.min = row = 0; row < height; row++)
-            {
-                if (line.splitValue > 1 && row == line.splitValue)
-                {
-                    huff = line.makeDecoder(tree + 1);
-                    line.max += ((line.min = 16) << 1);
-                }
-                for (col = 0; col < width; col++)
-                {
-                    Debug.WriteLine("Col: " + col + " of: " + width + " | Row: " + row + " of: " + height);
-                    i = (int)line.gethuff(huff);
-
-                    len = (i & 15);        
-                    shl = i >> 4;
-                    
-                    diff = (int)((line.getbithuff(len - shl, null) << 1) + 1) << shl >> 1;
-                    if ((diff & (1 << (len - 1))) == 0)
-                        diff -= (1 << len) - ((shl != 0) ? 1 : 1);
-                    if (col < 2)
-                    {
-                        line.vpreds[row & 1][col] += (short)diff;
-                        line.hpred[col] = (ushort)(line.vpreds[row & 1][col]);
-                    }
-                    else
-                    {
-                        line.hpred[col & 1] += (ushort)diff;
-                    }
-                    if ((ushort)(line.hpred[col & 1] + line.min) >= line.max) throw new Exception("Error during deflate");
-
-                    var x = Lim((short)line.hpred[col & 1], 0, 0x3fff);
-                    
-                    //TODO change variable names
-                    ushort xy;
-                    if(x > line.curveSize)
-                    {
-                        xy = (ushort)x;
-                    }
-                    else
-                    {
-                        xy = line.curve[x];
-                    }
-                    BitArray t = new BitArray(xy);                                       
-                    
-                    for (int k = 0; k < colordepth; k++)
-                    {
-                        uncompressedData[row + col + i] = t[i];
-                    }
-                }
-            }
-            return uncompressedData;
-        }
-
-        private short Lim(short x, short min, short max)
-        {
-            var t = ((x) < (max) ? (x) : (max));
-            return ((min) > (t) ? (min) : (t));
+            return line.uncompressed(rawData,height, width, colordepth);
         }
 
         public Dictionary<ushort, Tag> parseToStandardExifTag()

@@ -8,6 +8,7 @@ using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Diagnostics;
 
 namespace RawParser.Model.ImageDisplay
 {
@@ -43,10 +44,10 @@ namespace RawParser.Model.ImageDisplay
 
         public SoftwareBitmap getImageAsBitmap()
         {
-            SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Gray16, (int)width, (int)height);
-            byte[] tempByteArray = new byte[width * height * 2];
+            SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Gray8, (int)width, (int)height);
+            byte[] tempByteArray = new byte[width * height];
 
-            for (int i = 0; i < width * height * 2; i++)
+            for (int i = 0; i < width * height ; i++)
             {
                 //get the pixel
                 byte firstBits = 0;
@@ -66,11 +67,39 @@ namespace RawParser.Model.ImageDisplay
                 }
 
                 tempByteArray[i] = firstBits;
-                tempByteArray[++i] = lastBits;
+                //tempByteArray[++i] = lastBits;
             }
 
             image.CopyFromBuffer(tempByteArray.AsBuffer());
             return image;
+        }
+
+        /*
+         * For testing
+         */
+        public byte[] getImageAsByteArray()
+        {
+            byte[] tempByteArray = new byte[width * height];
+
+            for (int i = 0; i < width * height; i++)
+            {
+                //get the pixel
+                byte temp = 0;
+
+                for (int k = 0; k < 8; k++)
+                {
+                    bool xy = imageData[(i * colorDepth) + k];
+
+                    //if(xy)Debug.WriteLine("value: " + xy);
+                    if (xy)
+                    {
+                        temp |= (byte)(1 << k);
+                    }
+                }
+
+                tempByteArray[i] = temp;
+            }
+            return tempByteArray;
         }
 
         internal SoftwareBitmap getBitmapFromStream(IRandomAccessStream ms)

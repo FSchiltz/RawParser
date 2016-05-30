@@ -1,4 +1,7 @@
-﻿using System;
+﻿using RawParserUWP.Model.Format.Reader;
+using System;
+using System.Collections;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -9,8 +12,6 @@ namespace RawParser.Model.Parser
         public byte version0;
         public byte version1;
         private BinaryReader reader;
-        private uint offset;
-        private long pixels = 0;
 
         private uint bitbuf = 0;
         private int vbits = 0, reset = 0;
@@ -46,8 +47,14 @@ namespace RawParser.Model.Parser
          */
         public LinearisationTable(object[] table, ushort compressionType, int colordepth, uint offset, BinaryReader reader)
         {
-            this.reader = reader;
-            this.offset = offset;
+            //optimize as memory stream
+            reader.BaseStream.Position = offset;
+            byte[] imageBuffer = new byte[reader.BaseStream.Length - reader.BaseStream.Position];
+
+            reader.BaseStream.Read(imageBuffer, 0,imageBuffer.Length );
+            
+            this.reader = new BinaryReader(new MemoryStream(imageBuffer));
+
             rawdata = table;
             //get the version
             version0 = (byte)table[0];
@@ -119,6 +126,81 @@ namespace RawParser.Model.Parser
 
         }
 
+        private short Lim(short x, short min, short max)
+        {
+            var t = ((x) < (max) ? (x) : (max));
+            return ((min) > (t) ? (min) : (t));
+        }
+
+        public BitArray uncompressed(BitArray rawData, uint height, uint width, ushort colordepth)
+        {
+            BitArray uncompressedData = new BitArray((int)(height * width * colordepth)); //add pixel*
+            ushort[] huff;
+
+            int tree = 0, row, col, len, shl, diff;
+
+            if (version0 == 0x46) tree = 2;
+            if (colordepth == 14) tree += 3;
+
+            int maxcounter = curveSize;
+            while (maxcounter - 2 >= 0 && curve[maxcounter - 2] == curve[maxcounter - 1]) max--;
+            huff = makeDecoder(tree);
+            ushort[] huffMinus1 = huff.Skip(1).ToArray();
+            getbithuff(-1, null);
+
+            int i = 0;
+            for (min = row = 0; row < height; row++)
+            {
+                if (splitValue > 1 && row == splitValue)
+                {
+                    huff = makeDecoder(tree + 1);
+                    max += ((min = 16) << 1);
+                }
+                for (col = 0; col < width; col++)
+                {
+                    //Debug.WriteLine("Col: " + col + " of: " + width + " | Row: " + row + " of: " + height);
+                    i = (int)getbithuff(huff[0], huffMinus1);
+                    len = (i & 15);
+                    shl = i >> 4;
+
+                    diff = (short)((getbithuff(len - shl, null) << 1) + 1) << shl >> 1;
+                    if ((diff & (1 << (len - 1))) == 0)
+                        diff -= (1 << len) - ((shl != 0) ? 1 : 1);
+                    if (col < 2)
+                    {
+                        vpreds[row & 1][col] += (short)diff;
+                        hpred[col] = (ushort)(vpreds[row & 1][col]);
+                    }
+                    else
+                    {
+                        hpred[col & 1] += (ushort)diff;
+                    }
+                    if ((ushort)(hpred[col & 1] + min) >= max) throw new Exception("Error during deflate");
+
+                    var x = Lim((short)hpred[col & 1], 0, 0x3fff);
+
+                    //TODO change variable names
+                    ushort xy;
+                    if (x >= curveSize)
+                    {
+                        xy = (ushort)x;
+                    }
+                    else
+                    {
+                        xy = curve[x];
+                    }
+
+                    BitArray t = new BitArray(BitConverter.GetBytes(xy).ToArray());
+                    for (int k = 0; k < colordepth; k++)
+                    {
+                        uncompressedData[(((int)(row*width) + col )*colordepth)+ k] = t[k];
+                    }
+                }
+            }
+            reader.Dispose();
+            return uncompressedData;
+        }
+
         /*
            Construct a decode tree according the specification in *source.
            The first 16 bytes specify how many codes should be 1-bit, 2-bit
@@ -176,11 +258,6 @@ namespace RawParser.Model.Parser
             return huff;
         }
 
-        internal uint gethuff(ushort[] huff)
-        {
-            return getbithuff(huff[0], huff.Skip(1).ToArray());
-        }
-
         /*
          * read a byte from the raw data
          * 
@@ -200,19 +277,14 @@ namespace RawParser.Model.Parser
             }
             if (nbits == 0 || vbits < 0) { return 0; }
 
-            long currentpos = reader.BaseStream.Position;
-            reader.BaseStream.Position = offset + pixels;
-
             //!reset && vbits < nbits && (c = fgetc(ifp)) != EOF && !(reset = zero_after_ff && c == 0xff && fgetc(ifp))
             while (reset == 0 && vbits < nbits && i < rawdata.Length)
             {
                 i++;
                 c = reader.ReadByte();
-                pixels++;
                 bitbuf = (bitbuf << 8) + (byte)c;
                 vbits += 8;
             }
-            reader.BaseStream.Position = currentpos;
             c = bitbuf << (32 - vbits) >> (32 - nbits);
             if (huff != null)
             {
