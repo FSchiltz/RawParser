@@ -77,14 +77,14 @@ namespace RawParser.Model.ImageDisplay
         /*
          * For testing
          */
-        public byte[] getImageAsByteArray()
+        public ushort[] getImageAsByteArray()
         {
-            byte[] tempByteArray = new byte[width * height];
+            ushort[] tempByteArray = new ushort[width * height];
 
             for (int i = 0; i < width * height; i++)
             {
                 //get the pixel
-                byte temp = 0;
+                ushort temp = 0;
 
                 for (int k = 0; k < 8; k++)
                 {
@@ -93,7 +93,7 @@ namespace RawParser.Model.ImageDisplay
                     //if(xy)Debug.WriteLine("value: " + xy);
                     if (xy)
                     {
-                        temp |= (byte)(1 << k);
+                        temp |= (ushort)(1 << k);
                     }
                 }
 
