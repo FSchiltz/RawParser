@@ -143,14 +143,14 @@ namespace RawParserUWP
                     //rawImage.CopyToBuffer(bitmap.PixelBuffer);
 
                     // test
-                    byte[] temp = currentRawImage.getImageAsByteArray();
+                    ushort[] temp = currentRawImage.getImageAsByteArray();
                     var bitmapContext = bitmap.GetBitmapContext();
 
                     for (int x = 0; x < currentRawImage.width; x++)
                     {
                         for (int y = 0; y < currentRawImage.height; y++)
                         {
-                            bitmap.SetPixel(x, y, temp[x + (y * currentRawImage.width)], temp[x + (y * currentRawImage.width)], temp[x + (y * currentRawImage.width)]);
+                            bitmap.SetPixel(x, y,(byte) temp[x + (y * currentRawImage.width)], (byte)temp[x + (y * currentRawImage.width)], (byte)temp[x + (y * currentRawImage.width)]);
                         }
                     }
                     bitmapContext.Dispose();

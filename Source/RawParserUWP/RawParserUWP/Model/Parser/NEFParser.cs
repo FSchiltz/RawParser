@@ -20,10 +20,11 @@ namespace RawParser.Model.Parser
         protected NikonMakerNote makerNote;
 
         protected BitArray rawData;
-        protected byte[] previewData;
+        protected byte[] thumbnail;
 
         public RawImage parse(Stream file)
         {
+            byte[] previewData;
             //Open a binary stream on the file
             BinaryReader fileStream = new BinaryReader(file);
 
@@ -40,30 +41,44 @@ namespace RawParser.Model.Parser
             //Read the IFD
             ifd = new IFD(fileStream, header.TIFFoffset, true, false); // OK
 
+            //TODO
+            //Read the thumbnail
+            //Callback
+
+            //Get the full size preview
             Tag subifdoffsetTag;
-            Tag exifoffsetTag;
             if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue(0x8769, out exifoffsetTag)) throw new FormatException("File not correct");
-
             subifd0 = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
-            subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true, false);
-            //todo third IFD
-            exif = new IFD(fileStream, (uint)exifoffsetTag.data[0], true, false); //OK
-
-            //optimize (stop ifd from loaoding the makernote
-
-            Tag makerNoteOffsetTag;
-            if (!exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag)) throw new FormatException("File not correct");
-
-            makerNote = new NikonMakerNote(fileStream, makerNoteOffsetTag.dataOffset, true);
-
-            //Get image data
             Tag imagepreviewOffsetTags, imagepreviewX, imagepreviewY, imagepreviewSize;
             if (!subifd0.tags.TryGetValue(0x201, out imagepreviewOffsetTags)) throw new FormatException("File not correct");
             if (!subifd0.tags.TryGetValue(0x11A, out imagepreviewX)) throw new FormatException("File not correct");
             if (!subifd0.tags.TryGetValue(0x11B, out imagepreviewY)) throw new FormatException("File not correct");
             if (!subifd0.tags.TryGetValue(0x202, out imagepreviewSize)) throw new FormatException("File not correct");
 
+            //get the preview data ( faster than rezising )
+            fileStream.BaseStream.Position = (uint)imagepreviewOffsetTags.data[0];
+            previewData = fileStream.ReadBytes(Convert.ToInt32(imagepreviewSize.data[0]));
+
+            //TODO
+            //CallBack
+
+            previewData = null; //free memory
+
+            //get the Exif
+            Tag exifoffsetTag;
+            if (!ifd.tags.TryGetValue(0x8769, out exifoffsetTag)) throw new FormatException("File not correct");
+            subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true, false);
+            //todo third IFD
+            exif = new IFD(fileStream, (uint)exifoffsetTag.data[0], true, false);
+            Tag makerNoteOffsetTag;
+            if (!exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag)) throw new FormatException("File not correct");
+            makerNote = new NikonMakerNote(fileStream, makerNoteOffsetTag.dataOffset, true);
+            Dictionary<ushort, Tag> exifTag = parseToStandardExifTag();
+            //TODO
+            //callback for exif
+
+
+            //Get the RAW data info
             Tag imageRAWOffsetTags, imageRAWWidth, imageRAWHeight, imageRAWSize, imageRAWCompressed, imageRAWDepth;
             if (!subifd1.tags.TryGetValue(0x0111, out imageRAWOffsetTags)) throw new FormatException("File not correct");
             if (!subifd1.tags.TryGetValue(0x0100, out imageRAWWidth)) throw new FormatException("File not correct");
@@ -71,11 +86,6 @@ namespace RawParser.Model.Parser
             if (!subifd1.tags.TryGetValue(0x0102, out imageRAWDepth)) throw new FormatException("File not correct");
             if (!subifd1.tags.TryGetValue(0x0117, out imageRAWSize)) throw new FormatException("File not correct");
             if (!subifd1.tags.TryGetValue(0x0103, out imageRAWCompressed)) throw new FormatException("File not correct");
-
-            //get the preview data ( faster than rezising )
-            fileStream.BaseStream.Position = (uint)imagepreviewOffsetTags.data[0];
-            previewData = fileStream.ReadBytes(Convert.ToInt32(imagepreviewSize.data[0]));
-
             //get Raw Data            
             fileStream.BaseStream.Position = (uint)imageRAWOffsetTags.data[0];
             rawData = new BitArray(fileStream.ReadBytes(Convert.ToInt32(imageRAWSize.data[0])));
@@ -85,16 +95,14 @@ namespace RawParser.Model.Parser
             {                
                 rawData = uncompressed(new BitArray(rawData), (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)imageRAWDepth.data[0], (uint)imageRAWOffsetTags.data[0], fileStream);
             }
-            //parse to RawImage
-            Dictionary<ushort, Tag> exifTag = parseToStandardExifTag();
-            RawImage rawImage = new RawImage(exifTag, rawData, previewData, (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)imageRAWDepth.data[0]);
+          
+            RawImage rawImage = new RawImage(exifTag, rawData, thumbnail, (uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0], (ushort)imageRAWDepth.data[0]);
 
             fileStream.Dispose();
             return rawImage;
         }
 
         /*
-         * Clean implementation
          * First for 14bit lossless
          * 
          * ver0 = 70 (0x48)
