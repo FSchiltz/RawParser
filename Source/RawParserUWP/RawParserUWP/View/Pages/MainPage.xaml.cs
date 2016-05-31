@@ -16,9 +16,18 @@ using RawParserUWP.View.Exception;
 using Windows.Storage.Provider;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using System.Runtime.InteropServices;
+using RawParserUWP.Model.Parser.Demosaic;
 
 namespace RawParserUWP
 {
+    [ComImport]
+    [Guid("5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    unsafe interface IMemoryBufferByteAccess
+    {
+        void GetBuffer(out byte* buffer, out uint capacity);
+    }
     /// <summary>
     /// The main class of the appliation
     /// </summary>
@@ -36,6 +45,7 @@ namespace RawParserUWP
             NavigationCacheMode = NavigationCacheMode.Enabled;
 
             imageSelected = false;
+
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -65,17 +75,21 @@ namespace RawParserUWP
             }
         }
 
-        private void emptyImage()
+        //Always call in the UI thread
+        private async void emptyImage()
         {
-            //empty the previous image data
-            currentRawImage = null;
-            //empty the image display
-            imageBox.Source = null;
-            imageBox.UpdateLayout();
-            //empty the exif data
-            exifDisplay.ItemsSource = null;
-            //empty the histogram
-
+            await CoreApplication.MainView.CoreWindow.Dispatcher
+                    .RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        //empty the previous image data
+                        currentRawImage = null;
+                        //empty the image display
+                        imageBox.Source = null;
+                        imageBox.UpdateLayout();
+                        //empty the exif data
+                        exifDisplay.ItemsSource = null;
+                        //empty the histogram
+                    });
         }
 
         /*
@@ -108,11 +122,12 @@ namespace RawParserUWP
                     throw new System.Exception("File not supported"); //todo change exception types
             }
 
+            //Add a loading screen
+            progressDisplay.Visibility = Visibility.Visible;
+            emptyImage();
+
             Task t = Task.Run(async () =>
             {
-                //Add a loading screen
-                progressDisplay.Visibility = Visibility.Visible;
-                emptyImage();
                 using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                 {
                     currentRawImage = new RawImage();
@@ -126,21 +141,42 @@ namespace RawParserUWP
                     displayImage(RawImage.getImageAsBitmap(currentRawImage.thumbnail));
 
                     //read the preview
-                    displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
+                    parser.parsePreview();
+                    //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
 
                     //read the exif
                     currentRawImage.exif = parser.parseExif();
                     displayExif();
-                    //read the data
-                    parser.parseRAWImage();
-                    displayImage(currentRawImage.getImageRawAs8bitsBitmap());
-                    
+                    //read the data 
+                    currentRawImage.height = parser.height;
+                    currentRawImage.width = parser.width;
+                    currentRawImage.colorDepth = parser.colorDepth;
+                    currentRawImage.imageData = Demosaic.demos(parser.parseRAWImage(),currentRawImage.height,currentRawImage.width,currentRawImage.colorDepth, demosAlgorithm.NearNeighbour);
+
+                    /*
+                    //Needs to run in UI thread because fuck it
+                    await CoreApplication.MainView.CoreWindow.Dispatcher
+                     .RunAsync(CoreDispatcherPriority.Normal, () =>
+                     {
+                         displayImage(currentRawImage.getImageRawAs8bitsBitmap((int)currentRawImage.width, (int)currentRawImage.height, null));
+                     });
+                     */
+
+                    emptyImage();
+
+
                     //dispose
                     file = null;
                     parser = null;
                 }
-                //Hide the loading screen
-                progressDisplay.Visibility = Visibility.Collapsed;
+                await CoreApplication.MainView.CoreWindow.Dispatcher
+                            .RunAsync(CoreDispatcherPriority.Normal, () =>
+                            {
+                                //Do some UI-code that must be run on the UI thread.
+                                //Hide the loading screen
+                                progressDisplay.Visibility = Visibility.Collapsed;
+                            });
+
 
                 //For testing
                 //emptyImage();
