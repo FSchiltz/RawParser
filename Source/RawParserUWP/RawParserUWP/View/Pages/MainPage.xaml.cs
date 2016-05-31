@@ -1,8 +1,7 @@
-﻿using RawParser.Model.ImageDisplay;
-using RawParser.Model.Parser;
-using RawParserUWP.Model.Exception;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -11,6 +10,12 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using RawParserUWP.Model.Format.Image;
+using RawParserUWP.Model.Parser;
+using RawParserUWP.View.Exception;
+using Windows.Storage.Provider;
+using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
 
 namespace RawParserUWP
 {
@@ -29,7 +34,7 @@ namespace RawParserUWP
             InitializeComponent();
 
             NavigationCacheMode = NavigationCacheMode.Enabled;
-            appBarImageChoose.Click += new RoutedEventHandler(appBarImageChooseClick);
+
             imageSelected = false;
         }
 
@@ -77,13 +82,14 @@ namespace RawParserUWP
          * For the zoom of the image
          * 
          */
+
         private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             pageWidth = e.NewSize.Width;
             pageHeight = e.NewSize.Height;
         }
 
-        private async void OpenFile(StorageFile file)
+        private void OpenFile(StorageFile file)
         {
             //Open the file with the correct parser
             Parser parser;
@@ -98,67 +104,48 @@ namespace RawParserUWP
                 case ".TIFF":
                     parser = new DNGParser();
                     break;
-                default: throw new Exception("File not supported");//todo change exception types
+                default:
+                    throw new System.Exception("File not supported"); //todo change exception types
             }
 
-            //Add a loading screen
-            progressDisplay.Visibility = Visibility.Visible;
-            emptyImage();
-            Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
             Task t = Task.Run(async () =>
             {
-                currentRawImage = parser.parse(stream);
-                parser = null;
-
-                //Display thumbnail
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                //Add a loading screen
+                progressDisplay.Visibility = Visibility.Visible;
+                emptyImage();
+                using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                 {
+                    currentRawImage = new RawImage();
+                    currentRawImage.fileName = file.DisplayName;
 
-                });
+                    //Set the stream
+                    parser.setStream(stream);
 
+                    //read the thumbnail
+                    currentRawImage.thumbnail = parser.parseThumbnail();
+                    displayImage(RawImage.getImageAsBitmap(currentRawImage.thumbnail));
 
-                //DIsplay preview Image
-                SoftwareBitmap image = currentRawImage.getImagePreviewAsBitmap();
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    //Do some UI-code that must be run on the UI thread.
-                    //display the image preview
-                    WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                    image.CopyToBuffer(bitmap.PixelBuffer);
-                    imageBox.Source = bitmap;
-                    //set exif datasource
-                    exifDisplay.ItemsSource = currentRawImage.exif.Values;
-                });
+                    //read the preview
+                    displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
 
-                //Display the raw image
-                SoftwareBitmap rawImage = currentRawImage.getImageAsBitmap();
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    //Do some UI-code that must be run on the UI thread.
+                    //read the exif
+                    currentRawImage.exif = parser.parseExif();
+                    displayExif();
+                    //read the data
+                    parser.parseRAWImage();
+                    displayImage(currentRawImage.getImageRawAs8bitsBitmap());
+                    
+                    //dispose
+                    file = null;
+                    parser = null;
+                }
+                //Hide the loading screen
+                progressDisplay.Visibility = Visibility.Collapsed;
 
-
-                    //display the image preview
-                    WriteableBitmap bitmap = new WriteableBitmap(rawImage.PixelWidth, rawImage.PixelHeight);
-
-                    //rawImage.CopyToBuffer(bitmap.PixelBuffer);
-
-                    // test
-                    ushort[] temp = currentRawImage.getImageAsByteArray();
-                    var bitmapContext = bitmap.GetBitmapContext();
-
-                    for (int x = 0; x < currentRawImage.width; x++)
-                    {
-                        for (int y = 0; y < currentRawImage.height; y++)
-                        {
-                            bitmap.SetPixel(x, y,(byte) temp[x + (y * currentRawImage.width)], (byte)temp[x + (y * currentRawImage.width)], (byte)temp[x + (y * currentRawImage.width)]);
-                        }
-                    }
-                    bitmapContext.Dispose();
-                    imageBox.Source = bitmap;
-
-                    //Hide the loading screen
-                    progressDisplay.Visibility = Visibility.Collapsed;
-                });
+                //For testing
+                //emptyImage();
+                //see if memory leak
+                //memory should beat 25 mega after this.
             });
         }
 
@@ -166,34 +153,30 @@ namespace RawParserUWP
         {
             base.OnNavigatedTo(e);
             var args = e.Parameter as Windows.ApplicationModel.Activation.IActivatedEventArgs;
-            if (args != null)
+            if (args?.Kind == Windows.ApplicationModel.Activation.ActivationKind.File)
             {
-                if (args.Kind == Windows.ApplicationModel.Activation.ActivationKind.File)
+                var fileArgs = args as Windows.ApplicationModel.Activation.FileActivatedEventArgs;
+                string strFilePath = fileArgs.Files[0].Path;
+                var file = (StorageFile)fileArgs.Files[0];
+                if (file != null)
                 {
-                    var fileArgs = args as Windows.ApplicationModel.Activation.FileActivatedEventArgs;
-                    string strFilePath = fileArgs.Files[0].Path;
-                    var file = (StorageFile)fileArgs.Files[0];
-                    if (file != null)
+                    // Application now has read/write access to the picked file
+                    try
                     {
-                        // Application now has read/write access to the picked file
-                        try
-                        {
-                            OpenFile(file);
-                        }
-                        catch (Exception ex)
-                        {
-                            ExceptionDisplay.display(ex.Message + ex.StackTrace);
-                        }
+                        OpenFile(file);
                     }
-                    else
+                    catch (System.Exception ex)
                     {
-                        //TODO
+                        ExceptionDisplay.display(ex.Message + ex.StackTrace);
                     }
-
                 }
+                else
+                {
+                    //TODO
+                }
+
             }
         }
-
 
         private void appbarAboutClick(object sender, RoutedEventArgs e)
         {
@@ -208,7 +191,6 @@ namespace RawParserUWP
         private void appbarShowSplitClick(object sender, RoutedEventArgs e)
         {
             splitView.IsPaneOpen = !splitView.IsPaneOpen;
-
         }
 
         private void imageBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
@@ -216,6 +198,93 @@ namespace RawParserUWP
             imageDisplayScroll.ZoomToFactor((float)0.1);
             imageDisplayScroll.ScrollToVerticalOffset(imageDisplayScroll.ScrollableHeight / 2);
             imageDisplayScroll.ScrollToHorizontalOffset(imageDisplayScroll.ScrollableWidth / 2);
+        }
+
+        public async void displayImage(SoftwareBitmap image)
+        {
+            if (image != null)
+            {
+                //Display preview Image
+                //*
+                using (image)
+                {
+                    await
+                        CoreApplication.MainView.CoreWindow.Dispatcher
+                            .RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                            {
+                                //Do some UI-code that must be run on the UI thread.
+                                //display the image preview
+                                WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                                image.CopyToBuffer(bitmap.PixelBuffer);
+                                imageBox.Source = bitmap;
+                            });
+                }
+                //*/
+            }
+        }
+
+        public async void displayExif()
+        {
+            //*
+            if (currentRawImage.exif != null)
+            {
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    //Do some UI-code that must be run on the UI thread.
+                    //set exif datasource
+                    exifDisplay.ItemsSource = currentRawImage.exif.Values;
+                });
+            }
+            //*/
+        }
+
+        private async void saveButton_Click(object sender, RoutedEventArgs e)
+        {
+            //TODO reimplement correclty
+            //Just for testing purpose for now
+            if (imageBox.Source != null)
+            {
+                var savePicker = new FileSavePicker
+                {
+                    SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                    SuggestedFileName = currentRawImage.fileName
+                };
+                // Dropdown of file types the user can save the file as
+                savePicker.FileTypeChoices.Add("Image file", new List<string>() { ".jpg" });
+                StorageFile file = await savePicker.PickSaveFileAsync();
+                if (file == null) return;
+                // Prevent updates to the remote version of the file until
+                // we finish making changes and call CompleteUpdatesAsync.
+                CachedFileManager.DeferUpdates(file);
+                // write to file
+                WriteableBitmap bitmapImage = (WriteableBitmap)imageBox.Source;
+
+                BitmapEncoder encoder = await BitmapEncoder.CreateAsync(
+                    BitmapEncoder.JpegEncoderId,
+                    await file.OpenAsync(FileAccessMode.ReadWrite));
+                using (Stream pixelStream = bitmapImage.PixelBuffer.AsStream())
+                {
+
+                    byte[] pixels = new byte[pixelStream.Length];
+
+                    await pixelStream.ReadAsync(pixels, 0, pixels.Length);
+
+
+                    encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore, (uint)bitmapImage.PixelWidth,
+                        (uint)bitmapImage.PixelHeight, 96.0, 96.0, pixels);
+
+                    await encoder.FlushAsync();
+                    // Let Windows know that we're finished changing the file so
+                    // the other app can update the remote version of the file.
+                    // Completing updates may require Windows to ask for user input.
+                    FileUpdateStatus status =
+                        await CachedFileManager.CompleteUpdatesAsync(file);
+                    if (status != FileUpdateStatus.Complete)
+                    {
+                        ExceptionDisplay.display("File could not be saved");
+                    }
+                }
+            }
         }
     }
 }

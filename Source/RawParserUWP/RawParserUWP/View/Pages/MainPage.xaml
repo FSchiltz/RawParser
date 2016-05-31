@@ -12,36 +12,40 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
-            <AppBarButton x:Name="appbarRotateLeft" 
+            <AppBarButton x:Name="rotateLeftButton" 
                           Icon="Undo"
                           Label="Turn left" 
                           VerticalAlignment="Top" FontSize="12" Width="48"/>
-            <AppBarButton x:Name="appbarRotateRight" 
+            <AppBarButton x:Name="rotateRightButton" 
                           Icon="Redo"
                           Label="Rotate right" 
                           VerticalAlignment="Top" FontSize="12" Width="48"/>
             <AppBarSeparator/>
-            <AppBarButton x:Name="appBarImageChoose" 
+            <AppBarButton x:Name="ImageChooseButton" 
                           Icon="BrowsePhotos"
                           Label="Open an Image" 
+                          Click="appBarImageChooseClick"
                           VerticalAlignment="Top" FontSize="12" Width="40"/>
-            <AppBarButton x:Name="appbarSaveImg" 
+            <AppBarButton x:Name="saveButton" 
                           Icon="SaveLocal"
                           Label="Save" 
+                          Click="saveButton_Click"
                           VerticalAlignment="Top"/>
-            <AppBarButton x:Name="appbarShare" 
+            <AppBarButton x:Name="shareButton" 
                           Icon="Link"
                           Label="Share" 
                           VerticalAlignment="Top"/>
-            <AppBarButton x:Name="appbarShowSplit"
+            <AppBarButton x:Name="showSplitPanelButton"
                           Label="Show sidepanel" 
                           VerticalAlignment="Top" Visibility="Collapsed"
                           Click="appbarShowSplitClick" Icon="Back" FontSize="12" Width="40"/>
+            <AppBarButton x:Name="settingsButton"  Icon="Setting" Label="Setting" Click="appbarSettingClick"/>
+            <AppBarButton x:Name="aboutButton" Icon="Document" Label="About" Click="appbarAboutClick"/>
             <CommandBar.SecondaryCommands>
-                <AppBarButton Icon="Setting" Label="Setting" Click="appbarSettingClick"/>
-                <AppBarButton Icon="Document" Label="About" Click="appbarAboutClick"/>
-                <AppBarButton x:Name="appbarSaveImgSecond" Icon="SaveLocal" Label="Save" VerticalAlignment="Top"/>
-                <AppBarButton x:Name="appbarShareSecond" Icon="Link" Label="Share" VerticalAlignment="Top"/>
+                <AppBarButton x:Name="settingsButton2" Icon="Setting" Label="Setting" Click="appbarSettingClick"/>
+                <AppBarButton x:Name="aboutButton2" Icon="Document" Label="About" Click="appbarAboutClick"/>
+                <AppBarButton x:Name="saveButton2" Click="saveButton_Click"  Icon="SaveLocal" Label="Save" VerticalAlignment="Top"/>
+                <AppBarButton x:Name="shareButton2" Icon="Link" Label="Share" VerticalAlignment="Top"/>
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
@@ -56,11 +60,19 @@
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
                         <Setter Target="splitView.DisplayMode" Value="Inline" />
-                        <Setter Target="appbarShowSplit.Visibility" Value="Collapsed" />
-                        <Setter Target="appbarSaveImg.Visibility" Value="Visible" />
-                        <Setter Target="appbarShare.Visibility" Value="Visible" />
-                        <Setter Target="appbarSaveImgSecond.Visibility" Value="Visible" />
-                        <Setter Target="appbarShareSecond.Visibility" Value="Visible" />
+
+                        <Setter Target="showSplitPanelButton.Visibility" Value="Collapsed" />
+                        
+                        <Setter Target="saveButton.Visibility" Value="Visible" />
+                        <Setter Target="shareButton.Visibility" Value="Visible" />
+                        <Setter Target="settingsButton.Visibility" Value="Visible" />
+                        <Setter Target="aboutButton.Visibility" Value="Visible" />
+                        
+                        <Setter Target="saveButton2.Visibility" Value="Collapsed" />
+                        <Setter Target="shareButton2.Visibility" Value="Collapsed" />
+                        <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
+                        <Setter Target="aboutButton2.Visibility" Value="Collapsed" />
+
                         <Setter Target="splitView.IsPaneOpen" Value="true" />
                     </VisualState.Setters>
                 </VisualState>
@@ -72,11 +84,18 @@
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
                         <Setter Target="splitView.DisplayMode" Value="Overlay" />
-                        <Setter Target="appbarShowSplit.Visibility" Value="Visible" />
-                        <Setter Target="appbarSaveImg.Visibility" Value="Collapsed" />
-                        <Setter Target="appbarShare.Visibility" Value="Collapsed" />
-                        <Setter Target="appbarSaveImgSecond.Visibility" Value="Visible" />
-                        <Setter Target="appbarShareSecond.Visibility" Value="Visible" />
+                        <Setter Target="showSplitPanelButton.Visibility" Value="Visible" />
+
+                        <Setter Target="saveButton.Visibility" Value="Collapsed" />
+                        <Setter Target="shareButton.Visibility" Value="Collapsed" />
+                        <Setter Target="settingsButton.Visibility" Value="Collapsed" />
+                        <Setter Target="aboutButton.Visibility" Value="Collapsed" />
+                        
+                        <Setter Target="saveButton2.Visibility" Value="Visible" />
+                        <Setter Target="shareButton2.Visibility" Value="Visible" />
+                        <Setter Target="settingsButton2.Visibility" Value="Visible" />
+                        <Setter Target="aboutButton2.Visibility" Value="Visible" />
+                        
                         <Setter Target="splitView.IsPaneOpen" Value="False" />
 
                     </VisualState.Setters>

@@ -9,44 +9,44 @@ namespace RawParserUWP.Model.Format.Reader
 {
     class MemoryBufferedStream : BinaryReader
     {
-        byte[] buffer;
-        long bufferSize;
-        long bufferPosition;
+        byte[] _buffer;
+        long _bufferSize;
+        long _bufferPosition;
 
-        public MemoryBufferedStream(Stream S, long b) : base(S)
+        public MemoryBufferedStream(Stream s, long b) : base(s)
         {
-            bufferSize = b;
+            _bufferSize = b;
 
-            buffer = new byte[b];
-            bufferPosition = S.Position;
-            readBlock();
+            _buffer = new byte[b];
+            _bufferPosition = s.Position;
+            ReadBlock();
         }
 
         public override byte ReadByte()
         {
             //Si dans buffer, return from buffer
-            if (BaseStream.Position < (bufferPosition + buffer.Length) && BaseStream.Position > bufferPosition)
+            if (BaseStream.Position < (_bufferPosition + _buffer.Length) && BaseStream.Position > _bufferPosition)
             {
-                return buffer[BaseStream.Position++ - bufferPosition];
+                return _buffer[BaseStream.Position++ - _bufferPosition];
             }
             else
             {             
-                return buffer[BaseStream.Position++ - bufferPosition];
+                return _buffer[BaseStream.Position++ - _bufferPosition];
             }
         }
 
-        private void readBlock()
+        private void ReadBlock()
         {
             //else read new block
-            bufferPosition = BaseStream.Position;
-            if (buffer.Length > BaseStream.Length)
+            _bufferPosition = BaseStream.Position;
+            if (_buffer.Length > BaseStream.Length)
             {
-                buffer = new byte[BaseStream.Length - BaseStream.Position];
-                BaseStream.Read(buffer, (int)BaseStream.Position, buffer.Length);
+                _buffer = new byte[BaseStream.Length - BaseStream.Position];
+                BaseStream.Read(_buffer, (int)BaseStream.Position, _buffer.Length);
             }
             else
             {
-                BaseStream.Read(buffer, (int)BaseStream.Position, buffer.Length);
+                BaseStream.Read(_buffer, (int)BaseStream.Position, _buffer.Length);
             }
         }
     }

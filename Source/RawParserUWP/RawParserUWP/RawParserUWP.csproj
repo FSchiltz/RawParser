@@ -110,24 +110,22 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Model\Format\Base\DictionnaryFromFileString.cs" />
     <Compile Include="Model\Format\Base\DictionnaryFromFileUShort.cs" />
     <Compile Include="Model\Format\Base\DictionnaryFromFile.cs" />
     <Compile Include="Model\Format\Base\StreamHelper.cs" />
-    <Compile Include="Model\Format\Image\Nikon\LinearisationTable.cs" />
+    <Compile Include="Model\Format\Image\Tag.cs" />
+    <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
     <Compile Include="Model\Format\Reader\MemoryBufferedStream.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Model\Exception\ExceptionDisplay.cs" />
-    <Compile Include="Model\Format\Image\Base\Dimension.cs" />
-    <Compile Include="Model\Format\Image\Base\Pixel.cs" />
-    <Compile Include="Model\Format\Image\Base\RawImage.cs" />
-    <Compile Include="Model\Format\Image\Base\Header.cs" />
-    <Compile Include="Model\Format\Image\Base\Image.cs" />
-    <Compile Include="Model\Format\Image\Base\Tag.cs" />
-    <Compile Include="Model\Format\Image\Base\IFD.cs" />
-    <Compile Include="Model\Format\Image\Nikon\NikonMakerNote.cs" />
+    <Compile Include="View\Exception\ExceptionDisplay.cs" />
+    <Compile Include="Model\Format\Image\RawImage.cs" />
+    <Compile Include="Model\Format\Image\Header.cs" />
+    <Compile Include="Model\Format\Image\IFD.cs" />
+    <Compile Include="Model\Parser\Nikon\NikonMakerNote.cs" />
     <Compile Include="Model\Format\Reader\BinaryReaderBE.cs" />
     <Compile Include="Model\Parser\DNGParser.cs" />
     <Compile Include="Model\Parser\NEFParser.cs" />
@@ -179,8 +177,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Model\Demosaic\" />
-    <Folder Include="Model\Export\" />
+    <Folder Include="Model\Format\Image\Demosaic\" />
+    <Folder Include="Model\Parser\Export\" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

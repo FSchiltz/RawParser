@@ -1,6 +1,6 @@
-﻿namespace RawParser.Model.Format
+﻿namespace RawParserUWP.Model.Format.Image
 {
-    class Tag
+    public class Tag
     {
         public ushort tagId { get; set; }
         public ushort dataType;
@@ -70,7 +70,7 @@
                         break;
 
                     case 5:
-                    case 10:                   
+                    case 10:
                     case 12:
                         foreach (object t in data)
                         {
@@ -90,7 +90,7 @@
             dataCount = 1;
             dataType = 1;
             displayName = "";
-            
+
         }
         public int getTypeSize(ushort id)
         {

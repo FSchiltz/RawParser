@@ -1,7 +1,7 @@
 ﻿
 using System;
 
-namespace RawParser.Model.Parser
+namespace RawParserUWP.Model.Format.Base
 {
     class DictionnaryFromFileUShort : DictionnaryFromFile<ushort>
     {
@@ -9,7 +9,7 @@ namespace RawParser.Model.Parser
         {
         }
 
-        override public void AddTocontent(ushort key, string contentAsString)
+        override public void addTocontent(ushort key, string contentAsString)
         {
             Add(key, Convert.ToUInt16(contentAsString,16));
         }

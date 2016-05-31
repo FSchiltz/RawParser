@@ -1,7 +1,7 @@
 ﻿using System;
 using Windows.UI.Popups;
 
-namespace RawParserUWP.Model.Exception
+namespace RawParserUWP.View.Exception
 {
     class ExceptionDisplay
     {
