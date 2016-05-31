@@ -15,7 +15,7 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="RawParserUWP.App">
-      <uap:VisualElements DisplayName="Raw photo editor" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="RawParserUWP" BackgroundColor="transparent">
+      <uap:VisualElements DisplayName="Raw photo editor" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="A simple photo editor supporting Nikon Raw file" BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="Raw photo editor">
         </uap:DefaultTile>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
@@ -43,4 +43,8 @@
       </Extensions>
     </Application>
   </Applications>
+  <Capabilities>
+    <uap:Capability Name="picturesLibrary" />
+    <uap:Capability Name="removableStorage" />
+  </Capabilities>
 </Package>

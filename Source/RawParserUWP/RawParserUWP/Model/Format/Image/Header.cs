@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace RawParser.Model.Format
+namespace RawParserUWP.Model.Format.Image
 {
     class Header
     {

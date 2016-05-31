@@ -1,10 +1,41 @@
-﻿using RawParser.Model.ImageDisplay;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using RawParserUWP.Model.Format.Image;
+using System.Collections;
 
-namespace RawParser.Model.Parser
+namespace RawParserUWP.Model.Parser
 {
-    class TIFFParser : Parser
+    class TiffParser : Parser
     {
-        virtual public RawImage parse(Stream file) { return null;}
+        public override RawImage parse(Stream s)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Dictionary<ushort, Tag> parseExif()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override byte[] parsePreview()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override BitArray parseRAWImage()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override byte[] parseThumbnail()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void setStream(Stream s)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

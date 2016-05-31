@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace RawParser.Model.Format
+namespace RawParserUWP.Model.Format.Image
 {
     class IFD
     {

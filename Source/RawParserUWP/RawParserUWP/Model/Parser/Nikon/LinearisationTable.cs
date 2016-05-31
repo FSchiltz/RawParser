@@ -1,29 +1,28 @@
-﻿using RawParserUWP.Model.Format.Reader;
-using System;
+﻿using System;
 using System.Collections;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace RawParser.Model.Parser
+namespace RawParserUWP.Model.Parser.Nikon
 {
-    internal class LinearisationTable
+    internal class LinearisationTable : IDisposable
     {
-        public byte version0;
-        public byte version1;
+  
+        private int colordepth;
         private BinaryReader reader;
 
-        private uint bitbuf = 0;
-        private int vbits = 0, reset = 0;
+        byte version0;
+        byte version1;
+        int max;
+        short curveSize;
+        ushort[] curve;
+        short splitValue;
+        int vbits = 0, reset = 0;
+        short[][] vpreds;
+        ushort[] hpred = new ushort[2];
+        uint bitbuf = 0;
+        int rawdataLength;
 
-        public short[][] vpreds;
-        public short curveSize;
-        public ushort[] curve;
-        public short splitValue;
-        public int max;
-        public int min;
-        public ushort[] hpred = new ushort[2];
-        private object[] rawdata;
         //huffman tree for the different compression type
         public byte[][] nikonTree =
             {
@@ -45,17 +44,24 @@ namespace RawParser.Model.Parser
          * Source from DCRaw
          * 
          */
-        public LinearisationTable(object[] table, ushort compressionType, int colordepth, uint offset, BinaryReader reader)
+        public LinearisationTable(object[] table, ushort compressionType, int colordepth, uint offset, BinaryReader r)
         {
+            rawdataLength = table.Length;
+            this.colordepth = colordepth;
+
             //optimize as memory stream
-            reader.BaseStream.Position = offset;
-            byte[] imageBuffer = new byte[reader.BaseStream.Length - reader.BaseStream.Position];
-
-            reader.BaseStream.Read(imageBuffer, 0,imageBuffer.Length );
+            //change to filestreamwith bigbuffer
+            r.BaseStream.Position = offset;
+            //reader = r;
             
-            this.reader = new BinaryReader(new MemoryStream(imageBuffer));
+            
+            byte[] imageBuffer = new byte[r.BaseStream.Length - r.BaseStream.Position];
 
-            rawdata = table;
+            r.BaseStream.Read(imageBuffer, 0, imageBuffer.Length);
+            r.Dispose();
+
+            reader = new BinaryReader(new MemoryStream(imageBuffer));
+            
             //get the version
             version0 = (byte)table[0];
             version1 = (byte)table[1];
@@ -126,19 +132,29 @@ namespace RawParser.Model.Parser
 
         }
 
-        private short Lim(short x, short min, short max)
+        private short lim(short x, short a, short b)
         {
-            var t = ((x) < (max) ? (x) : (max));
-            return ((min) > (t) ? (min) : (t));
+            var t = ((x) < (b) ? (x) : (b));
+            return ((a) > (t) ? (a) : (t));
         }
 
-        public BitArray uncompressed(BitArray rawData, uint height, uint width, ushort colordepth)
+        /*
+          * First for 14bit lossless
+          * TODO for other raw
+          * ver0 = 70 (0x48)
+          * ver1 = 48 (0x30)
+          * 
+          * From DCraw
+          * 
+          * 
+          */
+        public BitArray uncompressed(uint height, uint width)
         {
             BitArray uncompressedData = new BitArray((int)(height * width * colordepth)); //add pixel*
             ushort[] huff;
-
+ 
             int tree = 0, row, col, len, shl, diff;
-
+            int min = 0;
             if (version0 == 0x46) tree = 2;
             if (colordepth == 14) tree += 3;
 
@@ -177,7 +193,7 @@ namespace RawParser.Model.Parser
                     }
                     if ((ushort)(hpred[col & 1] + min) >= max) throw new Exception("Error during deflate");
 
-                    var x = Lim((short)hpred[col & 1], 0, 0x3fff);
+                    var x = lim((short)hpred[col & 1], 0, 0x3fff);
 
                     //TODO change variable names
                     ushort xy;
@@ -193,11 +209,10 @@ namespace RawParser.Model.Parser
                     BitArray t = new BitArray(BitConverter.GetBytes(xy).ToArray());
                     for (int k = 0; k < colordepth; k++)
                     {
-                        uncompressedData[(((int)(row*width) + col )*colordepth)+ k] = t[k];
+                        uncompressedData[(((int)(row * width) + col) * colordepth) + k] = t[k];
                     }
                 }
             }
-            reader.Dispose();
             return uncompressedData;
         }
 
@@ -249,7 +264,6 @@ namespace RawParser.Model.Parser
                     {
                         if (h <= 1 << maxt)
                         {
-                            //TODO fix
                             huff[h++] = (ushort)((len << 8) | source[xy]);
                         }
                     }
@@ -278,7 +292,7 @@ namespace RawParser.Model.Parser
             if (nbits == 0 || vbits < 0) { return 0; }
 
             //!reset && vbits < nbits && (c = fgetc(ifp)) != EOF && !(reset = zero_after_ff && c == 0xff && fgetc(ifp))
-            while (reset == 0 && vbits < nbits && i < rawdata.Length)
+            while (reset == 0 && vbits < nbits && i < rawdataLength)
             {
                 i++;
                 c = reader.ReadByte();
@@ -296,5 +310,40 @@ namespace RawParser.Model.Parser
             if (vbits < 0) throw new Exception("Error");
             return c;
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects).
+                    reader.Dispose();
+                }
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~LinearisationTable() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 }

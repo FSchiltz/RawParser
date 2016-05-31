@@ -26,11 +26,20 @@
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
         <ListView x:Name="listView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
-            <TextBlock x:Name="textBlock" TextWrapping="Wrap" FontSize="48">
+            <TextBlock TextWrapping="Wrap" FontSize="48">
             Abouts
             </TextBlock>
             <TextBlock FontSize="24" >
-                Decopression code from DCraw
+                This app is currently work in progress.
+            </TextBlock>
+            <TextBlock FontSize="24" >
+                To report issue, go to https://github.com/arimhan/RawParser/issues
+            </TextBlock>
+            <TextBlock FontSize="24" >
+                To contribue to the code, go to https://github.com/arimhan/RawParser
+            </TextBlock>
+            <TextBlock FontSize="24" >
+                Decompression code from DCraw (http://www.cybercom.net/~dcoffin/dcraw/).
             </TextBlock>
         </ListView>
     </Grid>

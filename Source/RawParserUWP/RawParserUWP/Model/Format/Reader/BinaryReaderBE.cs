@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace RawParser.Model.Parser
+namespace RawParserUWP.Model.Format.Reader
 {
     class BinaryReaderBE : BinaryReader
     {

@@ -1,14 +1,15 @@
-﻿using RawParser.Model.Parser;
-using System;
+﻿using System;
 using System.IO;
+using RawParserUWP.Model.Format.Image;
+using RawParserUWP.Model.Format.Reader;
 
-namespace RawParser.Model.Format.Nikon
+namespace RawParserUWP.Model.Parser.Nikon
 {
     class NikonMakerNote
     {
         public Header header { get; set; }
         public IFD ifd { get; set; }
-        public IFD preview { get; }
+        public IFD preview { get; set; }
         public string stringMagic { set; get; }
         public ushort version { set; get; }
 

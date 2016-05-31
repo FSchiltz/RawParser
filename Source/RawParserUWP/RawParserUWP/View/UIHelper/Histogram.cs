@@ -1,4 +1,4 @@
-﻿namespace RawParserUWP.View
+﻿namespace RawParserUWP.View.UIHelper
 {
     class Histogram
     {

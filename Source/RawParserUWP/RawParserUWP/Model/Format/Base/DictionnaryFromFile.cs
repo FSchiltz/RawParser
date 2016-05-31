@@ -5,17 +5,17 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace RawParser.Model.Parser
+namespace RawParserUWP.Model.Format.Base
 {
     abstract class DictionnaryFromFile<T> : Dictionary<ushort, T>
     {
 
         internal DictionnaryFromFile(string file)
         {
-            ReadFile(file);
+            readFile(file);
         }
 
-        public void ReadFile(string fileName)
+        public void readFile(string fileName)
         {
             int lineread = 0, linediscarder = 0;
             StorageFolder installationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;            
@@ -34,11 +34,9 @@ namespace RawParser.Model.Parser
             });
             t.Wait();
 
-
             // Open the file into a streamreader
             using (StreamReader stream = new StreamReader(tempvar.AsStreamForRead()))
             {
-
                 while (!stream.EndOfStream) // Keep reading until we get to the end
                 {
                     lineread++;
@@ -58,13 +56,14 @@ namespace RawParser.Model.Parser
                             {
                                 temp += tempString[i];
                             }
-                            AddTocontent(Convert.ToUInt16(tempString[0].Trim(), 16), temp);
+                            addTocontent(Convert.ToUInt16(tempString[0].Trim(), 16), temp);
                         }
                     }
                 }
             }
+            tempvar.Dispose();
         }
 
-        public abstract void AddTocontent(ushort key, string contentAsString);
+        public abstract void addTocontent(ushort key, string contentAsString);
     }
 }
