@@ -65,8 +65,12 @@ namespace RawParserUWP.Model.Parser
             Tag makerNoteOffsetTag;
             if (!exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag)) throw new FormatException("File not correct");
             makerNote = new NikonMakerNote(fileStream, makerNoteOffsetTag.dataOffset, true);
-            //TODO
-            return null;
+            Tag thumbnailOffset, thumbnailSize;
+            if (!makerNote.preview.tags.TryGetValue(0x0201, out thumbnailOffset)) throw new FormatException("File not correct");
+            if (!makerNote.preview.tags.TryGetValue(0x0202, out thumbnailSize)) throw new FormatException("File not correct");
+            //get the preview data ( faster than rezising )
+            fileStream.BaseStream.Position = (uint)(thumbnailOffset.data[0]) + 10 + (uint)(makerNoteOffsetTag.dataOffset);
+            return fileStream.ReadBytes(Convert.ToInt32(thumbnailSize.data[0]));
         }
 
         public override byte[] parsePreview()
@@ -89,6 +93,14 @@ namespace RawParserUWP.Model.Parser
 
         public override Dictionary<ushort, Tag> parseExif()
         {
+            //Get the RAW data info
+            Tag imageRAWWidth, imageRAWHeight,imageRAWDepth;
+            if (!subifd1.tags.TryGetValue(0x0100, out imageRAWWidth)) throw new FormatException("File not correct");
+            if (!subifd1.tags.TryGetValue(0x0101, out imageRAWHeight)) throw new FormatException("File not correct");
+            if (!subifd1.tags.TryGetValue(0x0102, out imageRAWDepth)) throw new FormatException("File not correct");
+            colorDepth = (ushort)imageRAWDepth.data[0];
+            height = (uint)imageRAWHeight.data[0];
+            width = (uint)imageRAWWidth.data[0];
             Dictionary<ushort, Tag> temp = new Dictionary<ushort, Tag>();
             Dictionary<ushort, ushort> nikonToStandard = new DictionnaryFromFileUShort(@"Assets\Dic\NikonToStandard.dic");
             Dictionary<ushort, string> standardExifName = new DictionnaryFromFileString(@"Assets\\Dic\StandardExif.dic");
@@ -152,7 +164,7 @@ namespace RawParserUWP.Model.Parser
             {
                 //uncompress the image
                 LinearisationTable line = new LinearisationTable(lineTag.data, (ushort)compressionType.data[0], (ushort)imageRAWDepth.data[0], (uint)imageRAWOffsetTags.data[0], fileStream);
-                rawData = line.uncompressed((uint)imageRAWHeight.data[0], (uint)imageRAWWidth.data[0]);
+                rawData = line.uncompressed(height, width);
                 line.Dispose();
             }
             else
@@ -161,7 +173,6 @@ namespace RawParserUWP.Model.Parser
                 fileStream.BaseStream.Position = (uint)imageRAWOffsetTags.data[0];
                 rawData = new BitArray(fileStream.ReadBytes(Convert.ToInt32(imageRAWSize.data[0])));
             }
-
             fileStream.Dispose();
             return rawData;
         }
