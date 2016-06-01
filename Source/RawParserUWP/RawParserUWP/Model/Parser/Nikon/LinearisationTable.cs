@@ -7,7 +7,7 @@ namespace RawParserUWP.Model.Parser.Nikon
 {
     internal class LinearisationTable : IDisposable
     {
-  
+
         private int colordepth;
         private BinaryReader reader;
 
@@ -44,7 +44,7 @@ namespace RawParserUWP.Model.Parser.Nikon
          * Source from DCRaw
          * 
          */
-        public LinearisationTable(ushort compressionType, int colordepth, uint Rawoffset,uint Linetableoffset, BinaryReader r)
+        public LinearisationTable(ushort compressionType, int colordepth, uint Rawoffset, uint Linetableoffset, BinaryReader r)
         {
             //rawdataLength = table.Length;
             this.colordepth = colordepth;
@@ -96,7 +96,7 @@ namespace RawParserUWP.Model.Parser.Nikon
             //if certain version
             if (version0 == 0x44 && version1 == 0x20 && step > 0)
             {
-                for (int i = 0; i < curveSize ; i += 2)
+                for (int i = 0; i < curveSize; i += 2)
                 {
                     curve[i / step] = r.ReadUInt16();
                 }
@@ -105,6 +105,9 @@ namespace RawParserUWP.Model.Parser.Nikon
                     curve[i] = (ushort)((curve[i - i % step] * (step - i % step) +
                          curve[i - i % step + step] * (i % step)) / step);
                 }
+
+                splitValue = r.ReadInt16();
+
             }
 
             //else if otherversion
@@ -116,21 +119,16 @@ namespace RawParserUWP.Model.Parser.Nikon
                     curve[i] = r.ReadUInt16();
                 }
             }
-            if (compressionType == 4)
-            {
-                splitValue = r.ReadInt16();
-            }
-
 
             //optimize as memory stream
             //change to filestreamwith bigbuffer
-            r.BaseStream.Position = Rawoffset;            
+            r.BaseStream.Position = Rawoffset;
             byte[] imageBuffer = new byte[r.BaseStream.Length - r.BaseStream.Position];
             r.BaseStream.Read(imageBuffer, 0, imageBuffer.Length);
             rawdataLength = imageBuffer.Length;
             r.Dispose();
             reader = new BinaryReader(new MemoryStream(imageBuffer));
-            
+
 
         }
 
@@ -154,7 +152,7 @@ namespace RawParserUWP.Model.Parser.Nikon
         {
             BitArray uncompressedData = new BitArray((int)(height * width * colordepth)); //add pixel*
             ushort[] huff;
- 
+
             int tree = 0, row, col, len, shl, diff;
             int min = 0;
             if (version0 == 0x46) tree = 2;
@@ -209,10 +207,10 @@ namespace RawParserUWP.Model.Parser.Nikon
                     {
                         xy = curve[x];
                     }
-                    
+
                     for (k = 0; k < colordepth; k++)
                     {
-                        uncompressedData[(((int)(row * width) + col) * colordepth) + k] = (((xy >> k) & 1)==1);
+                        uncompressedData[(((int)(row * width) + col) * colordepth) + k] = (((xy >> k) & 1) == 1);
                     }
                 }
             }
@@ -326,10 +324,10 @@ namespace RawParserUWP.Model.Parser.Nikon
                     // TODO: dispose managed state (managed objects).
                     reader.Dispose();
                 }
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
 
-            disposedValue = true;
+                disposedValue = true;
             }
         }
 
