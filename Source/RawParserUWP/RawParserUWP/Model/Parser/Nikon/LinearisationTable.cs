@@ -44,27 +44,17 @@ namespace RawParserUWP.Model.Parser.Nikon
          * Source from DCRaw
          * 
          */
-        public LinearisationTable(object[] table, ushort compressionType, int colordepth, uint offset, BinaryReader r)
+        public LinearisationTable(ushort compressionType, int colordepth, uint Rawoffset,uint Linetableoffset, BinaryReader r)
         {
-            rawdataLength = table.Length;
+            //rawdataLength = table.Length;
             this.colordepth = colordepth;
 
-            //optimize as memory stream
-            //change to filestreamwith bigbuffer
-            r.BaseStream.Position = offset;
-            //reader = r;
-            
-            
-            byte[] imageBuffer = new byte[r.BaseStream.Length - r.BaseStream.Position];
+            //move the reader to the corresponding offset
+            r.BaseStream.Position = Linetableoffset;
 
-            r.BaseStream.Read(imageBuffer, 0, imageBuffer.Length);
-            r.Dispose();
-
-            reader = new BinaryReader(new MemoryStream(imageBuffer));
-            
             //get the version
-            version0 = (byte)table[0];
-            version1 = (byte)table[1];
+            version0 = r.ReadByte();
+            version1 = r.ReadByte();
 
             //get the 4 vpreds
 
@@ -76,16 +66,17 @@ namespace RawParserUWP.Model.Parser.Nikon
 
             if (version0 == 0x49 || version1 == 0x58)
             {
-                //fseek(ifp, 2110, SEEK_CUR) before));
+                //TODO
+                r.BaseStream.Position += 2110;
 
             }
-            vpreds[0][0] = BitConverter.ToInt16(new byte[2] { (byte)table[2], (byte)table[3] }, 0);
-            vpreds[0][1] = BitConverter.ToInt16(new byte[2] { (byte)table[4], (byte)table[5] }, 0);
-            vpreds[1][0] = BitConverter.ToInt16(new byte[2] { (byte)table[6], (byte)table[7] }, 0);
-            vpreds[1][1] = BitConverter.ToInt16(new byte[2] { (byte)table[8], (byte)table[9] }, 0);
+            vpreds[0][0] = r.ReadInt16();
+            vpreds[0][1] = r.ReadInt16();
+            vpreds[1][0] = r.ReadInt16();
+            vpreds[1][1] = r.ReadInt16();
 
             //get the curvesize
-            curveSize = Convert.ToInt16(table[10]);
+            curveSize = r.ReadInt16();
 
             int step = 0;
             max = 1 << colordepth & 0x7fff;
@@ -107,7 +98,7 @@ namespace RawParserUWP.Model.Parser.Nikon
             {
                 for (int i = 0; i < curveSize * 2; i += 2)
                 {
-                    curve[i / 2 * step] = BitConverter.ToUInt16(new byte[2] { (byte)table[12 + i], (byte)table[13 + i] }, 0);
+                    curve[i / 2 * step] = r.ReadUInt16();
                 }
                 for (int i = 0; i < max; i++)
                 {
@@ -122,13 +113,24 @@ namespace RawParserUWP.Model.Parser.Nikon
             {
                 for (int i = 0; i < curveSize * 2; i += 2)
                 {
-                    curve[i] = BitConverter.ToUInt16(new byte[2] { (byte)table[12 + i], (byte)table[13 + i] }, 0);
+                    curve[i] = r.ReadUInt16();
                 }
             }
             if (compressionType == 4)
             {
-                splitValue = BitConverter.ToInt16(new byte[2] { (byte)table[562], (byte)table[563] }, 0);
+                splitValue = r.ReadInt16();
             }
+
+
+            //optimize as memory stream
+            //change to filestreamwith bigbuffer
+            r.BaseStream.Position = Rawoffset;            
+            byte[] imageBuffer = new byte[r.BaseStream.Length - r.BaseStream.Position];
+            r.BaseStream.Read(imageBuffer, 0, imageBuffer.Length);
+            rawdataLength = imageBuffer.Length;
+            r.Dispose();
+            reader = new BinaryReader(new MemoryStream(imageBuffer));
+            
 
         }
 
