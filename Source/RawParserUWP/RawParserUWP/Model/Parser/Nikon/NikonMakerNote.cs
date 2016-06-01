@@ -46,7 +46,7 @@ namespace RawParserUWP.Model.Parser.Nikon
 
         internal uint getOffset()
         {
-            return header.TIFFoffset + 10 + offset;
+            return 10 + offset;
         }
     }
 }

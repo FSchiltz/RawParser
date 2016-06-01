@@ -153,11 +153,9 @@ namespace RawParserUWP.Model.Parser
             ifd = null;
             subifd0 = null;
             subifd1 = null;
-            makerNote.header = null;
+           
             header = null;
-            makerNote.ifd = null;
-            makerNote.preview = null;
-            makerNote = null;
+           
             BitArray rawData;
             //Check if uncompressed
             if ((ushort)imageRAWCompressed.data[0] == 34713)
@@ -166,6 +164,8 @@ namespace RawParserUWP.Model.Parser
                 LinearisationTable line = new LinearisationTable((ushort)compressionType.data[0], 
                     (ushort)imageRAWDepth.data[0], (uint)imageRAWOffsetTags.data[0],
                     lineTag.dataOffset + makerNote.getOffset(), fileStream);
+
+                makerNote = null;
                 rawData = line.uncompressed(height, width);
                 line.Dispose();
             }
