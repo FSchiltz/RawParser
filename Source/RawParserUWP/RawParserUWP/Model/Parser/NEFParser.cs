@@ -44,7 +44,7 @@ namespace RawParserUWP.Model.Parser
             if (fileStream.ReadUInt16() == 0x4D4D)
             {
                 //File is in reverse bit order
-                fileStream.Dispose();
+               // fileStream.Dispose(); //DO NOT dispose, because it remove the filestream not the reader and crash the parse
                 fileStream = new BinaryReaderBE(file);
             }
 
