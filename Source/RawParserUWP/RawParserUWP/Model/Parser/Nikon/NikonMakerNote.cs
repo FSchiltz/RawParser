@@ -12,11 +12,13 @@ namespace RawParserUWP.Model.Parser.Nikon
         public IFD preview { get; set; }
         public string stringMagic { set; get; }
         public ushort version { set; get; }
+        private uint offset;
 
         public NikonMakerNote(BinaryReader buffer, uint offset, bool compression)
         {
             //read the header
             stringMagic = "";
+            this.offset = offset;
             for (int i = 0; i < 6; i++)
             {
                 stringMagic += buffer.ReadChar();
@@ -40,6 +42,11 @@ namespace RawParserUWP.Model.Parser.Nikon
                 throw new Exception("Preview Offset not found");
             }
             preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + offset + 10, true, false);
+        }
+
+        internal uint getOffset()
+        {
+            return header.TIFFoffset + 10 + offset;
         }
     }
 }

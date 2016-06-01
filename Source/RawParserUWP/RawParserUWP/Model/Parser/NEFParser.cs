@@ -163,7 +163,9 @@ namespace RawParserUWP.Model.Parser
             if ((ushort)imageRAWCompressed.data[0] == 34713)
             {
                 //uncompress the image
-                LinearisationTable line = new LinearisationTable(lineTag.data, (ushort)compressionType.data[0], (ushort)imageRAWDepth.data[0], (uint)imageRAWOffsetTags.data[0], fileStream);
+                LinearisationTable line = new LinearisationTable((ushort)compressionType.data[0], 
+                    (ushort)imageRAWDepth.data[0], (uint)imageRAWOffsetTags.data[0],
+                    lineTag.dataOffset + makerNote.getOffset(), fileStream);
                 rawData = line.uncompressed(height, width);
                 line.Dispose();
             }
