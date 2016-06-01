@@ -82,9 +82,10 @@ namespace RawParserUWP.Model.Format.Image
                     {
                         //get the pixel
                         ushort temp = 0;
+                        //todo check if correct
                         for (int k = 0; k < colorDepth; k++)
                         {
-                            if (imageData[(i * (int)colorDepth) + k])
+                            if (imageData[(i * colorDepth) + k])
                             {
                                 temp |= (ushort)(1 << k);
                             }

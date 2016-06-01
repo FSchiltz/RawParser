@@ -165,6 +165,8 @@ namespace RawParserUWP.Model.Parser.Nikon
             getbithuff(-1, null);
 
             int i = 0;
+            short x;
+            int k = 0;
             for (min = row = 0; row < height; row++)
             {
                 if (splitValue > 1 && row == splitValue)
@@ -193,7 +195,7 @@ namespace RawParserUWP.Model.Parser.Nikon
                     }
                     if ((ushort)(hpred[col & 1] + min) >= max) throw new Exception("Error during deflate");
 
-                    var x = lim((short)hpred[col & 1], 0, 0x3fff);
+                    x = lim((short)hpred[col & 1], 0, 0x3fff);
 
                     //TODO change variable names
                     ushort xy;
@@ -205,11 +207,10 @@ namespace RawParserUWP.Model.Parser.Nikon
                     {
                         xy = curve[x];
                     }
-
-                    BitArray t = new BitArray(BitConverter.GetBytes(xy).ToArray());
-                    for (int k = 0; k < colordepth; k++)
+                    
+                    for (k = 0; k < colordepth; k++)
                     {
-                        uncompressedData[(((int)(row * width) + col) * colordepth) + k] = t[k];
+                        uncompressedData[(((int)(row * width) + col) * colordepth) + k] = (((xy >> k) & 1)==1);
                     }
                 }
             }
