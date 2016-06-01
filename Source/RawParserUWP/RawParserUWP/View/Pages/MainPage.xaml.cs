@@ -153,18 +153,14 @@ namespace RawParserUWP
                     currentRawImage.colorDepth = parser.colorDepth;
                     currentRawImage.imageData = Demosaic.demos(parser.parseRAWImage(),currentRawImage.height,currentRawImage.width,currentRawImage.colorDepth, demosAlgorithm.NearNeighbour);
 
-                    /*
+                    
                     //Needs to run in UI thread because fuck it
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
                          displayImage(currentRawImage.getImageRawAs8bitsBitmap((int)currentRawImage.width, (int)currentRawImage.height, null));
                      });
-                     */
-
-                    emptyImage();
-
-
+                     
                     //dispose
                     file = null;
                     parser = null;
