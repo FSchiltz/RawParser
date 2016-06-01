@@ -96,9 +96,9 @@ namespace RawParserUWP.Model.Parser.Nikon
             //if certain version
             if (version0 == 0x44 && version1 == 0x20 && step > 0)
             {
-                for (int i = 0; i < curveSize * 2; i += 2)
+                for (int i = 0; i < curveSize ; i += 2)
                 {
-                    curve[i / 2 * step] = r.ReadUInt16();
+                    curve[i / step] = r.ReadUInt16();
                 }
                 for (int i = 0; i < max; i++)
                 {
