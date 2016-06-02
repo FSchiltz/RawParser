@@ -158,9 +158,9 @@ namespace RawParserUWP.Model.Parser.Nikon
           * 
           * 
           */
-        public BitArray uncompressed(uint height, uint width)
+        public BitArray uncompressed(uint height, uint width, byte[] cfa)
         {
-            BitArray uncompressedData = new BitArray((int)(height * width * colordepth)); //add pixel*
+            BitArray uncompressedData = new BitArray((int)(height * width * colordepth * 3)); //add pixel*
             ushort[] huff;
 
             int tree = 0, row, col, len, shl, diff;
@@ -206,12 +206,31 @@ namespace RawParserUWP.Model.Parser.Nikon
 
                     //TODO change variable names
                     ushort xy = curve[lim((short)hpred[col & 1], 0, 0x3fff)];
-                    for (k = 0; k < colordepth; k++)
+                    //Check wich color is the pixel 
+                    int cfaoffset =cfa[((row % 2) * 2) + col % 2] * colordepth;
+                    for (k =0; k < colordepth; k++)
                     {
-                        uncompressedData[(((int)(row * width) + col) * colordepth) + k] = (((xy >> k) & 1) == 1);
+                        uncompressedData[(((int)(row * width) + col) * 3 * colordepth) + cfaoffset + k] = (((xy >> k) & 1) == 1);
                     }
                 }
             }
+            /*
+            //Create a object for debug
+            ushort[] tempsoieo = new ushort[width * height * 3];
+            for(int by = 0; by < tempsoieo.Length; by++)
+            {
+                ushort trtr = 0;
+                for(int tr = 0; tr < colordepth; tr++)
+                {
+                    if (uncompressedData[(by*colordepth) +tr])
+                    {
+                        trtr |= (ushort)(1 << k);
+                    }
+                }
+                tempsoieo[by] = BitConverter.ToUInt16(BitConverter.GetBytes(trtr).Reverse().ToArray(), 0);
+            }
+              
+             //*/
             return uncompressedData;
         }
 
