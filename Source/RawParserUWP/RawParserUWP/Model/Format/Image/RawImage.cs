@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,8 +14,8 @@ namespace RawParserUWP.Model.Format.Image
     {
         public byte[] thumbnail, previewImage;
         public string fileName { get; set; }
-        public Dictionary<ushort, Tag> exif { get; set; }
-        public BitArray imageData { set; get; }
+        public Dictionary<ushort, Tag> exif;
+        public BitArray imageData;
         public ushort colorDepth;
         public uint height;
         public uint width;
@@ -61,7 +62,7 @@ namespace RawParserUWP.Model.Format.Image
             return bitmapasync.GetResults();
         }
 
-        unsafe public SoftwareBitmap getImageRawAs8bitsBitmap(int width, int height, object[] curve)
+        unsafe public SoftwareBitmap getImageRawAs8bitsBitmap(int width, int height, object[] curve, ref int []value)
         {
             //mode is BGRA because microsoft only work correctly wih this            
             SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Bgra8, width, height,BitmapAlphaMode.Ignore);
@@ -78,6 +79,7 @@ namespace RawParserUWP.Model.Format.Image
 
                     //calculte diff between colordepth and 8
                     int diff = (int)(colorDepth) - 8;
+                    
                     for (int i = 0; i < bufferLayout.Width * bufferLayout.Height; i++)
                     {
                         //get the pixel
@@ -90,6 +92,10 @@ namespace RawParserUWP.Model.Format.Image
                                 temp |= (ushort)(1 << k);
                             }
                         }
+
+                        //TODO add histogram here to reducecpu usage
+                        value[temp] += 1;
+
                         /*
                          * For the moment no curve
                          * TODO apply a curve given in input
