@@ -18,18 +18,18 @@ namespace RawParserUWP.View.UIHelper
             for (int i = 0; i < value.Length; i++)
             {
                 Line line = null;
-                uint maxheight = (uint)(histogramCanvas.Height/imageHeight);
-                uint widthstep = (uint)(histogramCanvas.Width / value.Length);
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
+                         uint maxheight = (uint)(histogramCanvas.Height / imageHeight);
+                         uint widthstep = (uint)(histogramCanvas.Width / value.Length);
                          line = new Line();
                          line.Stroke = new SolidColorBrush(Colors.Black);
 
-                         line.X1 = 1;
-                         line.X2 = 50;
-                         line.Y1 = 1;
-                         line.Y2 = 50;
+                         line.X1 = line.X2 = i*widthstep;
+                         
+                         line.Y1 = 0;
+                         line.Y2 = maxheight * maxheight;
 
                          line.StrokeThickness = 1;
                          histogramCanvas.Children.Add(line);
