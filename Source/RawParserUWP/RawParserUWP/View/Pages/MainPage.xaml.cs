@@ -162,19 +162,22 @@ namespace RawParserUWP
                     currentRawImage.colorDepth = parser.colorDepth;
                     currentRawImage.imageData = Demosaic.demos(parser.parseRAWImage(), currentRawImage.height, currentRawImage.width, currentRawImage.colorDepth, demosAlgorithm.NearNeighbour);
 
-                    
+
                     //Needs to run in UI thread because fuck it
-                    int [] value = new int[(int)Math.Pow(2, currentRawImage.colorDepth)];
+                    int[] value = new int[(int)Math.Pow(2, currentRawImage.colorDepth)];
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
-                         displayImage(currentRawImage.getImageRawAs8bitsBitmap((int)currentRawImage.width, (int)currentRawImage.height, null,ref value ));
+                         displayImage(currentRawImage.getImageRawAs8bitsBitmap((int)currentRawImage.width, (int)currentRawImage.height, null, ref value));
                      });
                     //display the histogram
-                    Task histoTask = Task.Run(() =>
+                    Task histoTask = Task.Run(async () =>
                     {
-                        Histogram.Create(value, currentRawImage.colorDepth,currentRawImage.height, histogramCanvas);
-                        histoLoadingBar.Visibility = Visibility.Collapsed;
+                        Histogram.Create(value, currentRawImage.colorDepth, currentRawImage.height, histogramCanvas);
+                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                         {
+                             histoLoadingBar.Visibility = Visibility.Collapsed;
+                         });
                     });
                     //dispose
                     file = null;
