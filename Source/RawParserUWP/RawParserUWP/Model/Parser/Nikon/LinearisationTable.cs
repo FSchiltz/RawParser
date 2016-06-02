@@ -1,5 +1,7 @@
-﻿using System;
+﻿using RawParserUWP.Model.Format.Base;
+using System;
 using System.Collections;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -10,34 +12,35 @@ namespace RawParserUWP.Model.Parser.Nikon
 
         private int colordepth;
         private BinaryReader reader;
-
+        private ushort linearCurveSize = UInt16.MaxValue;
         byte version0;
         byte version1;
         int max;
         short curveSize;
-        ushort[] curve;
+        uShortArrayWithIndexAsDefaultValue curve;
         short splitValue;
         int vbits = 0, reset = 0;
         short[][] vpreds;
         ushort[] hpred = new ushort[2];
         uint bitbuf = 0;
         int rawdataLength;
+        uint c = 0;
 
         //huffman tree for the different compression type
         public byte[][] nikonTree =
             {
-                    new byte[]{ 0,1,5,1,1,1,1,1,1,2,0,0,0,0,0,0,	/* 12-bit lossy */
-                      5,4,3,6,2,7,1,0,8,9,11,10,12 },
-                    new byte[]{ 0,1,5,1,1,1,1,1,1,2,0,0,0,0,0,0,	/* 12-bit lossy after split */
-                      0x39,0x5a,0x38,0x27,0x16,5,4,3,2,1,0,11,12,12 },
-                    new byte[] { 0,1,4,2,3,1,2,0,0,0,0,0,0,0,0,0,  /* 12-bit lossless */
-                      5,4,6,3,7,2,8,1,9,0,10,11,12 },
-                    new byte[]{ 0,1,4,3,1,1,1,1,1,2,0,0,0,0,0,0,	/* 14-bit lossy */
-                      5,6,4,7,8,3,9,2,1,0,10,11,12,13,14 },
-                    new byte[]{ 0,1,5,1,1,1,1,1,1,1,2,0,0,0,0,0,	/* 14-bit lossy after split */
-                      8,0x5c,0x4b,0x3a,0x29,7,6,5,4,3,2,1,0,13,14 },
-                    new byte [] { 0,1,4,2,2,3,1,2,0,0,0,0,0,0,0,0,	/* 14-bit lossless */
-                      7,6,8,5,9,4,10,3,11,12,2,0,1,13,14 }
+                    new byte[32]{ 0,1,5,1,1,1,1,1,1,2,0,0,0,0,0,0,	/* 12-bit lossy */
+                      5,4,3,6,2,7,1,0,8,9,11,10,12,0,0,0 },
+                    new byte[32]{ 0,1,5,1,1,1,1,1,1,2,0,0,0,0,0,0,	/* 12-bit lossy after split */
+                      0x39,0x5a,0x38,0x27,0x16,5,4,3,2,1,0,11,12,12,0,0 },
+                    new byte[32] { 0,1,4,2,3,1,2,0,0,0,0,0,0,0,0,0,  /* 12-bit lossless */
+                      5,4,6,3,7,2,8,1,9,0,10,11,12,0,0,0 },
+                    new byte[32]{ 0,1,4,3,1,1,1,1,1,2,0,0,0,0,0,0,	/* 14-bit lossy */
+                      5,6,4,7,8,3,9,2,1,0,10,11,12,13,14,0 },
+                    new byte[32]{ 0,1,5,1,1,1,1,1,1,1,2,0,0,0,0,0,	/* 14-bit lossy after split */
+                      8,0x5c,0x4b,0x3a,0x29,7,6,5,4,3,2,1,0,13,14,0 },
+                    new byte [32] { 0,1,4,2,2,3,1,2,0,0,0,0,0,0,0,0,	/* 14-bit lossless */
+                      7,6,8,5,9,4,10,3,11,12,2,0,1,13,14,0 }
             };
 
         /*
@@ -81,31 +84,36 @@ namespace RawParserUWP.Model.Parser.Nikon
             int step = 0;
             max = 1 << colordepth & 0x7fff;
             step = max / (curveSize - 1);
+            /*
+                        if (curveSize == 257 && compressionType == 4)
+                        {
+                            curveSize = (short)(1 + curveSize * 2);
+                        }
+                        */
 
-            if (curveSize == 257 && compressionType == 4)
-            {
-                curveSize = (short)(1 + curveSize * 2);
-            }
-
-            curve = new ushort[curveSize];
-            for (ushort i = 0; i < curveSize; i++)
+            curve = new uShortArrayWithIndexAsDefaultValue(linearCurveSize);
+            /*
+            for (ushort i = 0; i < linearCurveSize; i++)
             {
                 curve[i] = i;
             }
-
+            */
             //if certain version
             if (version0 == 0x44 && version1 == 0x20 && step > 0)
             {
-                for (int i = 0; i < curveSize; i += 2)
+                for (int i = 0; i < curveSize; i++)
                 {
-                    curve[i / step] = r.ReadUInt16();
+                    curve[i * step] = r.ReadUInt16();
                 }
                 for (int i = 0; i < max; i++)
                 {
-                    curve[i] = (ushort)((curve[i - i % step] * (step - i % step) +
-                         curve[i - i % step + step] * (i % step)) / step);
+                    curve[i] = (ushort)(
+                        (
+                            curve[i - i % step] * (step - i % step) +
+                            curve[i - i % step + step] * (i % step)
+                        ) / step);
                 }
-
+                r.BaseStream.Position = Linetableoffset + 562;
                 splitValue = r.ReadInt16();
 
             }
@@ -114,7 +122,7 @@ namespace RawParserUWP.Model.Parser.Nikon
 
             else if (version0 != 0x46 && curveSize <= 0x4001)
             {
-                for (int i = 0; i < curveSize * 2; i += 2)
+                for (int i = 0; i < curveSize; i++)
                 {
                     curve[i] = r.ReadUInt16();
                 }
@@ -125,9 +133,11 @@ namespace RawParserUWP.Model.Parser.Nikon
             r.BaseStream.Position = Rawoffset;
             byte[] imageBuffer = new byte[r.BaseStream.Length - r.BaseStream.Position];
             r.BaseStream.Read(imageBuffer, 0, imageBuffer.Length);
+
             rawdataLength = imageBuffer.Length;
             r.Dispose();
             reader = new BinaryReader(new MemoryStream(imageBuffer));
+            reader.BaseStream.Position = 0;
 
 
         }
@@ -165,7 +175,6 @@ namespace RawParserUWP.Model.Parser.Nikon
             getbithuff(-1, null);
 
             int i = 0;
-            short x;
             int k = 0;
             for (min = row = 0; row < height; row++)
             {
@@ -176,7 +185,7 @@ namespace RawParserUWP.Model.Parser.Nikon
                 }
                 for (col = 0; col < width; col++)
                 {
-                    //Debug.WriteLine("Col: " + col + " of: " + width + " | Row: " + row + " of: " + height);
+                    //if (row >= 3083) Debug.WriteLine("Col: " + col + " of: " + width);
                     i = (int)getbithuff(huff[0], huffMinus1);
                     len = (i & 15);
                     shl = i >> 4;
@@ -195,19 +204,8 @@ namespace RawParserUWP.Model.Parser.Nikon
                     }
                     if ((ushort)(hpred[col & 1] + min) >= max) throw new Exception("Error during deflate");
 
-                    x = lim((short)hpred[col & 1], 0, 0x3fff);
-
                     //TODO change variable names
-                    ushort xy;
-                    if (x >= curveSize)
-                    {
-                        xy = (ushort)x;
-                    }
-                    else
-                    {
-                        xy = curve[x];
-                    }
-
+                    ushort xy = curve[lim((short)hpred[col & 1], 0, 0x3fff)];
                     for (k = 0; k < colordepth; k++)
                     {
                         uncompressedData[(((int)(row * width) + col) * colordepth) + k] = (((xy >> k) & 1) == 1);
@@ -245,7 +243,8 @@ namespace RawParserUWP.Model.Parser.Nikon
          */
         public ushort[] makeDecoder(int index)
         {
-            byte[] count = new byte[nikonTree[index].Length + 1];
+            //generate the tree
+            byte[] count = new byte[nikonTree[index].Length + 2];
             byte[] source = nikonTree[index].Skip(16).ToArray();
             count[0] = 0;
             nikonTree[index].CopyTo(count, 1);
@@ -259,11 +258,11 @@ namespace RawParserUWP.Model.Parser.Nikon
             int xy = 0;
             for (int h = len = 1; len <= maxt; len++)
             {
-                for (int i = 0; i < count[len]; i++, xy++)
+                for (int i = 0; i < count[len]; i++, ++xy)
                 {
                     for (int j = 0; j < 1 << (maxt - len); j++)
                     {
-                        if (h <= 1 << maxt)
+                        if (h <= (1 << maxt))
                         {
                             huff[h++] = (ushort)((len << 8) | source[xy]);
                         }
@@ -279,9 +278,6 @@ namespace RawParserUWP.Model.Parser.Nikon
          */
         public uint getbithuff(int nbits, ushort[] huff)
         {
-            uint c = 0;
-            int i = 0;
-
             if (nbits > 25) { return 0; }
             if (nbits < 0)
             {
@@ -293,9 +289,8 @@ namespace RawParserUWP.Model.Parser.Nikon
             if (nbits == 0 || vbits < 0) { return 0; }
 
             //!reset && vbits < nbits && (c = fgetc(ifp)) != EOF && !(reset = zero_after_ff && c == 0xff && fgetc(ifp))
-            while (reset == 0 && vbits < nbits && i < rawdataLength)
+            while (reset == 0 && vbits < nbits && reader.BaseStream.Position < reader.BaseStream.Length)// && !(c == 0xff && reader.ReadByte()== 0))
             {
-                i++;
                 c = reader.ReadByte();
                 bitbuf = (bitbuf << 8) + (byte)c;
                 vbits += 8;
