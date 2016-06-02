@@ -18,6 +18,7 @@ using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using System.Runtime.InteropServices;
 using RawParserUWP.Model.Parser.Demosaic;
+using RawParserUWP.View.UIHelper;
 
 namespace RawParserUWP
 {
@@ -33,6 +34,7 @@ namespace RawParserUWP
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
         private RawImage currentRawImage { set; get; }
         public bool imageSelected { set; get; }
         public double pageWidth;
@@ -41,11 +43,17 @@ namespace RawParserUWP
         public MainPage()
         {
             InitializeComponent();
-
+            InitSettings();
             NavigationCacheMode = NavigationCacheMode.Enabled;
 
             imageSelected = false;
 
+        }
+
+        private void InitSettings()
+        {
+            //checkif settings already exists
+            if (localSettings.Values["imageBoxBorder"] == null) localSettings.Values["imageBoxBorder"] = 10;
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -124,6 +132,7 @@ namespace RawParserUWP
 
             //Add a loading screen
             progressDisplay.Visibility = Visibility.Visible;
+            histoLoadingBar.Visibility = Visibility.Visible;
             emptyImage();
 
             Task t = Task.Run(async () =>
@@ -151,16 +160,22 @@ namespace RawParserUWP
                     currentRawImage.height = parser.height;
                     currentRawImage.width = parser.width;
                     currentRawImage.colorDepth = parser.colorDepth;
-                    currentRawImage.imageData = Demosaic.demos(parser.parseRAWImage(),currentRawImage.height,currentRawImage.width,currentRawImage.colorDepth, demosAlgorithm.NearNeighbour);
+                    currentRawImage.imageData = Demosaic.demos(parser.parseRAWImage(), currentRawImage.height, currentRawImage.width, currentRawImage.colorDepth, demosAlgorithm.NearNeighbour);
 
                     
                     //Needs to run in UI thread because fuck it
+                    int [] value = new int[(int)Math.Pow(2, currentRawImage.colorDepth)];
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
-                         displayImage(currentRawImage.getImageRawAs8bitsBitmap((int)currentRawImage.width, (int)currentRawImage.height, null));
+                         displayImage(currentRawImage.getImageRawAs8bitsBitmap((int)currentRawImage.width, (int)currentRawImage.height, null,ref value ));
                      });
-                     
+                    //display the histogram
+                    Task histoTask = Task.Run(() =>
+                    {
+                        Histogram.Create(value, currentRawImage.colorDepth,currentRawImage.height, histogramCanvas);
+                        histoLoadingBar.Visibility = Visibility.Collapsed;
+                    });
                     //dispose
                     file = null;
                     parser = null;
@@ -206,7 +221,6 @@ namespace RawParserUWP
                 {
                     //TODO
                 }
-
             }
         }
 
@@ -223,13 +237,6 @@ namespace RawParserUWP
         private void appbarShowSplitClick(object sender, RoutedEventArgs e)
         {
             splitView.IsPaneOpen = !splitView.IsPaneOpen;
-        }
-
-        private void imageBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
-        {
-            imageDisplayScroll.ZoomToFactor((float)0.1);
-            imageDisplayScroll.ScrollToVerticalOffset(imageDisplayScroll.ScrollableHeight / 2);
-            imageDisplayScroll.ScrollToHorizontalOffset(imageDisplayScroll.ScrollableWidth / 2);
         }
 
         public async void displayImage(SoftwareBitmap image)
@@ -249,10 +256,27 @@ namespace RawParserUWP
                                 WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                                 image.CopyToBuffer(bitmap.PixelBuffer);
                                 imageBox.Source = bitmap;
+                                setScrollProperty(bitmap.PixelHeight, bitmap.PixelWidth);
                             });
+                    //display the exif
+
                 }
                 //*/
             }
+        }
+
+        private void setScrollProperty(int pixelHeight, int pixelWidth)
+        {
+            //TODO call when changed state
+            if ((pixelWidth / pixelHeight) > (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
+            {
+                imageDisplayScroll.MinZoomFactor = (float)(imageDisplayScroll.ViewportWidth / (pixelWidth + (int)localSettings.Values["imageBoxBorder"]));
+            }
+            else
+            {
+                imageDisplayScroll.MinZoomFactor = (float)(imageDisplayScroll.ViewportHeight / (pixelHeight + (int)localSettings.Values["imageBoxBorder"]));
+            }
+            imageDisplayScroll.ZoomToFactor(imageDisplayScroll.MinZoomFactor);
         }
 
         public async void displayExif()

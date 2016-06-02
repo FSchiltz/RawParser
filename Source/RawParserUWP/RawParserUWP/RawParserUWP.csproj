@@ -119,6 +119,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Model\Format\Base\ByteArrayWithIndexValue.cs" />
     <Compile Include="Model\Format\Base\DictionnaryFromFileString.cs" />
     <Compile Include="Model\Format\Base\DictionnaryFromFileUShort.cs" />
     <Compile Include="Model\Format\Base\DictionnaryFromFile.cs" />

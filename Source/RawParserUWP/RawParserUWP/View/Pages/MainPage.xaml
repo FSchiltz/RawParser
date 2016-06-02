@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     SizeChanged="Page_SizeChanged">
+    
     <Page.BottomAppBar>
         <CommandBar >
             <CommandBar.Content>
@@ -105,12 +106,12 @@
         <SplitView x:Name="splitView" PanePlacement="Right" DisplayMode="Inline" IsPaneOpen="True">
             <SplitView.Content>
                 <ScrollViewer x:Name="imageDisplayScroll" ZoomMode="Enabled" 
-                            MinZoomFactor="0.1" 
-                            MaxZoomFactor="1"
+                            MinZoomFactor="1" 
+                            MaxZoomFactor="10"
                             
                             HorizontalScrollBarVisibility="Auto"
                             VerticalScrollBarVisibility="Auto">
-                    <Image x:Name="imageBox" DataContextChanged="imageBox_DataContextChanged"
+                    <Image x:Name="imageBox" 
                            MaxWidth="{Binding PageWidth}"
                            MaxHeight="{Binding PageHeight}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </ScrollViewer>
@@ -118,15 +119,16 @@
             <SplitView.Pane >
                 <Pivot Background="#FFF0F0F0">
                     <PivotItem Header="Exposure">
+                        
                         <ListView Background="#FFE4E4E4" Margin="-12,0" >
                             <!--The histogram-->
                             <TextBlock Foreground="Black">
                                 Histogram
-                            </TextBlock>
-                            <Border BorderBrush="#FF818181" BorderThickness="1">
+                            </TextBlock>                            
+                            <Border BorderBrush="#FF818181" BorderThickness="1">                                
                                 <Canvas x:Name="histogramCanvas" Width="300" Height="200">
-
-                                </Canvas>
+                                    <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}"/>
+                                </Canvas>                                
                             </Border>
                         </ListView>
                     </PivotItem>
