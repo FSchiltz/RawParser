@@ -19,6 +19,7 @@ namespace RawParserUWP.Model.Format.Image
         public ushort colorDepth;
         public uint height;
         public uint width;
+        public byte[] cfa;
 
         public static SoftwareBitmap getImageAsBitmap(byte[] im)
         {
@@ -62,10 +63,10 @@ namespace RawParserUWP.Model.Format.Image
             return bitmapasync.GetResults();
         }
 
-        unsafe public SoftwareBitmap getImageRawAs8bitsBitmap(int width, int height, object[] curve, ref int []value)
+        unsafe public SoftwareBitmap getImageRawAs8bitsBitmap(int width, int height, object[] curve, ref int[] value)
         {
             //mode is BGRA because microsoft only work correctly wih this            
-            SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Bgra8, width, height,BitmapAlphaMode.Ignore);
+            SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Rgba8, width, height, BitmapAlphaMode.Ignore);
             using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))
             {
                 using (var reference = buffer.CreateReference())
@@ -78,33 +79,47 @@ namespace RawParserUWP.Model.Format.Image
                     BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
 
                     //calculte diff between colordepth and 8
-                    int diff = (int)(colorDepth) - 8;
-                    
+                    int diff = (colorDepth) - 8;
+
                     for (int i = 0; i < bufferLayout.Width * bufferLayout.Height; i++)
                     {
                         //get the pixel
-                        ushort temp = 0;
-                        //todo check if correct
+                        ushort blue = 0, green = 0, red = 0;
                         for (int k = 0; k < colorDepth; k++)
                         {
-                            if (imageData[(i * colorDepth) + k])
+                            if (imageData[(i * 3 * colorDepth) + k])
                             {
-                                temp |= (ushort)(1 << k);
+                                red |= (ushort)(1 << k);
+                            }
+                        }
+                        for (int k = 0; k < colorDepth; k++)
+                        {
+                            if (imageData[(i * 3 * colorDepth) + colorDepth + k])
+                            {
+                                green |= (ushort)(1 << k);
+                            }
+                        }
+                        for (int k = 0; k < colorDepth; k++)
+                        {
+                            if (imageData[(i * 3 * colorDepth) + (2 * colorDepth) + k])
+                            {
+                                blue |= (ushort)(1 << k);
                             }
                         }
 
-                        //TODO add histogram here to reducecpu usage
-                        value[temp] += 1;
+                        //TODO get correct luminance
+                        value[(blue + red + green) / 3] += 1;
 
                         /*
                          * For the moment no curve
                          * TODO apply a curve given in input
                          * 
                          * */
-                        tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)(temp >> diff);
-                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 1] = (byte)(temp >> diff);
-                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)(temp >> diff);
-                        tempByteArray[bufferLayout.StartIndex+(i * 4) + 3] = 255;
+                        
+                        tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)(red >> diff);
+                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 1] = (byte)(green >> diff );
+                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)(blue >> diff );
+                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 3] = 255;
                     }
                 }
             }

@@ -94,13 +94,16 @@ namespace RawParserUWP.Model.Parser
         public override Dictionary<ushort, Tag> parseExif()
         {
             //Get the RAW data info
-            Tag imageRAWWidth, imageRAWHeight,imageRAWDepth;
+            Tag imageRAWWidth, imageRAWHeight,imageRAWDepth, imageRAWCFA;
             if (!subifd1.tags.TryGetValue(0x0100, out imageRAWWidth)) throw new FormatException("File not correct");
             if (!subifd1.tags.TryGetValue(0x0101, out imageRAWHeight)) throw new FormatException("File not correct");
             if (!subifd1.tags.TryGetValue(0x0102, out imageRAWDepth)) throw new FormatException("File not correct");
+            if (!subifd1.tags.TryGetValue(0x828e, out imageRAWCFA)) throw new FormatException("File not correct");
             colorDepth = (ushort)imageRAWDepth.data[0];
             height = (uint)imageRAWHeight.data[0];
             width = (uint)imageRAWWidth.data[0];
+            cfa = new byte[4];
+            for(int i = 0;i < 4; i++) cfa[i] = (byte)imageRAWCFA.data[i];
             Dictionary<ushort, Tag> temp = new Dictionary<ushort, Tag>();
             Dictionary<ushort, ushort> nikonToStandard = new DictionnaryFromFileUShort(@"Assets\Dic\NikonToStandard.dic");
             Dictionary<ushort, string> standardExifName = new DictionnaryFromFileString(@"Assets\\Dic\StandardExif.dic");
@@ -167,7 +170,7 @@ namespace RawParserUWP.Model.Parser
                     lineTag.dataOffset + makerNote.getOffset(), fileStream);
 
                 makerNote = null;
-                rawData = line.uncompressed(height, width);
+                rawData = line.uncompressed(height, width, cfa);
                 line.Dispose();
             }
             else

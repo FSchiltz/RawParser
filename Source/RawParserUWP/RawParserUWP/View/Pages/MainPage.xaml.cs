@@ -164,8 +164,30 @@ namespace RawParserUWP
                     currentRawImage.height = parser.height;
                     currentRawImage.width = parser.width;
                     currentRawImage.colorDepth = parser.colorDepth;
-                    currentRawImage.imageData = Demosaic.demos(parser.parseRAWImage(), currentRawImage.height, currentRawImage.width, currentRawImage.colorDepth, demosAlgorithm.NearNeighbour);
-
+                    currentRawImage.cfa = parser.cfa;
+                    currentRawImage.imageData = parser.parseRAWImage();
+                    ushort[] temp = new ushort[currentRawImage.width * 3*3];
+                    for (int i = 0; i < currentRawImage.width * 3 * 3; i++)
+                    {
+                        for (int k = 0; k < currentRawImage.colorDepth; k++)
+                        {
+                            if (currentRawImage.imageData[(i  * currentRawImage.colorDepth) + k])
+                            {
+                                temp[i] |= (ushort)(1 << k);
+                            }
+                        }
+                    }
+                    currentRawImage.imageData = Demosaic.demos(currentRawImage.imageData, (int)currentRawImage.height, (int)currentRawImage.width, currentRawImage.colorDepth, demosAlgorithm.NearNeighbour, currentRawImage.cfa);
+                    for (int i = 0; i < currentRawImage.width * 3 * 3; i++)
+                    {
+                        for (int k = 0; k < currentRawImage.colorDepth; k++)
+                        {
+                            if (currentRawImage.imageData[(i  * currentRawImage.colorDepth) + k])
+                            {
+                                temp[i] |= (ushort)(1 << k);
+                            }
+                        }
+                    }
 
                     //Needs to run in UI thread because fuck it
                     int[] value = new int[(int)Math.Pow(2, currentRawImage.colorDepth)];
@@ -175,6 +197,7 @@ namespace RawParserUWP
                          displayImage(currentRawImage.getImageRawAs8bitsBitmap((int)currentRawImage.width, (int)currentRawImage.height, null, ref value));
                      });
                     //display the histogram
+                    /*
                     Task histoTask = Task.Run(async () =>
                     {
                         Histogram.Create(value, currentRawImage.colorDepth, currentRawImage.height, histogramCanvas);
@@ -182,7 +205,7 @@ namespace RawParserUWP
                          {
                              histoLoadingBar.Visibility = Visibility.Collapsed;
                          });
-                    });
+                    });*/
                     //dispose
                     file = null;
                     parser = null;

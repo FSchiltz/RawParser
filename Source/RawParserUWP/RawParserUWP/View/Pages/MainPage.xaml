@@ -56,13 +56,13 @@
             <VisualStateGroup>
                 <VisualState x:Name="wideState">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="720" />
+                        <AdaptiveTrigger MinWindowWidth="1080" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
                         <Setter Target="splitView.DisplayMode" Value="Inline" />
 
-                        <Setter Target="showSplitPanelButton.Visibility" Value="Visible" />
+                        <Setter Target="showSplitPanelButton.Visibility" Value="Collapsed" />
                         
                         <Setter Target="saveButton.Visibility" Value="Visible" />
                         <Setter Target="shareButton.Visibility" Value="Visible" />
@@ -71,7 +71,7 @@
                         <Setter Target="saveButton2.Visibility" Value="Collapsed" />
                         <Setter Target="shareButton2.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
-                        <Setter Target="splitView.IsPaneOpen" Value="False" />
+                        <Setter Target="splitView.IsPaneOpen" Value="True" />
                     </VisualState.Setters>
                 </VisualState>
 
@@ -81,9 +81,9 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
-                        <Setter Target="splitView.DisplayMode" Value="Inline" />
+                        <Setter Target="splitView.DisplayMode" Value="Overlay" />
 
-                        <Setter Target="showSplitPanelButton.Visibility" Value="Collapsed" />
+                        <Setter Target="showSplitPanelButton.Visibility" Value="Visible" />
 
                         <Setter Target="saveButton.Visibility" Value="Visible" />
                         <Setter Target="shareButton.Visibility" Value="Visible" />
@@ -93,7 +93,7 @@
                         <Setter Target="shareButton2.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
                         
-                        <Setter Target="splitView.IsPaneOpen" Value="true" />
+                        <Setter Target="splitView.IsPaneOpen" Value="false" />
                     </VisualState.Setters>
                 </VisualState>
 

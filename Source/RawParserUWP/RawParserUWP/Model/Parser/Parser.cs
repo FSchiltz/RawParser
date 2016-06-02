@@ -15,6 +15,7 @@ namespace RawParserUWP.Model.Parser
         public uint height;
         public uint width;
         public ushort colorDepth;
+        public byte[] cfa;
 
         //parsethe image and return a rawimage 
         //takes time but if o constraint should be called instead of the other method
