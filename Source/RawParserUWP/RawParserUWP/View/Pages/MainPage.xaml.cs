@@ -39,6 +39,8 @@ namespace RawParserUWP
         public bool imageSelected { set; get; }
         public double pageWidth;
         public double pageHeight;
+        private int currentImageDisplayedHeight;
+        private int currentImageDisplayedWidth;
 
         public MainPage()
         {
@@ -53,7 +55,8 @@ namespace RawParserUWP
         private void InitSettings()
         {
             //checkif settings already exists
-            if (localSettings.Values["imageBoxBorder"] == null) localSettings.Values["imageBoxBorder"] = 10;
+            // if (localSettings.Values["imageBoxBorder"] == null)
+            localSettings.Values["imageBoxBorder"] = 0.05;
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -109,6 +112,7 @@ namespace RawParserUWP
         {
             pageWidth = e.NewSize.Width;
             pageHeight = e.NewSize.Height;
+            setScrollProperty();
         }
 
         private void OpenFile(StorageFile file)
@@ -227,11 +231,6 @@ namespace RawParserUWP
             }
         }
 
-        private void appbarAboutClick(object sender, RoutedEventArgs e)
-        {
-            Frame.Navigate(typeof(View.Pages.About), null);
-        }
-
         private void appbarSettingClick(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(View.Pages.Settings), null);
@@ -259,7 +258,10 @@ namespace RawParserUWP
                                 WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                                 image.CopyToBuffer(bitmap.PixelBuffer);
                                 imageBox.Source = bitmap;
-                                setScrollProperty(bitmap.PixelHeight, bitmap.PixelWidth);
+                                currentImageDisplayedHeight = bitmap.PixelHeight;
+                                currentImageDisplayedWidth = bitmap.PixelWidth;
+
+                                setScrollProperty();
                             });
                     //display the exif
 
@@ -268,18 +270,29 @@ namespace RawParserUWP
             }
         }
 
-        private void setScrollProperty(int pixelHeight, int pixelWidth)
+        private void setScrollProperty()
         {
-            //TODO call when changed state
-            if ((pixelWidth / pixelHeight) > (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
+            if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
             {
-                imageDisplayScroll.MinZoomFactor = (float)(imageDisplayScroll.ViewportWidth / (pixelWidth + (int)localSettings.Values["imageBoxBorder"]));
+                float x = 0;
+                double relativeBorder = (double)localSettings.Values["imageBoxBorder"];
+                if ((currentImageDisplayedWidth / currentImageDisplayedHeight) > (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
+                {
+                    x = (float)(imageDisplayScroll.ViewportWidth /
+                        (currentImageDisplayedWidth +
+                            (relativeBorder * currentImageDisplayedWidth)
+                        ));
+                }
+                else
+                {
+                    x = (float)(imageDisplayScroll.ViewportHeight /
+                        (currentImageDisplayedHeight +
+                            (relativeBorder * currentImageDisplayedHeight)
+                        ));
+                }
+                imageDisplayScroll.MinZoomFactor = ((x < 0.1) ? 0.1f : x);
+                imageDisplayScroll.ZoomToFactor(imageDisplayScroll.MinZoomFactor);
             }
-            else
-            {
-                imageDisplayScroll.MinZoomFactor = (float)(imageDisplayScroll.ViewportHeight / (pixelHeight + (int)localSettings.Values["imageBoxBorder"]));
-            }
-            imageDisplayScroll.ZoomToFactor(imageDisplayScroll.MinZoomFactor);
         }
 
         public async void displayExif()

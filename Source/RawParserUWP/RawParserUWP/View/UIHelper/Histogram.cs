@@ -25,13 +25,13 @@ namespace RawParserUWP.View.UIHelper
                          uint widthstep = (uint)(histogramCanvas.Width / value.Length);
                          line = new Line();
                          line.Stroke = new SolidColorBrush(Colors.Black);
-
-                         line.X1 = line.X2 = i*widthstep;
-                         
-                         line.Y1 = 0;
-                         line.Y2 = maxheight * maxheight;
-
                          line.StrokeThickness = 1;
+                         line.X1 = line.X2 = i*widthstep;                         
+                         line.Y1 = 0;
+                         line.Y2 = maxheight * value[i];
+
+                         Canvas.SetTop(line, 50);
+                         Canvas.SetLeft(line, 50);
                          histogramCanvas.Children.Add(line);
                      });                
             }
