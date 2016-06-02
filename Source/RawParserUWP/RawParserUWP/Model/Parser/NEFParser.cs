@@ -146,6 +146,7 @@ namespace RawParserUWP.Model.Parser
             //decompress the linearisationtable
             Tag lineTag;
             if (!makerNote.ifd.tags.TryGetValue(0x0096, out lineTag)) throw new FormatException("File not correct");
+
             Tag compressionType;
             if (!makerNote.ifd.tags.TryGetValue(0x0093, out compressionType)) throw new FormatException("File not correct");
 
