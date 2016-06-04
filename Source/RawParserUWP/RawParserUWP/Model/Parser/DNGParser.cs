@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using RawParserUWP.Model.Format.Image;
 using RawParserUWP.Model.Format.Reader;
-using System.Collections;
 
 namespace RawParserUWP.Model.Parser
 {
     class DNGParser : Parser
     {
-        private BinaryReader fileStream;
+        private TIFFBinaryReader fileStream;
         private Header header;
 
         public override RawImage parse(Stream s)
@@ -40,13 +39,13 @@ namespace RawParserUWP.Model.Parser
 
         public override void setStream(Stream s)
         {
-            fileStream = new BinaryReader(s);
+            fileStream = new TIFFBinaryReader(s);
 
             Header header = new Header(fileStream, 0);
             if (header.byteOrder == 0x4D4D)
             {
                 //File is in reverse bit order
-                fileStream = new BinaryReaderBE(s, System.Text.Encoding.BigEndianUnicode);
+                fileStream = new TIFFBinaryReaderRE(s, System.Text.Encoding.BigEndianUnicode);
             }
             header = new Header(fileStream, 0);
         }

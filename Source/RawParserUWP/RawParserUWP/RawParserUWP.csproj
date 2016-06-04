@@ -130,7 +130,6 @@
     <Compile Include="Model\Image\Tag.cs" />
     <Compile Include="Model\Image\Effect\Demosaic.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
-    <Compile Include="Model\Reader\MemoryBufferedStream.cs" />
     <Compile Include="Model\Image\Effect\Balance.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>

@@ -6,7 +6,7 @@
         public ushort dataType;
         public uint dataCount;
         public uint dataOffset;
-        public object[] data { get; set; }
+        public object[] data;
         public string displayName { get; set; }
         public string dataAsString
         {

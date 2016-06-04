@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using RawParserUWP.Model.Format.Image;
-using System.Collections;
 
 namespace RawParserUWP.Model.Parser
 {
@@ -16,9 +15,11 @@ namespace RawParserUWP.Model.Parser
         public uint width;
         public ushort colorDepth;
         public byte[] cfa;
+        public double[] camMul = new double[4];
+        public double[] preMul = new double[4];        
 
-        //parsethe image and return a rawimage 
-        //takes time but if o constraint should be called instead of the other method
+        //parse the image and return a rawimage 
+        //takes time but if no constraint should be called instead of the other method
         abstract public RawImage parse(Stream s);
 
         //Callable if want to parse sequentally

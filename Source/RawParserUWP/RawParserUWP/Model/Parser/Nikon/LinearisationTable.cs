@@ -1,7 +1,6 @@
 ﻿using RawParserUWP.Model.Format.Base;
 using System;
 using System.Collections;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -208,11 +207,6 @@ namespace RawParserUWP.Model.Parser.Nikon
                     //Check wich color is the pixel 
                     //int cfaoffset =cfa[((row % 2) * 2) + col % 2] * colordepth;
                     uncompressedData[(((int)(row * width) + col) * 3) + cfa[((row % 2) * 2) + col % 2]] = curve[lim((short)hpred[col & 1], 0, 0x3fff)];
-                    /*
-                    for (k =0; k < colordepth; k++)
-                    {
-                        uncompressedData[(((int)(row * width) + col) * 3 * colordepth) + cfaoffset + k] = (((xy >> k) & 1) == 1);
-                    }*/
                 }
             }
             /*
