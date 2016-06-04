@@ -26,3 +26,4 @@ Doc/Format/NEF/~$F format.docx
 Source/RawParserUWP/RawParserUWP/bin/*
 Source/RawParserUWP/.localhistory/*
 Doc/Format/NEF/DSC_8286.tiff
+*.vcxproj
