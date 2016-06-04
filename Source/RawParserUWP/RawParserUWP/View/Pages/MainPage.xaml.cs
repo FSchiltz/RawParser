@@ -180,16 +180,17 @@ namespace RawParserUWP
                     Demosaic.demos(ref currentRawImage, demosAlgorithm.NearNeighbour);
 
                     //create a small image from raw to display
-                    previewImageHeight = currentRawImage.height / 4;
-                    previewimageWitdth = currentRawImage.width / 4;
+                    int previewFactor = (int)localSettings.Values["previewFactor"];
+                    previewImageHeight = (uint)(currentRawImage.height / previewFactor);
+                    previewimageWitdth = (uint)(currentRawImage.width / previewFactor);
                     previewImage = new ushort[previewImageHeight * previewimageWitdth * 3];
                     for (int i = 0; i < previewImageHeight; i++)
                     {
                         for (int j = 0; j < previewimageWitdth; j++)
                         {
-                            previewImage[((i * previewimageWitdth) + j) * 3] = currentRawImage.imageData[((i * 4 * previewimageWitdth) + j) * 3 * 4];
-                            previewImage[(((i * previewimageWitdth) + j) * 3) + 1] = currentRawImage.imageData[(((i * 4 * previewimageWitdth) + j) * 3 * 4) + 1];
-                            previewImage[(((i * previewimageWitdth) + j) * 3) + 2] = currentRawImage.imageData[(((i * 4 * previewimageWitdth) + j) * 3 * 4) + 2];
+                            previewImage[((i * previewimageWitdth) + j) * 3] = currentRawImage.imageData[((i * previewFactor * previewimageWitdth) + j) * 3 * previewFactor];
+                            previewImage[(((i * previewimageWitdth) + j) * 3) + 1] = currentRawImage.imageData[(((i * previewFactor * previewimageWitdth) + j) * 3 * previewFactor) + 1];
+                            previewImage[(((i * previewimageWitdth) + j) * 3) + 2] = currentRawImage.imageData[(((i * previewFactor * previewimageWitdth) + j) * 3 * previewFactor) + 2];
                         }
                     }
                     int[] value = new int[256];
