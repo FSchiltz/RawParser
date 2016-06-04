@@ -11,8 +11,13 @@ namespace RawParserUWP.View.UIHelper
     class Histogram
     {
         //TODO simplify if memory saver mode
-        internal static async void Create(int[] value, ushort colorDepth,uint imageHeight, Canvas histogramCanvas)
+        public static async void Create(int[] value, ushort colorDepth,uint imageHeight, Canvas histogramCanvas)
         {
+            await CoreApplication.MainView.CoreWindow.Dispatcher
+                 .RunAsync(CoreDispatcherPriority.Normal, () =>
+                 {
+                     histogramCanvas.Children.Clear();
+                 });
             //create the histogram
             for (int i = 0; i < value.Length; i++)
             {
@@ -35,5 +40,6 @@ namespace RawParserUWP.View.UIHelper
                      });                
             }
         }
+
     }
 }

@@ -34,12 +34,12 @@ namespace RawParserUWP.View.Pages
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            localSettings.Values["previewFactor"] = (int)e.AddedItems[0];
+            localSettings.Values["previewFactor"] = (int)((ComboBoxItem)e.AddedItems[0]).Content;
         }
 
         private void ComboBoxFile_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            localSettings.Values["saveFormat"] = (string)e.AddedItems[0];
+        {            
+            localSettings.Values["saveFormat"] = ((ComboBoxItem)e.AddedItems[0]).Content.ToString();
         }
     }
 }
