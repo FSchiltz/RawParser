@@ -191,7 +191,7 @@ namespace RawParserUWP.Model.Parser
                 {
                     byte ci, cj, ck;
                     ci = xlat[0][serial & 0xff];
-                    byte[] shutterAsByte = BitConverter.GetBytes((int)shutterCountTag.data[0]);
+                    byte[] shutterAsByte = BitConverter.GetBytes((uint)shutterCountTag.data[0]);
                     cj = xlat[1][shutterAsByte[0] ^ shutterAsByte[1] ^ shutterAsByte[2] ^ shutterAsByte[3]];
                     ck = 0x60;
                     for (int i = 0; i < 324; i++)

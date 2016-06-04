@@ -138,8 +138,8 @@
                             <TextBlock Foreground="Black" IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left" FontSize="18">
                                 Histogram
                             </TextBlock>
-                            <Border BorderBrush="#FF818181" BorderThickness="1" Margin="0,0,0,12">
-                                <Canvas x:Name="histogramCanvas" Width="300" Height="200" Background="White">
+                            <Border BorderBrush="#FF818181" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas x:Name="histogramCanvas" Width="256" Height="200" Background="White">
                                     <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}" Visibility="Collapsed"/>
                                 </Canvas>
                             </Border>
