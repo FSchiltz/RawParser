@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using RawParserUWP.Model.Format.Image;
 using RawParserUWP.Model.Format.Reader;
 
@@ -14,7 +13,7 @@ namespace RawParserUWP.Model.Parser.Nikon
         public ushort version { set; get; }
         private uint offset;
 
-        public NikonMakerNote(BinaryReader buffer, uint offset, bool compression)
+        public NikonMakerNote(TIFFBinaryReader buffer, uint offset, bool compression)
         {
             //read the header
             stringMagic = "";
@@ -31,7 +30,7 @@ namespace RawParserUWP.Model.Parser.Nikon
 
             if(header.byteOrder == 0x4D4D)
             {
-                buffer = new BinaryReaderBE(buffer.BaseStream);
+                buffer = new TIFFBinaryReaderRE(buffer.BaseStream);
                 //TODO see if need to move
             }
             ifd = new IFD(buffer, header.TIFFoffset + 10 + offset, true, true);

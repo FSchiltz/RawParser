@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -90,10 +91,14 @@ namespace RawParserUWP.Model.Format.Image
             return bitmapasync.GetResults();
         }
 
-        unsafe public SoftwareBitmap getImageRawAs8bitsBitmap(object[] curve, ref int[] value)
+        public SoftwareBitmap getImageRawAs8bitsBitmap(object[] curve, ref int[] value)
         {
-            //mode is BGRA because microsoft only work correctly wih this            
-            SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Rgba8, (int)width, (int)height, BitmapAlphaMode.Ignore);
+            return getImageRawAs8bitsBitmap(curve, ref value, ref this.imageData, this.height, this.width);
+        }
+
+        unsafe public SoftwareBitmap getImageRawAs8bitsBitmap(object[] curve, ref int[] value, ref ushort[] RAW, uint h, uint w)
+        {         
+            SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Rgba8, (int)w, (int)h, BitmapAlphaMode.Ignore);
             using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))
             {
                 using (var reference = buffer.CreateReference())
@@ -110,56 +115,11 @@ namespace RawParserUWP.Model.Format.Image
 
                     for (int i = 0; i < bufferLayout.Width * bufferLayout.Height; i++)
                     {
-                        //get the pixel
-                        ushort blue = 0, green = 0, red = 0;
-                        blue = imageData[(i * 3)];
-                        green = imageData[(i * 3) + 1];
-                        red = imageData[(i * 3) + 2];
+                        //get the pixel                    
+                        ushort blue = (ushort)(RAW[(i * 3)] >> (colorDepth - 8)),
+                        green = (ushort)(RAW[(i * 3) + 1] >> (colorDepth - 8)),
+                        red = (ushort)(RAW[(i * 3) + 2] >> (colorDepth - 8));
                         /*
-                        for (int k = 0; k < colorDepth; k++)
-                        {
-                            if (imageData[(i * 3 * colorDepth) + k])
-                            {
-                                red |= (ushort)(1 << k);
-                            }
-                        }
-                        for (int k = 0; k < colorDepth; k++)
-                        {
-                            if (imageData[(i * 3 * colorDepth) + colorDepth + k])
-                            {
-                                green |= (ushort)(1 << k);
-                            }
-                        }
-                        for (int k = 0; k < colorDepth; k++)
-                        {
-                            if (imageData[(i * 3 * colorDepth) + (2 * colorDepth) + k])
-                            {
-                                blue |= (ushort)(1 << k);
-                            }
-                        }
-                        */
-                        //TODO get correct luminance
-                        //value[(blue + red + green) / 3] += 1;
-
-                        /*
-                         * For the moment no curve
-                         * TODO apply a curve given in input
-                         * 
-                         * */
-                        /*
-                       byte redB, greenB, blueB;
-                       if (red < 255) redB = (byte)(red >> 4);
-                       else if (red < 4095) redB =(byte)( red >> 5);
-                       else redB = (byte)(red >> 6);
-
-                       if (green < 255) greenB = (byte)(green >> 4);
-                       else if (green < 4095) greenB = (byte)(green >> 5);
-                       else greenB = (byte)(green >> 6);
-
-                       if (blue < 255) blueB = (byte)(blue >> 4);
-                       else if (red < 4095) blueB = (byte)(blue >> 5);
-                       else blueB = (byte)(blue >> 6);
-                       */
                         double redD = red / (255 * 64), greenD = green / (255 * 64), blueD = blue / (255 * 64);
 
                         //Center pixel values at 0, so that the range is -0.5 to 0.5
@@ -196,15 +156,20 @@ namespace RawParserUWP.Model.Format.Image
                         else if (blueD < 0)
                             blueD = 0;
                         int redI = (int)redD, greenI = (int)greenD, blueI = (int)blueD;
-
-                        tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)redI;
-                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 1] = (byte)greenI;
-                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)blueI;
+                        */
+                        tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)red;
+                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 1] = (byte)green;
+                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)blue;
                         tempByteArray[bufferLayout.StartIndex + (i * 4) + 3] = 255;
                     }
                 }
             }
             return image;
+        }
+
+        internal void getSmallRawImageAs8bitsBitmap(object p, ref int[] value)
+        {
+            throw new NotImplementedException();
         }
 
         public double[] getMultipliers()
@@ -250,7 +215,7 @@ namespace RawParserUWP.Model.Format.Image
                 scaleMul[c] = (preMul[c] /= dmax) * 65535.0 / maximum;
             }
             return scaleMul;*/
-            return null;
+            return scaleMul;
         }
 
         /*

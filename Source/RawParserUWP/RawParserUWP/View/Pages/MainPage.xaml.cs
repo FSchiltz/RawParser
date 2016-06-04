@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -18,7 +17,6 @@ using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using System.Runtime.InteropServices;
 using RawParserUWP.Model.Parser.Demosaic;
-using RawParserUWP.View.UIHelper;
 using System.Text;
 
 namespace RawParserUWP
@@ -109,7 +107,7 @@ namespace RawParserUWP
          * 
          */
 
-        private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
+        private void PageSizeChanged(object sender, SizeChangedEventArgs e)
         {
             pageWidth = e.NewSize.Width;
             pageHeight = e.NewSize.Height;
@@ -158,7 +156,7 @@ namespace RawParserUWP
                     parser.parsePreview();
                     //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
 
-                    //read the exif
+                    //read the exifi
                     currentRawImage.exif = parser.parseExif();
                     displayExif();
                     //read the data 
@@ -166,19 +164,36 @@ namespace RawParserUWP
                     currentRawImage.width = parser.width;
                     currentRawImage.colorDepth = parser.colorDepth;
                     currentRawImage.cfa = parser.cfa;
+                    currentRawImage.camMul = parser.camMul;
                     currentRawImage.imageData = parser.parseRAWImage();
+                    currentRawImage.camMul = new double[4] { 2.915122, 1.000000, 1.391935, 1.000000 };
+                    Balance.scaleColor(ref currentRawImage, currentRawImage.dark, currentRawImage.saturation, currentRawImage.camMul);
+                    //color correct to rgb
+                    //correct gamma
+                    //Balance.scaleGamma(ref currentRawImage, 1 / 2.2);
+                    //TODO Change to using polymorphisme
                     Demosaic.demos(ref currentRawImage, demosAlgorithm.NearNeighbour);
-                    Balance.whiteBalance(ref currentRawImage, 4000, -5);
-                    
+
+                    //create a small image from raw to display
+                    ushort[] smallImage = new ushort[(currentRawImage.height / 4) * (currentRawImage.width / 4) * 3];
+                    for (int i = 0; i < (currentRawImage.height / 4); i++)
+                    {
+                        for (int j = 0; j < (currentRawImage.width / 4) * 3; j++)
+                        {
+                            smallImage[(i * 3) + j] = currentRawImage.imageData[(i * 12 * 4) + (j * 4)];
+                        }
+                    }
                     int[] value = new int[256];
 
+
                     //Needs to run in UI thread because fuck it
+
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
-                         displayImage(currentRawImage.getImageRawAs8bitsBitmap(null, ref value));
+                         displayImage(currentRawImage.getImageRawAs8bitsBitmap(null, ref value, ref smallImage, currentRawImage.height / 4, currentRawImage.width / 4));
                      });
-                    
+
                     //display the histogram
                     /*
                     Task histoTask = Task.Run(async () =>
@@ -266,11 +281,9 @@ namespace RawParserUWP
                                 imageBox.Source = bitmap;
                                 currentImageDisplayedHeight = bitmap.PixelHeight;
                                 currentImageDisplayedWidth = bitmap.PixelWidth;
-
                                 setScrollProperty();
                             });
                     //display the exif
-
                 }
                 //*/
             }
@@ -282,7 +295,7 @@ namespace RawParserUWP
             {
                 float x = 0;
                 double relativeBorder = (double)localSettings.Values["imageBoxBorder"];
-                if ((currentImageDisplayedWidth / currentImageDisplayedHeight) > (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
+                if ((currentImageDisplayedWidth / currentImageDisplayedHeight) < (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
                 {
                     x = (float)(imageDisplayScroll.ViewportWidth /
                         (currentImageDisplayedWidth +
@@ -296,10 +309,17 @@ namespace RawParserUWP
                             (relativeBorder * currentImageDisplayedHeight)
                         ));
                 }
-                imageDisplayScroll.MinZoomFactor = ((x < 0.1) ? 0.1f : x);
-                imageDisplayScroll.ZoomToFactor(imageDisplayScroll.MinZoomFactor);
+                if (x < 0.1) x = 0.1f;
+                else if (x > 1) x = 1;
+                imageDisplayScroll.MinZoomFactor = x;
+                imageDisplayScroll.MaxZoomFactor = x + 10;
+                //imageDisplayScroll.ZoomToFactor(x);
+                imageDisplayScroll.InvalidateMeasure();
+                imageDisplayScroll.InvalidateArrange();
+                imageDisplayScroll.InvalidateScrollInfo();
             }
         }
+
 
         public async void displayExif()
         {
@@ -332,6 +352,7 @@ namespace RawParserUWP
                 savePicker.FileTypeChoices.Add("Image file", new List<string>() { format });
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
+                progressDisplay.Visibility = Visibility.Visible;
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
@@ -357,58 +378,35 @@ namespace RawParserUWP
                             for (int j = 0; j < currentRawImage.width; j++)
                             {
                                 ushort x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3)];
-                                /*
-                                ushort x = 0;
-                                for (int k = 0; k < currentRawImage.colorDepth; k++)
-                                {
-                                    if (currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3 * currentRawImage.colorDepth) + k])
-                                    {
-                                        x |= (ushort)(1 << k);
-                                    }
-                                }*/
                                 byte y = (byte)(x >> 6);
                                 stream.Write(y + " ");
-
                                 x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3) + 1];
-                                /*
-                                x = 0;
-                                for (int k = 0; k < currentRawImage.colorDepth; k++)
-                                {
-                                    if (currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3 * currentRawImage.colorDepth) + k + currentRawImage.colorDepth])
-                                    {
-                                        x |= (ushort)(1 << k);
-                                    }
-                                }*/
                                 y = (byte)(x >> 6);
                                 stream.Write(y + " ");
-
-                                x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3 )  + 2];
-                                /*
-                                x= 0;
-                                for (int k = 0; k < currentRawImage.colorDepth; k++)
-                                {
-                                    if (currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3 * currentRawImage.colorDepth) + k + (2 * currentRawImage.colorDepth)])
-                                    {
-                                        x |= (ushort)(1 << k);
-                                    }
-                                }
-                                */
+                                x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3) + 2];
                                 y = (byte)(x >> 6);
                                 stream.Write(y + " ");
                             }
                             stream.Write("\r\n");
                         }
                         str.Dispose();
-                    }
-                    // Let Windows know that we're finished changing the file so
-                    // the other app can update the remote version of the file.
-                    // Completing updates may require Windows to ask for user input.
-                    FileUpdateStatus status =
-                        await CachedFileManager.CompleteUpdatesAsync(file);
+                        // Let Windows know that we're finished changing the file so
+                        // the other app can update the remote version of the file.
+                        // Completing updates may require Windows to ask for user input.
+                        FileUpdateStatus status =
+                            await CachedFileManager.CompleteUpdatesAsync(file);
 
-                    if (status != FileUpdateStatus.Complete)
-                    {
-                        ExceptionDisplay.display("File could not be saved");
+                        if (status != FileUpdateStatus.Complete)
+                        {
+                            ExceptionDisplay.display("File could not be saved");
+                        }
+                        await CoreApplication.MainView.CoreWindow.Dispatcher
+                        .RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            //Hide the loading screen
+                            progressDisplay.Visibility = Visibility.Collapsed;
+                        });
                     }
                 });
             }
