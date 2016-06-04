@@ -1,4 +1,0 @@
-E:\Data\Progra\C#\RawParser\Source\RawParser\RawParser\obj\Release\RawParser.csprojResolveAssemblyReference.cache
-E:\Data\Progra\C#\RawParser\Source\RawParser\RawParser\obj\Release\RawParser.Properties.Resources.resources
-E:\Data\Progra\C#\RawParser\Source\RawParser\RawParser\obj\Release\RawParser.UI.resources
-E:\Data\Progra\C#\RawParser\Source\RawParser\RawParser\obj\Release\RawParser.csproj.GenerateResource.Cache
