@@ -44,6 +44,7 @@ namespace RawParserUWP
         private int currentImageDisplayedWidth;
         private RawImage previewImage;
         private bool colorTempchanged;
+        private int[] value = new int[256];
 
         public MainPage()
         {
@@ -199,6 +200,7 @@ namespace RawParserUWP
                     previewImage = new RawImage();
                     previewImage.height = (uint)(currentRawImage.height / previewFactor);
                     previewImage.width = (uint)(currentRawImage.width / previewFactor);
+                    previewImage.colorDepth = currentRawImage.colorDepth;
                     previewImage.imageData = new ushort[previewImage.height * previewImage.width * 3];
                     for (int i = 0; i < previewImage.height; i++)
                     {
@@ -209,7 +211,6 @@ namespace RawParserUWP
                             previewImage.imageData[(((i * previewImage.width) + j) * 3) + 2] = currentRawImage.imageData[(((i * previewFactor * previewImage.width) + j) * 3 * previewFactor) + 2];
                         }
                     }
-                    int[] value = new int[256];
 
                     //Needs to run in UI thread because fuck it
                     await CoreApplication.MainView.CoreWindow.Dispatcher
@@ -227,7 +228,6 @@ namespace RawParserUWP
                              histoLoadingBar.Visibility = Visibility.Collapsed;
                          });
                     });
-
                     //activate the editing control
                     enableEditingControl(true);
                     //dispose
@@ -241,12 +241,6 @@ namespace RawParserUWP
                                 //Hide the loading screen
                                 progressDisplay.Visibility = Visibility.Collapsed;
                             });
-
-
-                //For testing
-                //emptyImage();
-                //see if memory leak
-                //memory should beat 25 mega after this.
             });
         }
 
@@ -292,8 +286,6 @@ namespace RawParserUWP
         {
             if (image != null)
             {
-                //Display preview Image
-                //*
                 using (image)
                 {
                     await
@@ -309,9 +301,7 @@ namespace RawParserUWP
                                 currentImageDisplayedWidth = bitmap.PixelWidth;
                                 setScrollProperty();
                             });
-                    //display the exif
-                }
-                //*/
+                }                
             }
         }
 
@@ -346,7 +336,6 @@ namespace RawParserUWP
             }
         }
 
-
         public async void displayExif()
         {
             //*
@@ -368,7 +357,7 @@ namespace RawParserUWP
 
             //TODO reimplement correclty
             //Just for testing purpose for now
-            if (currentRawImage != null)
+            if (currentRawImage.imageData != null)
             {
                 var savePicker = new FileSavePicker
                 {
@@ -379,18 +368,22 @@ namespace RawParserUWP
                 savePicker.FileTypeChoices.Add("Image file", new List<string>() { format });
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
+
                 progressDisplay.Visibility = Visibility.Visible;
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
+                var exposure = exposureSlider.Value;
+                var temp = (int)colorTempSlider.Value;
                 var task = Task.Run(async () =>
                 {
+
                     //TODO apply to the real image the correction
                     //apply the exposure
-                    Luminance.Exposure(ref currentRawImage, exposureSlider.Value);
+                    Luminance.Exposure(ref currentRawImage, exposure);
                     //apply the temperature (not yet because slider is not set to correct temp)
                     if (colorTempchanged)
-                        Balance.whiteBalance(ref currentRawImage, (int)colorTempSlider.Value, 0);
+                        Balance.whiteBalance(ref currentRawImage, temp, 0);
                     colorTempchanged = false;
                     //Check if clipping
                     Luminance.Clip(ref currentRawImage, (ushort)Math.Pow(2, currentRawImage.colorDepth));
@@ -402,8 +395,13 @@ namespace RawParserUWP
                             BitmapEncoder.JpegEncoderId,
                             await file.OpenAsync(FileAccessMode.ReadWrite));
                         int[] t = new int[3];
-                        encoder.SetSoftwareBitmap(currentRawImage.getImageRawAs8bitsBitmap(null, ref t));
-                        await encoder.FlushAsync();
+                        //Needs to run in the UI thread because fuck performance
+                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            encoder.SetSoftwareBitmap(currentRawImage.getImageRawAs8bitsBitmap(null, ref t));
+                            await encoder.FlushAsync();
+                        });
                     }
                     else if (format == ".ppm")
                     {
@@ -427,25 +425,26 @@ namespace RawParserUWP
                             stream.Write("\r\n");
                         }
                         str.Dispose();
-                        // Let Windows know that we're finished changing the file so
-                        // the other app can update the remote version of the file.
-                        // Completing updates may require Windows to ask for user input.
-                        FileUpdateStatus status =
-                            await CachedFileManager.CompleteUpdatesAsync(file);
-
-                        if (status != FileUpdateStatus.Complete)
-                        {
-                            ExceptionDisplay.display("File could not be saved");
-                        }
-                        await CoreApplication.MainView.CoreWindow.Dispatcher
-                        .RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            //Hide the loading screen
-                            progressDisplay.Visibility = Visibility.Collapsed;
-                        });
                     }
                     else throw new FormatException("Format not supported: " + format);
+                    // Let Windows know that we're finished changing the file so
+                    // the other app can update the remote version of the file.
+                    // Completing updates may require Windows to ask for user input.
+                    FileUpdateStatus status =
+                            await CachedFileManager.CompleteUpdatesAsync(file);
+
+                    if (status != FileUpdateStatus.Complete)
+                    {
+                        ExceptionDisplay.display("File could not be saved");
+                    }
+                    await CoreApplication.MainView.CoreWindow.Dispatcher
+                    .RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        //Do some UI-code that must be run on the UI thread.
+                        //Hide the loading screen
+                        progressDisplay.Visibility = Visibility.Collapsed;
+                    });
+
                 });
             }
         }
@@ -461,9 +460,21 @@ namespace RawParserUWP
                     {
                         Luminance.Exposure(ref previewImage, value);
                     }
+                    updatePreview();
                 });
             }
         }
+
+        private async void updatePreview()
+        {
+            //Needs to run in UI thread because fuck it
+            await CoreApplication.MainView.CoreWindow.Dispatcher
+             .RunAsync(CoreDispatcherPriority.Normal, () =>
+             {
+                 displayImage(previewImage.getImageRawAs8bitsBitmap(null, ref value));
+             });
+            Histogram.Create(value, previewImage.colorDepth,previewImage.height, histogramCanvas);
+;        }
 
         private void colorTempSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
@@ -477,6 +488,7 @@ namespace RawParserUWP
                     {
                         Balance.whiteBalance(ref previewImage, (int)value, 0);
                     }
+                    updatePreview();
                 });
             }
         }
