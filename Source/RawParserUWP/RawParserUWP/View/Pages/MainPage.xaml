@@ -146,6 +146,13 @@
                                     <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}" Visibility="Collapsed"/>
                                 </Canvas>
                             </Border>
+                            <TextBlock Foreground="Black" >
+                                Exposure settings
+                            </TextBlock>
+                            <TextBlock>
+                                Exposure
+                            </TextBlock>
+                            <Slider></Slider>
                         </ListView>
                     </PivotItem>
                     <PivotItem Header="Tools">
