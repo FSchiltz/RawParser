@@ -6,9 +6,6 @@ using Windows.UI.Xaml.Controls;
 
 namespace RawParserUWP.View.Pages
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class Settings : Page
     {
 
@@ -34,7 +31,7 @@ namespace RawParserUWP.View.Pages
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            localSettings.Values["previewFactor"] = (int)((ComboBoxItem)e.AddedItems[0]).Content;
+            localSettings.Values["previewFactor"] = int.Parse(((ComboBoxItem)e.AddedItems[0]).Content.ToString());
         }
 
         private void ComboBoxFile_SelectionChanged(object sender, SelectionChangedEventArgs e)

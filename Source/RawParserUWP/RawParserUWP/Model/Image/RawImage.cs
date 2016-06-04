@@ -34,17 +34,17 @@ namespace RawParserUWP.Model.Format.Image
             get
             {
                 var a = (((row * width) + col) * 3) + k;
-                if (row < 0 || row >= height || col < 0|| col >= width)
+                if (row < 0 || row >= height || col < 0 || col >= width)
                 {
                     return 0;
                 }
-                else return imageData[a]; 
+                else return imageData[a];
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                imageData[(((row * width) + col) * 3) + k]  = value;
+                imageData[(((row * width) + col) * 3) + k] = value;
             }
         }
 
@@ -96,7 +96,7 @@ namespace RawParserUWP.Model.Format.Image
         }
 
         unsafe public SoftwareBitmap getImageRawAs8bitsBitmap(object[] curve, ref int[] value, ref ushort[] RAW, uint h, uint w)
-        {         
+        {
             SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Rgba8, (int)w, (int)h, BitmapAlphaMode.Ignore);
             using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))
             {
@@ -108,7 +108,6 @@ namespace RawParserUWP.Model.Format.Image
 
                     // Fill-in the BGRA plane
                     BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-
                     //calculte diff between colordepth and 8
                     int diff = (colorDepth) - 8;
 
@@ -121,6 +120,7 @@ namespace RawParserUWP.Model.Format.Image
                         if (blue > 255) blue = 255;
                         if (red > 255) red = 255;
                         if (green > 255) green = 255;
+                        value[(byte)((red << 1) + (green << 2) + green + blue) >> 3]++;
                         /*
                         double redD = red / (255 * 64), greenD = green / (255 * 64), blueD = blue / (255 * 64);
 
@@ -164,84 +164,84 @@ namespace RawParserUWP.Model.Format.Image
                         tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)blue;
                         tempByteArray[bufferLayout.StartIndex + (i * 4) + 3] = 255;
                     }
-                }
+}
             }
             return image;
         }
 
         internal void getSmallRawImageAs8bitsBitmap(object p, ref int[] value)
-        {
-            throw new NotImplementedException();
-        }
+{
+    throw new NotImplementedException();
+}
 
-        public double[] getMultipliers()
+public double[] getMultipliers()
+{
+    uint[] sum = new uint[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+    double[] scaleMul = new double[4], preMul = new double[4];
+    uint dmin, dmax;
+    uint c = 0;
+    /*
+    for (int row = 0; row < 8; row++)
+    {
+        for (int col = 0; col < 8; col++)
         {
-            uint[] sum = new uint[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-            double[] scaleMul = new double[4], preMul = new double[4];
-            uint dmin, dmax;
-            uint c = 0;
-            /*
-            for (int row = 0; row < 8; row++)
-            {
-                for (int col = 0; col < 8; col++)
-                {
-                    c = FC(row, col);
-                    if ((val = white[row][col] - cblack[c]) > 0)
-                        sum[c] += val;
-                    sum[c + 4]++;
-                }
-            }
-            if (sum[0] && sum[1] && sum[2] && sum[3])
-            {
-                for (c = 0; c < 4; c++)
-                {
-                    pre_mul[c] = (float)sum[c + 4] / sum[c];
-                }
-            }
-            else if (cam_mul[0] && cam_mul[2])
-                memcpy(pre_mul, cam_mul, sizeof pre_mul);
-            else throw new FormatException("White balance not correct");
-            
-            preMul = camMul;
-            if (preMul[1] == 0) preMul[1] = 1;
-            if (preMul[3] == 0) preMul[3] = colors < 4 ? preMul[1] : 1;
-            for (dmin = DBL_MAX, dmax = c = 0; c < 4; c++)
-            {
-                if (dmin > preMul[c])
-                    dmin = (uint)preMul[c];
-                if (dmax < preMul[c])
-                    dmax = (uint)preMul[c];
-            }
-            for (c = 0; c < 4; c++)
-            {
-                scaleMul[c] = (preMul[c] /= dmax) * 65535.0 / maximum;
-            }
-            return scaleMul;*/
-            return scaleMul;
+            c = FC(row, col);
+            if ((val = white[row][col] - cblack[c]) > 0)
+                sum[c] += val;
+            sum[c + 4]++;
         }
+    }
+    if (sum[0] && sum[1] && sum[2] && sum[3])
+    {
+        for (c = 0; c < 4; c++)
+        {
+            pre_mul[c] = (float)sum[c + 4] / sum[c];
+        }
+    }
+    else if (cam_mul[0] && cam_mul[2])
+        memcpy(pre_mul, cam_mul, sizeof pre_mul);
+    else throw new FormatException("White balance not correct");
 
+    preMul = camMul;
+    if (preMul[1] == 0) preMul[1] = 1;
+    if (preMul[3] == 0) preMul[3] = colors < 4 ? preMul[1] : 1;
+    for (dmin = DBL_MAX, dmax = c = 0; c < 4; c++)
+    {
+        if (dmin > preMul[c])
+            dmin = (uint)preMul[c];
+        if (dmax < preMul[c])
+            dmax = (uint)preMul[c];
+    }
+    for (c = 0; c < 4; c++)
+    {
+        scaleMul[c] = (preMul[c] /= dmax) * 65535.0 / maximum;
+    }
+    return scaleMul;*/
+    return scaleMul;
+}
+
+/*
+ * For testing
+ */
+public ushort[] getImageAsByteArray()
+{
+    ushort[] tempByteArray = new ushort[width * height];
+    for (int i = 0; i < width * height; i++)
+    {
+        //get the pixel
+        ushort temp = imageData[(i * (int)colorDepth)];
         /*
-         * For testing
-         */
-        public ushort[] getImageAsByteArray()
+    for (int k = 0; k < 8; k++)
+    {
+        bool xy = imageData[(i * (int)colorDepth) + k];
+        if (xy)
         {
-            ushort[] tempByteArray = new ushort[width * height];
-            for (int i = 0; i < width * height; i++)
-            {
-                //get the pixel
-                ushort temp = imageData[(i * (int)colorDepth)];
-                /*
-            for (int k = 0; k < 8; k++)
-            {
-                bool xy = imageData[(i * (int)colorDepth) + k];
-                if (xy)
-                {
-                    temp |= (ushort)(1 << k);
-                }
-            }*/
-                tempByteArray[i] = temp;
-            }
-            return tempByteArray;
+            temp |= (ushort)(1 << k);
         }
+    }*/
+        tempByteArray[i] = temp;
+    }
+    return tempByteArray;
+}
     }
 }
