@@ -1,0 +1,1 @@
+Luminance = (Max(R,G,B) + Min(R,G,B)) / 2

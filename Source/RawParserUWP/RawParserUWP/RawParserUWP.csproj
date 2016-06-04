@@ -17,7 +17,7 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PackageCertificateKeyFile>RawParserUWP_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
@@ -32,6 +32,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -44,6 +45,7 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
@@ -71,6 +73,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>
     </DocumentationFile>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -119,32 +122,30 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Model\Format\Base\ByteArrayWithIndexValue.cs" />
-    <Compile Include="Model\Format\Base\DictionnaryFromFileString.cs" />
-    <Compile Include="Model\Format\Base\DictionnaryFromFileUShort.cs" />
-    <Compile Include="Model\Format\Base\DictionnaryFromFile.cs" />
-    <Compile Include="Model\Format\Base\StreamHelper.cs" />
-    <Compile Include="Model\Format\Image\Tag.cs" />
-    <Compile Include="Model\Parser\Demosaic\Demosaic.cs" />
+    <Compile Include="Model\Base\ByteArrayWithIndexValue.cs" />
+    <Compile Include="Model\Base\DictionnaryFromFileString.cs" />
+    <Compile Include="Model\Base\DictionnaryFromFileUShort.cs" />
+    <Compile Include="Model\Base\DictionnaryFromFile.cs" />
+    <Compile Include="Model\Base\StreamHelper.cs" />
+    <Compile Include="Model\Image\Tag.cs" />
+    <Compile Include="Model\Image\Effect\Demosaic.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
-    <Compile Include="Model\Format\Reader\MemoryBufferedStream.cs" />
+    <Compile Include="Model\Reader\MemoryBufferedStream.cs" />
+    <Compile Include="Model\Image\Effect\Balance.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\Exception\ExceptionDisplay.cs" />
-    <Compile Include="Model\Format\Image\RawImage.cs" />
-    <Compile Include="Model\Format\Image\Header.cs" />
-    <Compile Include="Model\Format\Image\IFD.cs" />
+    <Compile Include="Model\Image\RawImage.cs" />
+    <Compile Include="Model\Image\Header.cs" />
+    <Compile Include="Model\Image\IFD.cs" />
     <Compile Include="Model\Parser\Nikon\NikonMakerNote.cs" />
-    <Compile Include="Model\Format\Reader\BinaryReaderBE.cs" />
+    <Compile Include="Model\Reader\BinaryReaderBE.cs" />
     <Compile Include="Model\Parser\DNGParser.cs" />
     <Compile Include="Model\Parser\NEFParser.cs" />
     <Compile Include="Model\Parser\Parser.cs" />
     <Compile Include="Model\Parser\TIFFParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="View\Pages\About.xaml.cs">
-      <DependentUpon>About.xaml</DependentUpon>
-    </Compile>
     <Compile Include="View\Pages\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
@@ -177,10 +178,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="View\Pages\About.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="View\Pages\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -191,6 +188,12 @@
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

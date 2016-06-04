@@ -27,7 +27,7 @@ namespace RawParserUWP.Model.Parser
             throw new NotImplementedException();
         }
 
-        public override BitArray parseRAWImage()
+        public override ushort[] parseRAWImage()
         {
             throw new NotImplementedException();
         }

@@ -28,6 +28,6 @@ namespace RawParserUWP.Model.Parser
         abstract public byte[] parseThumbnail();
         abstract public byte[] parsePreview();
         abstract public Dictionary<ushort,Tag> parseExif();
-        abstract public BitArray parseRAWImage();
+        abstract public ushort[] parseRAWImage();
     }
 }
