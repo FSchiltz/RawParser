@@ -25,7 +25,7 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <ListView x:Name="listView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+        <ListView x:Name="listView" >
 
             <TextBlock TextWrapping="Wrap" FontSize="48">
             Settings
@@ -35,17 +35,35 @@
             Display
             </TextBlock>
             <!--Display border-->
-            <Grid>
+            <Grid HorizontalAlignment="Left" >
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
-                    Relative border around the image
+                    Relative border around the image:
                 </TextBlock>
-                <Slider Grid.Column="1" Width="100"/>
+                <Slider ValueChanged="Slider_ValueChanged" Grid.Column="2" Width="100" HorizontalAlignment="Right"/>                                
             </Grid>
-
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
+                        Scaling factor of the preview images:
+                </TextBlock>
+                <ComboBox Grid.Column="2" SelectionChanged="ComboBox_SelectionChanged">
+                    <ComboBoxItem>1</ComboBoxItem>
+                    <ComboBoxItem>2</ComboBoxItem>
+                    <ComboBoxItem>4</ComboBoxItem>
+                    <ComboBoxItem>8</ComboBoxItem>
+                    <ComboBoxItem>16</ComboBoxItem>
+                    <ComboBoxItem>32</ComboBoxItem>
+                </ComboBox>
+            </Grid>
 
             <TextBlock TextWrapping="Wrap" FontSize="30">
             Abouts
