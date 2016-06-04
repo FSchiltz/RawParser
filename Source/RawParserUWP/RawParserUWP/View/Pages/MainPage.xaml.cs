@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 using RawParserUWP.Model.Parser.Demosaic;
 using System.Text;
 using RawParserUWP.View.UIHelper;
+using RawParserUWP.Model.Image.Effect;
 
 namespace RawParserUWP
 {
@@ -41,9 +42,8 @@ namespace RawParserUWP
         public double pageHeight;
         private int currentImageDisplayedHeight;
         private int currentImageDisplayedWidth;
-        private ushort[] previewImage;
-        private uint previewImageHeight;
-        private uint previewimageWitdth;
+        private RawImage previewImage;
+        private bool colorTempchanged;
 
         public MainPage()
         {
@@ -59,8 +59,10 @@ namespace RawParserUWP
             //checkif settings already exists
             if (localSettings.Values["imageBoxBorder"] == null)
                 localSettings.Values["imageBoxBorder"] = 0.05;
-            if (localSettings.Values["previewFctor"] == null)
+            if (localSettings.Values["previewFactor"] == null)
                 localSettings.Values["previewFactor"] = 8;
+            if (localSettings.Values["saveFormat"] == null)
+                localSettings.Values["saveFormat"] = ".jpg";
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -103,6 +105,7 @@ namespace RawParserUWP
                         imageBox.UpdateLayout();
                         //empty the exif data
                         exifDisplay.ItemsSource = null;
+                        previewImage = null;
                         //empty the histogram
                     });
         }
@@ -181,16 +184,17 @@ namespace RawParserUWP
 
                     //create a small image from raw to display
                     int previewFactor = (int)localSettings.Values["previewFactor"];
-                    previewImageHeight = (uint)(currentRawImage.height / previewFactor);
-                    previewimageWitdth = (uint)(currentRawImage.width / previewFactor);
-                    previewImage = new ushort[previewImageHeight * previewimageWitdth * 3];
-                    for (int i = 0; i < previewImageHeight; i++)
+                    previewImage = new RawImage();
+                    previewImage.height = (uint)(currentRawImage.height / previewFactor);
+                    previewImage.width = (uint)(currentRawImage.width / previewFactor);
+                    previewImage.imageData = new ushort[previewImage.height * previewImage.width * 3];
+                    for (int i = 0; i < previewImage.height; i++)
                     {
-                        for (int j = 0; j < previewimageWitdth; j++)
+                        for (int j = 0; j < previewImage.width; j++)
                         {
-                            previewImage[((i * previewimageWitdth) + j) * 3] = currentRawImage.imageData[((i * previewFactor * previewimageWitdth) + j) * 3 * previewFactor];
-                            previewImage[(((i * previewimageWitdth) + j) * 3) + 1] = currentRawImage.imageData[(((i * previewFactor * previewimageWitdth) + j) * 3 * previewFactor) + 1];
-                            previewImage[(((i * previewimageWitdth) + j) * 3) + 2] = currentRawImage.imageData[(((i * previewFactor * previewimageWitdth) + j) * 3 * previewFactor) + 2];
+                            previewImage.imageData[((i * previewImage.width) + j) * 3] = currentRawImage.imageData[((i * previewFactor * previewImage.width) + j) * 3 * previewFactor];
+                            previewImage.imageData[(((i * previewImage.width) + j) * 3) + 1] = currentRawImage.imageData[(((i * previewFactor * previewImage.width) + j) * 3 * previewFactor) + 1];
+                            previewImage.imageData[(((i * previewImage.width) + j) * 3) + 2] = currentRawImage.imageData[(((i * previewFactor * previewImage.width) + j) * 3 * previewFactor) + 2];
                         }
                     }
                     int[] value = new int[256];
@@ -199,7 +203,7 @@ namespace RawParserUWP
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                                      {
-                                         displayImage(currentRawImage.getImageRawAs8bitsBitmap(null, ref value, ref previewImage, currentRawImage.height / 4, currentRawImage.width / 4));
+                                         displayImage(previewImage.getImageRawAs8bitsBitmap(null, ref value));
                                      });
 
                     //display the histogram                    
@@ -345,7 +349,7 @@ namespace RawParserUWP
 
         private async void saveButton_Click(object sender, RoutedEventArgs e)
         {
-            string format = ".ppm";
+            string format = (string)localSettings.Values["saveFormat"];
 
             //TODO reimplement correclty
             //Just for testing purpose for now
@@ -368,9 +372,13 @@ namespace RawParserUWP
                 {
                     //TODO apply to the real image the correction
                     //apply the exposure
-
-                    //apply the temperature
-
+                    Luminance.Exposure(ref currentRawImage, exposureSlider.Value);
+                    //apply the temperature (not yet because slider is not set to correct temp)
+                    if (colorTempchanged)
+                        Balance.whiteBalance(ref currentRawImage, (int)colorTempSlider.Value, 0);
+                    colorTempchanged = false;
+                    //Check if clipping
+                    Luminance.Clip(ref currentRawImage, (ushort)Math.Pow(2, currentRawImage.colorDepth));
 
                     // write to file
                     if (format == ".jpg")
@@ -382,7 +390,7 @@ namespace RawParserUWP
                         encoder.SetSoftwareBitmap(currentRawImage.getImageRawAs8bitsBitmap(null, ref t));
                         await encoder.FlushAsync();
                     }
-                    else
+                    else if (format == ".ppm")
                     {
                         var str = await file.OpenStreamForWriteAsync();
                         var stream = new StreamWriter(str, Encoding.ASCII);
@@ -421,6 +429,38 @@ namespace RawParserUWP
                             //Hide the loading screen
                             progressDisplay.Visibility = Visibility.Collapsed;
                         });
+                    }
+                    else throw new FormatException("Format not supported: " + format);
+                });
+            }
+        }
+
+        private void ExposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (previewImage != null)
+            {
+                double value = e.NewValue / 3; //get the value as a stop
+                Task t = Task.Run(() =>
+                {
+                    lock (previewImage)
+                    {
+                        Luminance.Exposure(ref previewImage, value);
+                    }
+                });
+            }
+        }
+
+        private void colorTempSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (previewImage != null)
+            {
+                colorTempchanged = true;
+                double value = e.NewValue / 3; //get the value as a stop
+                Task t = Task.Run(() =>
+                {
+                    lock (previewImage)
+                    {
+                        Balance.whiteBalance(ref previewImage, (int)value, 0);
                     }
                 });
             }

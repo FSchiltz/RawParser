@@ -136,7 +136,7 @@
                 <Pivot Background="#FFF0F0F0">
                     <PivotItem Header="Exposure">
 
-                        <ListView Background="#FFE4E4E4" Margin="-12,0" >
+                        <ListView x:Name="listView" Background="#FFE4E4E4" Margin="-12,0" >
                             <!--The histogram-->
                             <TextBlock Foreground="Black">
                                 Histogram
@@ -146,13 +146,19 @@
                                     <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}" Visibility="Collapsed"/>
                                 </Canvas>
                             </Border>
-                            <TextBlock Foreground="Black" >
+                            <TextBlock Foreground="Black" FontSize="24" >
                                 Exposure settings
                             </TextBlock>
                             <TextBlock>
                                 Exposure
                             </TextBlock>
-                            <Slider></Slider>
+                            <Slider x:Name="exposureSlider"  ValueChanged="ExposureSlider_ValueChanged" Width="300" Maximum="15" Minimum="-15" LargeChange="3" SmallChange="1"/>
+                            <TextBlock>
+                                Temperature
+                            </TextBlock>
+                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000"/>
+                            <Rectangle Width="{Binding ActualWidth, ElementName=listView, Mode=OneWay}" Height="1" Fill="#FF343434" Stroke="#FF3E3E3E"/>
+
                         </ListView>
                     </PivotItem>
                     <PivotItem Header="Tools">

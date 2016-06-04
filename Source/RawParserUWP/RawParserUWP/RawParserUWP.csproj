@@ -127,6 +127,7 @@
     <Compile Include="Model\Base\DictionnaryFromFileUShort.cs" />
     <Compile Include="Model\Base\DictionnaryFromFile.cs" />
     <Compile Include="Model\Base\StreamHelper.cs" />
+    <Compile Include="Model\Image\Effect\Luminance.cs" />
     <Compile Include="Model\Image\Tag.cs" />
     <Compile Include="Model\Image\Effect\Demosaic.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
