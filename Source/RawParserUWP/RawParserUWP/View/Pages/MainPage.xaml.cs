@@ -19,6 +19,7 @@ using Windows.UI.Core;
 using System.Runtime.InteropServices;
 using RawParserUWP.Model.Parser.Demosaic;
 using RawParserUWP.View.UIHelper;
+using System.Text;
 
 namespace RawParserUWP
 {
@@ -35,7 +36,7 @@ namespace RawParserUWP
     public sealed partial class MainPage : Page
     {
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-        private RawImage currentRawImage { set; get; }
+        public RawImage currentRawImage;
         public bool imageSelected { set; get; }
         public double pageWidth;
         public double pageHeight;
@@ -166,36 +167,18 @@ namespace RawParserUWP
                     currentRawImage.colorDepth = parser.colorDepth;
                     currentRawImage.cfa = parser.cfa;
                     currentRawImage.imageData = parser.parseRAWImage();
-                    ushort[] temp = new ushort[currentRawImage.width * 3*3];
-                    for (int i = 0; i < currentRawImage.width * 3 * 3; i++)
-                    {
-                        for (int k = 0; k < currentRawImage.colorDepth; k++)
-                        {
-                            if (currentRawImage.imageData[(i  * currentRawImage.colorDepth) + k])
-                            {
-                                temp[i] |= (ushort)(1 << k);
-                            }
-                        }
-                    }
-                    currentRawImage.imageData = Demosaic.demos(currentRawImage.imageData, (int)currentRawImage.height, (int)currentRawImage.width, currentRawImage.colorDepth, demosAlgorithm.NearNeighbour, currentRawImage.cfa);
-                    for (int i = 0; i < currentRawImage.width * 3 * 3; i++)
-                    {
-                        for (int k = 0; k < currentRawImage.colorDepth; k++)
-                        {
-                            if (currentRawImage.imageData[(i  * currentRawImage.colorDepth) + k])
-                            {
-                                temp[i] |= (ushort)(1 << k);
-                            }
-                        }
-                    }
+                    Demosaic.demos(ref currentRawImage, demosAlgorithm.NearNeighbour);
+                    Balance.whiteBalance(ref currentRawImage, 4000, -5);
+                    
+                    int[] value = new int[256];
 
                     //Needs to run in UI thread because fuck it
-                    int[] value = new int[(int)Math.Pow(2, currentRawImage.colorDepth)];
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
-                         displayImage(currentRawImage.getImageRawAs8bitsBitmap((int)currentRawImage.width, (int)currentRawImage.height, null, ref value));
+                         displayImage(currentRawImage.getImageRawAs8bitsBitmap(null, ref value));
                      });
+                    
                     //display the histogram
                     /*
                     Task histoTask = Task.Run(async () =>
@@ -335,9 +318,10 @@ namespace RawParserUWP
 
         private async void saveButton_Click(object sender, RoutedEventArgs e)
         {
+            string format = ".ppm";
             //TODO reimplement correclty
             //Just for testing purpose for now
-            if (imageBox.Source != null)
+            if (currentRawImage != null)
             {
                 var savePicker = new FileSavePicker
                 {
@@ -345,40 +329,88 @@ namespace RawParserUWP
                     SuggestedFileName = currentRawImage.fileName
                 };
                 // Dropdown of file types the user can save the file as
-                savePicker.FileTypeChoices.Add("Image file", new List<string>() { ".jpg" });
+                savePicker.FileTypeChoices.Add("Image file", new List<string>() { format });
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
-                // write to file
-                WriteableBitmap bitmapImage = (WriteableBitmap)imageBox.Source;
-
-                BitmapEncoder encoder = await BitmapEncoder.CreateAsync(
-                    BitmapEncoder.JpegEncoderId,
-                    await file.OpenAsync(FileAccessMode.ReadWrite));
-                using (Stream pixelStream = bitmapImage.PixelBuffer.AsStream())
+                var task = Task.Run(async () =>
                 {
+                    // write to file
+                    if (format == ".jpg")
+                    {
+                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(
+                            BitmapEncoder.JpegEncoderId,
+                            await file.OpenAsync(FileAccessMode.ReadWrite));
+                        int[] t = new int[3];
+                        encoder.SetSoftwareBitmap(currentRawImage.getImageRawAs8bitsBitmap(null, ref t));
+                        await encoder.FlushAsync();
+                    }
+                    else
+                    {
+                        var str = await file.OpenStreamForWriteAsync();
+                        var stream = new StreamWriter(str, Encoding.ASCII);
+                        stream.Write("P3\r\n" + currentRawImage.width + " " + currentRawImage.height + " 255 \r\n");
+                        for (int i = 0; i < currentRawImage.height; i++)
+                        {
+                            for (int j = 0; j < currentRawImage.width; j++)
+                            {
+                                ushort x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3)];
+                                /*
+                                ushort x = 0;
+                                for (int k = 0; k < currentRawImage.colorDepth; k++)
+                                {
+                                    if (currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3 * currentRawImage.colorDepth) + k])
+                                    {
+                                        x |= (ushort)(1 << k);
+                                    }
+                                }*/
+                                byte y = (byte)(x >> 6);
+                                stream.Write(y + " ");
 
-                    byte[] pixels = new byte[pixelStream.Length];
+                                x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3) + 1];
+                                /*
+                                x = 0;
+                                for (int k = 0; k < currentRawImage.colorDepth; k++)
+                                {
+                                    if (currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3 * currentRawImage.colorDepth) + k + currentRawImage.colorDepth])
+                                    {
+                                        x |= (ushort)(1 << k);
+                                    }
+                                }*/
+                                y = (byte)(x >> 6);
+                                stream.Write(y + " ");
 
-                    await pixelStream.ReadAsync(pixels, 0, pixels.Length);
-
-
-                    encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore, (uint)bitmapImage.PixelWidth,
-                        (uint)bitmapImage.PixelHeight, 96.0, 96.0, pixels);
-
-                    await encoder.FlushAsync();
+                                x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3 )  + 2];
+                                /*
+                                x= 0;
+                                for (int k = 0; k < currentRawImage.colorDepth; k++)
+                                {
+                                    if (currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3 * currentRawImage.colorDepth) + k + (2 * currentRawImage.colorDepth)])
+                                    {
+                                        x |= (ushort)(1 << k);
+                                    }
+                                }
+                                */
+                                y = (byte)(x >> 6);
+                                stream.Write(y + " ");
+                            }
+                            stream.Write("\r\n");
+                        }
+                        str.Dispose();
+                    }
                     // Let Windows know that we're finished changing the file so
                     // the other app can update the remote version of the file.
                     // Completing updates may require Windows to ask for user input.
                     FileUpdateStatus status =
                         await CachedFileManager.CompleteUpdatesAsync(file);
+
                     if (status != FileUpdateStatus.Complete)
                     {
                         ExceptionDisplay.display("File could not be saved");
                     }
-                }
+                });
             }
         }
     }

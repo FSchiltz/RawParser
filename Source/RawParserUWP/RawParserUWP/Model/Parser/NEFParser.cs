@@ -135,7 +135,7 @@ namespace RawParserUWP.Model.Parser
             return temp;
         }
 
-        public override BitArray parseRAWImage()
+        public override ushort[] parseRAWImage()
         {
             //Get the RAW data info
             Tag imageRAWOffsetTags, imageRAWWidth, imageRAWHeight, imageRAWSize, imageRAWCompressed, imageRAWDepth;
@@ -160,7 +160,7 @@ namespace RawParserUWP.Model.Parser
            
             header = null;
            
-            BitArray rawData;
+            ushort[] rawData;
             //Check if uncompressed
             if ((ushort)imageRAWCompressed.data[0] == 34713)
             {
@@ -177,7 +177,10 @@ namespace RawParserUWP.Model.Parser
             {
                 //get Raw Data            
                 fileStream.BaseStream.Position = (uint)imageRAWOffsetTags.data[0];
-                rawData = new BitArray(fileStream.ReadBytes(Convert.ToInt32(imageRAWSize.data[0])));
+                //TODO convert toushort from the byte table
+                //Normaly only nikon camera between D1 and d100 are not compressed
+                fileStream.ReadBytes(Convert.ToInt32(imageRAWSize.data[0]));
+                rawData = null;
             }
             fileStream.Dispose();
             return rawData;

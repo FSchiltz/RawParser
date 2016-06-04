@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ProjectView>ProjectFiles</ProjectView>
+    <ProjectView>ShowAllFiles</ProjectView>
     <AppxPackageIsForStore>False</AppxPackageIsForStore>
     <AppxShowAllApps>False</AppxShowAllApps>
     <AppxBuildConfigurationSelection>x86|x64|arm</AppxBuildConfigurationSelection>
@@ -17,10 +17,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
     <DeviceId>30F105C9-681E-420b-A277-7C086EAD8A4E</DeviceId>
     <UseEmulator>true</UseEmulator>
-    <RemoteDebugMachine>Windows-Phone</RemoteDebugMachine>
+    <RemoteDebugMachine>192.168.1.7</RemoteDebugMachine>
     <AuthenticationMode>Universal</AuthenticationMode>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
-    <CreateCleanLayout>false</CreateCleanLayout>
+    <CreateCleanLayout>true</CreateCleanLayout>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DeviceId>98CD6FA8-9114-4179-ACA3-38E5D23C77EE</DeviceId>

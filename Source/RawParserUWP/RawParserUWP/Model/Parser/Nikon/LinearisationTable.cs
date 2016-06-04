@@ -158,9 +158,9 @@ namespace RawParserUWP.Model.Parser.Nikon
           * 
           * 
           */
-        public BitArray uncompressed(uint height, uint width, byte[] cfa)
+        public ushort[] uncompressed(uint height, uint width, byte[] cfa)
         {
-            BitArray uncompressedData = new BitArray((int)(height * width * colordepth * 3)); //add pixel*
+            ushort[] uncompressedData = new ushort[(int)(height * width *3 )]; //add pixel*
             ushort[] huff;
 
             int tree = 0, row, col, len, shl, diff;
@@ -175,7 +175,6 @@ namespace RawParserUWP.Model.Parser.Nikon
             getbithuff(-1, null);
 
             int i = 0;
-            int k = 0;
             for (min = row = 0; row < height; row++)
             {
                 if (splitValue > 1 && row == splitValue)
@@ -205,13 +204,15 @@ namespace RawParserUWP.Model.Parser.Nikon
                     if ((ushort)(hpred[col & 1] + min) >= max) throw new Exception("Error during deflate");
 
                     //TODO change variable names
-                    ushort xy = curve[lim((short)hpred[col & 1], 0, 0x3fff)];
+                    //ushort xy = curve[lim((short)hpred[col & 1], 0, 0x3fff)];
                     //Check wich color is the pixel 
-                    int cfaoffset =cfa[((row % 2) * 2) + col % 2] * colordepth;
+                    //int cfaoffset =cfa[((row % 2) * 2) + col % 2] * colordepth;
+                    uncompressedData[(((int)(row * width) + col) * 3) + cfa[((row % 2) * 2) + col % 2]] = curve[lim((short)hpred[col & 1], 0, 0x3fff)];
+                    /*
                     for (k =0; k < colordepth; k++)
                     {
                         uncompressedData[(((int)(row * width) + col) * 3 * colordepth) + cfaoffset + k] = (((xy >> k) & 1) == 1);
-                    }
+                    }*/
                 }
             }
             /*
@@ -231,6 +232,63 @@ namespace RawParserUWP.Model.Parser.Nikon
             }
               
              //*/
+            return uncompressedData;
+        }
+
+        public BitArray uncompressed2(uint height, uint width, byte[] cfa)
+        {
+            BitArray uncompressedData = new BitArray((int)(height * width * colordepth)); //add pixel*
+            ushort[] huff;
+
+            int tree = 0, row, col, len, shl, diff;
+            int min = 0;
+            if (version0 == 0x46) tree = 2;
+            if (colordepth == 14) tree += 3;
+
+            int maxcounter = curveSize;
+            while (maxcounter - 2 >= 0 && curve[maxcounter - 2] == curve[maxcounter - 1]) max--;
+            huff = makeDecoder(tree);
+            ushort[] huffMinus1 = huff.Skip(1).ToArray();
+            getbithuff(-1, null);
+
+            int i = 0;
+            int k = 0;
+            for (min = row = 0; row < height; row++)
+            {
+                if (splitValue > 1 && row == splitValue)
+                {
+                    huff = makeDecoder(tree + 1);
+                    max += ((min = 16) << 1);
+                }
+                for (col = 0; col < width; col++)
+                {
+                    i = (int)getbithuff(huff[0], huffMinus1);
+                    len = (i & 15);
+                    shl = i >> 4;
+
+                    diff = (short)((getbithuff(len - shl, null) << 1) + 1) << shl >> 1;
+                    if ((diff & (1 << (len - 1))) == 0)
+                        diff -= (1 << len) - ((shl != 0) ? 1 : 1);
+                    if (col < 2)
+                    {
+                        vpreds[row & 1][col] += (short)diff;
+                        hpred[col] = (ushort)(vpreds[row & 1][col]);
+                    }
+                    else
+                    {
+                        hpred[col & 1] += (ushort)diff;
+                    }
+                    if ((ushort)(hpred[col & 1] + min) >= max) throw new Exception("Error during deflate");
+
+                    //TODO change variable names
+                    ushort xy = curve[lim((short)hpred[col & 1], 0, 0x3fff)];
+                    //Check wich color is the pixel
+                    for (k = 0; k < colordepth; k++)
+                    {
+                        uncompressedData[(((int)(row * width) + col) *  colordepth) +  k] = (((xy >> k) & 1) == 1);
+                    }
+                }
+            }
             return uncompressedData;
         }
 
