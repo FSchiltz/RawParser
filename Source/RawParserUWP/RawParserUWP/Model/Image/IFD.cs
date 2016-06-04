@@ -35,7 +35,11 @@ namespace RawParserUWP.Model.Format.Image
                     temp.dataOffset = fileStream.ReadUInt32();
                 }
 
-                
+                if (temp.tagId == 0x0096 || temp.tagId == 0x927C)//if makernote or linearisation table, do not get the data ( optimisation)
+                {
+                    temp.dataCount = 0;
+                }
+
                 if (temp.tagId != 0x0096 && temp.tagId != 0x927C)//if makernote or linearisation table, do not get the data ( optimisation)
                 {
                     temp.data = new Object[temp.dataCount];

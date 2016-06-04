@@ -44,7 +44,7 @@
                 <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
                     Relative border around the image:
                 </TextBlock>
-                <Slider ValueChanged="Slider_ValueChanged" Grid.Column="2" Width="100" HorizontalAlignment="Right"/>                                
+                <Slider ValueChanged="Slider_ValueChanged" Grid.Column="2" Width="100" HorizontalAlignment="Right"/>
             </Grid>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -62,6 +62,20 @@
                     <ComboBoxItem>8</ComboBoxItem>
                     <ComboBoxItem>16</ComboBoxItem>
                     <ComboBoxItem>32</ComboBoxItem>
+                </ComboBox>
+            </Grid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
+                        Output Format:
+                </TextBlock>
+                <ComboBox Grid.Column="2" SelectionChanged="ComboBoxFile_SelectionChanged">
+                    <ComboBoxItem>.jpg</ComboBoxItem>
+                    <ComboBoxItem>.ppm</ComboBoxItem>
                 </ComboBox>
             </Grid>
 
