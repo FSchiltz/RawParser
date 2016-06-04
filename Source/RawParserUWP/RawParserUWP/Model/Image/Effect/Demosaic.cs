@@ -16,7 +16,6 @@ namespace RawParserUWP.Model.Parser.Demosaic
         {
             switch (algo)
             {
-
                 case demosAlgorithm.Bilinear:
                     break;
                 case demosAlgorithm.Bicubic:
@@ -27,8 +26,6 @@ namespace RawParserUWP.Model.Parser.Demosaic
                 default:
                     Demosaic.NearNeighbour(ref image, (int)image.height, (int)image.width, image.colorDepth, image.cfa);
                     break;
-
-
             }
         }
 
@@ -39,7 +36,6 @@ namespace RawParserUWP.Model.Parser.Demosaic
                 for (int col = 0; col < width; col++)
                 {
                     var pixeltype = cfa[((row % 2) * 2) + col % 2];
-
                     if (pixeltype == 1)
                     {
                         //if green

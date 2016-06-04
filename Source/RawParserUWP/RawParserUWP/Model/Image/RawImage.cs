@@ -34,18 +34,17 @@ namespace RawParserUWP.Model.Format.Image
             get
             {
                 var a = (((row * width) + col) * 3) + k;
-                if (a < imageData.Length
-                    && a >= 0)
+                if (row < 0 || row >= height || col < 0|| col >= width)
                 {
-                    return imageData[a];
+                    return 0;
                 }
-                else return 0;
+                else return imageData[a]; 
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                imageData[((row * width) + col) * 3] = value;
+                imageData[(((row * width) + col) * 3) + k]  = value;
             }
         }
 
@@ -116,9 +115,12 @@ namespace RawParserUWP.Model.Format.Image
                     for (int i = 0; i < bufferLayout.Width * bufferLayout.Height; i++)
                     {
                         //get the pixel                    
-                        ushort blue = (ushort)(RAW[(i * 3)] >> (colorDepth - 8)),
-                        green = (ushort)(RAW[(i * 3) + 1] >> (colorDepth - 8)),
-                        red = (ushort)(RAW[(i * 3) + 2] >> (colorDepth - 8));
+                        ushort blue = (ushort)(RAW[(i * 3)] >> diff),
+                        green = (ushort)(RAW[(i * 3) + 1] >> diff),
+                        red = (ushort)(RAW[(i * 3) + 2] >> (diff));
+                        if (blue > 255) blue = 255;
+                        if (red > 255) red = 255;
+                        if (green > 255) green = 255;
                         /*
                         double redD = red / (255 * 64), greenD = green / (255 * 64), blueD = blue / (255 * 64);
 

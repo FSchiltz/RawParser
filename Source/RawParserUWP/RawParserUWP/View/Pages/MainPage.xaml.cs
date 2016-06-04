@@ -18,6 +18,7 @@ using Windows.UI.Core;
 using System.Runtime.InteropServices;
 using RawParserUWP.Model.Parser.Demosaic;
 using System.Text;
+using RawParserUWP.View.UIHelper;
 
 namespace RawParserUWP
 {
@@ -33,20 +34,22 @@ namespace RawParserUWP
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+        private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
         public RawImage currentRawImage;
         public bool imageSelected { set; get; }
         public double pageWidth;
         public double pageHeight;
         private int currentImageDisplayedHeight;
         private int currentImageDisplayedWidth;
+        private ushort[] previewImage;
+        private uint previewImageHeight;
+        private uint previewimageWitdth;
 
         public MainPage()
         {
             InitializeComponent();
             InitSettings();
             NavigationCacheMode = NavigationCacheMode.Enabled;
-
             imageSelected = false;
 
         }
@@ -54,8 +57,10 @@ namespace RawParserUWP
         private void InitSettings()
         {
             //checkif settings already exists
-            // if (localSettings.Values["imageBoxBorder"] == null)
-            localSettings.Values["imageBoxBorder"] = 0.05;
+            if (localSettings.Values["imageBoxBorder"] == null)
+                localSettings.Values["imageBoxBorder"] = 0.05;
+            if (localSettings.Values["previewFctor"] == null)
+                localSettings.Values["previewFactor"] = 8;
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -175,27 +180,28 @@ namespace RawParserUWP
                     Demosaic.demos(ref currentRawImage, demosAlgorithm.NearNeighbour);
 
                     //create a small image from raw to display
-                    ushort[] smallImage = new ushort[(currentRawImage.height / 4) * (currentRawImage.width / 4) * 3];
-                    for (int i = 0; i < (currentRawImage.height / 4); i++)
+                    previewImageHeight = currentRawImage.height / 4;
+                    previewimageWitdth = currentRawImage.width / 4;
+                    previewImage = new ushort[previewImageHeight * previewimageWitdth * 3];
+                    for (int i = 0; i < previewImageHeight; i++)
                     {
-                        for (int j = 0; j < (currentRawImage.width / 4) * 3; j++)
+                        for (int j = 0; j < previewimageWitdth; j++)
                         {
-                            smallImage[(i * 3) + j] = currentRawImage.imageData[(i * 12 * 4) + (j * 4)];
+                            previewImage[((i * previewimageWitdth) + j) * 3] = currentRawImage.imageData[((i * 4 * previewimageWitdth) + j) * 3 * 4];
+                            previewImage[(((i * previewimageWitdth) + j) * 3) + 1] = currentRawImage.imageData[(((i * 4 * previewimageWitdth) + j) * 3 * 4) + 1];
+                            previewImage[(((i * previewimageWitdth) + j) * 3) + 2] = currentRawImage.imageData[(((i * 4 * previewimageWitdth) + j) * 3 * 4) + 2];
                         }
                     }
                     int[] value = new int[256];
 
-
                     //Needs to run in UI thread because fuck it
-
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
-                     {
-                         displayImage(currentRawImage.getImageRawAs8bitsBitmap(null, ref value, ref smallImage, currentRawImage.height / 4, currentRawImage.width / 4));
-                     });
+                                     {
+                                         displayImage(currentRawImage.getImageRawAs8bitsBitmap(null, ref value, ref previewImage, currentRawImage.height / 4, currentRawImage.width / 4));
+                                     });
 
-                    //display the histogram
-                    /*
+                    //display the histogram                    
                     Task histoTask = Task.Run(async () =>
                     {
                         Histogram.Create(value, currentRawImage.colorDepth, currentRawImage.height, histogramCanvas);
@@ -203,7 +209,7 @@ namespace RawParserUWP
                          {
                              histoLoadingBar.Visibility = Visibility.Collapsed;
                          });
-                    });*/
+                    });
                     //dispose
                     file = null;
                     parser = null;
@@ -339,6 +345,7 @@ namespace RawParserUWP
         private async void saveButton_Click(object sender, RoutedEventArgs e)
         {
             string format = ".ppm";
+
             //TODO reimplement correclty
             //Just for testing purpose for now
             if (currentRawImage != null)
@@ -358,6 +365,12 @@ namespace RawParserUWP
                 CachedFileManager.DeferUpdates(file);
                 var task = Task.Run(async () =>
                 {
+                    //TODO apply to the real image the correction
+                    //apply the exposure
+
+                    //apply the temperature
+
+
                     // write to file
                     if (format == ".jpg")
                     {
