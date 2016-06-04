@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -21,6 +18,9 @@ namespace RawParserUWP.Model.Format.Image
         public uint height;
         public uint width;
         public byte[] cfa;
+        public int saturation;
+        public int dark;
+        public double[] camMul;
 
         /*
          * Should be allows if possible
@@ -205,6 +205,52 @@ namespace RawParserUWP.Model.Format.Image
                 }
             }
             return image;
+        }
+
+        public double[] getMultipliers()
+        {
+            uint[] sum = new uint[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+            double[] scaleMul = new double[4], preMul = new double[4];
+            uint dmin, dmax;
+            uint c = 0;
+            /*
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    c = FC(row, col);
+                    if ((val = white[row][col] - cblack[c]) > 0)
+                        sum[c] += val;
+                    sum[c + 4]++;
+                }
+            }
+            if (sum[0] && sum[1] && sum[2] && sum[3])
+            {
+                for (c = 0; c < 4; c++)
+                {
+                    pre_mul[c] = (float)sum[c + 4] / sum[c];
+                }
+            }
+            else if (cam_mul[0] && cam_mul[2])
+                memcpy(pre_mul, cam_mul, sizeof pre_mul);
+            else throw new FormatException("White balance not correct");
+            
+            preMul = camMul;
+            if (preMul[1] == 0) preMul[1] = 1;
+            if (preMul[3] == 0) preMul[3] = colors < 4 ? preMul[1] : 1;
+            for (dmin = DBL_MAX, dmax = c = 0; c < 4; c++)
+            {
+                if (dmin > preMul[c])
+                    dmin = (uint)preMul[c];
+                if (dmax < preMul[c])
+                    dmax = (uint)preMul[c];
+            }
+            for (c = 0; c < 4; c++)
+            {
+                scaleMul[c] = (preMul[c] /= dmax) * 65535.0 / maximum;
+            }
+            return scaleMul;*/
+            return null;
         }
 
         /*

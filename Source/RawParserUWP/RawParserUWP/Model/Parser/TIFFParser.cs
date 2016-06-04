@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using RawParserUWP.Model.Format.Image;
-using System.Collections;
 
 namespace RawParserUWP.Model.Parser
 {

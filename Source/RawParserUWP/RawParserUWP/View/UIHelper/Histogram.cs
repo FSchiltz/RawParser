@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using Windows.ApplicationModel.Core;
 using Windows.UI;
 using Windows.UI.Core;
