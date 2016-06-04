@@ -29,3 +29,5 @@ Doc/Format/NEF/DSC_8286.tiff
 *.vcxproj
 *.filters
 *.user
+*.db
+Source/RawParserUWP/RawParserUWP.VC.VC.opendb
