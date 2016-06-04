@@ -81,23 +81,26 @@ namespace RawParserUWP
             }
         }
 
+        /*
+         * Does not clip,beware
+         * 
+         */
         public static void scaleColor(ref RawImage currentRawImage, int dark, int saturation, double[] mul)
-        {
-            //TODO remplace to use camera value
+        {           
             for (int i = 0; i < currentRawImage.height * currentRawImage.width; i++)
             {
-                ushort r = currentRawImage.imageData[i * 3];
-                ushort g = currentRawImage.imageData[(i * 3) + 1];
-                ushort b = currentRawImage.imageData[(i * 3) + 2];
-                currentRawImage.imageData[i * 3] = (ushort)(r * mul[0]);
-                currentRawImage.imageData[(i * 3) + 1] = (ushort)(g * mul[1]);
-                currentRawImage.imageData[(i * 3) + 2] = (ushort)(b * mul[2]);
+                ushort r = (ushort)(currentRawImage.imageData[i * 3] * mul[0]);
+                ushort g = (ushort)(currentRawImage.imageData[(i * 3) + 1] * mul[1]);
+                ushort b = (ushort)(currentRawImage.imageData[(i * 3) + 2] * mul[2]);
+
+                currentRawImage.imageData[i * 3] = (ushort)r;
+                currentRawImage.imageData[(i * 3) + 1] = (ushort)g;
+                currentRawImage.imageData[(i * 3) + 2] = (ushort)b;
             }
         }
 
         public static void scaleGamma(ref RawImage currentRawImage, double gamma)
         {
-            //TODO remplace to use camera value
             int maxValue = (int)Math.Pow(2, currentRawImage.colorDepth) - 1;
             for (int i = 0; i < currentRawImage.height * currentRawImage.width; i++)
             {
