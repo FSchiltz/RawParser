@@ -60,7 +60,7 @@ namespace RawParserUWP
             if (localSettings.Values["imageBoxBorder"] == null)
                 localSettings.Values["imageBoxBorder"] = 0.05;
             if (localSettings.Values["previewFactor"] == null)
-                localSettings.Values["previewFactor"] = 8;
+                localSettings.Values["previewFactor"] = 4;
             if (localSettings.Values["saveFormat"] == null)
                 localSettings.Values["saveFormat"] = ".jpg";
         }
@@ -107,7 +107,18 @@ namespace RawParserUWP
                         exifDisplay.ItemsSource = null;
                         previewImage = null;
                         //empty the histogram
+                        enableEditingControl(false);
                     });
+        }
+
+        private async void enableEditingControl(bool v)
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher
+                 .RunAsync(CoreDispatcherPriority.Normal, () =>
+                 {
+                     colorTempSlider.IsEnabled = v;
+                     exposureSlider.IsEnabled = v;
+                 });
         }
 
         /*
@@ -184,6 +195,7 @@ namespace RawParserUWP
 
                     //create a small image from raw to display
                     int previewFactor = (int)localSettings.Values["previewFactor"];
+                    previewFactor = 4;
                     previewImage = new RawImage();
                     previewImage.height = (uint)(currentRawImage.height / previewFactor);
                     previewImage.width = (uint)(currentRawImage.width / previewFactor);
@@ -215,6 +227,9 @@ namespace RawParserUWP
                              histoLoadingBar.Visibility = Visibility.Collapsed;
                          });
                     });
+
+                    //activate the editing control
+                    enableEditingControl(true);
                     //dispose
                     file = null;
                     parser = null;

@@ -119,78 +119,76 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <SplitView x:Name="splitView" PanePlacement="Right" DisplayMode="Inline" IsPaneOpen="True">
+        <SplitView x:Name="splitView" PanePlacement="Right" DisplayMode="Inline" IsPaneOpen="True" PaneBackground="#FFF7F7F7">
             <SplitView.Content>
                 <ScrollViewer x:Name="imageDisplayScroll" ZoomMode="Enabled" 
                             MinZoomFactor="1" 
                             MaxZoomFactor="10"
                             
                             HorizontalScrollBarVisibility="Auto"
-                            VerticalScrollBarVisibility="Auto">
-                    <Image x:Name="imageBox" 
-                           MaxWidth="{Binding ElementName=YourPage, Path=DataContext.Width}"
-                           MaxHeight="{Binding ElementName=YourPage, Path=DataContext.Height}"/>
+                            VerticalScrollBarVisibility="Auto" Background="{x:Null}">
+                    <Image x:Name="imageBox"/>
                 </ScrollViewer>
             </SplitView.Content>
             <SplitView.Pane >
-                <Pivot Background="#FFF0F0F0">
+                <Pivot>
                     <PivotItem Header="Exposure">
-
-                        <ListView x:Name="listView" Background="#FFE4E4E4" Margin="-12,0" >
+                        <StackPanel >
                             <!--The histogram-->
-                            <TextBlock Foreground="Black">
+                            <TextBlock Foreground="Black" IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left" FontSize="18">
                                 Histogram
                             </TextBlock>
-                            <Border BorderBrush="#FF818181" BorderThickness="1">
+                            <Border BorderBrush="#FF818181" BorderThickness="1" Margin="0,0,0,12">
                                 <Canvas x:Name="histogramCanvas" Width="300" Height="200">
                                     <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}" Visibility="Collapsed"/>
                                 </Canvas>
                             </Border>
-                            <TextBlock Foreground="Black" FontSize="24" >
+                            <TextBlock Foreground="Black" FontSize="22" >
                                 Exposure settings
                             </TextBlock>
-                            <TextBlock>
+                            <TextBlock FontSize="12">
                                 Exposure
                             </TextBlock>
-                            <Slider x:Name="exposureSlider"  ValueChanged="ExposureSlider_ValueChanged" Width="300" Maximum="15" Minimum="-15" LargeChange="3" SmallChange="1"/>
-                            <TextBlock>
+                            <Slider x:Name="exposureSlider"  ValueChanged="ExposureSlider_ValueChanged" Width="300" Maximum="15" Minimum="-15" LargeChange="3" SmallChange="1" IsEnabled="False"/>
+                            <TextBlock FontSize="12">
                                 Temperature
                             </TextBlock>
-                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000"/>
-                            <Rectangle Width="{Binding ActualWidth, ElementName=listView, Mode=OneWay}" Height="1" Fill="#FF343434" Stroke="#FF3E3E3E"/>
-
-                        </ListView>
+                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000" IsEnabled="False"/>
+                            <Rectangle Width="120" Height="1" Fill="#FF343434"/>
+                        </StackPanel>
                     </PivotItem>
                     <PivotItem Header="Tools">
-                        <ListView Background="#FFF0F0F0">
-                        </ListView>
+                        <StackPanel Background="#FFF0F0F0">
+                        </StackPanel>
                     </PivotItem>
                     <PivotItem Header="Presets">
                         <GridView Background="White" ></GridView>
                     </PivotItem>
                     <PivotItem Header="Exifs">
-                        <ListView Background="#FFF0F0F0" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                            <TextBlock IsTapEnabled="False" IsRightTapEnabled="False" IsHoldingEnabled="False" IsDoubleTapEnabled="False" IsHitTestVisible="False">Exifs data:</TextBlock>
-                            <ItemsControl x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid BorderBrush="#FF6A6A6A" BorderThickness="0,1,0,0" Background="{x:Null}" >
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition />
-                                                <ColumnDefinition />
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.Resources>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Margin" Value="5,0" />
-                                                </Style>
-                                            </Grid.Resources>
-                                            <TextBlock Grid.Column="0" Text="{Binding displayName}" IsDoubleTapEnabled="False" IsTapEnabled="False" IsTextSelectionEnabled="True" />
-                                            <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" TextAlignment="Right" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ListView>
+                        <StackPanel>
+                            <TextBlock>Exifs data:</TextBlock>
+                            <ListView Background="#FFF0F0F0" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid BorderBrush="#FF6A6A6A" BorderThickness="0,1,0,0" Background="{x:Null}" >
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.Resources>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Margin" Value="5,0" />
+                                                    </Style>
+                                                </Grid.Resources>
+                                                <TextBlock Grid.Column="0" Text="{Binding displayName}" IsDoubleTapEnabled="False" IsTapEnabled="False" IsTextSelectionEnabled="True" />
+                                                <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" TextAlignment="Right" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ListView>
+                        </StackPanel>
                     </PivotItem>
                 </Pivot>
             </SplitView.Pane>
