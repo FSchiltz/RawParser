@@ -149,7 +149,7 @@
                             <TextBlock FontSize="12">
                                 Exposure
                             </TextBlock>
-                            <Slider x:Name="exposureSlider" DragEnter="exposureSlider_DragEnter" DragLeave="exposureSlider_DragLeave"  ValueChanged="exposureSlider_ValueChanged" Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0"/>
+                            <Slider x:Name="exposureSlider" PointerCaptureLost="exposureSlider_DragStop"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0"/>
                             <TextBlock FontSize="12" Visibility="Collapsed">
                                 Temperature
                             </TextBlock>
