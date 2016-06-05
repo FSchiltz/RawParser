@@ -476,20 +476,15 @@ namespace RawParser
         {
             //store the value
             oldValue = exposureSlider.Value;
-            dragEnded = false;
+            dragStarted = true;
         }
 
         private void exposureSlider_DragLeave(object sender, DragEventArgs e)
         {
-            dragEnded = true;
-        }
-
-        private void exposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-        {
-            if (raw?.previewData != null && dragEnded)
+            if (raw?.previewData != null )
             {
-                colorTempchanged = true;             
-                double value = e.NewValue; //get the value as a stop
+                colorTempchanged = true;
+                double value = exposureSlider.Value; //get the value as a stop
                 value -= oldValue;
                 Task t = Task.Run(() =>
                 {
@@ -499,7 +494,25 @@ namespace RawParser
                         updatePreview();
                     }
                 });
-                dragEnded = false;
+                dragStarted = false;
+            }
+        }
+
+        private void exposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (raw?.previewData != null && !dragStarted)
+            {
+                colorTempchanged = true;
+                double value = e.NewValue; //get the value as a stop
+                value -= e.OldValue;
+                Task t = Task.Run(() =>
+                {
+                    lock (raw.previewData)
+                    {
+                        Luminance.Exposure(ref raw.previewData, raw.previewHeight, raw.previewWidth, value);
+                        updatePreview();
+                    }
+                });
             }
         }
     }
