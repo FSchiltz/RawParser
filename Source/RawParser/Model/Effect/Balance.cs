@@ -1,22 +1,16 @@
-﻿using System;
-using RawParserUWP.Model.Format.Image;
+﻿using RawParser.Image;
+using System;
 
-namespace RawParserUWP
+namespace RawParser.Effect
 {
     public class Balance
     {
-        /*
-         * Start with a temperature, in Kelvin, somewhere between 1000 and 40000.  (Other values may work,
-                 but I can't make any promises about the quality of the algorithm's estimates above 40000 K.)
-            Note also that the temperature and color variables need to be declared as floating - point.
-        */
-        public static void whiteBalance(ref RawImage image, int temp, int tint)
+        private Balance() { }
+
+        private static void calculateRGB(int temp, out ushort rRefer, out ushort gRefer, out ushort bRefer)
         {
-            //TODO caclute the real value and remove transforming to 8 bit
             ushort maxValue = 255;
             temp /= 100;
-            ushort factor = (ushort)(image.colorDepth - 8);
-            ushort rRefer, gRefer, bRefer;
 
             if (temp >= 66)
             {
@@ -60,24 +54,36 @@ namespace RawParserUWP
                     else if (bRefer > maxValue) bRefer = maxValue;
                 }
             }
+        }
+        /*
+         * Start with a temperature, in Kelvin, somewhere between 1000 and 40000.  (Other values may work,
+                 but I can't make any promises about the quality of the algorithm's estimates above 40000 K.)
+            Note also that the temperature and color variables need to be declared as floating - point.
+        */
+        public static void WhiteBalance(ref ushort[] image, int colorDepth, uint h, uint w, int temp)
+        {
+            //TODO caclute the real value and remove transforming to 8 bit
+            ushort rRefer = 0, gRefer = 0, bRefer = 0;
+            ushort factor = (ushort)(colorDepth - 8);
+            calculateRGB(temp, out rRefer, out gRefer, out bRefer);
             rRefer <<= factor;
             gRefer <<= factor;
             bRefer <<= factor;
             double aplhablend = 0.005;
-            for (int i = 0; i < image.width * image.height; i++)
+            for (int i = 0; i < w * h; i++)
             {
                 //red
-                var r = image.imageData[i * 3];
-                image.imageData[i * 3] = (ushort)((image.imageData[i * 3] * (1 - aplhablend)) + (rRefer * aplhablend));
-                var r2 = image.imageData[i * 3];
+                var r = image[i * 3];
+                image[i * 3] = (ushort)((image[i * 3] * (1 - aplhablend)) + (rRefer * aplhablend));
+                var r2 = image[i * 3];
                 //green
-                var g = image.imageData[(i * 3) + 1];
-                image.imageData[(i * 3) + 1] = (ushort)((image.imageData[(i * 3) + 1] * (1 - aplhablend)) + (gRefer * aplhablend));
-                var g2 = image.imageData[(i * 3) + 1];
+                var g = image[(i * 3) + 1];
+                image[(i * 3) + 1] = (ushort)((image[(i * 3) + 1] * (1 - aplhablend)) + (gRefer * aplhablend));
+                var g2 = image[(i * 3) + 1];
                 //blue                
-                var b = image.imageData[(i * 3) + 1];
-                image.imageData[(i * 3) + 2] = (ushort)((image.imageData[(i * 3) + 2] * (1 - aplhablend)) + (bRefer * aplhablend));
-                var b2 = image.imageData[(i * 3) + 1];
+                var b = image[(i * 3) + 1];
+                image[(i * 3) + 2] = (ushort)((image[(i * 3) + 2] * (1 - aplhablend)) + (bRefer * aplhablend));
+                var b2 = image[(i * 3) + 1];
             }
         }
 
@@ -86,16 +92,16 @@ namespace RawParserUWP
          * 
          */
         public static void scaleColor(ref RawImage currentRawImage, int dark, int saturation, double[] mul)
-        {           
+        {
             for (int i = 0; i < currentRawImage.height * currentRawImage.width; i++)
             {
-                ushort r = (ushort)(currentRawImage.imageData[i * 3] * mul[0]);
-                ushort g = (ushort)(currentRawImage.imageData[(i * 3) + 1] * mul[1]);
-                ushort b = (ushort)(currentRawImage.imageData[(i * 3) + 2] * mul[2]);
+                ushort r = (ushort)(currentRawImage.rawData[i * 3] * mul[0]);
+                ushort g = (ushort)(currentRawImage.rawData[(i * 3) + 1] * mul[1]);
+                ushort b = (ushort)(currentRawImage.rawData[(i * 3) + 2] * mul[2]);
 
-                currentRawImage.imageData[i * 3] = (ushort)r;
-                currentRawImage.imageData[(i * 3) + 1] = (ushort)g;
-                currentRawImage.imageData[(i * 3) + 2] = (ushort)b;
+                currentRawImage.rawData[i * 3] = (ushort)r;
+                currentRawImage.rawData[(i * 3) + 1] = (ushort)g;
+                currentRawImage.rawData[(i * 3) + 2] = (ushort)b;
             }
         }
 
@@ -105,10 +111,15 @@ namespace RawParserUWP
             for (int i = 0; i < currentRawImage.height * currentRawImage.width; i++)
             {
                 gamma = 1 / gamma;
-                currentRawImage.imageData[i * 3] = (ushort)(maxValue * Math.Pow(currentRawImage.imageData[i * 3] / maxValue, gamma));
-                currentRawImage.imageData[(i * 3) + 1] = (ushort)(maxValue * Math.Pow(currentRawImage.imageData[(i * 3)+1] / maxValue, gamma));
-                currentRawImage.imageData[(i * 3) + 2] = (ushort)(maxValue * Math.Pow(currentRawImage.imageData[(i * 3)+2] / maxValue, gamma));
+                currentRawImage.rawData[i * 3] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[i * 3] / maxValue, gamma));
+                currentRawImage.rawData[(i * 3) + 1] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[(i * 3) + 1] / maxValue, gamma));
+                currentRawImage.rawData[(i * 3) + 2] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[(i * 3) + 2] / maxValue, gamma));
             }
+        }
+
+        internal static void WhiteBalance(ref uint[] image, int colorDepth, uint h, uint w, int temp)
+        {
+            throw new NotImplementedException();
         }
     }
 }

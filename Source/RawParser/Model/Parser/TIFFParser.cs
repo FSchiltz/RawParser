@@ -1,11 +1,12 @@
-﻿using System;
+﻿using RawParser.Format.IFD;
+using RawParser.Image;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using RawParserUWP.Model.Format.Image;
 
-namespace RawParserUWP.Model.Parser
+namespace RawParser.Parser
 {
-    class TiffParser : Parser
+    class TiffParser : AParser
     {
         public override RawImage parse(Stream s)
         {

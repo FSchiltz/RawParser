@@ -1,10 +1,10 @@
-﻿using RawParserUWP.Model.Format.Base;
+﻿using RawParser.Base;
 using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
 
-namespace RawParserUWP.Model.Parser.Nikon
+namespace RawParser.Parser.Nikon
 {
     internal class LinearisationTable : IDisposable
     {
@@ -16,7 +16,7 @@ namespace RawParserUWP.Model.Parser.Nikon
         byte version1;
         int max;
         short curveSize;
-        uShortArrayWithIndexAsDefaultValue curve;
+        UShortArrayWithIndexAsDefaultValue curve;
         short splitValue;
         int vbits = 0, reset = 0;
         short[][] vpreds;
@@ -90,7 +90,7 @@ namespace RawParserUWP.Model.Parser.Nikon
                         }
                         */
 
-            curve = new uShortArrayWithIndexAsDefaultValue(linearCurveSize);
+            curve = new UShortArrayWithIndexAsDefaultValue(linearCurveSize);
             /*
             for (ushort i = 0; i < linearCurveSize; i++)
             {

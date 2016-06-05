@@ -1,10 +1,10 @@
-﻿namespace RawParserUWP.Model.Format.Base
+﻿namespace RawParser.Base
 {
-    public class uShortArrayWithIndexAsDefaultValue
+    public class UShortArrayWithIndexAsDefaultValue
     {
             ushort?[] arr;
 
-            public uShortArrayWithIndexAsDefaultValue(ushort size)
+            public UShortArrayWithIndexAsDefaultValue(ushort size)
             {
                 arr = new ushort?[size];
             }

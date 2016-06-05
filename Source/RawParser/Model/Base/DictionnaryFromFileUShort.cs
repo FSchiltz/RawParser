@@ -1,7 +1,7 @@
 ﻿
 using System;
 
-namespace RawParserUWP.Model.Format.Base
+namespace RawParser.Base
 {
     class DictionnaryFromFileUShort : DictionnaryFromFile<ushort>
     {

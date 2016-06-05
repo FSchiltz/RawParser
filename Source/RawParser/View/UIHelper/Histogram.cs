@@ -6,7 +6,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Shapes;
 
-namespace RawParserUWP.View.UIHelper
+namespace RawParser.View.UIHelper
 {
     class Histogram
     {

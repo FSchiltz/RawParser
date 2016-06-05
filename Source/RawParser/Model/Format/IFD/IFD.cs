@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace RawParserUWP.Model.Format.Image
+namespace RawParser.Format.IFD
 {
     class IFD
     {
@@ -34,11 +34,7 @@ namespace RawParserUWP.Model.Format.Image
                 {
                     temp.dataOffset = fileStream.ReadUInt32();
                 }
-
-                if (temp.tagId == 0x0096 || temp.tagId == 0x927C)//if makernote or linearisation table, do not get the data ( optimisation)
-                {
-                    temp.dataCount = 0;
-                }
+              
 
                 if (temp.tagId != 0x0096 && temp.tagId != 0x927C)//if makernote or linearisation table, do not get the data ( optimisation)
                 {
@@ -123,6 +119,10 @@ namespace RawParserUWP.Model.Format.Image
                         if (k < 4)
                             fileStream.ReadBytes(4 - k);
                     }
+                }else
+                {
+                    temp.dataCount = 0;
+                    temp.data = null;
                 }
                 if (!tags.ContainsKey(temp.tagId))
                 {

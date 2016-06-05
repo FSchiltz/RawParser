@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 
-namespace RawParserUWP.Model.Format.Base
+namespace RawParser.Base
 {
     static class StreamHelper
     {
-        public static void CopyStream(Stream input, Stream output, int bytes)
+        private static void CopyStream(Stream input, Stream output, int bytes)
         {
             byte[] buffer = new byte[32768];
             int read;

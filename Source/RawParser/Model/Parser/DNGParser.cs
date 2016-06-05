@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using RawParserUWP.Model.Format.Image;
-using RawParserUWP.Model.Format.Reader;
+using RawParser.Format.IFD;
+using RawParser.Reader;
+using RawParser.Image;
 
-namespace RawParserUWP.Model.Parser
+namespace RawParser.Parser
 {
-    class DNGParser : Parser
+    class DNGParser : AParser
     {
         private TIFFBinaryReader fileStream;
         private Header header;

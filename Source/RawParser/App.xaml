@@ -1,8 +1,8 @@
 ﻿<Application
-    x:Class="RawParserUWP.App"
+    x:Class="RawParser.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:RawParserUWP"
+    xmlns:local="using:RawParser"
     RequestedTheme="Light">
 
 </Application>

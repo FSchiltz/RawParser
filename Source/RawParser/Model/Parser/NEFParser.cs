@@ -1,14 +1,15 @@
-﻿using System;
+﻿using RawParser.Base;
+using RawParser.Format.IFD;
+using RawParser.Image;
+using RawParser.Parser.Nikon;
+using RawParser.Reader;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using RawParserUWP.Model.Format.Base;
-using RawParserUWP.Model.Format.Image;
-using RawParserUWP.Model.Parser.Nikon;
-using RawParserUWP.Model.Format.Reader;
 
-namespace RawParserUWP.Model.Parser
+namespace RawParser.Parser
 {
-    class NEFParser : Parser, IDisposable
+    class NEFParser : AParser, IDisposable
     {
         protected TIFFBinaryReader fileStream;
         protected IFD ifd, subifd0, subifd1, exif;
@@ -24,13 +25,14 @@ namespace RawParserUWP.Model.Parser
             //read the thumbnail
             currentRawImage.thumbnail = parseThumbnail();
 
+            /*Not needed*/
             //read the preview
-            currentRawImage.previewImage = parsePreview();
+            //currentRawImage.previewImage = parsePreview();
 
             //read the exif
             currentRawImage.exif = parseExif();
             //read the data
-            currentRawImage.imageData = parseRAWImage();
+            currentRawImage.rawData = parseRAWImage();
             return currentRawImage;
         }
 
@@ -68,17 +70,18 @@ namespace RawParserUWP.Model.Parser
             if (!makerNote.preview.tags.TryGetValue(0x0201, out thumbnailOffset)) throw new FormatException("File not correct");
             if (!makerNote.preview.tags.TryGetValue(0x0202, out thumbnailSize)) throw new FormatException("File not correct");
             //get the preview data ( faster than rezising )
+
+            //Get the full size preview
+            Tag subifdoffsetTag;
+            if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
+            subifd0 = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
+            subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true, false);
             fileStream.BaseStream.Position = (uint)(thumbnailOffset.data[0]) + 10 + (uint)(makerNoteOffsetTag.dataOffset);
             return fileStream.ReadBytes(Convert.ToInt32(thumbnailSize.data[0]));
         }
 
         public override byte[] parsePreview()
         {
-            //Get the full size preview
-            Tag subifdoffsetTag;
-            if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
-            subifd0 = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
-            subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true, false);
             Tag imagepreviewOffsetTags, imagepreviewX, imagepreviewY, imagepreviewSize;
             if (!subifd0.tags.TryGetValue(0x201, out imagepreviewOffsetTags)) throw new FormatException("File not correct");
             if (!subifd0.tags.TryGetValue(0x11A, out imagepreviewX)) throw new FormatException("File not correct");
@@ -179,7 +182,7 @@ namespace RawParserUWP.Model.Parser
                 {
                     buff[i] = (byte)colorBalanceTag.data[i + 1];
                 }
-                
+
                 //get serial
                 int serial = 0;
                 for (int i = 0; i < serialTag.data.Length; i++)
@@ -202,6 +205,10 @@ namespace RawParserUWP.Model.Parser
                     for (int c = 0; c < 4; c++)
                     {
                         camMul[c ^ (c >> 1) ^ (offset & 1)] = fileStream.readUshortFromArray(ref buff, (offset & -2) + c * 2);
+                    }
+                    for (int c = 0; c < 4; c++)
+                    {
+                        camMul[c] = (camMul[c] / 0.93783628940582275) * 65535.0 / 16383;
                     }
                 }
             }

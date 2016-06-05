@@ -1,8 +1,8 @@
-﻿using System;
-using RawParserUWP.Model.Format.Image;
-using RawParserUWP.Model.Format.Reader;
+﻿using RawParser.Format.IFD;
+using RawParser.Reader;
+using System;
 
-namespace RawParserUWP.Model.Parser.Nikon
+namespace RawParser.Parser.Nikon
 {
     class NikonMakerNote
     {
