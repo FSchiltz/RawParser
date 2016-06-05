@@ -9,19 +9,18 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using RawParserUWP.Model.Format.Image;
-using RawParserUWP.Model.Parser;
-using RawParserUWP.View.Exception;
+using RawParser.View.Exception;
 using Windows.Storage.Provider;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using System.Runtime.InteropServices;
-using RawParserUWP.Model.Parser.Demosaic;
 using System.Text;
-using RawParserUWP.View.UIHelper;
-using RawParserUWP.Model.Image.Effect;
+using RawParser.View.UIHelper;
+using RawParser.Image;
+using RawParser.Parser;
+using RawParser.Effect;
 
-namespace RawParserUWP
+namespace RawParser
 {
     [ComImport]
     [Guid("5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D")]
@@ -36,15 +35,19 @@ namespace RawParserUWP
     public sealed partial class MainPage : Page
     {
         private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-        public RawImage currentRawImage;
+        public RawImage raw;
         public bool imageSelected { set; get; }
         public double pageWidth;
         public double pageHeight;
         private int currentImageDisplayedHeight;
         private int currentImageDisplayedWidth;
-        private RawImage previewImage;
         private bool colorTempchanged;
         private int[] value = new int[256];
+
+        //TODO move
+        bool dragStarted = false;
+        bool dragEnded = false;
+        double oldValue = 0;
 
         public MainPage()
         {
@@ -100,13 +103,12 @@ namespace RawParserUWP
                     .RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         //empty the previous image data
-                        currentRawImage = null;
+                        raw = null;
                         //empty the image display
                         imageBox.Source = null;
                         imageBox.UpdateLayout();
                         //empty the exif data
                         exifDisplay.ItemsSource = null;
-                        previewImage = null;
                         //empty the histogram
                         enableEditingControl(false);
                     });
@@ -137,7 +139,7 @@ namespace RawParserUWP
         private void OpenFile(StorageFile file)
         {
             //Open the file with the correct parser
-            Parser parser;
+            AParser parser;
             switch (file.FileType.ToUpper())
             {
                 case ".NEF":
@@ -162,72 +164,52 @@ namespace RawParserUWP
             {
                 using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                 {
-                    currentRawImage = new RawImage();
-                    currentRawImage.fileName = file.DisplayName;
+                    raw = new RawImage();
+                    raw.fileName = file.DisplayName;
 
                     //Set the stream
                     parser.setStream(stream);
 
                     //read the thumbnail
-                    currentRawImage.thumbnail = parser.parseThumbnail();
-                    displayImage(RawImage.getImageAsBitmap(currentRawImage.thumbnail));
+                    raw.thumbnail = parser.parseThumbnail();
+                    displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
 
                     //read the preview
                     parser.parsePreview();
                     //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
 
                     //read the exifi
-                    currentRawImage.exif = parser.parseExif();
+                    raw.exif = parser.parseExif();
                     displayExif();
                     //read the data 
-                    currentRawImage.height = parser.height;
-                    currentRawImage.width = parser.width;
-                    currentRawImage.colorDepth = parser.colorDepth;
-                    currentRawImage.cfa = parser.cfa;
-                    currentRawImage.camMul = parser.camMul;
-                    currentRawImage.imageData = parser.parseRAWImage();
-                    currentRawImage.camMul = new double[4] { 2.915122, 1.000000, 1.391935, 1.000000 };
-                    Balance.scaleColor(ref currentRawImage, currentRawImage.dark, currentRawImage.saturation, currentRawImage.camMul);
-                    //color correct to rgb
-                    //correct gamma
-                    //Balance.scaleGamma(ref currentRawImage, 1 / 2.2);
-                    //TODO Change to using polymorphisme
-                    Demosaic.demos(ref currentRawImage, demosAlgorithm.NearNeighbour);
+                    raw.height = parser.height;
+                    raw.width = parser.width;
+                    raw.colorDepth = parser.colorDepth;
+                    raw.cfa = parser.cfa;
+                    raw.camMul = parser.camMul;
+                    raw.rawData = parser.parseRAWImage();
+                    raw.camMul = parser.camMul;
+                    Balance.scaleColor(ref raw, raw.dark, raw.saturation, raw.camMul);
+
+                    Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
 
                     //create a small image from raw to display
                     int previewFactor = (int)localSettings.Values["previewFactor"];
-                    previewFactor = 4;
-                    previewImage = new RawImage();
-                    previewImage.height = (uint)(currentRawImage.height / previewFactor);
-                    previewImage.width = (uint)(currentRawImage.width / previewFactor);
-                    previewImage.colorDepth = currentRawImage.colorDepth;
-                    previewImage.imageData = new ushort[previewImage.height * previewImage.width * 3];
-                    for (int i = 0; i < previewImage.height; i++)
+                    //previewFactor = 4;
+
+                    raw.previewHeight = (uint)(raw.height / previewFactor);
+                    raw.previewWidth = (uint)(raw.width / previewFactor);
+                    raw.previewData = new uint[raw.previewHeight * raw.previewWidth * 3];
+                    for (int i = 0; i < raw.previewHeight; i++)
                     {
-                        for (int j = 0; j < previewImage.width; j++)
+                        for (int j = 0; j < raw.previewWidth; j++)
                         {
-                            previewImage.imageData[((i * previewImage.width) + j) * 3] = currentRawImage.imageData[((i * previewFactor * previewImage.width) + j) * 3 * previewFactor];
-                            previewImage.imageData[(((i * previewImage.width) + j) * 3) + 1] = currentRawImage.imageData[(((i * previewFactor * previewImage.width) + j) * 3 * previewFactor) + 1];
-                            previewImage.imageData[(((i * previewImage.width) + j) * 3) + 2] = currentRawImage.imageData[(((i * previewFactor * previewImage.width) + j) * 3 * previewFactor) + 2];
+                            raw.previewData[((i * raw.previewWidth) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor];
+                            raw.previewData[(((i * raw.previewWidth) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 1];
+                            raw.previewData[(((i * raw.previewWidth) + j) * 3) + 2] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 2];
                         }
                     }
-
-                    //Needs to run in UI thread because fuck it
-                    await CoreApplication.MainView.CoreWindow.Dispatcher
-                     .RunAsync(CoreDispatcherPriority.Normal, () =>
-                                     {
-                                         displayImage(previewImage.getImageRawAs8bitsBitmap(null, ref value));
-                                     });
-
-                    //display the histogram                    
-                    Task histoTask = Task.Run(async () =>
-                    {
-                        Histogram.Create(value, currentRawImage.colorDepth, currentRawImage.height, histogramCanvas);
-                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                         {
-                             histoLoadingBar.Visibility = Visibility.Collapsed;
-                         });
-                    });
+                    updatePreview();
                     //activate the editing control
                     enableEditingControl(true);
                     //dispose
@@ -301,7 +283,7 @@ namespace RawParserUWP
                                 currentImageDisplayedWidth = bitmap.PixelWidth;
                                 setScrollProperty();
                             });
-                }                
+                }
             }
         }
 
@@ -339,13 +321,13 @@ namespace RawParserUWP
         public async void displayExif()
         {
             //*
-            if (currentRawImage.exif != null)
+            if (raw.exif != null)
             {
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     //Do some UI-code that must be run on the UI thread.
                     //set exif datasource
-                    exifDisplay.ItemsSource = currentRawImage.exif.Values;
+                    exifDisplay.ItemsSource = raw.exif.Values;
                 });
             }
             //*/
@@ -357,12 +339,12 @@ namespace RawParserUWP
 
             //TODO reimplement correclty
             //Just for testing purpose for now
-            if (currentRawImage.imageData != null)
+            if (raw.rawData != null)
             {
                 var savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                    SuggestedFileName = currentRawImage.fileName
+                    SuggestedFileName = raw.fileName
                 };
                 // Dropdown of file types the user can save the file as
                 savePicker.FileTypeChoices.Add("Image file", new List<string>() { format });
@@ -380,13 +362,13 @@ namespace RawParserUWP
 
                     //TODO apply to the real image the correction
                     //apply the exposure
-                    Luminance.Exposure(ref currentRawImage, exposure);
+                    Luminance.Exposure(ref raw.rawData, raw.height, raw.width, exposure);
                     //apply the temperature (not yet because slider is not set to correct temp)
                     if (colorTempchanged)
-                        Balance.whiteBalance(ref currentRawImage, temp, 0);
+                        Balance.WhiteBalance(ref raw.rawData, raw.colorDepth, raw.height, raw.width, temp);
                     colorTempchanged = false;
                     //Check if clipping
-                    Luminance.Clip(ref currentRawImage, (ushort)Math.Pow(2, currentRawImage.colorDepth));
+                    Luminance.Clip(ref raw.rawData, raw.height, raw.width, (ushort)Math.Pow(2, raw.colorDepth));
 
                     // write to file
                     if (format == ".jpg")
@@ -399,7 +381,7 @@ namespace RawParserUWP
                         await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
                         {
                             //Do some UI-code that must be run on the UI thread.
-                            encoder.SetSoftwareBitmap(currentRawImage.getImageRawAs8bitsBitmap(null, ref t));
+                            encoder.SetSoftwareBitmap(raw.getImageRawAs8bitsBitmap(null, ref t));
                             await encoder.FlushAsync();
                         });
                     }
@@ -407,18 +389,18 @@ namespace RawParserUWP
                     {
                         var str = await file.OpenStreamForWriteAsync();
                         var stream = new StreamWriter(str, Encoding.ASCII);
-                        stream.Write("P3\r\n" + currentRawImage.width + " " + currentRawImage.height + " 255 \r\n");
-                        for (int i = 0; i < currentRawImage.height; i++)
+                        stream.Write("P3\r\n" + raw.width + " " + raw.height + " 255 \r\n");
+                        for (int i = 0; i < raw.height; i++)
                         {
-                            for (int j = 0; j < currentRawImage.width; j++)
+                            for (int j = 0; j < raw.width; j++)
                             {
-                                ushort x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3)];
+                                ushort x = raw.rawData[(int)(((i * raw.width) + j) * 3)];
                                 byte y = (byte)(x >> 6);
                                 stream.Write(y + " ");
-                                x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3) + 1];
+                                x = raw.rawData[(int)(((i * raw.width) + j) * 3) + 1];
                                 y = (byte)(x >> 6);
                                 stream.Write(y + " ");
-                                x = currentRawImage.imageData[(int)(((i * currentRawImage.width) + j) * 3) + 2];
+                                x = raw.rawData[(int)(((i * raw.width) + j) * 3) + 2];
                                 y = (byte)(x >> 6);
                                 stream.Write(y + " ");
                             }
@@ -449,47 +431,75 @@ namespace RawParserUWP
             }
         }
 
-        private void ExposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        private void colorTempSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
-            if (previewImage != null)
+            if (raw?.previewData != null)
             {
-                double value = e.NewValue / 3; //get the value as a stop
+                colorTempchanged = true;
+                double oldvalue = e.OldValue;
+                double value = e.NewValue; //get the value as a stop
+                value -= oldvalue;
                 Task t = Task.Run(() =>
                 {
-                    lock (previewImage)
+                    lock (raw.previewData)
                     {
-                        Luminance.Exposure(ref previewImage, value);
+                        Balance.WhiteBalance(ref raw.previewData, raw.colorDepth, raw.previewHeight, raw.previewWidth, (int)value);
+                        updatePreview();
                     }
-                    updatePreview();
                 });
             }
         }
 
-        private async void updatePreview()
+        private void updatePreview()
         {
-            //Needs to run in UI thread because fuck it
-            await CoreApplication.MainView.CoreWindow.Dispatcher
-             .RunAsync(CoreDispatcherPriority.Normal, () =>
-             {
-                 displayImage(previewImage.getImageRawAs8bitsBitmap(null, ref value));
-             });
-            Histogram.Create(value, previewImage.colorDepth,previewImage.height, histogramCanvas);
-;        }
-
-        private void colorTempSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-        {
-            if (previewImage != null)
+            //display the histogram                    
+            Task histoTask = Task.Run(async () =>
             {
-                colorTempchanged = true;
-                double value = e.NewValue / 3; //get the value as a stop
+                SoftwareBitmap bitmap = null;
+                //Needs to run in UI thread because fuck it
+                await CoreApplication.MainView.CoreWindow.Dispatcher
+                 .RunAsync(CoreDispatcherPriority.Normal, () =>
+                 {
+                     histoLoadingBar.Visibility = Visibility.Visible;
+                     bitmap = raw.getImagePreviewAs8bitsBitmap(null, ref value);
+                 });
+                displayImage(bitmap);
+                Histogram.Create(value, raw.colorDepth, raw.previewHeight, histogramCanvas);
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    histoLoadingBar.Visibility = Visibility.Collapsed;
+                });
+            });
+        }
+
+        private void exposureSlider_DragEnter(object sender, DragEventArgs e)
+        {
+            //store the value
+            oldValue = exposureSlider.Value;
+            dragEnded = false;
+        }
+
+        private void exposureSlider_DragLeave(object sender, DragEventArgs e)
+        {
+            dragEnded = true;
+        }
+
+        private void exposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (raw?.previewData != null && dragEnded)
+            {
+                colorTempchanged = true;             
+                double value = e.NewValue; //get the value as a stop
+                value -= oldValue;
                 Task t = Task.Run(() =>
                 {
-                    lock (previewImage)
+                    lock (raw.previewData)
                     {
-                        Balance.whiteBalance(ref previewImage, (int)value, 0);
+                        Luminance.Exposure(ref raw.previewData, raw.previewHeight, raw.previewWidth, value);
+                        updatePreview();
                     }
-                    updatePreview();
                 });
+                dragEnded = false;
             }
         }
     }

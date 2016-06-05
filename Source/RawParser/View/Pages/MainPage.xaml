@@ -1,8 +1,8 @@
 ﻿<Page
-    x:Class="RawParserUWP.MainPage"
+    x:Class="RawParser.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:RawParserUWP"
+    xmlns:local="using:RawParser"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -149,11 +149,11 @@
                             <TextBlock FontSize="12">
                                 Exposure
                             </TextBlock>
-                            <Slider x:Name="exposureSlider"  ValueChanged="ExposureSlider_ValueChanged" Width="300" Maximum="15" Minimum="-15" LargeChange="3" SmallChange="1" IsEnabled="False"/>
-                            <TextBlock FontSize="12">
+                            <Slider x:Name="exposureSlider" DragEnter="exposureSlider_DragEnter" DragLeave="exposureSlider_DragLeave"  ValueChanged="exposureSlider_ValueChanged" Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0"/>
+                            <TextBlock FontSize="12" Visibility="Collapsed">
                                 Temperature
                             </TextBlock>
-                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000" IsEnabled="False"/>
+                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000" IsEnabled="False" Visibility="Collapsed"/>
                             <Rectangle Width="120" Height="1" Fill="#FF343434"/>
                         </StackPanel>
                     </PivotItem>

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace RawParserUWP.Model.Format.Base
+namespace RawParser.Base
 {
     abstract class DictionnaryFromFile<T> : Dictionary<ushort, T>
     {
@@ -41,7 +41,7 @@ namespace RawParserUWP.Model.Format.Base
                 {
                     lineread++;
                     string splitMe = stream.ReadLine();
-                    if (splitMe.Trim() != "")
+                    if (!String.IsNullOrEmpty(splitMe))
                     {
                         string[] tempString = splitMe.Split(new char[] { ' ' }); //Split at the space
 

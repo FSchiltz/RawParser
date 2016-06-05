@@ -5,7 +5,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
-namespace RawParserUWP
+namespace RawParser
 {
     /// <summary>
     /// Fournit un comportement spécifique à l'application afin de compléter la classe Application par défaut.
@@ -32,7 +32,7 @@ namespace RawParserUWP
 #if DEBUG
             if (System.Diagnostics.Debugger.IsAttached)
             {
-                DebugSettings.EnableFrameRateCounter = true;
+                DebugSettings.EnableFrameRateCounter = false;
             }
 #endif
             Frame rootFrame = Window.Current.Content as Frame;

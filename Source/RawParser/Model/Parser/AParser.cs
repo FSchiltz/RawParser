@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using RawParser.Format.IFD;
+using RawParser.Image;
+using System.Collections.Generic;
 using System.IO;
-using RawParserUWP.Model.Format.Image;
 
-namespace RawParserUWP.Model.Parser
+namespace RawParser.Parser
 {
-    abstract class Parser
+    abstract class AParser
     {
-        public Parser()
+        public AParser()
         {
 
         }

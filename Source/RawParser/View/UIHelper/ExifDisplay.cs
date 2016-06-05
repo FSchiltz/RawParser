@@ -1,4 +1,4 @@
-﻿namespace RawParserUWP.View.UIHelper
+﻿namespace RawParser.View.UIHelper
 {
     class ExifDisplay
     {

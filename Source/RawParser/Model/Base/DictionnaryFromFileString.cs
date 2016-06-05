@@ -1,5 +1,5 @@
 ﻿
-namespace RawParserUWP.Model.Format.Base
+namespace RawParser.Base
 {
     class DictionnaryFromFileString: DictionnaryFromFile<string>
     {

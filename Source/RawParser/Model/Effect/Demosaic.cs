@@ -1,6 +1,6 @@
-﻿using RawParserUWP.Model.Format.Image;
+﻿using RawParser.Image;
 
-namespace RawParserUWP.Model.Parser.Demosaic
+namespace RawParser.Effect
 {
     enum demosAlgorithm
     {

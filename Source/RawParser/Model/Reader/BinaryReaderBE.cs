@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace RawParserUWP.Model.Format.Reader
+namespace RawParser.Reader
 {
     class TIFFBinaryReader : BinaryReader
     {
