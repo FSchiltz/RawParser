@@ -21,13 +21,13 @@
 *.app
 *.suo
 
-Source/RawParserUWP/RawParserUWP/obj/*
 Doc/Format/NEF/~$F format.docx
-Source/RawParserUWP/RawParserUWP/bin/*
-Source/RawParserUWP/.localhistory/*
+bin/*
+Source/RawParser/.localhistory/*
 Doc/Format/NEF/DSC_8286.tiff
 *.vcxproj
 *.filters
 *.user
 *.db
-Source/RawParserUWP/RawParserUWP.VC.VC.opendb
+Source/RawParserUWP.VC.VC.opendb
+Source/RawParser/BundleArtifacts/*
