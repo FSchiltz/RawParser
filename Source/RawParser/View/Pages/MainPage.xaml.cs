@@ -46,7 +46,6 @@ namespace RawParser
 
         //TODO move
         bool dragStarted = false;
-        bool dragEnded = false;
         double oldValue = 0;
 
         public MainPage()
@@ -197,6 +196,9 @@ namespace RawParser
                     int previewFactor = (int)localSettings.Values["previewFactor"];
                     //previewFactor = 4;
 
+                    //activate the editing control
+                    enableEditingControl(true);
+
                     raw.previewHeight = (uint)(raw.height / previewFactor);
                     raw.previewWidth = (uint)(raw.width / previewFactor);
                     raw.previewData = new uint[raw.previewHeight * raw.previewWidth * 3];
@@ -210,8 +212,9 @@ namespace RawParser
                         }
                     }
                     updatePreview();
-                    //activate the editing control
-                    enableEditingControl(true);
+
+
+
                     //dispose
                     file = null;
                     parser = null;
@@ -364,9 +367,9 @@ namespace RawParser
                     //apply the exposure
                     Luminance.Exposure(ref raw.rawData, raw.height, raw.width, exposure);
                     //apply the temperature (not yet because slider is not set to correct temp)
-                    if (colorTempchanged)
+                    /*if (colorTempchanged)
                         Balance.WhiteBalance(ref raw.rawData, raw.colorDepth, raw.height, raw.width, temp);
-                    colorTempchanged = false;
+                    colorTempchanged = false;*/
                     //Check if clipping
                     Luminance.Clip(ref raw.rawData, raw.height, raw.width, (ushort)Math.Pow(2, raw.colorDepth));
 
@@ -378,12 +381,13 @@ namespace RawParser
                             await file.OpenAsync(FileAccessMode.ReadWrite));
                         int[] t = new int[3];
                         //Needs to run in the UI thread because fuck performance
-                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
                             //Do some UI-code that must be run on the UI thread.
                             encoder.SetSoftwareBitmap(raw.getImageRawAs8bitsBitmap(null, ref t));
-                            await encoder.FlushAsync();
+                            
                         });
+                        await encoder.FlushAsync();
                     }
                     else if (format == ".ppm")
                     {
@@ -419,6 +423,7 @@ namespace RawParser
                     {
                         ExceptionDisplay.display("File could not be saved");
                     }
+                    else ExceptionDisplay.display("File successfuly saved");
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                     .RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -464,7 +469,7 @@ namespace RawParser
                      bitmap = raw.getImagePreviewAs8bitsBitmap(null, ref value);
                  });
                 displayImage(bitmap);
-                Histogram.Create(value, raw.colorDepth, raw.previewHeight, histogramCanvas);
+                Histogram.Create(value, raw.colorDepth, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     histoLoadingBar.Visibility = Visibility.Collapsed;
@@ -472,20 +477,22 @@ namespace RawParser
             });
         }
 
-        private void exposureSlider_DragEnter(object sender, DragEventArgs e)
+        private void exposureSlider_DragStart(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             //store the value
             oldValue = exposureSlider.Value;
             dragStarted = true;
         }
 
-        private void exposureSlider_DragLeave(object sender, DragEventArgs e)
+        private void exposureSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            if (raw?.previewData != null )
+            if (raw?.previewData != null)
             {
                 colorTempchanged = true;
                 double value = exposureSlider.Value; //get the value as a stop
-                value -= oldValue;
+                double old = oldValue;
+                oldValue = value;
+                value -= old;
                 Task t = Task.Run(() =>
                 {
                     lock (raw.previewData)
@@ -494,13 +501,12 @@ namespace RawParser
                         updatePreview();
                     }
                 });
-                dragStarted = false;
             }
         }
 
         private void exposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
-            if (raw?.previewData != null && !dragStarted)
+            if (raw?.previewData != null && dragStarted)
             {
                 colorTempchanged = true;
                 double value = e.NewValue; //get the value as a stop

@@ -15,11 +15,11 @@ namespace RawParser.Effect
             }
         }
 
-        public static void Clip(ref ushort[] image,uint h, uint w, ushort maxValue)
+        public static void Clip(ref ushort[] image, uint h, uint w, ushort maxValue)
         {
-            for (int i = 0; i < w * w*3; ++i)
+            for (int i = 0; i < w * h * 3; ++i)
             {
-                if (image[i] > maxValue) image[i ] = maxValue;
+                if (image[i] > maxValue) image[i] = maxValue;
             }
         }
 

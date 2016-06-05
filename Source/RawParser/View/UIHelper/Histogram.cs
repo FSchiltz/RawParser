@@ -11,7 +11,7 @@ namespace RawParser.View.UIHelper
     class Histogram
     {
         //TODO simplify if memory saver mode
-        public static async void Create(int[] value, ushort colorDepth,uint imageHeight, Canvas histogramCanvas)
+        public static async void Create(int[] value, ushort colorDepth, Canvas histogramCanvas)
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher
                  .RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -19,25 +19,30 @@ namespace RawParser.View.UIHelper
                      histogramCanvas.Children.Clear();
                  });
             //create the histogram
+            int max = 0;
+            for (int i = 0; i < value.Length; i++)
+            {
+                if (max < value[i]) max = value[i];
+            }
             for (int i = 0; i < value.Length; i++)
             {
                 Line line = null;
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
-                         uint maxheight = (uint)(histogramCanvas.Height / imageHeight);
-                         uint widthstep = (uint)(histogramCanvas.Width / value.Length);
+                         double maxheight = (histogramCanvas.Height / max);
+                         double widthstep = (value.Length / histogramCanvas.ActualWidth);
                          line = new Line();
                          line.Stroke = new SolidColorBrush(Colors.Black);
                          line.StrokeThickness = 1;
-                         line.X1 = line.X2 = i*widthstep;                         
-                         line.Y1 = 0;
-                         line.Y2 = maxheight * value[i];
+                         line.X1 = line.X2 = (int)(i * widthstep);
+                         line.Y1 = histogramCanvas.Height;
+                         line.Y2 = (int)(histogramCanvas.Height - (maxheight * value[i]));
 
-                         Canvas.SetTop(line, 50);
-                         Canvas.SetLeft(line, 50);
+                         Canvas.SetLeft(line, 0);
+                         Canvas.SetTop(line, 0);
                          histogramCanvas.Children.Add(line);
-                     });                
+                     });
             }
         }
 
