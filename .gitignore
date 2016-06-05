@@ -31,3 +31,6 @@ Doc/Format/NEF/DSC_8286.tiff
 *.db
 Source/RawParserUWP.VC.VC.opendb
 Source/RawParser/BundleArtifacts/*
+Source/RawParser/project.lock.json
+Source/RawParser/bin/*
+Source/RawParser/obj/*
