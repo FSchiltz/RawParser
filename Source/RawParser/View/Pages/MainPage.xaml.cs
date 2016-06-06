@@ -351,16 +351,19 @@ namespace RawParser
                     {
                         using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
+                            SoftwareBitmap bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t);
                             BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
                             int[] t = new int[3];
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
                                 //Do some UI-code that must be run on the UI thread.
-                                encoder.SetSoftwareBitmap(RawImage.getImageAs8bitsBitmap(ref copyOfimage,raw.height, raw.width, raw.colorDepth,null, ref t));
+                                encoder.SetSoftwareBitmap(bitmap);
 
                             });
                             await encoder.FlushAsync();
+                            encoder = null;
+                            bitmap.Dispose();
                         }
                     }
                     else if (format == ".ppm")
