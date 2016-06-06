@@ -1,4 +1,5 @@
-﻿using Windows.Storage;
+﻿using RawParser.Model.Settings;
+using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 
@@ -8,14 +9,12 @@ namespace RawParser.View.Pages
 {
     public sealed partial class Settings : Page
     {
-
-        private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
         public Settings()
         {
             InitializeComponent();
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
             SystemNavigationManager.GetForCurrentView().BackRequested += (s, a) =>
-            {                
+            {
                 if (Frame.CanGoBack)
                 {
                     Frame.GoBack();
@@ -26,17 +25,26 @@ namespace RawParser.View.Pages
 
         private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
-            localSettings.Values["imageBoxBorder"] = e.NewValue/100;            
+            SettingStorage.imageBoxBorder = e.NewValue / 100;
         }
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            localSettings.Values["previewFactor"] = int.Parse(((ComboBoxItem)e.AddedItems[0]).Content.ToString());
+            var t = ((ComboBoxItem)e.AddedItems[0]).Content.ToString();
+            if (t == "Auto")
+            {
+                SettingStorage.autoPreviewFactor = true;
+            }
+            else
+            {
+                SettingStorage.autoPreviewFactor = false;
+                SettingStorage.previewFactor = int.Parse(t);
+            }
         }
 
         private void ComboBoxFile_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {            
-            localSettings.Values["saveFormat"] = ((ComboBoxItem)e.AddedItems[0]).Content.ToString();
+        {
+            SettingStorage.saveFormat = ((ComboBoxItem)e.AddedItems[0]).Content.ToString();
         }
     }
 }

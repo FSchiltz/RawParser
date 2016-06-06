@@ -8,7 +8,7 @@ namespace RawParser.Effect
         public static void Exposure(ref ushort[] image, uint h, uint w, double value, int colorDepth)
         {
             double v = Math.Pow(2, value);
-            uint maxValue = (uint)(1 << colorDepth);
+            uint maxValue = (uint)(1 << colorDepth) -1;
             for (int i = 0; i < h * w * 3; ++i)
             {
                 double t = (image[i] * v);
