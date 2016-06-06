@@ -489,7 +489,7 @@ namespace RawParser
                 Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, mul, colordepth);
             }
             Balance.scaleGamma(ref data, height, width, colordepth, gamma);
-            Luminance.Contraste(ref data, height, width, contrast, colordepth);
+           // Luminance.Contraste(ref data, height, width, contrast, colordepth);
             Luminance.Exposure(ref data, height, width, exposure, colordepth);
 
 
