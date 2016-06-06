@@ -70,14 +70,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
-                        Output Format:
-                </TextBlock>
-                <ComboBox Grid.Column="2" SelectionChanged="ComboBoxFile_SelectionChanged">
-                    <ComboBoxItem>.jpg</ComboBoxItem>
-                    <ComboBoxItem>.ppm</ComboBoxItem>
-                </ComboBox>
+                </Grid.ColumnDefinitions>               
             </Grid>
 
             <TextBlock TextWrapping="Wrap" FontSize="30">

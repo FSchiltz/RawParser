@@ -140,13 +140,15 @@
     <Compile Include="Model\Base\DictionnaryFromFile.cs" />
     <Compile Include="Model\Base\StreamHelper.cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
+    <Compile Include="Model\Encoder\JpegEncoder.cs" />
+    <Compile Include="Model\Encoder\PpmEncoder.cs" />
     <Compile Include="Model\Format\IFD\Tag.cs" />
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Image\JpegHelper.cs" />
     <Compile Include="View\UIHelper\UIImageHelper.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
-    <Compile Include="Model\Settings\SettingStorage.cs" />
+    <Compile Include="Model\Base\Settings\SettingStorage.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -155,7 +157,7 @@
     <Compile Include="Model\Format\IFD\Header.cs" />
     <Compile Include="Model\Format\IFD\IFD.cs" />
     <Compile Include="Model\Parser\Nikon\NikonMakerNote.cs" />
-    <Compile Include="Model\Reader\BinaryReaderBE.cs" />
+    <Compile Include="Model\Base\Reader\BinaryReaderBE.cs" />
     <Compile Include="Model\Parser\DNGParser.cs" />
     <Compile Include="Model\Parser\NEFParser.cs" />
     <Compile Include="Model\Parser\AParser.cs" />

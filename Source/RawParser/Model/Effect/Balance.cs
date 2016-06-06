@@ -1,5 +1,4 @@
-﻿using RawParser.Image;
-using System;
+﻿using System;
 
 namespace RawParser.Effect
 {
@@ -113,15 +112,20 @@ namespace RawParser.Effect
             }
         }
 
-        public static void scaleGamma(ref RawImage currentRawImage, double gamma)
+        public static void scaleGamma(ref ushort [] image, uint height,uint width, int colorDepth, double gamma)
         {
-            int maxValue = (int)Math.Pow(2, currentRawImage.colorDepth) - 1;
-            for (int i = 0; i < currentRawImage.height * currentRawImage.width; i++)
+            double maxValue = (int)Math.Pow(2, colorDepth) - 1;
+            for (int i = 0; i < height * width; i++)
             {
-                gamma = 1 / gamma;
-                currentRawImage.rawData[i * 3] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[i * 3] / maxValue, gamma));
-                currentRawImage.rawData[(i * 3) + 1] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[(i * 3) + 1] / maxValue, gamma));
-                currentRawImage.rawData[(i * 3) + 2] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[(i * 3) + 2] / maxValue, gamma));
+                double r = maxValue * Math.Pow(image[i * 3] / maxValue, gamma);
+                double g = maxValue * Math.Pow(image[(i * 3) + 1] / maxValue, gamma);
+                double b = maxValue * Math.Pow(image[(i * 3) + 2] / maxValue, gamma);
+                if (r > maxValue) r = maxValue;
+                if (g > maxValue) g = maxValue;
+                if (b > maxValue) b = maxValue;
+                image[i * 3] = (ushort)r;
+                image[(i * 3) + 1] = (ushort)g;
+                image[(i * 3) + 2] = (ushort)b;
             }
         }
     }

@@ -1,5 +1,4 @@
 ﻿using RawParser.Model.Settings;
-using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 
@@ -21,6 +20,7 @@ namespace RawParser.View.Pages
                     a.Handled = true;
                 }
             };
+
         }
 
         private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
@@ -40,11 +40,6 @@ namespace RawParser.View.Pages
                 SettingStorage.autoPreviewFactor = false;
                 SettingStorage.previewFactor = int.Parse(t);
             }
-        }
-
-        private void ComboBoxFile_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            SettingStorage.saveFormat = ((ComboBoxItem)e.AddedItems[0]).Content.ToString();
         }
     }
 }
