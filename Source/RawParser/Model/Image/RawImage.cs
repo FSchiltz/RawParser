@@ -48,8 +48,8 @@ namespace RawParser.Image
             }
         }
 
-       
-        public static unsafe SoftwareBitmap getImageAs8bitsBitmap(ref ushort[] data, uint height, uint width, int colorDepth,object[] curve, ref int[] value)
+
+        public static unsafe SoftwareBitmap getImageAs8bitsBitmap(ref ushort[] data, uint height, uint width, int colorDepth, object[] curve, ref int[] value, bool histo, bool bgr)
         {
             SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Rgba8, (int)width, (int)height, BitmapAlphaMode.Ignore);
             using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))
@@ -68,15 +68,25 @@ namespace RawParser.Image
                     for (int i = 0; i < bufferLayout.Width * bufferLayout.Height; i++)
                     {
                         //get the pixel                    
-                        ushort blue = (ushort)(data[(i * 3)] >> diff),
+                        ushort red = (ushort)(data[(i * 3)] >> diff),
                         green = (ushort)(data[(i * 3) + 1] >> diff),
-                        red = (ushort)(data[(i * 3) + 2] >> (diff));
+                        blue = (ushort)(data[(i * 3) + 2] >> (diff));
                         if (blue > 255) blue = 255;
                         if (red > 255) red = 255;
                         if (green > 255) green = 255;
-                        tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)red;
-                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 1] = (byte)green;
-                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)blue;
+                        if (histo) value[(byte)((red << 1) + (green << 2) + green + blue) >> 3]++;
+                        if (bgr)
+                        {
+                            tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)blue;
+                            tempByteArray[bufferLayout.StartIndex + (i * 4) + 1] = (byte)green;
+                            tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)red;
+                        }
+                        else
+                        {
+                            tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)red;
+                            tempByteArray[bufferLayout.StartIndex + (i * 4) + 1] = (byte)green;
+                            tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)blue;
+                        }
                         tempByteArray[bufferLayout.StartIndex + (i * 4) + 3] = 255;
                     }
                 }
@@ -84,7 +94,7 @@ namespace RawParser.Image
             return image;
         }
 
-       
+
 
         /*
          * For testing
@@ -108,6 +118,6 @@ namespace RawParser.Image
                 tempByteArray[i] = temp;
             }
             return tempByteArray;
-        }        
+        }
     }
 }

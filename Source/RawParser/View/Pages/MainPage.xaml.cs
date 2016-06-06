@@ -14,12 +14,12 @@ using Windows.Storage.Provider;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using System.Runtime.InteropServices;
-using System.Text;
 using RawParser.View.UIHelper;
 using RawParser.Image;
 using RawParser.Parser;
 using RawParser.Effect;
 using RawParser.Model.Settings;
+using RawParser.Model.Encoder;
 
 namespace RawParser
 {
@@ -197,7 +197,7 @@ namespace RawParser
                         }
                         int start = 1;
                         for (; previewFactor > (start << 1); start <<= 1) ;
-                        if ((previewFactor-start) < ((start << 1) - previewFactor)) previewFactor = start;
+                        if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
                         else previewFactor <<= 1;
                     }
                     else
@@ -217,8 +217,6 @@ namespace RawParser
                         }
                     }
                     updatePreview();
-
-
 
                     //dispose
                     file = null;
@@ -320,8 +318,6 @@ namespace RawParser
 
         private async void saveButton_Click(object sender, RoutedEventArgs e)
         {
-            string format = SettingStorage.saveFormat;
-
             //TODO reimplement correclty
             //Just for testing purpose for now
             if (raw?.rawData != null)
@@ -332,9 +328,10 @@ namespace RawParser
                     SuggestedFileName = raw.fileName
                 };
                 // Dropdown of file types the user can save the file as
-                savePicker.FileTypeChoices.Add("Image file", new List<string>() { format });
+                savePicker.FileTypeChoices.Add("Image file", new List<string>() { ".jpg", ".png", ".ppm", ".tiff", ".bmp" });
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
+
 
                 progressDisplay.Visibility = Visibility.Visible;
                 // Prevent updates to the remote version of the file until
@@ -347,52 +344,73 @@ namespace RawParser
                 {
                     ushort[] copyOfimage = new ushort[raw.rawData.Length];
                     for (int i = 0; i < raw.rawData.Length; i++) copyOfimage[i] = raw.rawData[i];
-                    applyUserModif(ref copyOfimage,raw.height, raw.width,raw.colorDepth);
+                    applyUserModif(ref copyOfimage, raw.height, raw.width, raw.colorDepth);
 
                     // write to file
-                    if (format == ".jpg")
+                    if (file.FileType == ".jpg")
                     {
                         using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
                             int[] t = new int[3];
-                            SoftwareBitmap bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t);                          BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
-                            
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
+                            var x = encoder.BitmapProperties;
+                            SoftwareBitmap bitmap = null;
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
                                 //Do some UI-code that must be run on the UI thread.
+                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
                                 encoder.SetSoftwareBitmap(bitmap);
-
                             });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
                         }
                     }
-                    else if (format == ".ppm")
+                    else if (file.FileType == ".png")
                     {
-                        var str = await file.OpenStreamForWriteAsync();
-                        var stream = new StreamWriter(str, Encoding.ASCII);
-                        stream.Write("P3\r\n" + raw.width + " " + raw.height + " 255 \r\n");
-                        for (int i = 0; i < raw.height; i++)
+                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
-                            for (int j = 0; j < raw.width; j++)
+                            int[] t = new int[3];
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, filestream);
+                            SoftwareBitmap bitmap = null;
+                            //Needs to run in the UI thread because fuck performance
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
-                                ushort x = raw.rawData[(int)(((i * raw.width) + j) * 3)];
-                                byte y = (byte)(x >> 6);
-                                stream.Write(y + " ");
-                                x = raw.rawData[(int)(((i * raw.width) + j) * 3) + 1];
-                                y = (byte)(x >> 6);
-                                stream.Write(y + " ");
-                                x = raw.rawData[(int)(((i * raw.width) + j) * 3) + 2];
-                                y = (byte)(x >> 6);
-                                stream.Write(y + " ");
-                            }
-                            stream.Write("\r\n");
+                                //Do some UI-code that must be run on the UI thread.
+                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
+                                encoder.SetSoftwareBitmap(bitmap);
+                            });
+                            await encoder.FlushAsync();
+                            encoder = null;
+                            bitmap.Dispose();
                         }
-                        str.Dispose();
                     }
-                    else throw new FormatException("Format not supported: " + format);
+                    else if (file.FileType == ".bmp")
+                    {
+                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
+                        {
+                            int[] t = new int[3];
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.BmpEncoderId, filestream);
+                            SoftwareBitmap bitmap = null;
+                            //Needs to run in the UI thread because fuck performance
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                            {
+                                //Do some UI-code that must be run on the UI thread.
+                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
+                                encoder.SetSoftwareBitmap(bitmap);
+                            });
+                            await encoder.FlushAsync();
+                            encoder = null;
+                            bitmap.Dispose();
+                        }
+                    }
+                    else if (file.FileType == ".ppm")
+                    {
+                        Stream str = await file.OpenStreamForWriteAsync();
+                        PpmEncoder.WriteToFile(str, ref copyOfimage, raw.height, raw.width, raw.colorDepth);
+                    }
+                    else throw new FormatException("Format not supported: " + file.FileType);
                     // Let Windows know that we're finished changing the file so
                     // the other app can update the remote version of the file.
                     // Completing updates may require Windows to ask for user input.
@@ -482,7 +500,8 @@ namespace RawParser
                  .RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      histoLoadingBar.Visibility = Visibility.Visible;
-                 bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value);
+                     //Writeablebitmap use BGRA (don't know why )
+                     bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
                  });
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, histogramCanvas);
