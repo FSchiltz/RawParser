@@ -1,5 +1,4 @@
 ﻿using RawParser.Format.IFD;
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Windows.Graphics.Imaging;
@@ -143,6 +142,42 @@ namespace RawParser.Image
                 tempByteArray[i] = temp;
             }
             return tempByteArray;
+        }
+
+        unsafe public SoftwareBitmap getImagePreviewAs8bitsBitmapWithCopyOfData(ref uint[] copyofpreview, object p, ref int[] value)
+        {
+            SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Rgba8, (int)previewWidth, (int)previewHeight, BitmapAlphaMode.Ignore);
+            using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))
+            {
+                using (var reference = buffer.CreateReference())
+                {
+                    byte* tempByteArray;
+                    uint capacity;
+                    ((IMemoryBufferByteAccess)reference).GetBuffer(out tempByteArray, out capacity);
+
+                    // Fill-in the BGRA plane
+                    BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
+                    //calculte diff between colordepth and 8
+                    int diff = (colorDepth) - 8;
+
+                    for (int i = 0; i < bufferLayout.Width * bufferLayout.Height; i++)
+                    {
+                        //get the pixel                    
+                        uint blue = (copyofpreview[(i * 3)] >> diff),
+                        green = (copyofpreview[(i * 3) + 1] >> diff),
+                        red = (copyofpreview[(i * 3) + 2] >> (diff));
+                        if (blue > 255) blue = 255;
+                        if (red > 255) red = 255;
+                        if (green > 255) green = 255;
+                        value[(byte)((red << 1) + (green << 2) + green + blue) >> 3]++;
+                        tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)red;
+                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 1] = (byte)green;
+                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 2] = (byte)blue;
+                        tempByteArray[bufferLayout.StartIndex + (i * 4) + 3] = 255;
+                    }
+                }
+            }
+            return image;
         }
     }
 }

@@ -150,11 +150,16 @@
                                 Exposure
                             </TextBlock>
                             <Slider x:Name="exposureSlider" PointerCaptureLost="exposureSlider_DragStop"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0"/>
-                            <TextBlock FontSize="12" Visibility="Collapsed">
+                            <TextBlock FontSize="12">
                                 Temperature
                             </TextBlock>
-                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000" IsEnabled="False" Visibility="Collapsed"/>
-                            <Rectangle Width="120" Height="1" Fill="#FF343434"/>
+                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000" IsEnabled="False"/>
+
+                            <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" x:Name="cameraWBCheck" HorizontalAlignment="Center">
+                                Use camera white balance
+                            </Button>
+                            <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
+
                         </StackPanel>
                     </PivotItem>
                     <PivotItem Header="Tools">
