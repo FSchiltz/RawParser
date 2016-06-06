@@ -145,6 +145,7 @@
     <Compile Include="Model\Image\JpegHelper.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
+    <Compile Include="Model\Settings\Settings.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

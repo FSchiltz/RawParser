@@ -7,11 +7,10 @@ namespace RawParser.Effect
     {
         private Balance() { }
 
-        private static void calculateRGB(int temp, out ushort rRefer, out ushort gRefer, out ushort bRefer)
+        public static void calculateRGB(int temp, out ushort rRefer, out ushort gRefer, out ushort bRefer)
         {
             ushort maxValue = 255;
             temp /= 100;
-
             if (temp >= 66)
             {
                 //red
@@ -54,7 +53,11 @@ namespace RawParser.Effect
                     else if (bRefer > maxValue) bRefer = maxValue;
                 }
             }
+            bRefer /= (255 / 2);
+            gRefer /= (255 / 2);
+            rRefer /= (255 / 2);
         }
+
         /*
          * Start with a temperature, in Kelvin, somewhere between 1000 and 40000.  (Other values may work,
                  but I can't make any promises about the quality of the algorithm's estimates above 40000 K.)
@@ -120,6 +123,20 @@ namespace RawParser.Effect
         internal static void WhiteBalance(ref uint[] image, int colorDepth, uint h, uint w, int temp)
         {
             throw new NotImplementedException();
+        }
+
+        public static void scaleColor(ref uint[] copyofpreview, uint height, uint width, int dark, int saturation, double[] mul)
+        {
+            for (int i = 0; i < height * width; i++)
+            {
+                ushort r = (ushort)(copyofpreview[i * 3] * mul[0]);
+                ushort g = (ushort)(copyofpreview[(i * 3) + 1] * mul[1]);
+                ushort b = (ushort)(copyofpreview[(i * 3) + 2] * mul[2]);
+
+                copyofpreview[i * 3] = (ushort)r;
+                copyofpreview[(i * 3) + 1] = (ushort)g;
+                copyofpreview[(i * 3) + 2] = (ushort)b;
+            }
         }
     }
 }

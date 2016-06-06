@@ -1,5 +1,4 @@
-﻿using RawParser.Image;
-using System;
+﻿using System;
 
 namespace RawParser.Effect
 {

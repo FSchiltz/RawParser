@@ -19,6 +19,7 @@ using RawParser.View.UIHelper;
 using RawParser.Image;
 using RawParser.Parser;
 using RawParser.Effect;
+using RawParser.Model.Settings;
 
 namespace RawParser
 {
@@ -34,38 +35,25 @@ namespace RawParser
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
         public RawImage raw;
         public bool imageSelected { set; get; }
         public double pageWidth;
         public double pageHeight;
         private int currentImageDisplayedHeight;
         private int currentImageDisplayedWidth;
-        private bool colorTempchanged;
         private int[] value = new int[256];
 
-        //TODO move
-        bool dragStarted = false;
-        double oldValue = 0;
+        bool cameraWB = true;
+        private bool ExposuredragStarted;
+        private bool WBdragStarted;
 
         public MainPage()
         {
             InitializeComponent();
-            InitSettings();
+            Settings.InitSettings();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
 
-        }
-
-        private void InitSettings()
-        {
-            //checkif settings already exists
-            if (localSettings.Values["imageBoxBorder"] == null)
-                localSettings.Values["imageBoxBorder"] = 0.05;
-            if (localSettings.Values["previewFactor"] == null)
-                localSettings.Values["previewFactor"] = 4;
-            if (localSettings.Values["saveFormat"] == null)
-                localSettings.Values["saveFormat"] = ".jpg";
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -188,17 +176,31 @@ namespace RawParser
                     raw.camMul = parser.camMul;
                     raw.rawData = parser.parseRAWImage();
                     raw.camMul = parser.camMul;
-                    Balance.scaleColor(ref raw, raw.dark, raw.saturation, raw.camMul);
 
                     Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
-
-                    //create a small image from raw to display
-                    int previewFactor = (int)localSettings.Values["previewFactor"];
-                    //previewFactor = 4;
 
                     //activate the editing control
                     enableEditingControl(true);
 
+                    //create a small image from raw to display
+                    bool autoFactor = Settings.getBoolSetting("autoPreviewFactor");
+                    int previewFactor = 0;
+                    if (autoFactor)
+                    {
+                        if (raw.height > raw.width)
+                        {
+                            previewFactor = (int)(raw.height / 720);
+                        }
+                        else
+                        {
+                            previewFactor = (int)(raw.width/1080);
+                        }
+                    }
+                    else
+                    {
+                        previewFactor = Settings.getIntSetting("previewFactor");               
+                    
+                    }
                     raw.previewHeight = (uint)(raw.height / previewFactor);
                     raw.previewWidth = (uint)(raw.width / previewFactor);
                     raw.previewData = new uint[raw.previewHeight * raw.previewWidth * 3];
@@ -295,7 +297,7 @@ namespace RawParser
             if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
             {
                 float x = 0;
-                double relativeBorder = (double)localSettings.Values["imageBoxBorder"];
+                double relativeBorder = Settings.geDoubleSetting("imageBoxBorder");
                 if ((currentImageDisplayedWidth / currentImageDisplayedHeight) < (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
                 {
                     x = (float)(imageDisplayScroll.ViewportWidth /
@@ -338,7 +340,7 @@ namespace RawParser
 
         private async void saveButton_Click(object sender, RoutedEventArgs e)
         {
-            string format = (string)localSettings.Values["saveFormat"];
+            string format = Settings.getStringSetting("saveFormat");
 
             //TODO reimplement correclty
             //Just for testing purpose for now
@@ -376,18 +378,19 @@ namespace RawParser
                     // write to file
                     if (format == ".jpg")
                     {
-                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(
-                            BitmapEncoder.JpegEncoderId,
-                            await file.OpenAsync(FileAccessMode.ReadWrite));
-                        int[] t = new int[3];
-                        //Needs to run in the UI thread because fuck performance
-                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
-                            //Do some UI-code that must be run on the UI thread.
-                            encoder.SetSoftwareBitmap(raw.getImageRawAs8bitsBitmap(null, ref t));
-                            
-                        });
-                        await encoder.FlushAsync();
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
+                            int[] t = new int[3];
+                            //Needs to run in the UI thread because fuck performance
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                            {
+                                //Do some UI-code that must be run on the UI thread.
+                                encoder.SetSoftwareBitmap(raw.getImageRawAs8bitsBitmap(null, ref t));
+
+                            });
+                            await encoder.FlushAsync();
+                        }
                     }
                     else if (format == ".ppm")
                     {
@@ -423,7 +426,6 @@ namespace RawParser
                     {
                         ExceptionDisplay.display("File could not be saved");
                     }
-                    else ExceptionDisplay.display("File successfuly saved");
                     await CoreApplication.MainView.CoreWindow.Dispatcher
                     .RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -431,26 +433,6 @@ namespace RawParser
                         //Hide the loading screen
                         progressDisplay.Visibility = Visibility.Collapsed;
                     });
-
-                });
-            }
-        }
-
-        private void colorTempSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-        {
-            if (raw?.previewData != null)
-            {
-                colorTempchanged = true;
-                double oldvalue = e.OldValue;
-                double value = e.NewValue; //get the value as a stop
-                value -= oldvalue;
-                Task t = Task.Run(() =>
-                {
-                    lock (raw.previewData)
-                    {
-                        Balance.WhiteBalance(ref raw.previewData, raw.colorDepth, raw.previewHeight, raw.previewWidth, (int)value);
-                        updatePreview();
-                    }
                 });
             }
         }
@@ -460,13 +442,45 @@ namespace RawParser
             //display the histogram                    
             Task histoTask = Task.Run(async () =>
             {
+                //get all the value
+                double exposure = 0;
+                double temperature = 0;
+                await CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    exposure = exposureSlider.Value;
+                    temperature = colorTempSlider.Value;
+                });
+                uint[] copyofpreview;
+                //create a copy of the preview
+                lock (raw.previewData)
+                {
+                    copyofpreview = new uint[raw.previewData.Length];
+                    for (int i = 0; i < raw.previewData.Length; i++) copyofpreview[i] = raw.previewData[i];
+
+
+
+                    //aply all thetransformation on it
+
+                    Luminance.Exposure(ref copyofpreview, raw.previewHeight, raw.previewWidth, exposure);
+                    if (cameraWB)
+                    {
+                        Balance.scaleColor(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.dark, raw.saturation, raw.camMul);
+                    }
+                    else
+                    {
+                        ushort[] mul = new ushort[4];
+                        Balance.calculateRGB((int)colorTempSlider.Value,out  mul[0],out  mul[2], out mul[1]);
+                        Balance.scaleColor(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.dark, raw.saturation, raw.camMul);
+                    }
+                }
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread because fuck it
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                  .RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      histoLoadingBar.Visibility = Visibility.Visible;
-                     bitmap = raw.getImagePreviewAs8bitsBitmap(null, ref value);
+                     bitmap = raw.getImagePreviewAs8bitsBitmapWithCopyOfData(ref copyofpreview, null, ref value);
                  });
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, histogramCanvas);
@@ -477,49 +491,63 @@ namespace RawParser
             });
         }
 
+        #region ExposureSlider
         private void exposureSlider_DragStart(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            //store the value
-            oldValue = exposureSlider.Value;
-            dragStarted = true;
+            ExposuredragStarted = true;
         }
 
         private void exposureSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (raw?.previewData != null)
             {
-                colorTempchanged = true;
-                double value = exposureSlider.Value; //get the value as a stop
-                double old = oldValue;
-                oldValue = value;
-                value -= old;
-                Task t = Task.Run(() =>
-                {
-                    lock (raw.previewData)
-                    {
-                        Luminance.Exposure(ref raw.previewData, raw.previewHeight, raw.previewWidth, value);
-                        updatePreview();
-                    }
-                });
+                updatePreview();
+                ExposuredragStarted = false;
             }
         }
 
         private void exposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
-            if (raw?.previewData != null && dragStarted)
+            if (raw?.previewData != null && ExposuredragStarted)
             {
-                colorTempchanged = true;
-                double value = e.NewValue; //get the value as a stop
-                value -= e.OldValue;
-                Task t = Task.Run(() =>
-                {
-                    lock (raw.previewData)
-                    {
-                        Luminance.Exposure(ref raw.previewData, raw.previewHeight, raw.previewWidth, value);
-                        updatePreview();
-                    }
-                });
+                updatePreview();
             }
         }
+        #endregion
+
+        #region WBSlider
+        private void WBSlider_DragStart(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            WBdragStarted = true;
+        }
+
+        private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (raw?.previewData != null)
+            {
+                WBdragStarted = false;
+                cameraWB = false;
+                cameraWBCheck.IsEnabled = false;
+                updatePreview();          
+            }
+        }
+
+        private void colorTempSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (raw?.previewData != null && WBdragStarted)
+            {
+                cameraWB = false;
+                cameraWBCheck.IsEnabled = false;
+                updatePreview();
+            }
+        }      
+
+        private void cameraWBCheck_Click(object sender, RoutedEventArgs e)
+        {
+            cameraWB = true;
+            cameraWBCheck.IsEnabled = false;
+            updatePreview();
+        }
+        #endregion
     }
 }
