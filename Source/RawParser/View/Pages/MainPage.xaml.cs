@@ -108,6 +108,7 @@ namespace RawParser
                  {
                      colorTempSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
+                     gammaSlider.IsEnabled = v;
                  });
         }
 
@@ -456,10 +457,11 @@ namespace RawParser
                 });
             }
         }
-        public void applyUserModif(ref ushort[] data, uint height, uint width, uint colordepth)
+        public void applyUserModif(ref ushort[] data, uint height, uint width, int colordepth)
         {
             double exposure = 0;
             double temperature = 0;
+            double gamma = 0;
             Task t = Task.Run(async () =>
             {
                 //get all the value               
@@ -468,12 +470,12 @@ namespace RawParser
                 {
                     exposure = exposureSlider.Value;
                     temperature = colorTempSlider.Value;
+                    gamma = gammaSlider.Value;
                 });
             });
             t.Wait();
 
             //aply all thetransformation on it
-            Luminance.Exposure(ref data, height, width, exposure, raw.colorDepth);
             if (cameraWB)
             {
                 Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, raw.camMul, raw.colorDepth);
@@ -482,8 +484,11 @@ namespace RawParser
             {
                 double[] mul = new double[4];
                 Balance.calculateRGB((int)temperature, out mul[0], out mul[2], out mul[1]);
-                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, mul, raw.colorDepth);
+                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, mul, colordepth);
             }
+            Balance.scaleGamma(ref data, height, width, colordepth, gamma);
+            Luminance.Exposure(ref data, height, width, exposure, colordepth);
+
         }
 
         private void updatePreview()
@@ -570,5 +575,13 @@ namespace RawParser
             updatePreview();
         }
         #endregion
+
+        private void Slider_PointerCaptureLost(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (raw?.previewData != null)
+            {               
+                updatePreview();
+            }
+        }
     }
 }
