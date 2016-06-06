@@ -21,14 +21,5 @@ namespace RawParser.Effect
                 if (image[i] > maxValue) image[i] = maxValue;
             }
         }
-
-        internal static void Exposure(ref uint[] image, uint h, uint w, double value)
-        {
-            double v = Math.Pow(2, value);
-            for (int i = 0; i < h * w * 3; ++i)
-            {
-                image[i] = (uint)(image[i] * v);
-            }
-        }
     }
 }

@@ -193,17 +193,17 @@ namespace RawParser
                         }
                         else
                         {
-                            previewFactor = (int)(raw.width/1080);
+                            previewFactor = (int)(raw.width / 1080);
                         }
                     }
                     else
                     {
-                        previewFactor = Settings.getIntSetting("previewFactor");               
-                    
+                        previewFactor = Settings.getIntSetting("previewFactor");
+
                     }
                     raw.previewHeight = (uint)(raw.height / previewFactor);
                     raw.previewWidth = (uint)(raw.width / previewFactor);
-                    raw.previewData = new uint[raw.previewHeight * raw.previewWidth * 3];
+                    raw.previewData = new ushort[raw.previewHeight * raw.previewWidth * 3];
                     for (int i = 0; i < raw.previewHeight; i++)
                     {
                         for (int j = 0; j < raw.previewWidth; j++)
@@ -269,29 +269,6 @@ namespace RawParser
             splitView.IsPaneOpen = !splitView.IsPaneOpen;
         }
 
-        public async void displayImage(SoftwareBitmap image)
-        {
-            if (image != null)
-            {
-                using (image)
-                {
-                    await
-                        CoreApplication.MainView.CoreWindow.Dispatcher
-                            .RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                //display the image preview
-                                WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                                image.CopyToBuffer(bitmap.PixelBuffer);
-                                imageBox.Source = bitmap;
-                                currentImageDisplayedHeight = bitmap.PixelHeight;
-                                currentImageDisplayedWidth = bitmap.PixelWidth;
-                                setScrollProperty();
-                            });
-                }
-            }
-        }
-
         private void setScrollProperty()
         {
             if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
@@ -344,7 +321,7 @@ namespace RawParser
 
             //TODO reimplement correclty
             //Just for testing purpose for now
-            if (raw.rawData != null)
+            if (raw?.rawData != null)
             {
                 var savePicker = new FileSavePicker
                 {
@@ -361,19 +338,13 @@ namespace RawParser
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
                 var exposure = exposureSlider.Value;
+                int temperature = (int)colorTempSlider.Value;
                 var temp = (int)colorTempSlider.Value;
                 var task = Task.Run(async () =>
                 {
-
-                    //TODO apply to the real image the correction
-                    //apply the exposure
-                    Luminance.Exposure(ref raw.rawData, raw.height, raw.width, exposure);
-                    //apply the temperature (not yet because slider is not set to correct temp)
-                    /*if (colorTempchanged)
-                        Balance.WhiteBalance(ref raw.rawData, raw.colorDepth, raw.height, raw.width, temp);
-                    colorTempchanged = false;*/
-                    //Check if clipping
-                    Luminance.Clip(ref raw.rawData, raw.height, raw.width, (ushort)Math.Pow(2, raw.colorDepth));
+                    ushort[] copyOfimage = new ushort[raw.rawData.Length];
+                    for (int i = 0; i < raw.rawData.Length; i++) copyOfimage[i] = raw.rawData[i];
+                    applyUserModif(ref copyOfimage,raw.height, raw.width,raw.colorDepth);
 
                     // write to file
                     if (format == ".jpg")
@@ -386,7 +357,7 @@ namespace RawParser
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
                                 //Do some UI-code that must be run on the UI thread.
-                                encoder.SetSoftwareBitmap(raw.getImageRawAs8bitsBitmap(null, ref t));
+                                encoder.SetSoftwareBitmap(RawImage.getImageAs8bitsBitmap(ref copyOfimage,raw.height, raw.width, raw.colorDepth,null, ref t));
 
                             });
                             await encoder.FlushAsync();
@@ -437,48 +408,75 @@ namespace RawParser
             }
         }
 
-        private void updatePreview()
+        private void displayImage(SoftwareBitmap image)
         {
-            //display the histogram                    
-            Task histoTask = Task.Run(async () =>
+            if (image != null)
             {
-                //get all the value
-                double exposure = 0;
-                double temperature = 0;
+                Task t = Task.Run(async () =>
+                {
+                    using (image)
+                    {
+                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                                {
+                                    //Do some UI-code that must be run on the UI thread.
+                                    //display the image preview
+                                    imageBox.Source = null;
+                                    WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                                    image.CopyToBuffer(bitmap.PixelBuffer);
+                                    imageBox.Source = bitmap;
+                                    currentImageDisplayedHeight = bitmap.PixelHeight;
+                                    currentImageDisplayedWidth = bitmap.PixelWidth;
+                                    setScrollProperty();
+                                });
+                    }
+                });
+            }
+        }
+        public void applyUserModif(ref ushort[] data, uint height, uint width, uint colordepth)
+        {
+            double exposure = 0;
+            double temperature = 0;
+            Task t = Task.Run(async () =>
+            {
+                //get all the value               
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     exposure = exposureSlider.Value;
                     temperature = colorTempSlider.Value;
                 });
-                uint[] copyofpreview;
-                //create a copy of the preview
-                lock (raw.previewData)
-                {
-                    copyofpreview = new uint[raw.previewData.Length];
-                    for (int i = 0; i < raw.previewData.Length; i++) copyofpreview[i] = raw.previewData[i];
+            });
+            t.Wait();
 
-                    //aply all thetransformation on it
+            //aply all thetransformation on it
+            Luminance.Exposure(ref data, height, width, exposure);
+            if (cameraWB)
+            {
+                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, raw.camMul);
+            }
+            else
+            {
+                double[] mul = new double[4];
+                Balance.calculateRGB((int)temperature, out mul[0], out mul[2], out mul[1]);
+                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, mul);
+            }
+        }
 
-                    Luminance.Exposure(ref copyofpreview, raw.previewHeight, raw.previewWidth, exposure);
-                    if (cameraWB)
-                    {
-                        Balance.scaleColor(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.dark, raw.saturation, raw.camMul);
-                    }
-                    else
-                    {
-                        double[] mul = new double[4];
-                        Balance.calculateRGB((int)temperature,out  mul[0],out  mul[2], out mul[1]);
-                        Balance.scaleColor(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.dark, raw.saturation, mul);
-                    }
-                }
+        private void updatePreview()
+        {
+            //display the histogram                    
+            Task histoTask = Task.Run(async () =>
+            {
+                ushort[] copyofpreview = new ushort[raw.previewData.Length];
+                for (int i = 0; i < copyofpreview.Length; i++) copyofpreview[i] = raw.previewData[i];
+                applyUserModif(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth);
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread because fuck it
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                  .RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      histoLoadingBar.Visibility = Visibility.Visible;
-                     bitmap = raw.getImagePreviewAs8bitsBitmapWithCopyOfData(ref copyofpreview, null, ref value);
+                 bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value);
                  });
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, histogramCanvas);
@@ -526,7 +524,7 @@ namespace RawParser
                 WBdragStarted = false;
                 cameraWB = false;
                 cameraWBCheck.IsEnabled = true;
-                updatePreview();          
+                updatePreview();
             }
         }
 
@@ -538,7 +536,7 @@ namespace RawParser
                 cameraWBCheck.IsEnabled = true;
                 updatePreview();
             }
-        }      
+        }
 
         private void cameraWBCheck_Click(object sender, RoutedEventArgs e)
         {

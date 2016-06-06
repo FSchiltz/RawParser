@@ -96,17 +96,17 @@ namespace RawParser.Effect
          * Does not clip,beware
          * 
          */
-        public static void scaleColor(ref RawImage currentRawImage, int dark, int saturation, double[] mul)
+        public static void scaleColor(ref ushort[] data, uint height, uint width, int dark, int saturation, double[] mul)
         {
-            for (int i = 0; i < currentRawImage.height * currentRawImage.width; i++)
+            for (int i = 0; i < height * width; i++)
             {
-                ushort r = (ushort)(currentRawImage.rawData[i * 3] * mul[0]);
-                ushort g = (ushort)(currentRawImage.rawData[(i * 3) + 1] * mul[1]);
-                ushort b = (ushort)(currentRawImage.rawData[(i * 3) + 2] * mul[2]);
+                ushort r = (ushort)(data[i * 3] * mul[0]);
+                ushort g = (ushort)(data[(i * 3) + 1] * mul[1]);
+                ushort b = (ushort)(data[(i * 3) + 2] * mul[2]);
 
-                currentRawImage.rawData[i * 3] = (ushort)r;
-                currentRawImage.rawData[(i * 3) + 1] = (ushort)g;
-                currentRawImage.rawData[(i * 3) + 2] = (ushort)b;
+                data[i * 3] = r;
+                data[(i * 3) + 1] = g;
+                data[(i * 3) + 2] = b;
             }
         }
 
@@ -119,25 +119,6 @@ namespace RawParser.Effect
                 currentRawImage.rawData[i * 3] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[i * 3] / maxValue, gamma));
                 currentRawImage.rawData[(i * 3) + 1] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[(i * 3) + 1] / maxValue, gamma));
                 currentRawImage.rawData[(i * 3) + 2] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[(i * 3) + 2] / maxValue, gamma));
-            }
-        }
-
-        internal static void WhiteBalance(ref uint[] image, int colorDepth, uint h, uint w, int temp)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static void scaleColor(ref uint[] copyofpreview, uint height, uint width, int dark, int saturation, double[] mul)
-        {
-            for (int i = 0; i < height * width; i++)
-            {
-                ushort r = (ushort)(copyofpreview[i * 3] * mul[0]);
-                ushort g = (ushort)(copyofpreview[(i * 3) + 1] * mul[1]);
-                ushort b = (ushort)(copyofpreview[(i * 3) + 2] * mul[2]);
-
-                copyofpreview[i * 3] = (ushort)r;
-                copyofpreview[(i * 3) + 1] = (ushort)g;
-                copyofpreview[(i * 3) + 2] = (ushort)b;
             }
         }
     }

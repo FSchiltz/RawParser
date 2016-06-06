@@ -143,6 +143,7 @@
     <Compile Include="Model\Format\IFD\Tag.cs" />
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Image\JpegHelper.cs" />
+    <Compile Include="View\UIHelper\UIImageHelper.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
     <Compile Include="Model\Settings\Settings.cs" />
