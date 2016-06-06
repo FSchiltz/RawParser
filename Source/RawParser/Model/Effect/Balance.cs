@@ -7,7 +7,7 @@ namespace RawParser.Effect
     {
         private Balance() { }
 
-        public static void calculateRGB(int temp, out ushort rRefer, out ushort gRefer, out ushort bRefer)
+        public static void calculateRGB(int temp, out double rRefer, out double gRefer, out double bRefer)
         {
             ushort maxValue = 255;
             temp /= 100;
@@ -53,9 +53,9 @@ namespace RawParser.Effect
                     else if (bRefer > maxValue) bRefer = maxValue;
                 }
             }
-            bRefer /= (255 / 2);
-            gRefer /= (255 / 2);
-            rRefer /= (255 / 2);
+            bRefer /= (255 );
+            gRefer /= (255 );
+            rRefer /= (255 );
         }
 
         /*
@@ -63,6 +63,8 @@ namespace RawParser.Effect
                  but I can't make any promises about the quality of the algorithm's estimates above 40000 K.)
             Note also that the temperature and color variables need to be declared as floating - point.
         */
+        //TODO correct
+        /*
         public static void WhiteBalance(ref ushort[] image, int colorDepth, uint h, uint w, int temp)
         {
             //TODO caclute the real value and remove transforming to 8 bit
@@ -88,7 +90,7 @@ namespace RawParser.Effect
                 image[(i * 3) + 2] = (ushort)((image[(i * 3) + 2] * (1 - aplhablend)) + (bRefer * aplhablend));
                 var b2 = image[(i * 3) + 1];
             }
-        }
+        }*/
 
         /*
          * Does not clip,beware

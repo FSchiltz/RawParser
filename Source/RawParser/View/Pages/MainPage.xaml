@@ -153,7 +153,7 @@
                             <TextBlock FontSize="12">
                                 Temperature
                             </TextBlock>
-                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000" IsEnabled="False"/>
+                            <Slider x:Name="colorTempSlider"  PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="10000" Minimum="1000" LargeChange="100" SmallChange="10" Value="1000" IsEnabled="False"/>
 
                             <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" x:Name="cameraWBCheck" HorizontalAlignment="Center">
                                 Use camera white balance
