@@ -525,7 +525,7 @@ namespace RawParser
             {
                 WBdragStarted = false;
                 cameraWB = false;
-                cameraWBCheck.IsEnabled = false;
+                cameraWBCheck.IsEnabled = true;
                 updatePreview();          
             }
         }
