@@ -50,7 +50,7 @@ namespace RawParser
         public MainPage()
         {
             InitializeComponent();
-            Settings.InitSettings();
+            SettingStorage.init();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
 
@@ -183,7 +183,7 @@ namespace RawParser
                     enableEditingControl(true);
 
                     //create a small image from raw to display
-                    bool autoFactor = Settings.getBoolSetting("autoPreviewFactor");
+                    bool autoFactor = SettingStorage.autoPreviewFactor;
                     int previewFactor = 0;
                     if (autoFactor)
                     {
@@ -202,8 +202,7 @@ namespace RawParser
                     }
                     else
                     {
-                        previewFactor = Settings.getIntSetting("previewFactor");
-
+                        previewFactor = SettingStorage.previewFactor;
                     }
                     raw.previewHeight = (uint)(raw.height / previewFactor);
                     raw.previewWidth = (uint)(raw.width / previewFactor);
@@ -278,7 +277,7 @@ namespace RawParser
             if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
             {
                 float x = 0;
-                double relativeBorder = Settings.geDoubleSetting("imageBoxBorder");
+                double relativeBorder = SettingStorage.imageBoxBorder;
                 if ((currentImageDisplayedWidth / currentImageDisplayedHeight) < (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
                 {
                     x = (float)(imageDisplayScroll.ViewportWidth /
@@ -321,7 +320,7 @@ namespace RawParser
 
         private async void saveButton_Click(object sender, RoutedEventArgs e)
         {
-            string format = Settings.getStringSetting("saveFormat");
+            string format = SettingStorage.saveFormat;
 
             //TODO reimplement correclty
             //Just for testing purpose for now
@@ -459,13 +458,13 @@ namespace RawParser
             Luminance.Exposure(ref data, height, width, exposure, raw.colorDepth);
             if (cameraWB)
             {
-                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, raw.camMul);
+                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, raw.camMul, raw.colorDepth);
             }
             else
             {
                 double[] mul = new double[4];
                 Balance.calculateRGB((int)temperature, out mul[0], out mul[2], out mul[1]);
-                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, mul);
+                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, mul, raw.colorDepth);
             }
         }
 
