@@ -195,6 +195,10 @@ namespace RawParser
                         {
                             previewFactor = (int)(raw.width / 1080);
                         }
+                        int start = 1;
+                        for (; previewFactor > (start << 1); start <<= 1) ;
+                        if ((previewFactor-start) < ((start << 1) - previewFactor)) previewFactor = start;
+                        else previewFactor <<= 1;
                     }
                     else
                     {
@@ -351,9 +355,9 @@ namespace RawParser
                     {
                         using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
-                            SoftwareBitmap bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t);
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
                             int[] t = new int[3];
+                            SoftwareBitmap bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t);                          BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
+                            
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
@@ -452,7 +456,7 @@ namespace RawParser
             t.Wait();
 
             //aply all thetransformation on it
-            Luminance.Exposure(ref data, height, width, exposure);
+            Luminance.Exposure(ref data, height, width, exposure, raw.colorDepth);
             if (cameraWB)
             {
                 Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, raw.camMul);
