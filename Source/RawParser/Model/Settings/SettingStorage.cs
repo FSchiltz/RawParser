@@ -2,12 +2,43 @@
 
 namespace RawParser.Model.Settings
 {
-    class Settings
+    static class SettingStorage
     {
         static private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
+        private static string def = "Default";
+        //checkif settings already exists
+        public static double imageBoxBorder
+        {
+            get { return getDoubleSetting("imageBoxBorder"); }
+            set { localSettings.Values["imageBoxBorder"] = value; }
+        }
+        public static int previewFactor
+        {
+            get { return getIntSetting("previewFactor"); }
+            set { localSettings.Values["previewFactor"] = value; }
+        }
+        public static string saveFormat
+        {
+            get { return getStringSetting("saveFormat"); }
+            set { localSettings.Values["saveFormat"] = value; }
+        }
+        public static bool autoPreviewFactor
+        {
+            get { return getBoolSetting("autoPreviewFormat"); }
+            set { localSettings.Values["autoPreviewFormat"] = value; }
+        }
+
+        public static void init()
+        {
+            localSettings.Values["imageBoxBorder" + def] = 0.05;
+            localSettings.Values["previewFactor" + def] = 4;
+            localSettings.Values["saveFormat" + def] = ".jpg";
+            localSettings.Values["autoPreviewFormat" + def] = true;
+        }
+
         //ToDO replace by getonread member
-        public static bool getBoolSetting(string name)
+        private static bool getBoolSetting(string name)
         {
             if (localSettings.Values[name] != null)
             {
@@ -20,7 +51,7 @@ namespace RawParser.Model.Settings
             return (bool)localSettings.Values[name];
         }
 
-        public static int getIntSetting(string name)
+        private static int getIntSetting(string name)
         {
             if (localSettings.Values[name] != null)
             {
@@ -33,7 +64,7 @@ namespace RawParser.Model.Settings
             return (int)localSettings.Values[name];
         }
 
-        public static double geDoubleSetting(string name)
+        private static double getDoubleSetting(string name)
         {
             if (localSettings.Values[name] != null)
             {
@@ -46,7 +77,7 @@ namespace RawParser.Model.Settings
             return (double)localSettings.Values[name];
         }
 
-        public static string getStringSetting(string name)
+        private static string getStringSetting(string name)
         {
             if (localSettings.Values[name] != null)
             {
@@ -57,21 +88,6 @@ namespace RawParser.Model.Settings
                 localSettings.Values[name] = localSettings.Values[name + "Default"];
             }
             return (string)localSettings.Values[name];
-        }
-
-
-        public static void InitSettings()
-        {
-            string def = "Default";
-            //checkif settings already exists
-            if (localSettings.Values["imageBoxBorder" + def] == null)
-                localSettings.Values["imageBoxBorder" + def] = 0.05;
-            if (localSettings.Values["previewFactord" + def] == null)
-                localSettings.Values["previewFactor" + def] = 4;
-            if (localSettings.Values["saveFormat" + def] == null)
-                localSettings.Values["saveFormat" + def] = ".jpg";
-            if (localSettings.Values["autoPreviewFactor" + def] == null)
-                localSettings.Values["autoPreviewFactor" + def] = true;
         }
     }
 }

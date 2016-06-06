@@ -96,17 +96,20 @@ namespace RawParser.Effect
          * Does not clip,beware
          * 
          */
-        public static void scaleColor(ref ushort[] data, uint height, uint width, int dark, int saturation, double[] mul)
+        public static void scaleColor(ref ushort[] data, uint height, uint width, int dark, int saturation, double[] mul, int colorDepth)
         {
+            uint maxValue = (uint)(1 << colorDepth) - 1;
             for (int i = 0; i < height * width; i++)
             {
-                ushort r = (ushort)(data[i * 3] * mul[0]);
-                ushort g = (ushort)(data[(i * 3) + 1] * mul[1]);
-                ushort b = (ushort)(data[(i * 3) + 2] * mul[2]);
-
-                data[i * 3] = r;
-                data[(i * 3) + 1] = g;
-                data[(i * 3) + 2] = b;
+                double r = (data[i * 3] * mul[0]);
+                double g = (data[(i * 3) + 1] * mul[1]);
+                double b = (data[(i * 3) + 2] * mul[2]);
+                if (r > maxValue) r = maxValue;
+                if (g > maxValue) g = maxValue;
+                if (b > maxValue) b = maxValue;
+                data[i * 3] = (ushort)r;
+                data[(i * 3) + 1] = (ushort)g;
+                data[(i * 3) + 2] = (ushort)b;
             }
         }
 

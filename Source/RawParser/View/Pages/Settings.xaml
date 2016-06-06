@@ -56,6 +56,7 @@
                         Scaling factor of the preview images:
                 </TextBlock>
                 <ComboBox Grid.Column="2" SelectionChanged="ComboBox_SelectionChanged">
+                    <ComboBoxItem>Auto</ComboBoxItem>
                     <ComboBoxItem>1</ComboBoxItem>
                     <ComboBoxItem>2</ComboBoxItem>
                     <ComboBoxItem>4</ComboBoxItem>
