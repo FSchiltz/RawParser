@@ -74,7 +74,7 @@ namespace RawParser.Image
                         if (blue > 255) blue = 255;
                         if (red > 255) red = 255;
                         if (green > 255) green = 255;
-                        if (histo) value[(byte)((red << 1) + (green << 2) + green + blue) >> 3]++;
+                        if (histo) value[(ushort)((red + green + blue)/3)]++;
                         if (bgr)
                         {
                             tempByteArray[bufferLayout.StartIndex + (i * 4)] = (byte)blue;

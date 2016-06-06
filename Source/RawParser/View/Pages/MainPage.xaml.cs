@@ -41,7 +41,6 @@ namespace RawParser
         public double pageHeight;
         private int currentImageDisplayedHeight;
         private int currentImageDisplayedWidth;
-        private int[] value = new int[256];
 
         bool cameraWB = true;
         private bool ExposuredragStarted;
@@ -109,6 +108,7 @@ namespace RawParser
                      colorTempSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
                      gammaSlider.IsEnabled = v;
+                     //contrastSlider.IsEnabled = v;
                  });
         }
 
@@ -462,6 +462,7 @@ namespace RawParser
             double exposure = 0;
             double temperature = 0;
             double gamma = 0;
+            double contrast = 0;
             Task t = Task.Run(async () =>
             {
                 //get all the value               
@@ -471,6 +472,7 @@ namespace RawParser
                     exposure = exposureSlider.Value;
                     temperature = colorTempSlider.Value;
                     gamma = gammaSlider.Value;
+                    contrast = contrastSlider.Value;
                 });
             });
             t.Wait();
@@ -487,7 +489,9 @@ namespace RawParser
                 Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, mul, colordepth);
             }
             Balance.scaleGamma(ref data, height, width, colordepth, gamma);
+            Luminance.Contraste(ref data, height, width, contrast, colordepth);
             Luminance.Exposure(ref data, height, width, exposure, colordepth);
+
 
         }
 
@@ -496,6 +500,7 @@ namespace RawParser
             //display the histogram                    
             Task histoTask = Task.Run(async () =>
             {
+                int[] value = new int[256];
                 ushort[] copyofpreview = new ushort[raw.previewData.Length];
                 for (int i = 0; i < copyofpreview.Length; i++) copyofpreview[i] = raw.previewData[i];
                 applyUserModif(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth);
@@ -509,7 +514,7 @@ namespace RawParser
                      bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
                  });
                 displayImage(bitmap);
-                Histogram.Create(value, raw.colorDepth, histogramCanvas);
+                Histogram.Create(value, raw.colorDepth,raw.previewHeight, raw.previewWidth, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     histoLoadingBar.Visibility = Visibility.Collapsed;
@@ -579,7 +584,7 @@ namespace RawParser
         private void Slider_PointerCaptureLost(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (raw?.previewData != null)
-            {               
+            {
                 updatePreview();
             }
         }
