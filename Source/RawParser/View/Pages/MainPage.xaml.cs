@@ -458,8 +458,6 @@ namespace RawParser
                     copyofpreview = new uint[raw.previewData.Length];
                     for (int i = 0; i < raw.previewData.Length; i++) copyofpreview[i] = raw.previewData[i];
 
-
-
                     //aply all thetransformation on it
 
                     Luminance.Exposure(ref copyofpreview, raw.previewHeight, raw.previewWidth, exposure);
@@ -469,9 +467,9 @@ namespace RawParser
                     }
                     else
                     {
-                        ushort[] mul = new ushort[4];
-                        Balance.calculateRGB((int)colorTempSlider.Value,out  mul[0],out  mul[2], out mul[1]);
-                        Balance.scaleColor(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.dark, raw.saturation, raw.camMul);
+                        double[] mul = new double[4];
+                        Balance.calculateRGB((int)temperature,out  mul[0],out  mul[2], out mul[1]);
+                        Balance.scaleColor(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.dark, raw.saturation, mul);
                     }
                 }
                 SoftwareBitmap bitmap = null;
@@ -537,7 +535,7 @@ namespace RawParser
             if (raw?.previewData != null && WBdragStarted)
             {
                 cameraWB = false;
-                cameraWBCheck.IsEnabled = false;
+                cameraWBCheck.IsEnabled = true;
                 updatePreview();
             }
         }      
