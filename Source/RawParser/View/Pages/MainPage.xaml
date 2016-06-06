@@ -168,7 +168,7 @@
                             <TextBlock FontSize="12">
                                 Contrast
                             </TextBlock>
-                            <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Width="300" Maximum="5" Minimum="0.01" LargeChange="10" SmallChange="1" IsEnabled="False" StepFrequency="0.1"/>
+                            <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Width="300" Maximum="5" Minimum="0.01" LargeChange="10" SmallChange="1" IsEnabled="False" StepFrequency="0.1" Value="1"/>
                             <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                         </StackPanel>
                     </PivotItem>
