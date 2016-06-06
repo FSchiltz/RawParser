@@ -31,16 +31,13 @@ namespace RawParser.View.UIHelper
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
                          double maxheight = (histogramCanvas.Height / max);
-                         double widthstep = (value.Length / histogramCanvas.ActualWidth);
+                         int widthstep = (int)(value.Length / histogramCanvas.ActualWidth);
                          line = new Line();
                          line.Stroke = new SolidColorBrush(Colors.Black);
                          line.StrokeThickness = 1;
                          line.X1 = line.X2 = (int)(i * widthstep);
                          line.Y1 = histogramCanvas.Height;
                          line.Y2 = (int)(histogramCanvas.Height - (maxheight * value[i]));
-
-                         Canvas.SetLeft(line, 0);
-                         Canvas.SetTop(line, 0);
                          histogramCanvas.Children.Add(line);
                      });
             }
