@@ -156,7 +156,7 @@
                             <TextBlock FontSize="12">
                                 Brightness
                             </TextBlock>
-                            <Slider x:Name="brightnessSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="-100" LargeChange="1" SmallChange="1" IsEnabled="False" Margin="4,0,0,0"/>
+                            <Slider x:Name="brightnessSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False" Margin="4,0,0,0" StepFrequency="5"/>
 
                             <TextBlock FontSize="12">
                                 Temperature
@@ -173,7 +173,7 @@
                             <TextBlock FontSize="12">
                                 Contrast
                             </TextBlock>
-                            <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Width="300" Maximum="5" Minimum="0.01" LargeChange="10" SmallChange="1" IsEnabled="False" StepFrequency="0.1" Value="1"/>
+                            <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Width="300" Maximum="1.3" Minimum="0.7" LargeChange="0.1" SmallChange="0.005" IsEnabled="False" StepFrequency="0.001" Value="1"/>
                             <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                         </StackPanel>
                     </PivotItem>
