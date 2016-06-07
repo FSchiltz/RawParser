@@ -191,11 +191,11 @@ namespace RawParser
                     {
                         if (raw.height > raw.width)
                         {
-                            previewFactor = (int)(raw.height / 720);
+                            previewFactor = (int)(raw.height / 480);
                         }
                         else
                         {
-                            previewFactor = (int)(raw.width / 1080);
+                            previewFactor = (int)(raw.width / 640);
                         }
                         int start = 1;
                         for (; previewFactor > (start << 1); start <<= 1) ;
