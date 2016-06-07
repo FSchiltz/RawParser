@@ -43,7 +43,6 @@ namespace RawParser
         private int currentImageDisplayedWidth;
 
         bool cameraWB = true;
-        private bool ExposuredragStarted;
         private bool WBdragStarted;
 
         public MainPage()
@@ -108,7 +107,7 @@ namespace RawParser
                      colorTempSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
                      gammaSlider.IsEnabled = v;
-                     //contrastSlider.IsEnabled = v;
+                     contrastSlider.IsEnabled = v;
                      brightnessSlider.IsEnabled = v;
                  });
         }
@@ -191,11 +190,11 @@ namespace RawParser
                     {
                         if (raw.height > raw.width)
                         {
-                            previewFactor = (int)(raw.height / 480);
+                            previewFactor = (int)(raw.height / 720);
                         }
                         else
                         {
-                            previewFactor = (int)(raw.width / 640);
+                            previewFactor = (int)(raw.width / 1080);
                         }
                         int start = 1;
                         for (; previewFactor > (start << 1); start <<= 1) ;
@@ -491,19 +490,24 @@ namespace RawParser
             uint maxValue = (uint)(1 << colorDepth) - 1;
             for (int i = 0; i < height * width; i++)
             {
-                double red = 0, green = 0, blue = 0;
+                double red = image[i * 3],
+                green = image[(i * 3) + 1],
+                blue = image[(i * 3) + 2];
                 //aply all thetransformation that needs red green and blue at the same time
                 Balance.scaleColor(ref red, ref green, ref blue, mul);
                 Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);
                 //apply transformation that are on each pixel;
 
-                // Luminance.Contraste(ref data, height, width, contrast, colordepth);
+                Luminance.Contraste(ref red, ref green, ref blue,maxValue, contrast);
                 Luminance.Exposure(ref red, ref green, ref blue, exposure);
                 Luminance.Brightness(ref red, ref green, ref blue, brightness);
 
                 if (red > maxValue) red = maxValue;
                 if (green > maxValue) green = maxValue;
                 if (blue > maxValue) blue = maxValue;
+                if (red < 0) red = 0;
+                if (green < 0) green = 0;
+                if (blue < 0) blue = 0;
 
                 image[i * 3] = (ushort)red;
                 image[(i * 3) + 1] = (ushort)green;
@@ -521,14 +525,14 @@ namespace RawParser
                 for (int i = 0; i < copyofpreview.Length; i++) copyofpreview[i] = raw.previewData[i];
                 applyUserModif(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth);
                 SoftwareBitmap bitmap = null;
-            //Needs to run in UI thread because fuck it
-            await CoreApplication.MainView.CoreWindow.Dispatcher
-             .RunAsync(CoreDispatcherPriority.Normal, () =>
-             {
-                         histoLoadingBar.Visibility = Visibility.Visible;
-                     //Writeablebitmap use BGRA (don't know why )
-                     bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
-                     });
+                //Needs to run in UI thread because fuck it
+                await CoreApplication.MainView.CoreWindow.Dispatcher
+                 .RunAsync(CoreDispatcherPriority.Normal, () =>
+                 {
+                     histoLoadingBar.Visibility = Visibility.Visible;
+                 //Writeablebitmap use BGRA (don't know why )
+                 bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
+                 });
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, raw.previewHeight, raw.previewWidth, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
