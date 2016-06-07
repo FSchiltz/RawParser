@@ -467,15 +467,14 @@ namespace RawParser
             //get all the value 
             Task t = Task.Run(async () =>
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher
-            .RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                exposure = exposureSlider.Value;
-                temperature = colorTempSlider.Value;
-                gamma = gammaSlider.Value;
-                contrast = contrastSlider.Value;
-                brightness = brightnessSlider.Value;
-            });
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    exposure = exposureSlider.Value;
+                    temperature = colorTempSlider.Value;
+                    gamma = gammaSlider.Value;
+                    contrast = contrastSlider.Value;
+                    brightness = brightnessSlider.Value;
+                });
             });
             t.Wait();
 
@@ -498,7 +497,7 @@ namespace RawParser
                 Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);
                 //apply transformation that are on each pixel;
 
-                Luminance.Contraste(ref red, ref green, ref blue,maxValue, contrast);
+                Luminance.Contraste(ref red, ref green, ref blue, maxValue, contrast);
                 Luminance.Exposure(ref red, ref green, ref blue, exposure);
                 Luminance.Brightness(ref red, ref green, ref blue, brightness);
 
@@ -530,8 +529,8 @@ namespace RawParser
                  .RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      histoLoadingBar.Visibility = Visibility.Visible;
-                 //Writeablebitmap use BGRA (don't know why )
-                 bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
+                     //Writeablebitmap use BGRA (don't know why )
+                     bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
                  });
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, raw.previewHeight, raw.previewWidth, histogramCanvas);

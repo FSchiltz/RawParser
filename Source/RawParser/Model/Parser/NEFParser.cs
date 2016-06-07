@@ -108,7 +108,7 @@ namespace RawParser.Parser
             for (int i = 0; i < 4; i++) cfa[i] = (byte)imageRAWCFA.data[i];
 
             //get the colorBalance
-            Tag colorBalanceTag, colorLevelTag;
+            Tag colorBalanceTag, colorLevelTag, blackLevelTag;
             //first get the matrix of level for each pixel (a 2*2 array corresponding to the rgb bayer matrice used            
             if (!makerNote.ifd.tags.TryGetValue(0xc, out colorLevelTag)) throw new FormatException("File not correct");
             for (int c = 0; c < 3; c++)
