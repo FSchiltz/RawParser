@@ -106,7 +106,7 @@ namespace RawParser
                  {
                      colorTempSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
-                     gammaSlider.IsEnabled = v;
+                     //gammaSlider.IsEnabled = v;
                      contrastSlider.IsEnabled = v;
                      brightnessSlider.IsEnabled = v;
                  });
@@ -472,8 +472,8 @@ namespace RawParser
                     exposure = exposureSlider.Value;
                     temperature = colorTempSlider.Value;
                     gamma = gammaSlider.Value;
-                    contrast = contrastSlider.Value;
-                    brightness = brightnessSlider.Value;
+                    contrast = contrastSlider.Value / 10;
+                    brightness = (int)brightnessSlider.Value << (colorDepth - 8);
                 });
             });
             t.Wait();
@@ -494,7 +494,7 @@ namespace RawParser
                 blue = image[(i * 3) + 2];
                 //aply all thetransformation that needs red green and blue at the same time
                 Balance.scaleColor(ref red, ref green, ref blue, mul);
-                Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);
+                //Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);
                 //apply transformation that are on each pixel;
 
                 Luminance.Contraste(ref red, ref green, ref blue, maxValue, contrast);
