@@ -109,6 +109,7 @@ namespace RawParser
                      exposureSlider.IsEnabled = v;
                      gammaSlider.IsEnabled = v;
                      //contrastSlider.IsEnabled = v;
+                     brightnessSlider.IsEnabled = v;
                  });
         }
 
@@ -457,42 +458,57 @@ namespace RawParser
                 });
             }
         }
-        public void applyUserModif(ref ushort[] data, uint height, uint width, int colordepth)
+        public void applyUserModif(ref ushort[] image, uint height, uint width, int colorDepth)
         {
             double exposure = 0;
             double temperature = 0;
             double gamma = 0;
             double contrast = 0;
+            double brightness = 0;
+            //get all the value 
             Task t = Task.Run(async () =>
             {
-                //get all the value               
                 await CoreApplication.MainView.CoreWindow.Dispatcher
-                .RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    exposure = exposureSlider.Value;
-                    temperature = colorTempSlider.Value;
-                    gamma = gammaSlider.Value;
-                    contrast = contrastSlider.Value;
-                });
+            .RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                exposure = exposureSlider.Value;
+                temperature = colorTempSlider.Value;
+                gamma = gammaSlider.Value;
+                contrast = contrastSlider.Value;
+                brightness = brightnessSlider.Value;
+            });
             });
             t.Wait();
 
-            //aply all thetransformation on it
-            if (cameraWB)
+            double[] mul;
+            if (!cameraWB)
             {
-                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, raw.camMul, raw.colorDepth);
-            }
-            else
-            {
-                double[] mul = new double[4];
+                mul = new double[4];
                 Balance.calculateRGB((int)temperature, out mul[0], out mul[2], out mul[1]);
-                Balance.scaleColor(ref data, height, width, raw.dark, raw.saturation, mul, colordepth);
             }
-            Balance.scaleGamma(ref data, height, width, colordepth, gamma);
-           // Luminance.Contraste(ref data, height, width, contrast, colordepth);
-            Luminance.Exposure(ref data, height, width, exposure, colordepth);
+            else mul = raw.camMul;
+            exposure = Math.Pow(2, exposure);
+            uint maxValue = (uint)(1 << colorDepth) - 1;
+            for (int i = 0; i < height * width; i++)
+            {
+                double red = 0, green = 0, blue = 0;
+                //aply all thetransformation that needs red green and blue at the same time
+                Balance.scaleColor(ref red, ref green, ref blue, mul);
+                Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);
+                //apply transformation that are on each pixel;
 
+                // Luminance.Contraste(ref data, height, width, contrast, colordepth);
+                Luminance.Exposure(ref red, ref green, ref blue, exposure);
+                Luminance.Brightness(ref red, ref green, ref blue, brightness);
 
+                if (red > maxValue) red = maxValue;
+                if (green > maxValue) green = maxValue;
+                if (blue > maxValue) blue = maxValue;
+
+                image[i * 3] = (ushort)red;
+                image[(i * 3) + 1] = (ushort)green;
+                image[(i * 3) + 2] = (ushort)blue;
+            }
         }
 
         private void updatePreview()
@@ -505,46 +521,22 @@ namespace RawParser
                 for (int i = 0; i < copyofpreview.Length; i++) copyofpreview[i] = raw.previewData[i];
                 applyUserModif(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth);
                 SoftwareBitmap bitmap = null;
-                //Needs to run in UI thread because fuck it
-                await CoreApplication.MainView.CoreWindow.Dispatcher
-                 .RunAsync(CoreDispatcherPriority.Normal, () =>
-                 {
-                     histoLoadingBar.Visibility = Visibility.Visible;
+            //Needs to run in UI thread because fuck it
+            await CoreApplication.MainView.CoreWindow.Dispatcher
+             .RunAsync(CoreDispatcherPriority.Normal, () =>
+             {
+                         histoLoadingBar.Visibility = Visibility.Visible;
                      //Writeablebitmap use BGRA (don't know why )
                      bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
-                 });
+                     });
                 displayImage(bitmap);
-                Histogram.Create(value, raw.colorDepth,raw.previewHeight, raw.previewWidth, histogramCanvas);
+                Histogram.Create(value, raw.colorDepth, raw.previewHeight, raw.previewWidth, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     histoLoadingBar.Visibility = Visibility.Collapsed;
                 });
             });
         }
-
-        #region ExposureSlider
-        private void exposureSlider_DragStart(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            ExposuredragStarted = true;
-        }
-
-        private void exposureSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (raw?.previewData != null)
-            {
-                updatePreview();
-                ExposuredragStarted = false;
-            }
-        }
-
-        private void exposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-        {
-            if (raw?.previewData != null && ExposuredragStarted)
-            {
-                updatePreview();
-            }
-        }
-        #endregion
 
         #region WBSlider
         private void WBSlider_DragStart(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
