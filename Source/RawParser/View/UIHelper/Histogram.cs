@@ -20,20 +20,17 @@ namespace RawParser.View.UIHelper
                  });
             for (int i = 0; i < value.Length; i++)
             {
-                value[i] = (int)(value[i]/((height*width)/ (256 *10)));
-            }
-            for (int i = 0; i < value.Length; i++)
-            {
                 Line line = null;
+                int widthstep = (int)(value.Length / histogramCanvas.ActualWidth);
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
-                         int widthstep = (int)(value.Length / histogramCanvas.ActualWidth);
+                         value[i] = (int)(value[i] / ((height * width) / (256 * 10)));
                          line = new Line();
                          line.Stroke = new SolidColorBrush(Colors.Black);
                          line.StrokeThickness = 1;
 
-                         line.X1 = line.X2 = (int)(i * widthstep);
+                         line.X1 = line.X2 = (i * widthstep);
                          line.Y1 = histogramCanvas.Height;
                          line.Y2 = (int)(histogramCanvas.Height - value[i]);
 
