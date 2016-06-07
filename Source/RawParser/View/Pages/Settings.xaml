@@ -25,7 +25,7 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <ListView x:Name="listView" >
+        <StackPanel x:Name="listView" >
 
             <TextBlock TextWrapping="Wrap" FontSize="48">
             Settings
@@ -88,7 +88,7 @@
             <TextBlock FontSize="18" >
                 Decompression code from DCraw (http://www.cybercom.net/~dcoffin/dcraw/).
             </TextBlock>
-        </ListView>
+        </StackPanel>
 
     </Grid>
 </Page>
