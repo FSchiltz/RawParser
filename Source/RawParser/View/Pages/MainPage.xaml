@@ -152,7 +152,12 @@
                             <TextBlock FontSize="12">
                                 Exposure
                             </TextBlock>
-                            <Slider x:Name="exposureSlider" PointerCaptureLost="exposureSlider_DragStop"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0"/>
+                            <Slider x:Name="exposureSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0"/>
+                            <TextBlock FontSize="12">
+                                Brightness
+                            </TextBlock>
+                            <Slider x:Name="brightnessSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="-100" LargeChange="1" SmallChange="1" IsEnabled="False" Margin="4,0,0,0"/>
+
                             <TextBlock FontSize="12">
                                 Temperature
                             </TextBlock>

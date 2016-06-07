@@ -52,9 +52,9 @@ namespace RawParser.Effect
                     else if (bRefer > maxValue) bRefer = maxValue;
                 }
             }
-            bRefer /= (255 );
-            gRefer /= (255 );
-            rRefer /= (255 );
+            bRefer /= (255);
+            gRefer /= (255);
+            rRefer /= (255);
         }
 
         /*
@@ -91,42 +91,19 @@ namespace RawParser.Effect
             }
         }*/
 
-        /*
-         * Does not clip,beware
-         * 
-         */
-        public static void scaleColor(ref ushort[] data, uint height, uint width, int dark, int saturation, double[] mul, int colorDepth)
+
+        public static void scaleColor(ref double r, ref double g, ref double b, double[] mul)
         {
-            uint maxValue = (uint)(1 << colorDepth) - 1;
-            for (int i = 0; i < height * width; i++)
-            {
-                double r = (data[i * 3] * mul[0]);
-                double g = (data[(i * 3) + 1] * mul[1]);
-                double b = (data[(i * 3) + 2] * mul[2]);
-                if (r > maxValue) r = maxValue;
-                if (g > maxValue) g = maxValue;
-                if (b > maxValue) b = maxValue;
-                data[i * 3] = (ushort)r;
-                data[(i * 3) + 1] = (ushort)g;
-                data[(i * 3) + 2] = (ushort)b;
-            }
+            r *= mul[0];
+            g *= mul[1];
+            b *= mul[2];
         }
 
-        public static void scaleGamma(ref ushort [] image, uint height,uint width, int colorDepth, double gamma)
+        public static void scaleGamma(ref double r, ref double g, ref double b, double gamma, uint maxValue)
         {
-            double maxValue = (int)Math.Pow(2, colorDepth) - 1;
-            for (int i = 0; i < height * width; i++)
-            {
-                double r = maxValue * Math.Pow(image[i * 3] / maxValue, gamma);
-                double g = maxValue * Math.Pow(image[(i * 3) + 1] / maxValue, gamma);
-                double b = maxValue * Math.Pow(image[(i * 3) + 2] / maxValue, gamma);
-                if (r > maxValue) r = maxValue;
-                if (g > maxValue) g = maxValue;
-                if (b > maxValue) b = maxValue;
-                image[i * 3] = (ushort)r;
-                image[(i * 3) + 1] = (ushort)g;
-                image[(i * 3) + 2] = (ushort)b;
-            }
+            r = maxValue * Math.Pow(r / maxValue, gamma);
+            g = maxValue * Math.Pow(g / maxValue, gamma);
+            b = maxValue * Math.Pow(b / maxValue, gamma);
         }
     }
 }
