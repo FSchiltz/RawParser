@@ -18,11 +18,23 @@ namespace RawParser.Effect
 
         public static void Contraste(ref double r, ref double g, ref double b, uint maxValue, double value)
         {
-            r *= 1.0 / maxValue;
+            r /= maxValue;
             r -= 0.5;
             r *= value * 1.0;
             r += 0.5;
             r *= maxValue;
+
+            g /= maxValue;
+            g -= 0.5;
+            g *= value * 1.0;
+            g += 0.5;
+            g *= maxValue;
+
+            b /= maxValue;
+            b -= 0.5;
+            b *= value * 1.0;
+            b += 0.5;
+            b *= maxValue;
         }
 
         public static void Clip(ref ushort[] image, uint h, uint w, ushort maxValue)
