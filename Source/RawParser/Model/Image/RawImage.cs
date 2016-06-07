@@ -22,6 +22,7 @@ namespace RawParser.Image
         public int saturation;
         public int dark;
         public double[] camMul;
+        public double[] black;
 
         /*
          * Should be allows if possible

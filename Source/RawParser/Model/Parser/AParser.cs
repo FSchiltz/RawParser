@@ -17,7 +17,8 @@ namespace RawParser.Parser
         public ushort colorDepth;
         public byte[] cfa;
         public double[] camMul = new double[4];
-        public double[] preMul = new double[4];        
+        public double[] black = new double[4];
+                
 
         //parse the image and return a rawimage 
         //takes time but if no constraint should be called instead of the other method
