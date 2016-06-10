@@ -37,11 +37,11 @@ namespace RawParser.Parser.Nikon
             ifd = new IFD(buffer, header.TIFFoffset + 10 + offset, true, true);
             //ifd = new IFD(buffer, (uint)buffer.BaseStream.Position, true, true);
             Tag previewOffsetTag;
-            if (!ifd.tags.TryGetValue(17, out previewOffsetTag))
+            if (ifd.tags.TryGetValue(17, out previewOffsetTag))
             {
-                throw new Exception("Preview Offset not found");
+                preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + offset + 10, true, false);
             }
-            preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + offset + 10, true, false);
+            else preview = null; //no preview in this file
         }
 
         internal uint getOffset()

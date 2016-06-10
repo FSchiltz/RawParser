@@ -12,7 +12,8 @@ namespace RawParser.Parser
     class NEFParser : AParser, IDisposable
     {
         protected TIFFBinaryReader fileStream;
-        protected IFD ifd, subifd0, subifd1, exif;
+        protected IFD ifd,exif;
+        protected IFD[] subifd;
         protected NikonMakerNote makerNote;
         protected Header header;
 
@@ -50,8 +51,10 @@ namespace RawParser.Parser
             //Get the full size preview
             Tag subifdoffsetTag;
             if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
-            subifd0 = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
-            subifd1 = new IFD(fileStream, (uint)subifdoffsetTag.data[1], true, false);
+            for(int i = 0; i <  subifdoffsetTag.dataCount; i++)
+            {
+                subifd[i] = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
+            }
             Tag thumbnailOffset, thumbnailSize;
             if (!makerNote.preview.tags.TryGetValue(0x0201, out thumbnailOffset)) throw new FormatException("File not correct");
             if (!makerNote.preview.tags.TryGetValue(0x0202, out thumbnailSize)) throw new FormatException("File not correct");
@@ -64,10 +67,10 @@ namespace RawParser.Parser
         public override byte[] parsePreview()
         {
             Tag imagepreviewOffsetTags, imagepreviewX, imagepreviewY, imagepreviewSize;
-            if (!subifd0.tags.TryGetValue(0x201, out imagepreviewOffsetTags)) throw new FormatException("File not correct");
-            if (!subifd0.tags.TryGetValue(0x11A, out imagepreviewX)) throw new FormatException("File not correct");
-            if (!subifd0.tags.TryGetValue(0x11B, out imagepreviewY)) throw new FormatException("File not correct");
-            if (!subifd0.tags.TryGetValue(0x202, out imagepreviewSize)) throw new FormatException("File not correct");
+            if (!subifd[0].tags.TryGetValue(0x201, out imagepreviewOffsetTags)) throw new FormatException("File not correct");
+            if (!subifd[0].tags.TryGetValue(0x11A, out imagepreviewX)) throw new FormatException("File not correct");
+            if (!subifd[0].tags.TryGetValue(0x11B, out imagepreviewY)) throw new FormatException("File not correct");
+            if (!subifd[0].tags.TryGetValue(0x202, out imagepreviewSize)) throw new FormatException("File not correct");
 
             //get the preview data ( faster than rezising )
             fileStream.BaseStream.Position = (uint)imagepreviewOffsetTags.data[0];
@@ -85,8 +88,10 @@ namespace RawParser.Parser
                 ushort nikonTagId;
                 if (!nikonToStandard.TryGetValue(exifTag, out nikonTagId)) continue;
                 ifd.tags.TryGetValue(nikonTagId, out tempTag);
-                subifd0.tags.TryGetValue(nikonTagId, out tempTag);
-                subifd1.tags.TryGetValue(nikonTagId, out tempTag);
+                foreach(IFD ifd in subifd)
+                {
+                    ifd.tags.TryGetValue(nikonTagId, out tempTag);
+                }
                 makerNote.preview.tags.TryGetValue(nikonTagId, out tempTag);
                 makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag);
                 exif.tags.TryGetValue(nikonTagId, out tempTag);
@@ -112,13 +117,14 @@ namespace RawParser.Parser
         {
             //Get the RAW data info
             Tag imageRAWOffsetTags, imageRAWWidth, imageRAWHeight, imageRAWSize, imageRAWCompressed, imageRAWDepth, imageRAWCFA;
-            if (!subifd1.tags.TryGetValue(0x0111, out imageRAWOffsetTags)) throw new FormatException("File not correct");
-            if (!subifd1.tags.TryGetValue(0x0100, out imageRAWWidth)) throw new FormatException("File not correct");
-            if (!subifd1.tags.TryGetValue(0x0101, out imageRAWHeight)) throw new FormatException("File not correct");
-            if (!subifd1.tags.TryGetValue(0x0102, out imageRAWDepth)) throw new FormatException("File not correct");
-            if (!subifd1.tags.TryGetValue(0x0117, out imageRAWSize)) throw new FormatException("File not correct");
-            if (!subifd1.tags.TryGetValue(0x0103, out imageRAWCompressed)) throw new FormatException("File not correct");            
-            if (!subifd1.tags.TryGetValue(0x828e, out imageRAWCFA)) throw new FormatException("File not correct");
+            int rawIFDNum = 1;
+            if (!subifd[rawIFDNum].tags.TryGetValue(0x0111, out imageRAWOffsetTags)) throw new FormatException("File not correct");
+            if (!subifd[rawIFDNum].tags.TryGetValue(0x0100, out imageRAWWidth)) throw new FormatException("File not correct");
+            if (!subifd[rawIFDNum].tags.TryGetValue(0x0101, out imageRAWHeight)) throw new FormatException("File not correct");
+            if (!subifd[rawIFDNum].tags.TryGetValue(0x0102, out imageRAWDepth)) throw new FormatException("File not correct");
+            if (!subifd[rawIFDNum].tags.TryGetValue(0x0117, out imageRAWSize)) throw new FormatException("File not correct");
+            if (!subifd[rawIFDNum].tags.TryGetValue(0x0103, out imageRAWCompressed)) throw new FormatException("File not correct");            
+            if (!subifd[rawIFDNum].tags.TryGetValue(0x828e, out imageRAWCFA)) throw new FormatException("File not correct");
             colorDepth = (ushort)imageRAWDepth.data[0];
             height = (uint)imageRAWHeight.data[0];
             width = (uint)imageRAWWidth.data[0];
@@ -242,8 +248,7 @@ namespace RawParser.Parser
 
             //Free all the ifd
             ifd = null;
-            subifd0 = null;
-            subifd1 = null;
+            subifd= null;         
 
             header = null;
 
