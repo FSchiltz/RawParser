@@ -35,7 +35,13 @@ namespace RawParser.Parser
 
             //Read the IFD
             ifd = new IFD(fileStream, header.TIFFoffset, true, false);
-
+            Tag subifdoffsetTag;
+            if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
+            subifd = new IFD[subifdoffsetTag.dataCount];
+            for (int i = 0; i < subifdoffsetTag.dataCount; i++)
+            {
+                subifd[i] = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
+            }
             //get the Exif
             Tag exifoffsetTag;
             if (!ifd.tags.TryGetValue(0x8769, out exifoffsetTag)) throw new FormatException("File not correct");
@@ -48,13 +54,7 @@ namespace RawParser.Parser
 
         public override byte[] parseThumbnail()
         {
-            //Get the full size preview
-            Tag subifdoffsetTag;
-            if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
-            for(int i = 0; i <  subifdoffsetTag.dataCount; i++)
-            {
-                subifd[i] = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
-            }
+            //Get the full size preview          
             Tag thumbnailOffset, thumbnailSize;
             if (!makerNote.preview.tags.TryGetValue(0x0201, out thumbnailOffset)) throw new FormatException("File not correct");
             if (!makerNote.preview.tags.TryGetValue(0x0202, out thumbnailSize)) throw new FormatException("File not correct");
