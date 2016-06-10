@@ -16,6 +16,7 @@ namespace RawParser.Parser.Nikon
         public NikonMakerNote(TIFFBinaryReader buffer, uint offset, bool compression)
         {
             //read the header
+            buffer.BaseStream.Position = offset;
             stringMagic = "";
             this.offset = offset;
             for (int i = 0; i < 6; i++)
@@ -34,7 +35,7 @@ namespace RawParser.Parser.Nikon
                 //TODO see if need to move
             }
             ifd = new IFD(buffer, header.TIFFoffset + 10 + offset, true, true);
-
+            //ifd = new IFD(buffer, (uint)buffer.BaseStream.Position, true, true);
             Tag previewOffsetTag;
             if (!ifd.tags.TryGetValue(17, out previewOffsetTag))
             {

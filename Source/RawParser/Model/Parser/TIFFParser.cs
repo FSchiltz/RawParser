@@ -8,7 +8,7 @@ namespace RawParser.Parser
 {
     class TiffParser : AParser
     {
-        public override RawImage parse(Stream s)
+        public override void Parse(Stream s)
         {
             throw new NotImplementedException();
         }
@@ -29,11 +29,6 @@ namespace RawParser.Parser
         }
 
         public override byte[] parseThumbnail()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void setStream(Stream s)
         {
             throw new NotImplementedException();
         }
