@@ -457,6 +457,7 @@ namespace RawParser
                 });
             }
         }
+
         public void applyUserModif(ref ushort[] image, uint height, uint width, int colorDepth)
         {
             double exposure = 0;

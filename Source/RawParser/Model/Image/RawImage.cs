@@ -23,6 +23,7 @@ namespace RawParser.Image
         public int dark;
         public double[] camMul;
         public double[] black;
+        public int rotation = 0;
 
         /*
          * Should be allows if possible

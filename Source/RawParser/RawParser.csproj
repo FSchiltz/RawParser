@@ -140,6 +140,7 @@
     <Compile Include="Model\Base\DictionnaryFromFile.cs" />
     <Compile Include="Model\Base\StreamHelper.cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
+    <Compile Include="Model\Effect\Rotate.cs" />
     <Compile Include="Model\Encoder\JpegEncoder.cs" />
     <Compile Include="Model\Encoder\PpmEncoder.cs" />
     <Compile Include="Model\Format\IFD\Tag.cs" />
