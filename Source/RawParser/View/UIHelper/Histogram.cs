@@ -21,10 +21,10 @@ namespace RawParser.View.UIHelper
             for (int i = 0; i < value.Length; i++)
             {
                 Line line = null;
-                int widthstep = (int)(value.Length / histogramCanvas.ActualWidth);
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>
                      {
+                         int widthstep = (int)(value.Length / histogramCanvas.ActualWidth);
                          value[i] = (int)(value[i] / ((height * width) / (256 * 10)));
                          line = new Line();
                          line.Stroke = new SolidColorBrush(Colors.Black);
