@@ -76,7 +76,7 @@ namespace RawParser.Format.IFD
                                 break;
                             case 8:
                                 temp.data[j] = fileStream.ReadInt16();
-                                if (temp.dataOffset == 0 && temp.dataCount == 1) fileStream.ReadInt16();
+                                //if (temp.dataOffset == 0 && temp.dataCount == 1) fileStream.ReadInt16();
                                 break;
                             case 9:
                                 temp.data[j] = fileStream.ReadInt32();

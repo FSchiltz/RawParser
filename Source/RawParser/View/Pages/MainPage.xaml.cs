@@ -155,12 +155,18 @@ namespace RawParser
                     raw = new RawImage();
                     raw.fileName = file.DisplayName;
 
-                    //Set the stream
-                    parser.setStream(stream);
+                    parser.Parse(stream);
 
                     //read the thumbnail
-                    raw.thumbnail = parser.parseThumbnail();
-                    displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
+                    try
+                    {
+                        raw.thumbnail = parser.parseThumbnail();
+                        displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
+                    }catch(FormatException e)
+                    {
+                        ExceptionDisplay.display(e.Message);
+                        //no preview in this file
+                    }
 
                     //read the preview
                     parser.parsePreview();
