@@ -1,0 +1,3 @@
+﻿  pch.cpp
+  dcraw.c
+d:\data\progra\c#\rawparser\source\universaldcraw\dcraw.c : fatal error C1853: 'x64\Debug\UniversalDCRaw.pch' precompiled header file is from a previous version of the compiler, or the precompiled header is C++ and you are using it from C (or vice versa)
