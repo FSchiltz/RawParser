@@ -93,7 +93,7 @@ namespace RawParser.Format.IFD
                                 }
                                 break;
                             case 11:
-                                temp.data[j] = fileStream.ReadBytes(4);
+                                temp.data[j] = fileStream.ReadSingle();
                                 break;
                             case 12:
                                 temp.data[j] = fileStream.ReadDouble();

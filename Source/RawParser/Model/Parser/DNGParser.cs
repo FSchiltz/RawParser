@@ -7,22 +7,12 @@ using RawParser.Image;
 
 namespace RawParser.Parser
 {
-    class DNGParser : AParser
+    class DNGParser : TiffParser
     {
-        private TIFFBinaryReader fileStream;
-        private Header header;
 
-        public override void Parse(Stream s)
+        public override void Parse(Stream file)
         {
-            fileStream = new TIFFBinaryReader(s);
-
-            Header header = new Header(fileStream, 0);
-            if (header.byteOrder == 0x4D4D)
-            {
-                //File is in reverse bit order
-                fileStream = new TIFFBinaryReaderRE(s, System.Text.Encoding.BigEndianUnicode);
-            }
-            header = new Header(fileStream, 0);
+            readTiffBase(file);
         }
 
         public override Dictionary<ushort, Tag> parseExif()
