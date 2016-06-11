@@ -137,7 +137,12 @@ namespace RawParser
                     parser = new DNGParser();
                     break;
                 case ".TIFF":
+                case ".TIF":
                     parser = new DNGParser();
+                    break;
+                case ".JPG":
+                case ".JPEG":
+                    parser = new JPGParser();
                     break;
                 default:
                     throw new System.Exception("File not supported"); //todo change exception types
@@ -158,30 +163,27 @@ namespace RawParser
                     parser.Parse(stream);
 
                     //read the thumbnail
-                    try
-                    {
-                        raw.thumbnail = parser.parseThumbnail();
-                        displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
-                    }catch(FormatException e)
-                    {
-                        ExceptionDisplay.display(e.Message);
-                        //no preview in this file
-                    }
+
+                    raw.thumbnail = parser.parseThumbnail();
+                    if (raw.thumbnail != null) displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
+
 
                     //read the preview
-                    parser.parsePreview();
+                    //parser.parsePreview();
                     //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
 
                     //read the exifi
                     raw.exif = parser.parseExif();
-                    displayExif();
+                    if (raw.exif != null) displayExif();
+
                     //read the data 
+                    
+                    raw.rawData = parser.parseRAWImage();
+
                     raw.height = parser.height;
                     raw.width = parser.width;
                     raw.colorDepth = parser.colorDepth;
                     raw.cfa = parser.cfa;
-                    raw.camMul = parser.camMul;
-                    raw.rawData = parser.parseRAWImage();
                     raw.camMul = parser.camMul;
 
                     Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
