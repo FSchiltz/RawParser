@@ -1,6 +1,5 @@
 ﻿using RawParser.Base;
 using RawParser.Format.IFD;
-using RawParser.Image;
 using RawParser.Parser.Nikon;
 using RawParser.Reader;
 using System;
@@ -9,32 +8,14 @@ using System.IO;
 
 namespace RawParser.Parser
 {
-    class NEFParser : AParser, IDisposable
+    class NEFParser : TiffParser, IDisposable
     {
-        protected TIFFBinaryReader fileStream;
-        protected IFD ifd,exif;
-        protected IFD[] subifd;
         protected NikonMakerNote makerNote;
-        protected Header header;
 
         public override void Parse(Stream file)
         {
-            //Open a binary stream on the file
-            fileStream = new TIFFBinaryReader(file);
-
-            //read the first bit to get the endianness of the file           
-            if (fileStream.ReadUInt16() == 0x4D4D)
-            {
-                //File is in reverse bit order
-                // fileStream.Dispose(); //DO NOT dispose, because it remove the filestream not the reader and crash the parse
-                fileStream = new TIFFBinaryReaderRE(file);
-            }
-
-            //read the header
-            header = new Header(fileStream, 0);
-
-            //Read the IFD
-            ifd = new IFD(fileStream, header.TIFFoffset, true, false);
+            readTiffBase(file);
+            
             Tag subifdoffsetTag;
             if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
             subifd = new IFD[subifdoffsetTag.dataCount];
@@ -49,36 +30,42 @@ namespace RawParser.Parser
             exif = new IFD(fileStream, (uint)exifoffsetTag.data[0], true, false);
             Tag makerNoteOffsetTag;
             if (!exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag)) throw new FormatException("File not correct");
-            makerNote = new NikonMakerNote(fileStream, makerNoteOffsetTag.dataOffset, true);                       
+            makerNote = new NikonMakerNote(fileStream, makerNoteOffsetTag.dataOffset, true);
         }
 
         public override byte[] parseThumbnail()
         {
             //Get the full size preview          
             Tag thumbnailOffset, thumbnailSize;
-            if (!makerNote.preview.tags.TryGetValue(0x0201, out thumbnailOffset)) throw new FormatException("File not correct");
-            if (!makerNote.preview.tags.TryGetValue(0x0202, out thumbnailSize)) throw new FormatException("File not correct");
-            Tag makerNoteOffsetTag;
-            if (!exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag)) throw new FormatException("File not correct");
-            fileStream.BaseStream.Position = (uint)(thumbnailOffset.data[0]) + 10 + (uint)(makerNoteOffsetTag.dataOffset);
-            return fileStream.ReadBytes(Convert.ToInt32(thumbnailSize.data[0]));
+            if (makerNote?.preview != null && makerNote.preview.tags.TryGetValue(0x0201, out thumbnailOffset))
+            {
+                if (!makerNote.preview.tags.TryGetValue(0x0202, out thumbnailSize)) throw new FormatException("File not correct");
+                Tag makerNoteOffsetTag;
+                if (!exif.tags.TryGetValue(0x927C, out makerNoteOffsetTag)) throw new FormatException("File not correct");
+                fileStream.BaseStream.Position = (uint)(thumbnailOffset.data[0]) + 10 + (uint)(makerNoteOffsetTag.dataOffset);
+                return fileStream.ReadBytes(Convert.ToInt32(thumbnailSize.data[0]));
+            }
+            else return null;
         }
 
         public override byte[] parsePreview()
         {
             Tag imagepreviewOffsetTags, imagepreviewX, imagepreviewY, imagepreviewSize;
-            if (!subifd[0].tags.TryGetValue(0x201, out imagepreviewOffsetTags)) throw new FormatException("File not correct");
-            if (!subifd[0].tags.TryGetValue(0x11A, out imagepreviewX)) throw new FormatException("File not correct");
-            if (!subifd[0].tags.TryGetValue(0x11B, out imagepreviewY)) throw new FormatException("File not correct");
-            if (!subifd[0].tags.TryGetValue(0x202, out imagepreviewSize)) throw new FormatException("File not correct");
+            if (subifd[0].tags.TryGetValue(0x201, out imagepreviewOffsetTags))
+            {
+                if (!subifd[0].tags.TryGetValue(0x11A, out imagepreviewX)) throw new FormatException("File not correct");
+                if (!subifd[0].tags.TryGetValue(0x11B, out imagepreviewY)) throw new FormatException("File not correct");
+                if (!subifd[0].tags.TryGetValue(0x202, out imagepreviewSize)) throw new FormatException("File not correct");
 
-            //get the preview data ( faster than rezising )
-            fileStream.BaseStream.Position = (uint)imagepreviewOffsetTags.data[0];
-            return fileStream.ReadBytes(Convert.ToInt32(imagepreviewSize.data[0]));
+                //get the preview data ( faster than rezising )
+                fileStream.BaseStream.Position = (uint)imagepreviewOffsetTags.data[0];
+                return fileStream.ReadBytes(Convert.ToInt32(imagepreviewSize.data[0]));
+            }
+            else return null;
         }
 
         public override Dictionary<ushort, Tag> parseExif()
-        {          
+        {
             Dictionary<ushort, Tag> temp = new Dictionary<ushort, Tag>();
             Dictionary<ushort, ushort> nikonToStandard = new DictionnaryFromFileUShort(@"Assets\Dic\NikonToStandard.dic");
             Dictionary<ushort, string> standardExifName = new DictionnaryFromFileString(@"Assets\\Dic\StandardExif.dic");
@@ -88,13 +75,13 @@ namespace RawParser.Parser
                 ushort nikonTagId;
                 if (!nikonToStandard.TryGetValue(exifTag, out nikonTagId)) continue;
                 ifd.tags.TryGetValue(nikonTagId, out tempTag);
-                foreach(IFD ifd in subifd)
+                foreach (IFD ifd in subifd)
                 {
                     ifd.tags.TryGetValue(nikonTagId, out tempTag);
                 }
-                makerNote.preview.tags.TryGetValue(nikonTagId, out tempTag);
-                makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag);
-                exif.tags.TryGetValue(nikonTagId, out tempTag);
+                if (makerNote.preview != null) makerNote.preview.tags.TryGetValue(nikonTagId, out tempTag);
+                if (makerNote.ifd != null) makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag);
+                exif?.tags.TryGetValue(nikonTagId, out tempTag);
                 if (tempTag == null)
                 {
                     tempTag = new Tag
@@ -116,20 +103,24 @@ namespace RawParser.Parser
         public override ushort[] parseRAWImage()
         {
             //Get the RAW data info
-            Tag imageRAWOffsetTags, imageRAWWidth, imageRAWHeight, imageRAWSize, imageRAWCompressed, imageRAWDepth, imageRAWCFA;
+            Tag imageRAWOffsetTags, imageRAWWidth, imageRAWHeight, imageRAWSize, imageRAWCompressed, imageRAWDepth, imageRAWCFA, ExposureTuningTag;
             int rawIFDNum = 1;
+            if (subifd.Length < 2) rawIFDNum = 0;
             if (!subifd[rawIFDNum].tags.TryGetValue(0x0111, out imageRAWOffsetTags)) throw new FormatException("File not correct");
             if (!subifd[rawIFDNum].tags.TryGetValue(0x0100, out imageRAWWidth)) throw new FormatException("File not correct");
             if (!subifd[rawIFDNum].tags.TryGetValue(0x0101, out imageRAWHeight)) throw new FormatException("File not correct");
             if (!subifd[rawIFDNum].tags.TryGetValue(0x0102, out imageRAWDepth)) throw new FormatException("File not correct");
             if (!subifd[rawIFDNum].tags.TryGetValue(0x0117, out imageRAWSize)) throw new FormatException("File not correct");
-            if (!subifd[rawIFDNum].tags.TryGetValue(0x0103, out imageRAWCompressed)) throw new FormatException("File not correct");            
+            if (!subifd[rawIFDNum].tags.TryGetValue(0x0103, out imageRAWCompressed)) throw new FormatException("File not correct");
             if (!subifd[rawIFDNum].tags.TryGetValue(0x828e, out imageRAWCFA)) throw new FormatException("File not correct");
             colorDepth = (ushort)imageRAWDepth.data[0];
             height = (uint)imageRAWHeight.data[0];
             width = (uint)imageRAWWidth.data[0];
             cfa = new byte[4];
             for (int i = 0; i < 4; i++) cfa[i] = (byte)imageRAWCFA.data[i];
+
+
+            if (!makerNote.ifd.tags.TryGetValue(0x1C, out ExposureTuningTag)) throw new FormatException("File not correct");
 
             //get the colorBalance
             Tag colorBalanceTag, colorLevelTag, blackLevelTag;
@@ -140,34 +131,35 @@ namespace RawParser.Parser
                 {
                     camMul[((c << 1) | (c >> 1)) & 3] = (double)colorLevelTag.data[c];
                 }
-            }            
+            }
 
             //then get the R and B multiplier           
-            if (!makerNote.ifd.tags.TryGetValue(0x97, out colorBalanceTag)) throw new FormatException("File not correct");
-            int version = 0;
-            for (int i = 0; i < 4; i++)
-                version = version * 10 + (byte)(colorBalanceTag.data[i]) - '0';
-            if (version < 200)
+            if (makerNote.ifd.tags.TryGetValue(0x97, out colorBalanceTag))
             {
-                switch (version)
+                int version = 0;
+                for (int i = 0; i < 4; i++)
+                    version = version * 10 + (byte)(colorBalanceTag.data[i]) - '0';
+                if (version < 200)
                 {
-                    case 100:
-                        for (int c = 0; c < 4; c++) camMul[(c >> 1) | ((c & 1) << 1)] = fileStream.readshortFromArrayC(ref colorBalanceTag.data, (c * 2) + 72);
-                        break;
-                    case 102:
-                        for (int c = 0; c < 4; c++) camMul[c ^ (c >> 1)] = fileStream.readshortFromArrayC(ref colorBalanceTag.data, (c * 2) + 10);
-                        //check
-                        //for (int c = 0; c < 4; c++) sraw_mul[c ^ (c >> 1)] = get2();
-                        break;
-                    case 103:
-                        for (int c = 0; c < 4; c++) camMul[c] = fileStream.readshortFromArrayC(ref colorBalanceTag.data, (c * 2) + 20);
-                        break;
+                    switch (version)
+                    {
+                        case 100:
+                            for (int c = 0; c < 4; c++) camMul[(c >> 1) | ((c & 1) << 1)] = fileStream.readshortFromArrayC(ref colorBalanceTag.data, (c * 2) + 72);
+                            break;
+                        case 102:
+                            for (int c = 0; c < 4; c++) camMul[c ^ (c >> 1)] = fileStream.readshortFromArrayC(ref colorBalanceTag.data, (c * 2) + 10);
+                            //check
+                            //for (int c = 0; c < 4; c++) sraw_mul[c ^ (c >> 1)] = get2();
+                            break;
+                        case 103:
+                            for (int c = 0; c < 4; c++) camMul[c] = fileStream.readshortFromArrayC(ref colorBalanceTag.data, (c * 2) + 20);
+                            break;
+                    }
                 }
-            }
-            else
-            {
-                //encrypted
-                byte[][] xlat = new byte[2][] {
+                else
+                {
+                    //encrypted
+                    byte[][] xlat = new byte[2][] {
                     new byte [256]{ 0xc1,0xbf,0x6d,0x0d,0x59,0xc5,0x13,0x9d,0x83,0x61,0x6b,0x4f,0xc7,0x7f,0x3d,0x3d,
                       0x53,0x59,0xe3,0xc7,0xe9,0x2f,0x95,0xa7,0x95,0x1f,0xdf,0x7f,0x2b,0x29,0xc7,0x0d,
                       0xdf,0x07,0xef,0x71,0x89,0x3d,0x13,0x3d,0x3b,0x13,0xfb,0x0d,0x89,0xc1,0x65,0x1f,
@@ -200,62 +192,55 @@ namespace RawParser.Parser
                       0xbe,0x57,0x19,0x32,0x7e,0x2a,0xd0,0xb8,0xba,0x29,0x00,0x3c,0x52,0x7d,0xa8,0x49,
                       0x3b,0x2d,0xeb,0x25,0x49,0xfa,0xa3,0xaa,0x39,0xa7,0xc5,0xa7,0x50,0x11,0x36,0xfb,
                       0xc6,0x67,0x4a,0xf5,0xa5,0x12,0x65,0x7e,0xb0,0xdf,0xaf,0x4e,0xb3,0x61,0x7f,0x2f } };
-                Tag serialTag, shutterCountTag;
-                if (!makerNote.ifd.tags.TryGetValue(0x1D, out serialTag)) throw new FormatException("File not correct");
-                if (!makerNote.ifd.tags.TryGetValue(0xA7, out shutterCountTag)) throw new FormatException("File not correct");
-                byte[] buff = new byte[324];
-                for (int i = 0; i < 324; i++)
-                {
-                    buff[i] = (byte)colorBalanceTag.data[i + 1];
-                }
-
-                //get serial
-                int serial = 0;
-                for (int i = 0; i < serialTag.data.Length; i++)
-                {
-                    byte c = (byte)serialTag.dataAsString[i];
-                    serial = (byte)(serial * 10) + (char.IsDigit((char)c) ? c - '0' : c % 10);
-                }
-                if (version < 217)
-                {
-                    byte ci, cj, ck;
-                    ci = xlat[0][serial & 0xff];
-                    byte[] shutterAsByte = BitConverter.GetBytes((uint)shutterCountTag.data[0]);
-                    cj = xlat[1][shutterAsByte[0] ^ shutterAsByte[1] ^ shutterAsByte[2] ^ shutterAsByte[3]];
-                    ck = 0x60;
+                    Tag serialTag, shutterCountTag;
+                    if (!makerNote.ifd.tags.TryGetValue(0x1D, out serialTag)) throw new FormatException("File not correct");
+                    if (!makerNote.ifd.tags.TryGetValue(0xA7, out shutterCountTag)) throw new FormatException("File not correct");
+                    byte[] buff = new byte[324];
                     for (int i = 0; i < 324; i++)
                     {
-                        buff[i] ^= (cj += (byte)(ci * ck++));
+                        buff[i] = (byte)colorBalanceTag.data[i + 1];
                     }
-                    int offset = "66666>666;6A;:;55"[version - 200] - '0';
-                    for (int c = 0; c < 4; c++)
+
+                    //get serial
+                    int serial = 0;
+                    for (int i = 0; i < serialTag.data.Length; i++)
                     {
-                        camMul[c ^ (c >> 1) ^ (offset & 1)] = fileStream.readUshortFromArray(ref buff, (offset & -2) + c * 2);
+                        byte c = (byte)serialTag.dataAsString[i];
+                        serial = (byte)(serial * 10) + (char.IsDigit((char)c) ? c - '0' : c % 10);
                     }
-                    for (int c = 0; c < 4; c++)
+                    if (version < 217)
                     {
-                        camMul[c] = (camMul[c] / 0.93783628940582275) * 65535.0 / 16383;
+                        byte ci, cj, ck;
+                        ci = xlat[0][serial & 0xff];
+                        byte[] shutterAsByte = BitConverter.GetBytes((uint)shutterCountTag.data[0]);
+                        cj = xlat[1][shutterAsByte[0] ^ shutterAsByte[1] ^ shutterAsByte[2] ^ shutterAsByte[3]];
+                        ck = 0x60;
+                        for (int i = 0; i < 324; i++)
+                        {
+                            buff[i] ^= (cj += (byte)(ci * ck++));
+                        }
+                        int offset = "66666>666;6A;:;55"[version - 200] - '0';
+                        for (int c = 0; c < 4; c++)
+                        {
+                            camMul[c ^ (c >> 1) ^ (offset & 1)] = fileStream.readUshortFromArray(ref buff, (offset & -2) + c * 2);
+                        }
+                        for (int c = 0; c < 4; c++)
+                        {
+                            camMul[c] = (camMul[c] / 0.93783628940582275) * 65535.0 / 16383;
+                        }
                     }
                 }
             }
-            
-            //decompress the linearisationtable
-            Tag lineTag;
-            if (!makerNote.ifd.tags.TryGetValue(0x0096, out lineTag)) throw new FormatException("File not correct");
-
-            Tag compressionType;
-            if (!makerNote.ifd.tags.TryGetValue(0x0093, out compressionType)) throw new FormatException("File not correct");
-
-            //Free all the ifd
-            ifd = null;
-            subifd= null;         
-
-            header = null;
 
             ushort[] rawData;
             //Check if uncompressed
             if ((ushort)imageRAWCompressed.data[0] == 34713)
             {
+                Tag compressionType;
+                if (!makerNote.ifd.tags.TryGetValue(0x0093, out compressionType)) throw new FormatException("File not correct");
+                //decompress the linearisationtable
+                Tag lineTag;
+                if (!makerNote.ifd.tags.TryGetValue(0x0096, out lineTag)) throw new FormatException("File not correct");
                 //uncompress the image
                 LinearisationTable line = new LinearisationTable((ushort)compressionType.data[0],
                     (ushort)imageRAWDepth.data[0], (uint)imageRAWOffsetTags.data[0],
@@ -271,8 +256,13 @@ namespace RawParser.Parser
                 fileStream.BaseStream.Position = (uint)imageRAWOffsetTags.data[0];
                 //TODO convert toushort from the byte table
                 //Normaly only nikon camera between D1 and d100 are not compressed
-                fileStream.ReadBytes(Convert.ToInt32(imageRAWSize.data[0]));
-                rawData = null;
+                rawData = new ushort[height*width*3];
+                var rawbyte = fileStream.ReadBytes(Convert.ToInt32(imageRAWSize.data[0]));
+                //todo implement
+                for(int i = 0; i < height*width; i++)
+                {
+                    rawData[i] = rawbyte[i/4];
+                }
             }
             fileStream.Dispose();
             return rawData;

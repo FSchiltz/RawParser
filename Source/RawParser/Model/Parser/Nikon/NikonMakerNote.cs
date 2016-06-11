@@ -34,12 +34,12 @@ namespace RawParser.Parser.Nikon
                 buffer = new TIFFBinaryReaderRE(buffer.BaseStream);
                 //TODO see if need to move
             }
-            ifd = new IFD(buffer, header.TIFFoffset + 10 + offset, true, true);
+            ifd = new IFD(buffer, header.TIFFoffset + getOffset(), true, true);
             //ifd = new IFD(buffer, (uint)buffer.BaseStream.Position, true, true);
             Tag previewOffsetTag;
             if (ifd.tags.TryGetValue(17, out previewOffsetTag))
             {
-                preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + offset + 10, true, false);
+                preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + getOffset(), true, false);
             }
             else preview = null; //no preview in this file
         }
