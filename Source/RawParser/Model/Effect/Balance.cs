@@ -107,7 +107,7 @@ namespace RawParser.Effect
             b = maxValue * Math.Pow(b / maxValue, gamma);
         }
 
-        public static double[] gamma_curve(double pwr, double ts,int mode, int imax)
+        public static double[] gamma_curve(double pwr, double ts, int mode, int imax)
         {
             int i;
             double[] g = new double[6], bnd = { 0, 0 };
@@ -146,6 +146,20 @@ namespace RawParser.Effect
                     curve[i] = 0x10000 * (Convert.ToBoolean(mode)
                   ? (r < g[3] ? r * g[1] : (Convert.ToBoolean(g[0]) ? Math.Pow(r, g[0]) * (1 + g[4]) - g[4] : Math.Log(r) * g[2] + 1))
                   : (r < g[2] ? r / g[1] : (Convert.ToBoolean(g[0]) ? Math.Pow((r + g[4]) / (1 + g[4]), 1 / g[0]) : Math.Exp((r - 1) / g[2]))));
+            }
+            return curve;
+        }
+
+        internal static double[] contrast_curve(double shadow, double highlight, int v)
+        {
+            double[] curve = new double[v];
+            for (int i = 0; i < v / 2; i++)
+            {
+                curve[i] = i * (1 + ((shadow - i > 0) ? shadow - i : 0));
+            }
+            for (int i = v-1, x = 0; i >= v / 2; i--, x++)
+            {
+                curve[i] = i * (1 + ((highlight - x > 0) ? highlight - x : 0));
             }
             return curve;
         }

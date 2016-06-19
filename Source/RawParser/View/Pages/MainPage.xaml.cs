@@ -107,6 +107,8 @@ namespace RawParser
                      colorTempSlider.IsEnabled = v;
                      colorTintSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
+                     ShadowSlider.IsEnabled = v;
+                     HighLightSlider.IsEnabled = v;
                      //gammaSlider.IsEnabled = v;
                      contrastSlider.IsEnabled = v;
                      brightnessSlider.IsEnabled = v;
@@ -484,6 +486,8 @@ namespace RawParser
             double gamma = 0;
             double contrast = 0;
             double brightness = 0;
+            double hightlight = 1;
+            double shadow = 1;
             //get all the value 
             Task t = Task.Run(async () =>
             {
@@ -495,6 +499,8 @@ namespace RawParser
                     gamma = gammaSlider.Value;
                     contrast = contrastSlider.Value / 10;
                     brightness = (int)brightnessSlider.Value << (colorDepth - 8);
+                    shadow = ShadowSlider.Value;
+                    hightlight = HighLightSlider.Value;
 
                 });
             });
@@ -516,13 +522,16 @@ namespace RawParser
 
             //get gamma curve
             //double[] curve = Balance.gamma_curve(raw.curve[0],raw.curve[1],1, (int)Math.Pow(2, raw.colorDepth));
+            double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
             double[] curve = Balance.gamma_curve(0.45, 4.5, 2, 8192 << 3);
             for (int i = 0; i < height * width; i++)
             {
                 double red = image[i * 3],
                 green = image[(i * 3) + 1],
                 blue = image[(i * 3) + 2];
-
+                red = contrastCurve[(int)red];
+                green = contrastCurve[(int)green];
+                blue = contrastCurve[(int)blue];
                 red = curve[(int)red];
                 green = curve[(int)green];
                 blue = curve[(int)blue];
