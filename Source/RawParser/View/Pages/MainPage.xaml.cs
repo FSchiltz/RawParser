@@ -529,12 +529,10 @@ namespace RawParser
                 double red = image[i * 3],
                 green = image[(i * 3) + 1],
                 blue = image[(i * 3) + 2];
-                red = contrastCurve[(int)red];
-                green = contrastCurve[(int)green];
-                blue = contrastCurve[(int)blue];
-                red = curve[(int)red];
-                green = curve[(int)green];
-                blue = curve[(int)blue];
+
+
+                Luminance.Exposure(ref red, ref green, ref blue, exposure);
+                Luminance.Brightness(ref red, ref green, ref blue, brightness);
 
                 //aply all thetransformation that needs red green and blue at the same time
                 Balance.scaleColor(ref red, ref green, ref blue, mul);
@@ -542,8 +540,6 @@ namespace RawParser
 
                 //apply transformation that are on each pixel;
                 Luminance.Contraste(ref red, ref green, ref blue, maxValue, contrast);
-                Luminance.Exposure(ref red, ref green, ref blue, exposure);
-                Luminance.Brightness(ref red, ref green, ref blue, brightness);
 
                 if (red > maxValue) red = maxValue;
                 if (green > maxValue) green = maxValue;
@@ -551,6 +547,13 @@ namespace RawParser
                 if (red < 0) red = 0;
                 if (green < 0) green = 0;
                 if (blue < 0) blue = 0;
+
+                red = contrastCurve[(int)red];
+                green = contrastCurve[(int)green];
+                blue = contrastCurve[(int)blue];
+                red = curve[(int)red];
+                green = curve[(int)green];
+                blue = curve[(int)blue];
 
                 image[i * 3] = (ushort)red;
                 image[(i * 3) + 1] = (ushort)green;
