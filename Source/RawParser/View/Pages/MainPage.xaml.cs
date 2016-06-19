@@ -20,6 +20,7 @@ using RawParser.Parser;
 using RawParser.Effect;
 using RawParser.Model.Settings;
 using RawParser.Model.Encoder;
+using Windows.UI.Xaml.Media;
 
 namespace RawParser
 {
@@ -189,8 +190,8 @@ namespace RawParser
                         raw.camMul = parser.camMul;
                         raw.curve = parser.curve;
 
-                        if(raw.cfa !=null)
-                        Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
+                        if (raw.cfa != null)
+                            Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
 
                         //activate the editing control
                         enableEditingControl(true);
@@ -310,7 +311,7 @@ namespace RawParser
                 }
                 if (x < 0.1) x = 0.1f;
                 else if (x > 1) x = 1;
-                imageDisplayScroll.MinZoomFactor = x;
+                imageDisplayScroll.MinZoomFactor = 0.1f;
                 imageDisplayScroll.MaxZoomFactor = x + 10;
                 //imageDisplayScroll.ZoomToFactor(x);
                 imageDisplayScroll.InvalidateMeasure();
@@ -576,26 +577,11 @@ namespace RawParser
         }
 
         #region WBSlider
-        private void WBSlider_DragStart(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            WBdragStarted = true;
-        }
-
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (raw?.previewData != null)
             {
                 WBdragStarted = false;
-                cameraWB = false;
-                cameraWBCheck.IsEnabled = true;
-                updatePreview();
-            }
-        }
-
-        private void colorTempSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-        {
-            if (raw?.previewData != null && WBdragStarted)
-            {
                 cameraWB = false;
                 cameraWBCheck.IsEnabled = true;
                 updatePreview();
