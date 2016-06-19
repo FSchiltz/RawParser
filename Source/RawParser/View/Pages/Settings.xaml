@@ -63,6 +63,7 @@
                     <ComboBoxItem>8</ComboBoxItem>
                     <ComboBoxItem>16</ComboBoxItem>
                     <ComboBoxItem>32</ComboBoxItem>
+                    <HyperlinkButton Content="HyperlinkButton" HorizontalAlignment="Left"/>
                 </ComboBox>
             </Grid>
             <Grid>
@@ -80,13 +81,16 @@
                 This app is currently work in progress.
             </TextBlock>
             <TextBlock FontSize="18" >
-                To report issue, go to https://github.com/arimhan/RawParser/issues
+                To report issue, go to 
+                https://github.com/arimhan/RawParser/issues
             </TextBlock>
             <TextBlock FontSize="18" >
-                To contribue to the code, go to https://github.com/arimhan/RawParser
+                To contribue to the code, go to 
+                https://github.com/arimhan/RawParser
             </TextBlock>
             <TextBlock FontSize="18" >
-                Decompression code from DCraw (http://www.cybercom.net/~dcoffin/dcraw/).
+                Decompression code from DCraw 
+                (http://www.cybercom.net/~dcoffin/dcraw/).
             </TextBlock>
         </StackPanel>
 

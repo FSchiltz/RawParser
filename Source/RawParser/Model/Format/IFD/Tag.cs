@@ -1,4 +1,6 @@
-﻿namespace RawParser.Format.IFD
+﻿using System.IO;
+
+namespace RawParser.Format.IFD
 {
     public class Tag
     {
@@ -96,6 +98,7 @@
             displayName = "";
 
         }
+
         public int getTypeSize(ushort id)
         {
             int size = 0;
@@ -123,6 +126,11 @@
                     break;
             }
             return size;
+        }
+
+        public void writeToStream(Stream s,ushort name,ulong count, object data, long offset )
+        {
+            
         }
     }
 }

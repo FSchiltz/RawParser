@@ -51,7 +51,6 @@ namespace RawParser
             SettingStorage.init();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
-
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -61,6 +60,7 @@ namespace RawParser
             filePicker.SuggestedStartLocation = PickerLocationId.ComputerFolder;
             filePicker.FileTypeFilter.Add(".nef");
             filePicker.FileTypeFilter.Add(".tiff");
+            filePicker.FileTypeFilter.Add(".tif");
             filePicker.FileTypeFilter.Add(".dng");
             StorageFile file = await filePicker.PickSingleFileAsync();
             if (file != null)
@@ -101,10 +101,10 @@ namespace RawParser
 
         private async void enableEditingControl(bool v)
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher
-                 .RunAsync(CoreDispatcherPriority.Normal, () =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      colorTempSlider.IsEnabled = v;
+                     colorTintSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
                      //gammaSlider.IsEnabled = v;
                      contrastSlider.IsEnabled = v;
@@ -116,7 +116,6 @@ namespace RawParser
          * For the zoom of the image
          * 
          */
-
         private void PageSizeChanged(object sender, SizeChangedEventArgs e)
         {
             pageWidth = e.NewSize.Width;
@@ -138,7 +137,7 @@ namespace RawParser
                     break;
                 case ".TIFF":
                 case ".TIF":
-                    parser = new DNGParser();
+                    parser = new TiffParser();
                     break;
                 case ".JPG":
                 case ".JPEG":
@@ -155,84 +154,94 @@ namespace RawParser
 
             Task t = Task.Run(async () =>
             {
+
                 using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                 {
-                    raw = new RawImage();
-                    raw.fileName = file.DisplayName;
-
-                    parser.Parse(stream);
-
-                    //read the thumbnail
-
-                    raw.thumbnail = parser.parseThumbnail();
-                    if (raw.thumbnail != null) displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
-
-
-                    //read the preview
-                    //parser.parsePreview();
-                    //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
-
-                    //read the exifi
-                    raw.exif = parser.parseExif();
-                    if (raw.exif != null) displayExif();
-
-                    //read the data 
-                    
-                    raw.rawData = parser.parseRAWImage();
-
-                    raw.height = parser.height;
-                    raw.width = parser.width;
-                    raw.colorDepth = parser.colorDepth;
-                    raw.cfa = parser.cfa;
-                    raw.camMul = parser.camMul;
-
-                    Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
-
-                    //activate the editing control
-                    enableEditingControl(true);
-
-                    //create a small image from raw to display
-                    bool autoFactor = SettingStorage.autoPreviewFactor;
-                    int previewFactor = 0;
-                    if (autoFactor)
+                    try
                     {
-                        if (raw.height > raw.width)
+                        raw = new RawImage();
+                        raw.fileName = file.DisplayName;
+
+                        parser.Parse(stream);
+
+                        //read the thumbnail
+
+                        raw.thumbnail = parser.parseThumbnail();
+                        if (raw.thumbnail != null) displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
+
+
+                        //read the preview
+                        //parser.parsePreview();
+                        //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
+
+                        //read the exifi
+                        raw.exif = parser.parseExif();
+                        if (raw.exif != null) displayExif();
+
+                        //read the data 
+
+                        raw.rawData = parser.parseRAWImage();
+                        if (raw.rawData == null) throw new FormatException("Image not compatible");
+                        raw.height = parser.height;
+                        raw.width = parser.width;
+                        raw.colorDepth = parser.colorDepth;
+                        raw.cfa = parser.cfa;
+                        raw.camMul = parser.camMul;
+                        raw.curve = parser.curve;
+
+                        if(raw.cfa !=null)
+                        Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
+
+                        //activate the editing control
+                        enableEditingControl(true);
+
+                        //create a small image from raw to display
+                        bool autoFactor = SettingStorage.autoPreviewFactor;
+                        int previewFactor = 0;
+                        if (autoFactor)
                         {
-                            previewFactor = (int)(raw.height / 720);
+                            if (raw.height > raw.width)
+                            {
+                                previewFactor = (int)(raw.height / 720);
+                            }
+                            else
+                            {
+                                previewFactor = (int)(raw.width / 1080);
+                            }
+                            int start = 1;
+                            for (; previewFactor > (start << 1); start <<= 1) ;
+                            if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
+                            else previewFactor <<= 1;
                         }
                         else
                         {
-                            previewFactor = (int)(raw.width / 1080);
+                            previewFactor = SettingStorage.previewFactor;
                         }
-                        int start = 1;
-                        for (; previewFactor > (start << 1); start <<= 1) ;
-                        if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
-                        else previewFactor <<= 1;
-                    }
-                    else
-                    {
-                        previewFactor = SettingStorage.previewFactor;
-                    }
-                    raw.previewHeight = (uint)(raw.height / previewFactor);
-                    raw.previewWidth = (uint)(raw.width / previewFactor);
-                    raw.previewData = new ushort[raw.previewHeight * raw.previewWidth * 3];
-                    for (int i = 0; i < raw.previewHeight; i++)
-                    {
-                        for (int j = 0; j < raw.previewWidth; j++)
+                        raw.previewHeight = (uint)(raw.height / previewFactor);
+                        raw.previewWidth = (uint)(raw.width / previewFactor);
+                        raw.previewData = new ushort[raw.previewHeight * raw.previewWidth * 3];
+                        for (int i = 0; i < raw.previewHeight; i++)
                         {
-                            raw.previewData[((i * raw.previewWidth) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor];
-                            raw.previewData[(((i * raw.previewWidth) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 1];
-                            raw.previewData[(((i * raw.previewWidth) + j) * 3) + 2] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 2];
+                            for (int j = 0; j < raw.previewWidth; j++)
+                            {
+                                raw.previewData[((i * raw.previewWidth) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor];
+                                raw.previewData[(((i * raw.previewWidth) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 1];
+                                raw.previewData[(((i * raw.previewWidth) + j) * 3) + 2] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 2];
+                            }
                         }
-                    }
-                    updatePreview();
+                        updatePreview();
 
-                    //dispose
-                    file = null;
-                    parser = null;
+                        //dispose
+                        file = null;
+                        parser = null;
+
+                    }
+                    catch (FormatException e)
+                    {
+                        ExceptionDisplay.display(e.Message);
+                    }
                 }
-                await CoreApplication.MainView.CoreWindow.Dispatcher
-                            .RunAsync(CoreDispatcherPriority.Normal, () =>
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
                                 //Do some UI-code that must be run on the UI thread.
                                 //Hide the loading screen
@@ -469,7 +478,8 @@ namespace RawParser
         public void applyUserModif(ref ushort[] image, uint height, uint width, int colorDepth)
         {
             double exposure = 0;
-            double temperature = 0;
+            double temperature = 1;
+            double tint = 1;
             double gamma = 0;
             double contrast = 0;
             double brightness = 0;
@@ -479,10 +489,12 @@ namespace RawParser
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     exposure = exposureSlider.Value;
-                    temperature = colorTempSlider.Value;
+                    temperature = colorTempSlider.Value - 1;
+                    tint = colorTintSlider.Value - 1;
                     gamma = gammaSlider.Value;
                     contrast = contrastSlider.Value / 10;
                     brightness = (int)brightnessSlider.Value << (colorDepth - 8);
+
                 });
             });
             t.Wait();
@@ -491,21 +503,34 @@ namespace RawParser
             if (!cameraWB)
             {
                 mul = new double[4];
-                Balance.calculateRGB((int)temperature, out mul[0], out mul[2], out mul[1]);
+                //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
+                mul[0] = 255 / temperature;
+                mul[1] = 255 / tint;
+                mul[2] = 1;
             }
             else mul = raw.camMul;
+
             exposure = Math.Pow(2, exposure);
             uint maxValue = (uint)(1 << colorDepth) - 1;
+
+            //get gamma curve
+            //double[] curve = Balance.gamma_curve(raw.curve[0],raw.curve[1],1, (int)Math.Pow(2, raw.colorDepth));
+            double[] curve = Balance.gamma_curve(0.45, 4.5, 2, 8192 << 3);
             for (int i = 0; i < height * width; i++)
             {
                 double red = image[i * 3],
                 green = image[(i * 3) + 1],
                 blue = image[(i * 3) + 2];
+
+                red = curve[(int)red];
+                green = curve[(int)green];
+                blue = curve[(int)blue];
+
                 //aply all thetransformation that needs red green and blue at the same time
                 Balance.scaleColor(ref red, ref green, ref blue, mul);
                 //Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);
-                //apply transformation that are on each pixel;
 
+                //apply transformation that are on each pixel;
                 Luminance.Contraste(ref red, ref green, ref blue, maxValue, contrast);
                 Luminance.Exposure(ref red, ref green, ref blue, exposure);
                 Luminance.Brightness(ref red, ref green, ref blue, brightness);

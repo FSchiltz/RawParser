@@ -146,6 +146,7 @@
     <Compile Include="Model\Format\IFD\Tag.cs" />
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Image\JpegHelper.cs" />
+    <Compile Include="Model\Parser\Export\TiffWriter.cs" />
     <Compile Include="Model\Parser\JPGParser.cs" />
     <Compile Include="View\UIHelper\UIImageHelper.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
@@ -238,9 +239,7 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Model\Parser\Export\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

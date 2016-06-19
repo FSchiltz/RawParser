@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using RawParser.Format.IFD;
-using RawParser.Parser;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
 

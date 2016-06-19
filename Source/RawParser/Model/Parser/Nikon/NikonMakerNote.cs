@@ -1,6 +1,5 @@
 ﻿using RawParser.Format.IFD;
 using RawParser.Reader;
-using System;
 
 namespace RawParser.Parser.Nikon
 {

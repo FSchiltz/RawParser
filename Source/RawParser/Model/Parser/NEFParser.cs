@@ -1,7 +1,6 @@
 ﻿using RawParser.Base;
 using RawParser.Format.IFD;
 using RawParser.Parser.Nikon;
-using RawParser.Reader;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,13 +14,13 @@ namespace RawParser.Parser
         public override void Parse(Stream file)
         {
             readTiffBase(file);
-            
+
             Tag subifdoffsetTag;
             if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");
             subifd = new IFD[subifdoffsetTag.dataCount];
             for (int i = 0; i < subifdoffsetTag.dataCount; i++)
             {
-                subifd[i] = new IFD(fileStream, (uint)subifdoffsetTag.data[0], true, false);
+                subifd[i] = new IFD(fileStream, (uint)subifdoffsetTag.data[i], true, false);
             }
             //get the Exif
             Tag exifoffsetTag;
@@ -71,39 +70,45 @@ namespace RawParser.Parser
             Dictionary<ushort, string> standardExifName = new DictionnaryFromFileString(@"Assets\\Dic\StandardExif.dic");
             foreach (ushort exifTag in standardExifName.Keys)
             {
-                Tag tempTag;
+                Tag tempTag = null;
                 ushort nikonTagId;
-                if (!nikonToStandard.TryGetValue(exifTag, out nikonTagId)) continue;
-                ifd.tags.TryGetValue(nikonTagId, out tempTag);
-                foreach (IFD ifd in subifd)
+                if (nikonToStandard.TryGetValue(exifTag, out nikonTagId))
                 {
+                    /*
                     ifd.tags.TryGetValue(nikonTagId, out tempTag);
-                }
-                if (makerNote.preview != null) makerNote.preview.tags.TryGetValue(nikonTagId, out tempTag);
-                if (makerNote.ifd != null) makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag);
-                exif?.tags.TryGetValue(nikonTagId, out tempTag);
-                if (tempTag == null)
-                {
-                    tempTag = new Tag
+                    foreach (IFD ifd in subifd)
                     {
-                        dataType = 2,
-                        data = { [0] = "" }
-                    };
+                        if (tempTag == null) ifd.tags.TryGetValue(nikonTagId, out tempTag);
+                    }
+                    if (makerNote.preview != null && tempTag == null) makerNote.preview.tags.TryGetValue(nikonTagId, out tempTag);
+                    */
+                    if (makerNote.ifd != null && tempTag == null) makerNote.ifd.tags.TryGetValue(nikonTagId, out tempTag);
+                    if (tempTag == null) exif?.tags.TryGetValue(nikonTagId, out tempTag);
+                    /*if (tempTag == null)
+                    {
+                        tempTag = new Tag
+                        {
+                            dataType = 2,
+                            data = { [0] = "Data not avalaible" }
+                        };
+                    }*/
+                    if (tempTag != null)
+                    {
+                        string t = "";
+                        standardExifName.TryGetValue(exifTag, out t);
+                        tempTag.displayName = t;
+
+                        temp.Add(nikonTagId, tempTag);
+                    }
                 }
-                string t = "";
-                standardExifName.TryGetValue(exifTag, out t);
-                tempTag.displayName = t;
-
-                temp.Add(nikonTagId, tempTag);
             }
-
             return temp;
         }
 
         public override ushort[] parseRAWImage()
         {
             //Get the RAW data info
-            Tag imageRAWOffsetTags, imageRAWWidth, imageRAWHeight, imageRAWSize, imageRAWCompressed, imageRAWDepth, imageRAWCFA, ExposureTuningTag;
+            Tag imageRAWOffsetTags, imageRAWWidth, imageRAWHeight, imageRAWSize, imageRAWCompressed, imageRAWDepth, imageRAWCFA;
             int rawIFDNum = 1;
             if (subifd.Length < 2) rawIFDNum = 0;
             if (!subifd[rawIFDNum].tags.TryGetValue(0x0111, out imageRAWOffsetTags)) throw new FormatException("File not correct");
@@ -119,11 +124,18 @@ namespace RawParser.Parser
             cfa = new byte[4];
             for (int i = 0; i < 4; i++) cfa[i] = (byte)imageRAWCFA.data[i];
 
-
-            if (!makerNote.ifd.tags.TryGetValue(0x1C, out ExposureTuningTag)) throw new FormatException("File not correct");
+            Tag ContrastCurveTag;
+            if (makerNote.ifd.tags.TryGetValue(0x8C, out ContrastCurveTag))
+            {
+                curve = new double[ContrastCurveTag.dataCount];
+                for (int i = 0; i < ContrastCurveTag.dataCount; i++)
+                {
+                    curve[i] = Convert.ToDouble(ContrastCurveTag.data[i]);
+                }
+            }
 
             //get the colorBalance
-            Tag colorBalanceTag, colorLevelTag, blackLevelTag;
+            Tag colorBalanceTag, colorLevelTag;
             //first get the matrix of level for each pixel (a 2*2 array corresponding to the rgb bayer matrice used     
             if (makerNote.ifd.tags.TryGetValue(0xc, out colorLevelTag))
             {
@@ -256,12 +268,12 @@ namespace RawParser.Parser
                 fileStream.BaseStream.Position = (uint)imageRAWOffsetTags.data[0];
                 //TODO convert toushort from the byte table
                 //Normaly only nikon camera between D1 and d100 are not compressed
-                rawData = new ushort[height*width*3];
+                rawData = new ushort[height * width * 3];
                 var rawbyte = fileStream.ReadBytes(Convert.ToInt32(imageRAWSize.data[0]));
                 //todo implement
-                for(int i = 0; i < height*width; i++)
+                for (int i = 0; i < height * width; i++)
                 {
-                    rawData[i] = rawbyte[i/4];
+                    rawData[i] = rawbyte[i / 4];
                 }
             }
             fileStream.Dispose();

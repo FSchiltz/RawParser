@@ -52,9 +52,10 @@ namespace RawParser.Effect
                     else if (bRefer > maxValue) bRefer = maxValue;
                 }
             }
-            bRefer /= (255);
-            gRefer /= (255);
-            rRefer /= (255);
+            //TODO fix
+            bRefer = 255 / bRefer;
+            gRefer = 255 / gRefer;
+            rRefer = 255 / rRefer;
         }
 
         /*
@@ -104,6 +105,49 @@ namespace RawParser.Effect
             r = maxValue * Math.Pow(r / maxValue, gamma);
             g = maxValue * Math.Pow(g / maxValue, gamma);
             b = maxValue * Math.Pow(b / maxValue, gamma);
+        }
+
+        public static double[] gamma_curve(double pwr, double ts,int mode, int imax)
+        {
+            int i;
+            double[] g = new double[6], bnd = { 0, 0 };
+            double r;
+            double[] curve = new double[0x10000];
+
+            g[0] = pwr;
+            g[1] = ts;
+            g[2] = g[3] = g[4] = 0;
+            bnd[Convert.ToInt32(g[1] >= 1)] = 1;
+
+            if (g[1] != 0 && (g[1] - 1) * (g[0] - 1) <= 0)
+            {
+                for (i = 0; i < 48; i++)
+                {
+                    g[2] = (bnd[0] + bnd[1]) / 2;
+                    if (g[0] != 0) bnd[Convert.ToInt32((Math.Pow(g[2] / g[1], -g[0]) - 1) / g[0] - 1 / g[2] > -1)] = g[2];
+                    else bnd[Convert.ToInt32(g[2] / Math.Exp(1 - 1 / g[2]) < g[1])] = g[2];
+                }
+                g[3] = g[2] / g[1];
+                if (g[0] != 0) g[4] = g[2] * (1 / g[0] - 1);
+            }
+            if (g[0] != 0) g[5] = 1 / (g[1] * (g[3] * g[3]) / 2 - g[4] * (1 - g[3]) +
+                    (1 - Math.Pow(g[3], 1 + g[0])) * (1 + g[4]) / (1 + g[0])) - 1;
+            else g[5] = 1 / (g[1] * (g[3] * g[3]) / 2 + 1
+             - g[2] - g[3] - g[2] * g[3] * (Math.Log(g[3]) - 1)) - 1;
+            if (!Convert.ToBoolean(mode--))
+            {
+                //memcpy(gamm, g, sizeof gamm);
+                return null;
+            }
+            for (i = 0; i < 0x10000; i++)
+            {
+                curve[i] = 0xffff;
+                if ((r = (double)i / imax) < 1)
+                    curve[i] = 0x10000 * (Convert.ToBoolean(mode)
+                  ? (r < g[3] ? r * g[1] : (Convert.ToBoolean(g[0]) ? Math.Pow(r, g[0]) * (1 + g[4]) - g[4] : Math.Log(r) * g[2] + 1))
+                  : (r < g[2] ? r / g[1] : (Convert.ToBoolean(g[0]) ? Math.Pow((r + g[4]) / (1 + g[4]), 1 / g[0]) : Math.Exp((r - 1) / g[2]))));
+            }
+            return curve;
         }
     }
 }

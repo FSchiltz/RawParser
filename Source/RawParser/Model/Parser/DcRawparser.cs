@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using RawParser.Format.IFD;
 
 namespace RawParser.Parser
 {
-    class DNGParser : TiffParser
+    class DcRawparser : AParser
     {
-
-        public override void Parse(Stream file)
+        public override void Parse(Stream s)
         {
-            readTiffBase(file);
+            throw new NotImplementedException();
         }
 
         public override Dictionary<ushort, Tag> parseExif()
@@ -30,8 +32,15 @@ namespace RawParser.Parser
 
         public override byte[] parseThumbnail()
         {
-            IFD ifd = new IFD(fileStream, header.TIFFoffset, false, false);
-            return null;
+            throw new NotImplementedException();
         }
+
+        #region DCRAW Variable
+
+        #endregion
+
+        #region DCRawCode
+
+        #endregion
     }
 }
