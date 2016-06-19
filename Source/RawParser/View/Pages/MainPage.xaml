@@ -13,11 +13,13 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
-            <AppBarButton x:Name="rotateLeftButton" 
+            <AppBarButton IsEnabled="False" 
+                x:Name="rotateLeftButton" 
                           Icon="Undo"
-                          Label="Turn left" 
+                          Label="Rotate left" 
                           VerticalAlignment="Top" FontSize="12" Width="48"/>
-            <AppBarButton x:Name="rotateRightButton" 
+            <AppBarButton IsEnabled="False" 
+                          x:Name="rotateRightButton" 
                           Icon="Redo"
                           Label="Rotate right" 
                           VerticalAlignment="Top" FontSize="12" Width="48"/>
@@ -32,7 +34,8 @@
                           Label="Save" 
                           Click="saveButton_Click"
                           VerticalAlignment="Top"/>
-            <AppBarButton x:Name="shareButton" 
+            <AppBarButton IsEnabled="False" 
+                          x:Name="shareButton" 
                           Icon="Link"
                           Label="Share" 
                           VerticalAlignment="Top"/>
@@ -119,7 +122,7 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <SplitView x:Name="splitView" PanePlacement="Right" DisplayMode="Inline" IsPaneOpen="True" PaneBackground="#FFF7F7F7">
+        <SplitView x:Name="splitView" DisplayMode="Inline" PaneBackground="#FFF7F7F7" OpenPaneLength="360" PanePlacement="Right">
             <SplitView.Content>
                 <ScrollViewer x:Name="imageDisplayScroll" ZoomMode="Enabled" 
                             MinZoomFactor="1" 
@@ -148,41 +151,31 @@
                             </Border>
                             <ScrollViewer VerticalScrollMode="Enabled" HorizontalScrollMode="Disabled">
                                 <StackPanel>
-                                    <TextBlock Foreground="Black" FontSize="16" >
-                                Exposure settings
+                                    <TextBlock Foreground="Black" FontSize="16" >Exposure settings</TextBlock>
+                                    <TextBlock FontSize="12">Exposure</TextBlock>
+                                    <Slider x:Name="exposureSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0" Width="316"/>
+                                    <TextBlock FontSize="12">Brightness</TextBlock>
+                                    <Slider x:Name="brightnessSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False" Margin="4,0,0,0" StepFrequency="5" Width="302"/>
+                                    <TextBlock FontSize="12"> Highlight</TextBlock>
+                                    <Slider x:Name="HighLightSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False" Margin="4,0,0,0" StepFrequency="5" Width="302"/>
+                                    <TextBlock FontSize="12">Shadow
                                     </TextBlock>
-                                    <TextBlock FontSize="12">
-                                Exposure
-                                    </TextBlock>
-                                    <Slider x:Name="exposureSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0"/>
-                                    <TextBlock FontSize="12">
-                                Brightness
-                                    </TextBlock>
-                                    <Slider x:Name="brightnessSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False" Margin="4,0,0,0" StepFrequency="5"/>
+                                    <Slider x:Name="ShadowSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False" Margin="4,0,0,0" StepFrequency="5" Width="302"/>
+
                                     <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
-                                    <TextBlock Foreground="Black" FontSize="16" >
-                                Color balance
-                                    </TextBlock>
-                                    <TextBlock FontSize="12">
-                                Temperature
-                                    </TextBlock>
-                                    <Slider x:Name="colorTempSlider"  PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="6000" Minimum="1000" LargeChange="100" SmallChange="10" Value="1000" IsEnabled="False"/>
-                                    <Slider x:Name="colorTintSlider"  PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="10000" Minimum="1000" LargeChange="100" SmallChange="10" Value="1000" IsEnabled="False"/>
-                                    <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" x:Name="cameraWBCheck" HorizontalAlignment="Center">
-                                        Use camera white balance
-                                    </Button>
+
+                                    <TextBlock Foreground="Black" FontSize="16" >Color balance</TextBlock>
+                                    <TextBlock FontSize="12">Temperature</TextBlock>
+                                    <Slider x:Name="colorTempSlider"  PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="256" Minimum="1" LargeChange="50" SmallChange="5" Value="1" IsEnabled="False"/>
+                                    <Slider x:Name="colorTintSlider"  PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="256" Minimum="1" LargeChange="50" SmallChange="5" Value="1" IsEnabled="False"/>
+
+                                    <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" x:Name="cameraWBCheck" HorizontalAlignment="Center">Use camera white balance</Button>
                                     <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
-                                    <TextBlock Foreground="Black" FontSize="16" >
-                                Contraste balance
-                                    </TextBlock>
-                                    <TextBlock FontSize="12">
-                                Gamma
-                                    </TextBlock>
-                                    <Slider x:Name="gammaSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Width="300" Maximum="6" Minimum="0.01" LargeChange="1" SmallChange="0.1" Value="1" IsEnabled="False" StepFrequency="0.01"/>
-                                    <TextBlock FontSize="12">
-                                Contrast
-                                    </TextBlock>
-                                    <Slider x:Name="contrastSlider" PointerCaptureLost="Slider_PointerCaptureLost" Maximum="13" LargeChange="1" Value="10" Minimum="7" StepFrequency="0.01" IsEnabled="False" />
+                                    <TextBlock Foreground="Black" FontSize="16" > Contraste balance</TextBlock>
+                                    <TextBlock FontSize="12">Gamma</TextBlock>
+                                    <Slider x:Name="gammaSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Width="300" Maximum="6" Minimum="0.01" LargeChange="1" SmallChange="0.1" Value="1" IsEnabled="False" StepFrequency="0.01"/>
+                                    <TextBlock FontSize="12">Contrast</TextBlock>
+                                    <Slider x:Name="contrastSlider" PointerCaptureLost="Slider_PointerCaptureLost" Maximum="13" LargeChange="1" Value="10" Minimum="7" StepFrequency="0.01" IsEnabled="False" Width="309" />
                                     <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                                 </StackPanel>
                             </ScrollViewer>
@@ -196,28 +189,26 @@
                         <GridView Background="White" ></GridView>
                     </PivotItem>
                     <PivotItem Header="Exifs">
-                        <StackPanel>
+                        <StackPanel Margin="0,0,0,49">
                             <TextBlock>Exifs data:</TextBlock>
-                            <ListView Background="#FFF0F0F0" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                <ItemsControl x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid BorderBrush="#FF6A6A6A" BorderThickness="0,1,0,0" Background="{x:Null}" >
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition />
-                                                    <ColumnDefinition />
-                                                </Grid.ColumnDefinitions>
-                                                <Grid.Resources>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Margin" Value="5,0" />
-                                                    </Style>
-                                                </Grid.Resources>
-                                                <TextBlock Grid.Column="0" Text="{Binding displayName}" IsDoubleTapEnabled="False" IsTapEnabled="False" IsTextSelectionEnabled="True" />
-                                                <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" TextAlignment="Right" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                            <ListView ScrollViewer.VerticalScrollBarVisibility="Visible" x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.Resources>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Margin" Value="5,0" />
+                                                </Style>
+                                            </Grid.Resources>
+                                            <TextBlock Grid.Column="0" Text="{Binding displayName}" IsDoubleTapEnabled="False" IsTapEnabled="False" IsTextSelectionEnabled="True" />
+                                            <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" TextAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
                             </ListView>
                         </StackPanel>
                     </PivotItem>

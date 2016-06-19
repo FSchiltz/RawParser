@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RawParser.Effect
+﻿namespace RawParser.Effect
 {
     class Luminance
     {

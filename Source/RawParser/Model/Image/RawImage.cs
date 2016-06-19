@@ -24,6 +24,7 @@ namespace RawParser.Image
         public double[] camMul;
         public double[] black;
         public int rotation = 0;
+        public double[] curve;
 
         /*
          * Should be allows if possible
