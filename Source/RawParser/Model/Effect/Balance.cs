@@ -155,11 +155,11 @@ namespace RawParser.Effect
             double[] curve = new double[v];
             for (int i = 0; i < v / 2; i++)
             {
-                curve[i] = i * (1 + ((shadow - i > 0) ? shadow - i : 0));
+                curve[i] = i + ((shadow - (i / (v / 2) * 100) > 0) ? shadow - (i / (v / 2) * 100) : 0) * 100;
             }
-            for (int i = v-1, x = 0; i >= v / 2; i--, x++)
+            for (int i = v - 1; i >= v / 2; i--)
             {
-                curve[i] = i * (1 + ((highlight - x > 0) ? highlight - x : 0));
+                curve[i] = i - (((i / (v / 2) * 100) - highlight > 0) ? (i / (v / 2) * 100) - highlight : 0);
             }
             return curve;
         }

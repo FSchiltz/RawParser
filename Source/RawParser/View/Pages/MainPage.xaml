@@ -136,10 +136,10 @@
                                 <TextBlock FontSize="12">Brightness</TextBlock>
                                 <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False"  StepFrequency="5"/>
                                 <TextBlock FontSize="12"> Highlight</TextBlock>
-                                <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False"  StepFrequency="5"/>
+                                <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
                                 <TextBlock FontSize="12">Shadow
                                 </TextBlock>
-                                <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False"  StepFrequency="5"/>
+                                <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
 
                                 <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
 
