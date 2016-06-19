@@ -129,34 +129,32 @@
                                 </Canvas.Clip>
                                 <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}" Visibility="Collapsed"/>
                             </Canvas>
-                            <StackPanel>
-                                        <TextBlock Foreground="Black" FontSize="16" >Exposure settings</TextBlock>
-                                        <TextBlock FontSize="12">Exposure</TextBlock>
-                                        <Slider x:Name="exposureSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0" Width="316"/>
-                                        <TextBlock FontSize="12">Brightness</TextBlock>
-                                        <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False" Margin="4,0,0,0" StepFrequency="5" Width="302"/>
-                                        <TextBlock FontSize="12"> Highlight</TextBlock>
-                                        <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False" Margin="4,0,0,0" StepFrequency="5" Width="302"/>
-                                        <TextBlock FontSize="12">Shadow
-                                        </TextBlock>
-                                        <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False" Margin="4,0,0,0" StepFrequency="5" Width="302"/>
+                            <TextBlock Foreground="Black" FontSize="16" >Exposure settings</TextBlock>
+                            <TextBlock FontSize="12">Exposure</TextBlock>
+                            <Slider x:Name="exposureSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3"/>
+                            <TextBlock FontSize="12">Brightness</TextBlock>
+                            <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False"  StepFrequency="5"/>
+                            <TextBlock FontSize="12"> Highlight</TextBlock>
+                            <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False"  StepFrequency="5"/>
+                            <TextBlock FontSize="12">Shadow
+                            </TextBlock>
+                            <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False"  StepFrequency="5"/>
 
-                                        <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
+                            <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
 
-                                        <TextBlock Foreground="Black" FontSize="16" >Color balance</TextBlock>
-                                        <TextBlock FontSize="12">Temperature</TextBlock>
-                                        <Slider x:Name="colorTempSlider"   PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="256" Minimum="1" LargeChange="50" SmallChange="5" Value="1" IsEnabled="False"/>
-                                        <Slider x:Name="colorTintSlider"    PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="256" Minimum="1" LargeChange="50" SmallChange="5" Value="1" IsEnabled="False"/>
+                            <TextBlock Foreground="Black" FontSize="16" >Color balance</TextBlock>
+                            <TextBlock FontSize="12">Temperature</TextBlock>
+                            <Slider x:Name="colorTempSlider"   PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
+                            <Slider x:Name="colorTintSlider"    PointerCaptureLost="WBSlider_DragStop"  Width="300" Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
 
-                                        <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" x:Name="cameraWBCheck" HorizontalAlignment="Center">Use camera white balance</Button>
-                                        <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
-                                        <TextBlock Foreground="Black" FontSize="16" > Contraste balance</TextBlock>
-                                        <TextBlock FontSize="12">Gamma</TextBlock>
-                                        <Slider x:Name="gammaSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Width="300" Maximum="6" Minimum="0.01" LargeChange="1" SmallChange="0.1" Value="1" IsEnabled="False" StepFrequency="0.01"/>
-                                        <TextBlock FontSize="12">Contrast</TextBlock>
-                                        <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="13" LargeChange="1" Value="10" Minimum="7" StepFrequency="0.01" IsEnabled="False" Width="309" />
-                                        <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
-                                    </StackPanel>                               
+                            <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" x:Name="cameraWBCheck" HorizontalAlignment="Center">Use camera white balance</Button>
+                            <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
+                            <TextBlock Foreground="Black" FontSize="16" > Contraste balance</TextBlock>
+                            <TextBlock FontSize="12">Gamma</TextBlock>
+                            <Slider x:Name="gammaSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="6" Minimum="0.01" LargeChange="1" SmallChange="0.1" Value="1" IsEnabled="False" StepFrequency="0.01"/>
+                            <TextBlock FontSize="12">Contrast</TextBlock>
+                            <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="13" LargeChange="1" Value="10" Minimum="7" StepFrequency="0.01" IsEnabled="False" />
+                            <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                         </StackPanel>
                     </PivotItem>
                     <PivotItem Header="Tools">
