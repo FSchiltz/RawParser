@@ -478,89 +478,6 @@ namespace RawParser
             }
         }
 
-        public void applyUserModif(ref ushort[] image, uint height, uint width, int colorDepth)
-        {
-            double exposure = 0;
-            double temperature = 1;
-            double tint = 1;
-            double gamma = 0;
-            double contrast = 0;
-            double brightness = 0;
-            double hightlight = 1;
-            double shadow = 1;
-            //get all the value 
-            Task t = Task.Run(async () =>
-            {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    exposure = exposureSlider.Value;
-                    temperature = colorTempSlider.Value - 1;
-                    tint = colorTintSlider.Value - 1;
-                    gamma = gammaSlider.Value;
-                    contrast = contrastSlider.Value / 10;
-                    brightness = (int)brightnessSlider.Value << (colorDepth - 8);
-                    shadow = ShadowSlider.Value;
-                    hightlight = HighLightSlider.Value;
-
-                });
-            });
-            t.Wait();
-
-            double[] mul;
-            if (!cameraWB)
-            {
-                mul = new double[4];
-                //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
-                mul[0] = 255 / temperature;
-                mul[1] = 255 / tint;
-                mul[2] = 1;
-            }
-            else mul = raw.camMul;
-
-            exposure = Math.Pow(2, exposure);
-            uint maxValue = (uint)(1 << colorDepth) - 1;
-
-            //get gamma curve
-            //double[] curve = Balance.gamma_curve(raw.curve[0],raw.curve[1],1, (int)Math.Pow(2, raw.colorDepth));
-            double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
-            double[] curve = Balance.gamma_curve(0.45, 4.5, 2, 8192 << 3);
-            for (int i = 0; i < height * width; i++)
-            {
-                double red = image[i * 3],
-                green = image[(i * 3) + 1],
-                blue = image[(i * 3) + 2];
-
-
-                Luminance.Exposure(ref red, ref green, ref blue, exposure);
-                Luminance.Brightness(ref red, ref green, ref blue, brightness);
-
-                //aply all thetransformation that needs red green and blue at the same time
-                Balance.scaleColor(ref red, ref green, ref blue, mul);
-                //Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);
-
-                //apply transformation that are on each pixel;
-                Luminance.Contraste(ref red, ref green, ref blue, maxValue, contrast);
-
-                if (red > maxValue) red = maxValue;
-                if (green > maxValue) green = maxValue;
-                if (blue > maxValue) blue = maxValue;
-                if (red < 0) red = 0;
-                if (green < 0) green = 0;
-                if (blue < 0) blue = 0;
-
-                red = contrastCurve[(int)red];
-                green = contrastCurve[(int)green];
-                blue = contrastCurve[(int)blue];
-                red = curve[(int)red];
-                green = curve[(int)green];
-                blue = curve[(int)blue];
-
-                image[i * 3] = (ushort)red;
-                image[(i * 3) + 1] = (ushort)green;
-                image[(i * 3) + 2] = (ushort)blue;
-            }
-        }
-
         private void updatePreview()
         {
             //display the histogram                    
@@ -571,12 +488,12 @@ namespace RawParser
                 for (int i = 0; i < copyofpreview.Length; i++) copyofpreview[i] = raw.previewData[i];
                 applyUserModif(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth);
                 SoftwareBitmap bitmap = null;
-                //Needs to run in UI thread because fuck it
+                //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                  .RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      histoLoadingBar.Visibility = Visibility.Visible;
-                     //Writeablebitmap use BGRA (don't know why )
+                     //Writeablebitmap use BGRA
                      bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
                  });
                 displayImage(bitmap);
@@ -586,6 +503,32 @@ namespace RawParser
                     histoLoadingBar.Visibility = Visibility.Collapsed;
                 });
             });
+        }
+
+        private void applyUserModif(ref ushort[] image, uint imageHeight, uint imageWidth, ushort colorDepth)
+        {
+            ImageEffect effect = new ImageEffect();
+            //get all the value 
+            Task t = Task.Run(async () =>
+            {
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    effect.exposure = exposureSlider.Value;
+                    effect.temperature = colorTempSlider.Value - 1;
+                    effect.tint = colorTintSlider.Value - 1;
+                    effect.gamma = gammaSlider.Value;
+                    effect.contrast = contrastSlider.Value / 10;
+                    effect.brightness = (uint)brightnessSlider.Value << (colorDepth - 8);
+                    effect.shadow = ShadowSlider.Value;
+                    effect.hightlight = HighLightSlider.Value;
+                });
+            });
+            t.Wait();
+            effect.mul = raw.camMul;
+            effect.cameraWB = cameraWB;
+            effect.exposure = Math.Pow(2, effect.exposure);
+            effect.camCurve = raw.curve;
+            effect.applyModification(ref image, imageHeight, imageWidth, colorDepth);
         }
 
         #region WBSlider
