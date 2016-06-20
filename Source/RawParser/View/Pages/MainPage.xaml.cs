@@ -518,7 +518,7 @@ namespace RawParser
                     effect.tint = colorTintSlider.Value - 1;
                     effect.gamma = gammaSlider.Value;
                     effect.contrast = contrastSlider.Value / 10;
-                    effect.brightness = (uint)brightnessSlider.Value << (colorDepth - 8);
+                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value /100);
                     effect.shadow = ShadowSlider.Value;
                     effect.hightlight = HighLightSlider.Value;
                 });

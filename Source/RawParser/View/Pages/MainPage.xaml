@@ -134,7 +134,7 @@
                                 <TextBlock FontSize="12">Exposure</TextBlock>
                                 <Slider x:Name="exposureSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3"/>
                                 <TextBlock FontSize="12">Brightness</TextBlock>
-                                <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="255" Minimum="-255" LargeChange="51" SmallChange="5" IsEnabled="False"  StepFrequency="5"/>
+                                <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="-100" LargeChange="10" SmallChange="1" IsEnabled="False"/>
                                 <TextBlock FontSize="12"> Highlight</TextBlock>
                                 <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
                                 <TextBlock FontSize="12">Shadow
