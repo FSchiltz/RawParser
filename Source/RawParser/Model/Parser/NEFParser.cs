@@ -143,10 +143,7 @@ namespace RawParser.Parser
                 {
                     camMul[((c << 1) | (c >> 1)) & 3] = (double)colorLevelTag.data[c];
                 }
-            }
-
-            //then get the R and B multiplier           
-            if (makerNote.ifd.tags.TryGetValue(0x97, out colorBalanceTag))
+            }else if (makerNote.ifd.tags.TryGetValue(0x97, out colorBalanceTag))
             {
                 int version = 0;
                 for (int i = 0; i < 4; i++)
