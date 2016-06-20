@@ -37,28 +37,31 @@ namespace RawParser.Image
                 mul[1] = 255 / tint;
                 mul[2] = 1;
             }
-            //generate the curve
-            /*
+            //generate the curve            
             double[] x = new double[5], y = new double[5];
             //mid point
             x[2] = maxValue / 2;
             y[2] = maxValue / 2;
             //shadow
             x[0] = 0;
-            y[0] = shadow * (maxValue / 2 / 100) ;
+            y[0] = shadow * (maxValue / (400));
             //hightlight
             x[4] = maxValue;
-            y[4] = maxValue - (hightlight * (maxValue / 2 / 100)) ;
+            y[4] = maxValue - (hightlight * (maxValue / 400));
             //contrast
             x[1] = maxValue / 4;
-            y[1] = ((y[0] + y[2]) / 2) - (maxValue / 2 / 100 * contrast) ;
+            y[1] = ((y[0] + y[2]) / 2) - (maxValue / 200);
             x[3] = maxValue * 3 / 4;
-            y[3] = ((y[2] + y[4]) / 2) + (maxValue / 2 / 100 * contrast) ;
-            maxValue--;*/
+            y[3] = ((y[2] + y[4]) / 2) + (maxValue / 200);
+            maxValue--;
+
             //interpolate with spline
-            double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
-            //double[] contrastCurve = Curve.simpleInterpol(x, y);
+            //double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
+            double[] contrastCurve = Curve.cubicSpline(x, y);
+
             //double[] gammaCurve = Balance.gamma_curve(0.45, 4.5, 2, 8192 << 3);
+
+            //gammacurve from camera
             double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
             for (int i = 0; i < height * width; i++)
             {
@@ -67,36 +70,33 @@ namespace RawParser.Image
                 green = image[(i * 3) + 1],
                 blue = image[(i * 3) + 2];
                 //transform to HSL value
-                //double h = 0, s = 0, l = 0;
-                //Color.rgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
+                Balance.scaleColor(ref red, ref green, ref blue, mul);
+                //clip
+                Luminance.Clip(ref red, ref green, ref blue, maxValue);
+                double h = 0, s = 0, l = 0;
+                Color.rgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
                 //change brightness from curve
-                //l = contrastCurve[(uint)l];
-                //s *= saturation;
-                //s += vibrance;
-                Luminance.Exposure(ref red, ref green, ref blue, exposure);
-                Luminance.Brightness(ref red, ref green, ref blue, brightness);
-                //Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);                
+                //add saturation
+                l = contrastCurve[(uint)(l * maxValue)] / maxValue;
+                s *= saturation;
+                s += vibrance;
+                l *= exposure;
+                l += brightness / 100;
+                //change back to RGB
+                Color.hslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+
+                //Luminance.Exposure(ref red, ref green, ref blue, exposure);
+                //Luminance.Brightness(ref red, ref green, ref blue, brightness);
+                //Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);               
                 Luminance.Contraste(ref red, ref green, ref blue, maxValue, contrast);
 
-                //change back to RGB
-                //Color.hslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+                //clip
+                Luminance.Clip(ref red, ref green, ref blue, maxValue);
 
-                Balance.scaleColor(ref red, ref green, ref blue, mul);
-
-                if (red > maxValue) red = maxValue;
-                if (green > maxValue) green = maxValue;
-                if (blue > maxValue) blue = maxValue;
-                if (red < 0) red = 0;
-                if (green < 0) green = 0;
-                if (blue < 0) blue = 0;
-                //change gamma from curve
-                red = gammaCurve[(int)red];
-                green = gammaCurve[(int)green];
-                blue = gammaCurve[(int)blue];
-
-                image[i * 3] = (ushort)red;
-                image[(i * 3) + 1] = (ushort)green;
-                image[(i * 3) + 2] = (ushort)blue;
+                //change gamma from curve 
+                image[i * 3] = (ushort)gammaCurve[(int)red];
+                image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
+                image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];
             }
         }
     }

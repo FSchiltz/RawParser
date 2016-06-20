@@ -42,9 +42,7 @@ namespace RawParser
         public double pageHeight;
         private int currentImageDisplayedHeight;
         private int currentImageDisplayedWidth;
-
         bool cameraWB = true;
-        private bool WBdragStarted;
 
         public MainPage()
         {
@@ -112,6 +110,7 @@ namespace RawParser
                      //gammaSlider.IsEnabled = v;
                      contrastSlider.IsEnabled = v;
                      brightnessSlider.IsEnabled = v;
+                     saturationSlider.IsEnabled = v;
                  });
         }
 
@@ -518,9 +517,10 @@ namespace RawParser
                     effect.tint = colorTintSlider.Value - 1;
                     effect.gamma = gammaSlider.Value;
                     effect.contrast = contrastSlider.Value / 10;
-                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value /100);
+                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
                     effect.shadow = ShadowSlider.Value;
                     effect.hightlight = HighLightSlider.Value;
+                    effect.saturation = 1 + saturationSlider.Value/100;
                 });
             });
             t.Wait();
@@ -536,7 +536,6 @@ namespace RawParser
         {
             if (raw?.previewData != null)
             {
-                WBdragStarted = false;
                 cameraWB = false;
                 cameraWBCheck.IsEnabled = true;
                 updatePreview();
