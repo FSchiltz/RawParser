@@ -348,7 +348,11 @@ namespace RawParser
                     SuggestedFileName = raw.fileName
                 };
                 // Dropdown of file types the user can save the file as
-                savePicker.FileTypeChoices.Add("Image file", new List<string>() { ".jpg", ".png", ".ppm", ".tiff", ".bmp" });
+                savePicker.FileTypeChoices.Add("Jpeg image file", new List<string>() { ".jpg"});
+                savePicker.FileTypeChoices.Add("PNG image file", new List<string>() { ".png"});
+                savePicker.FileTypeChoices.Add("PPM image file", new List<string>() {  ".ppm" });
+                savePicker.FileTypeChoices.Add("TIFF image file", new List<string>() { ".tiff"});
+                savePicker.FileTypeChoices.Add("BitMap image file", new List<string>() { ".bmp" });
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
 
