@@ -7,7 +7,7 @@
         /*
             value = Math.Pow(2, exposure as stop);
         */
-        public static void Exposure(ref double r,ref double g, ref double b, double value)
+        public static void Exposure(ref double r, ref double g, ref double b, double value)
         {
             r *= value;
             g *= value;
@@ -35,12 +35,14 @@
             b *= maxValue;
         }
 
-        public static void Clip(ref ushort[] image, uint h, uint w, ushort maxValue)
+        public static void Clip(ref double red, ref double green, ref double blue,uint maxValue)
         {
-            for (int i = 0; i < w * h * 3; ++i)
-            {
-                if (image[i] > maxValue) image[i] = maxValue;
-            }
+            if (red > maxValue) red = maxValue;
+            if (green > maxValue) green = maxValue;
+            if (blue > maxValue) blue = maxValue;
+            if (red < 0) red = 0;
+            if (green < 0) green = 0;
+            if (blue < 0) blue = 0;
         }
 
         internal static void Brightness(ref double red, ref double green, ref double blue, double brightness)
