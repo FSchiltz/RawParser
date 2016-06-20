@@ -1,7 +1,12 @@
-﻿using RawParser.Format.IFD;
+﻿using RawParser.Effect;
+using RawParser.Format.IFD;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.Graphics.Imaging;
+using Windows.UI.Core;
 
 namespace RawParser.Image
 {
@@ -51,7 +56,6 @@ namespace RawParser.Image
             }
         }
 
-
         public static unsafe SoftwareBitmap getImageAs8bitsBitmap(ref ushort[] data, uint height, uint width, int colorDepth, object[] curve, ref int[] value, bool histo, bool bgr)
         {
             SoftwareBitmap image = new SoftwareBitmap(BitmapPixelFormat.Rgba8, (int)width, (int)height, BitmapAlphaMode.Ignore);
@@ -96,13 +100,10 @@ namespace RawParser.Image
             }
             return image;
         }
-
-
-
         /*
          * For testing
          */
-        public ushort[] getImageAsByteArray()
+        internal ushort[] getImageAsByteArray()
         {
             ushort[] tempByteArray = new ushort[width * height];
             for (int i = 0; i < width * height; i++)

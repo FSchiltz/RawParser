@@ -139,6 +139,8 @@
     <Compile Include="Model\Base\DictionnaryFromFileUShort.cs" />
     <Compile Include="Model\Base\DictionnaryFromFile.cs" />
     <Compile Include="Model\Base\StreamHelper.cs" />
+    <Compile Include="Model\Effect\Color.cs" />
+    <Compile Include="Model\Effect\Curve.cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
     <Compile Include="Model\Effect\Rotate.cs" />
     <Compile Include="Model\Encoder\JpegEncoder.cs" />
@@ -146,6 +148,7 @@
     <Compile Include="Model\Format\IFD\Tag.cs" />
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Image\JpegHelper.cs" />
+    <Compile Include="Model\Image\ImageEffect.cs" />
     <Compile Include="Model\Parser\Export\TiffWriter.cs" />
     <Compile Include="Model\Parser\JPGParser.cs" />
     <Compile Include="View\UIHelper\UIImageHelper.cs" />
