@@ -562,5 +562,19 @@ namespace RawParser
                 updatePreview();
             }
         }
+
+        private void VisualStateGroup_CurrentStateChanged(object sender, VisualStateChangedEventArgs e)
+        {
+            if (e.NewState == narrowState)
+            {
+                PivotGrid.Children.Remove(ControlPivot);
+                MainGrid.Children.Add(ControlPivot);
+            }
+            else if(e.OldState == narrowState)
+            {
+                MainGrid.Children.Remove(ControlPivot);
+                PivotGrid.Children.Add(ControlPivot);
+            }
+        }
     }
 }
