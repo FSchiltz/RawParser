@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{754D22E8-25B1-4ACF-B547-372B1BA3311A}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>dcraw</RootNamespace>
+    <AssemblyName>dcraw</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ColourScaler.cs" />
+    <Compile Include="ColourSpace.cs" />
+    <Compile Include="Demosaicing\AHD.cs" />
+    <Compile Include="Demosaicing\Bilinear.cs" />
+    <Compile Include="Demosaicing\Demosaic.cs" />
+    <Compile Include="Filter.cs" />
+    <Compile Include="Filters\Median.cs" />
+    <Compile Include="HuffmanTree.cs" />
+    <Compile Include="Identifier.cs" />
+    <Compile Include="IdentifierTables.cs" />
+    <Compile Include="Loaders\AdobeDng.cs" />
+    <Compile Include="Loaders\LJpeg.cs" />
+    <Compile Include="Loaders\LJpegBase.cs" />
+    <Compile Include="Loaders\NikonCompressed.cs" />
+    <Compile Include="Loaders\Packed12.cs" />
+    <Compile Include="MainStuff.cs" />
+    <Compile Include="Profiler.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RawLoader.cs" />
+    <Compile Include="RawStream.cs" />
+    <Compile Include="DcRawState.cs" />
+    <Compile Include="TaskMultiplexer.cs" />
+    <Compile Include="Tiff.cs" />
+    <Compile Include="Utils.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
