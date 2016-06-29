@@ -126,6 +126,7 @@
     <Content Include="Assets\Dic\StandardExif.dic">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="RawParser\dcraw\dcraw.csproj" />
     <None Include="project.json" />
     <None Include="RawParser_TemporaryKey.pfx" />
   </ItemGroup>
@@ -151,6 +152,20 @@
     <Compile Include="Model\Image\ImageEffect.cs" />
     <Compile Include="Model\Parser\Export\TiffWriter.cs" />
     <Compile Include="Model\Parser\JPGParser.cs" />
+    <Compile Include="RawParser\dcraw\DcRawState.cs" />
+    <Compile Include="RawParser\dcraw\HuffmanTree.cs" />
+    <Compile Include="RawParser\dcraw\Identifier.cs" />
+    <Compile Include="RawParser\dcraw\IdentifierTables.cs" />
+    <Compile Include="RawParser\dcraw\Loaders\AdobeDng.cs" />
+    <Compile Include="RawParser\dcraw\Loaders\LJpeg.cs" />
+    <Compile Include="RawParser\dcraw\Loaders\LJpegBase.cs" />
+    <Compile Include="RawParser\dcraw\Loaders\NikonCompressed.cs" />
+    <Compile Include="RawParser\dcraw\Loaders\Packed12.cs" />
+    <Compile Include="RawParser\dcraw\RawLoader.cs" />
+    <Compile Include="RawParser\dcraw\RawStream.cs" />
+    <Compile Include="RawParser\dcraw\TaskMultiplexer.cs" />
+    <Compile Include="RawParser\dcraw\Utils.cs" />
+    <Compile Include="Model\Parser\DCRawParser.cs" />
     <Compile Include="View\UIHelper\UIImageHelper.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
     <Compile Include="Model\Effect\Balance.cs" />

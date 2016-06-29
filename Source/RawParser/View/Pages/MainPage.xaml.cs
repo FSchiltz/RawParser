@@ -20,7 +20,6 @@ using RawParser.Parser;
 using RawParser.Effect;
 using RawParser.Model.Settings;
 using RawParser.Model.Encoder;
-using Windows.UI.Xaml.Media;
 
 namespace RawParser
 {
@@ -61,6 +60,7 @@ namespace RawParser
             filePicker.FileTypeFilter.Add(".tiff");
             filePicker.FileTypeFilter.Add(".tif");
             filePicker.FileTypeFilter.Add(".dng");
+            filePicker.FileTypeFilter.Add(".cr2");
             StorageFile file = await filePicker.PickSingleFileAsync();
             if (file != null)
             {
@@ -131,6 +131,7 @@ namespace RawParser
             AParser parser;
             switch (file.FileType.ToUpper())
             {
+
                 case ".NEF":
                     parser = new NEFParser();
                     break;
@@ -146,7 +147,7 @@ namespace RawParser
                     parser = new JPGParser();
                     break;
                 default:
-                    throw new System.Exception("File not supported"); //todo change exception types
+                   throw new System.Exception("File not supported"); //todo change exception types
             }
 
             //Add a loading screen
@@ -348,10 +349,10 @@ namespace RawParser
                     SuggestedFileName = raw.fileName
                 };
                 // Dropdown of file types the user can save the file as
-                savePicker.FileTypeChoices.Add("Jpeg image file", new List<string>() { ".jpg"});
-                savePicker.FileTypeChoices.Add("PNG image file", new List<string>() { ".png"});
-                savePicker.FileTypeChoices.Add("PPM image file", new List<string>() {  ".ppm" });
-                savePicker.FileTypeChoices.Add("TIFF image file", new List<string>() { ".tiff"});
+                savePicker.FileTypeChoices.Add("Jpeg image file", new List<string>() { ".jpg" });
+                savePicker.FileTypeChoices.Add("PNG image file", new List<string>() { ".png" });
+                savePicker.FileTypeChoices.Add("PPM image file", new List<string>() { ".ppm" });
+                savePicker.FileTypeChoices.Add("TIFF image file", new List<string>() { ".tiff" });
                 savePicker.FileTypeChoices.Add("BitMap image file", new List<string>() { ".bmp" });
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
@@ -524,7 +525,7 @@ namespace RawParser
                     effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
                     effect.shadow = ShadowSlider.Value;
                     effect.hightlight = HighLightSlider.Value;
-                    effect.saturation = 1 + saturationSlider.Value/100;
+                    effect.saturation = 1 + saturationSlider.Value / 100;
                 });
             });
             t.Wait();
