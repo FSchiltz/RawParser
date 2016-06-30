@@ -20,6 +20,8 @@ using RawParser.Parser;
 using RawParser.Effect;
 using RawParser.Model.Settings;
 using RawParser.Model.Encoder;
+using Windows.UI.ViewManagement;
+using Windows.Foundation;
 
 namespace RawParser
 {
@@ -49,6 +51,11 @@ namespace RawParser
             SettingStorage.init();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
+            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
+            if(VisualStateGroupeMainUI.CurrentState == narrowState)
+            {
+                ChangeUIForMobile(mediumState, narrowState);
+            }
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -565,15 +572,26 @@ namespace RawParser
 
         private void VisualStateGroup_CurrentStateChanged(object sender, VisualStateChangedEventArgs e)
         {
-            if (e.NewState == narrowState)
+            ChangeUIForMobile(e.OldState, e.NewState);
+        }
+
+        private void ChangeUIForMobile(VisualState oldState, VisualState newState)
+        {
+            if (newState == narrowState)
             {
                 PivotGrid.Children.Remove(ControlPivot);
+                Grid.SetRow(ControlPivot, 1);
                 MainGrid.Children.Add(ControlPivot);
+                MainGridRow1.Height = new GridLength(2,GridUnitType.Star);
+                MainGridRow2.Height = new GridLength(3, GridUnitType.Star);
             }
-            else if(e.OldState == narrowState)
+            else if (oldState == narrowState)
             {
                 MainGrid.Children.Remove(ControlPivot);
+                Grid.SetRow(ControlPivot, 0);                
                 PivotGrid.Children.Add(ControlPivot);
+                MainGridRow1.Height = new GridLength(1, GridUnitType.Star);
+                MainGridRow2.Height = new GridLength(0, GridUnitType.Star);
             }
         }
     }

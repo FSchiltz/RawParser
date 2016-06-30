@@ -53,8 +53,12 @@
     </Page.BottomAppBar>
 
     <Grid x:Name="MainGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="MainGridRow1" Height="2*"/>
+            <RowDefinition x:Name="MainGridRow2" Height="3*"/>
+        </Grid.RowDefinitions>
         <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup CurrentStateChanged="VisualStateGroup_CurrentStateChanged">
+            <VisualStateGroup x:Name="VisualStateGroupeMainUI" CurrentStateChanged="VisualStateGroup_CurrentStateChanged">
                 <VisualState x:Name="wideState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="1080" />
