@@ -54,7 +54,10 @@ namespace RawParser
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
             if(VisualStateGroupeMainUI.CurrentState == narrowState)
             {
-                ChangeUIForMobile(mediumState, narrowState);
+                ChangeUIForMobile(wideState, narrowState);
+            }else if(VisualStateGroupeMainUI.CurrentState == mediumState)
+            {
+                ChangeUIForMobile(wideState, mediumState);
             }
         }
 
@@ -577,7 +580,7 @@ namespace RawParser
 
         private void ChangeUIForMobile(VisualState oldState, VisualState newState)
         {
-            if (newState == narrowState)
+            if ((newState == narrowState || newState == mediumState) && Window.Current.Bounds.Height > Window.Current.Bounds.Width)
             {
                 PivotGrid.Children.Remove(ControlPivot);
                 Grid.SetRow(ControlPivot, 1);
@@ -585,7 +588,7 @@ namespace RawParser
                 MainGridRow1.Height = new GridLength(2,GridUnitType.Star);
                 MainGridRow2.Height = new GridLength(3, GridUnitType.Star);
             }
-            else if (oldState == narrowState)
+            else if (newState == wideState)
             {
                 MainGrid.Children.Remove(ControlPivot);
                 Grid.SetRow(ControlPivot, 0);                

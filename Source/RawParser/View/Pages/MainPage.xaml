@@ -54,8 +54,8 @@
 
     <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
-            <RowDefinition x:Name="MainGridRow1" Height="2*"/>
-            <RowDefinition x:Name="MainGridRow2" Height="3*"/>
+            <RowDefinition x:Name="MainGridRow1" />
+            <RowDefinition x:Name="MainGridRow2" />
         </Grid.RowDefinitions>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="VisualStateGroupeMainUI" CurrentStateChanged="VisualStateGroup_CurrentStateChanged">
