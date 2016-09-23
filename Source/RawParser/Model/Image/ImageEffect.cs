@@ -63,12 +63,17 @@ namespace RawParser.Image
 
             //gammacurve from camera
             double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
+
             for (int i = 0; i < height * width; i++)
             {
                 //get the RGB value
                 double red = image[i * 3],
                 green = image[(i * 3) + 1],
                 blue = image[(i * 3) + 2];
+                //convert to linear rgb
+                Balance.sRGBToRGB(ref red, maxValue - 1);
+                Balance.sRGBToRGB(ref green, maxValue - 1);
+                Balance.sRGBToRGB(ref blue, maxValue - 1);
                 //transform to HSL value
                 Balance.scaleColor(ref red, ref green, ref blue, mul);
                 //clip
@@ -94,6 +99,7 @@ namespace RawParser.Image
                 Luminance.Clip(ref red, ref green, ref blue, maxValue);
 
                 //change gamma from curve 
+
                 image[i * 3] = (ushort)gammaCurve[(int)red];
                 image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
                 image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];
