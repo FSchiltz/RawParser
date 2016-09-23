@@ -6,6 +6,20 @@ namespace RawParser.Effect
     {
         private Balance() { }
 
+        public static void sRGBToRGB(ref double value, double maxValue)
+        {
+            value /= maxValue;
+            if (value < 0.04045)
+            {
+                value /= 12.92;
+            }
+            else
+            {
+                value = Math.Pow(((value + 0.055) / 1.055), 2.4);
+            }
+            value *= maxValue;
+        }
+
         public static void calculateRGB(int temp, out double rRefer, out double gRefer, out double bRefer)
         {
             ushort maxValue = 255;

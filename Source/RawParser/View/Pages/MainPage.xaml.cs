@@ -187,7 +187,7 @@ namespace RawParser
                         //parser.parsePreview();
                         //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
 
-                        //read the exifi
+                        //read the exifs
                         raw.exif = parser.parseExif();
                         if (raw.exif != null) displayExif();
 
@@ -200,8 +200,9 @@ namespace RawParser
                         raw.colorDepth = parser.colorDepth;
                         raw.cfa = parser.cfa;
                         raw.camMul = parser.camMul;
-                        raw.curve = parser.curve;
+                        raw.curve = parser.curve;                   
 
+                        //demos                                        
                         if (raw.cfa != null)
                             Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
 
