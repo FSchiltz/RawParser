@@ -72,6 +72,8 @@
                         <Setter Target="shareButton2.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
                         <Setter Target="splitView.IsPaneOpen" Value="True" />
+
+                        <Setter Target="MainGridRow2.MaxHeight" Value="0"/>
                     </VisualState.Setters>
                 </VisualState>
 
@@ -88,6 +90,8 @@
                         <Setter Target="shareButton2.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
                         <Setter Target="splitView.IsPaneOpen" Value="false" />
+
+                        <Setter Target="MainGridRow2.MaxHeight" Value="0"/>
                     </VisualState.Setters>
                 </VisualState>
 
@@ -104,6 +108,8 @@
                         <Setter Target="shareButton2.Visibility" Value="Visible" />
                         <Setter Target="settingsButton2.Visibility" Value="Visible" />
                         <Setter Target="splitView.IsPaneOpen" Value="False" />
+
+                        <Setter Target="MainGridRow2.MaxHeight" Value="*"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
