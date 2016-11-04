@@ -167,7 +167,6 @@ namespace RawParser
 
             Task t = Task.Run(async () =>
             {
-
                 using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                 {
                     try
@@ -182,7 +181,6 @@ namespace RawParser
                         raw.thumbnail = parser.parseThumbnail();
                         if (raw.thumbnail != null) displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
 
-
                         //read the preview
                         //parser.parsePreview();
                         //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
@@ -192,7 +190,6 @@ namespace RawParser
                         if (raw.exif != null) displayExif();
 
                         //read the data 
-
                         raw.rawData = parser.parseRAWImage();
                         if (raw.rawData == null) throw new FormatException("Image not compatible");
                         raw.height = parser.height;
@@ -520,6 +517,9 @@ namespace RawParser
             });
         }
 
+        /**
+         * Apply the change over the image preview
+         */
         private void applyUserModif(ref ushort[] image, uint imageHeight, uint imageWidth, ushort colorDepth)
         {
             ImageEffect effect = new ImageEffect();
@@ -581,20 +581,20 @@ namespace RawParser
 
         private void ChangeUIForMobile(VisualState oldState, VisualState newState)
         {
-            if ((newState == narrowState || newState == mediumState) && Window.Current.Bounds.Height > Window.Current.Bounds.Width)
+            if (newState == narrowState)
             {
                 PivotGrid.Children.Remove(ControlPivot);
                 Grid.SetRow(ControlPivot, 1);
                 MainGrid.Children.Add(ControlPivot);
-                MainGridRow1.Height = new GridLength(2,GridUnitType.Star);
-                MainGridRow2.Height = new GridLength(3, GridUnitType.Star);
+               // MainGridRow1.Height = new GridLength(2,GridUnitType.Star);
+               // MainGridRow2.Height = new GridLength(3, GridUnitType.Star);
             }
-            else if (newState == wideState)
+            else if (oldState == narrowState)
             {
                 MainGrid.Children.Remove(ControlPivot);
                 Grid.SetRow(ControlPivot, 0);                
                 PivotGrid.Children.Add(ControlPivot);
-                MainGridRow1.Height = new GridLength(1, GridUnitType.Star);
+               // MainGridRow1.Height = new GridLength(1, GridUnitType.Star);
                 MainGridRow2.Height = new GridLength(0, GridUnitType.Star);
             }
         }
