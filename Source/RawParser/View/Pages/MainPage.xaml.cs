@@ -189,6 +189,7 @@ namespace RawParser
                         raw.exif = parser.parseExif();
                         if (raw.exif != null) displayExif();
 
+                        
                         //read the data 
                         raw.rawData = parser.parseRAWImage();
                         if (raw.rawData == null) throw new FormatException("Image not compatible");
@@ -245,7 +246,7 @@ namespace RawParser
                         //dispose
                         file = null;
                         parser = null;
-
+                        
                     }
                     catch (FormatException e)
                     {

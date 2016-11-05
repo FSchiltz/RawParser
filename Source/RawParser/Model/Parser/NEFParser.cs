@@ -13,7 +13,7 @@ namespace RawParser.Parser
 
         public override void Parse(Stream file)
         {
-            readTiffBase(file);
+            base.Parse(file);
 
             Tag subifdoffsetTag;
             if (!ifd.tags.TryGetValue(0x14A, out subifdoffsetTag)) throw new FormatException("File not correct");

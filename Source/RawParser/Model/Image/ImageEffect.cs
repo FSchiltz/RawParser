@@ -59,10 +59,11 @@ namespace RawParser.Image
             //double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
             double[] contrastCurve = Curve.cubicSpline(x, y);
 
+            //Change the gamma/No more gammaneeded here, the raw should be transformed to neutral gamma before demos
             //double[] gammaCurve = Balance.gamma_curve(0.45, 4.5, 2, 8192 << 3);
 
             //gammacurve from camera
-            double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
+            //double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
 
             for (int i = 0; i < height * width; i++)
             {
@@ -70,15 +71,18 @@ namespace RawParser.Image
                 double red = image[i * 3],
                 green = image[(i * 3) + 1],
                 blue = image[(i * 3) + 2];
-                //convert to linear rgb
-                Balance.sRGBToRGB(ref red, maxValue - 1);
+
+                //convert to linear rgb (notneede, the raw should be in linear already)
+                /*Balance.sRGBToRGB(ref red, maxValue - 1);
                 Balance.sRGBToRGB(ref green, maxValue - 1);
-                Balance.sRGBToRGB(ref blue, maxValue - 1);
-                //transform to HSL value
+                Balance.sRGBToRGB(ref blue, maxValue - 1);*/
+               
+                //scale according to the white balance
                 Balance.scaleColor(ref red, ref green, ref blue, mul);
                 //clip
                 Luminance.Clip(ref red, ref green, ref blue, maxValue);
                 double h = 0, s = 0, l = 0;
+                //transform to HSL value
                 Color.rgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
                 //change brightness from curve
                 //add saturation
@@ -97,12 +101,14 @@ namespace RawParser.Image
 
                 //clip
                 Luminance.Clip(ref red, ref green, ref blue, maxValue);
-
+                image[i * 3] = (ushort)red;
+                image[(i * 3) + 1] = (ushort)green;
+                image[(i * 3) + 2] = (ushort)blue;
                 //change gamma from curve 
-
+                /*
                 image[i * 3] = (ushort)gammaCurve[(int)red];
                 image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
-                image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];
+                image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];*/
             }
         }
     }
