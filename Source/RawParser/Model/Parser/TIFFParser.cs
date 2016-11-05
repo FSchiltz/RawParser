@@ -13,7 +13,7 @@ namespace RawParser.Parser
         protected Header header;
         protected IFD[] subifd;
 
-        internal void readTiffBase(Stream file)
+        public override void Parse(Stream file)
         {
             //Open a binary stream on the file
             fileStream = new TIFFBinaryReader(file);
@@ -30,12 +30,6 @@ namespace RawParser.Parser
             header = new Header(fileStream, 0);
             //Read the IFD
             ifd = new IFD(fileStream, header.TIFFoffset, true, false);
-        }
-
-
-        public override void Parse(Stream file)
-        {
-            readTiffBase(file);
         }
 
         public override Dictionary<ushort, Tag> parseExif()
@@ -64,8 +58,8 @@ namespace RawParser.Parser
                 Tag samplesPerPixel, bitPerSampleTag;
                 if (!ifd.tags.TryGetValue(0x0102, out bitPerSampleTag)) throw new FormatException("File not correct");
                 if (!ifd.tags.TryGetValue(0x0115, out samplesPerPixel)) throw new FormatException("File not correct");
-                height = (ushort)imageHeightTag.data[0];
-                width = (ushort)imageWidthTag.data[0];
+                height = Convert.ToUInt32(imageHeightTag.data[0]);
+                width = Convert.ToUInt32(imageWidthTag.data[0]);
                 //suppose that image are always 8,8,8 or 16,16,16
                 colorDepth = (ushort)bitPerSampleTag.data[0];
                 ushort[] image = new ushort[width * height * 3];
