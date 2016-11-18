@@ -72,7 +72,7 @@ namespace RawParser.Image
                 green = image[(i * 3) + 1],
                 blue = image[(i * 3) + 2];
 
-                //convert to linear rgb (notneede, the raw should be in linear already)
+                //convert to linear rgb (not needed, the raw should be in linear already)
                 /*Balance.sRGBToRGB(ref red, maxValue - 1);
                 Balance.sRGBToRGB(ref green, maxValue - 1);
                 Balance.sRGBToRGB(ref blue, maxValue - 1);*/

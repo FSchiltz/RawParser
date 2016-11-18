@@ -45,7 +45,9 @@ namespace RawParser.Parser
 
         public override ushort[] parseRAWImage()
         {
+            //this return a preview from the dng file, to remplace
             return base.parseRAWImage();
+
             //Find the IFD with tag NewSubFileType=0 (it's the raw)
             //Find the BitsPerSample tag (used to convert from the raw bit/pixel to 16bit/pixel of the raw processor)
             //Find the SampleFormat tag for integer or float image
