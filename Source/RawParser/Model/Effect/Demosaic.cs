@@ -31,6 +31,7 @@ namespace RawEditor.Effect
 
         private static void NearNeighbour(ref RawImage image, int height, int width, ushort colorDepth, ColorFilterArray cfa)
         {
+            ushort[] deflated = new ushort[image.rawData.Length * 3];
             for (int row = 0; row < height; row++)
             {
                 for (int col = 0; col < width; col++)
@@ -40,20 +41,22 @@ namespace RawEditor.Effect
                     {
                         //if green
                         //get the red(                        
-                        image[row, col, 0] = (ushort)((image[row - 1, col, 0] + image[row + 1, col, 0]) >> 1);
+                        deflated[((row * width) + col) * 3] = (ushort)((image[row - 1, col] + image[row + 1, col]) >> 1);
                         //get the blue (left)
-                        image[row, col, 2] = (ushort)((image[row, col - 1, 2] + image[row, col + 1, 2]) >> 1);
+                        deflated[(((row * width) + col) * 3) + 2] = (ushort)((image[row, col - 1] + image[row, col + 1]) >> 1);
                     }
                     else
                     {
                         //get the green value from around
                         pixeltype ^= 2;
-                        image[row, col, 1] = (ushort)((image[row - 1, col, 1] + image[row + 1, col, 1] + image[row, col - 1, 1] + image[row, col + 1, 1]) >> 2);
+                        deflated[(((row * width) + col) * 3) + 1] = (ushort)((image[row - 1, col] + image[row + 1, col] + image[row, col - 1] + image[row, col + 1]) >> 2);
 
-                        image[row, col, pixeltype] = (ushort)((image[row - 1, col - 1, pixeltype] + image[row - 1, col + 1, pixeltype] + image[row + 1, col - 1, pixeltype] + image[row + 1, col + 1, pixeltype]) >> 2);
+                        deflated[(((row * width) + col) * 3) + pixeltype] = (ushort)((image[row - 1, col - 1] + image[row - 1, col + 1] + image[row + 1, col - 1] + image[row + 1, col + 1]) >> 2);
                     }
                 }
             }
+            image.rawData = deflated;
+
         }
     }
 }
