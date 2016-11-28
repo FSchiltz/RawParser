@@ -163,10 +163,15 @@ namespace RawEditor
 
                     //read the thumbnail
                     thumbnail = decoder.decodeThumb();
-                    Task.Run(() =>
+                    if (thumbnail != null)
                     {
-                        if (thumbnail != null) displayImage(JpegHelper.getJpegInArray(thumbnail));
-                    });
+                        CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            //Hide the loading screen
+                            displayImage(JpegHelper.getJpegInArray(thumbnail));
+                        });
+                    }
 
                     decoder.decodeRaw();
                     decoder.decodeMetaData(metadata);
