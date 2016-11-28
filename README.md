@@ -11,6 +11,7 @@ The next work is the support of DNG and rotation of file
   - Tiff (uncompressed only)
   - Jpeg
   - Png 
+  
 ### output:
   - Tiff
   - PPM
