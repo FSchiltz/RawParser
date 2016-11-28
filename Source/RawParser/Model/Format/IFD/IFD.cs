@@ -36,7 +36,7 @@ namespace RawParser.Format.IFD
                 }
               
 
-                if (temp.tagId != 0x0096 && temp.tagId != 0x927C)//if makernote or linearisation table, do not get the data ( optimisation)
+                //if (temp.tagId != 0x0096) && temp.tagId != 0x927C)//if makernote or linearisation table, do not get the data ( optimisation)
                 {
                     temp.data = new Object[temp.dataCount];
                     long firstPosition = fileStream.BaseStream.Position;
@@ -119,11 +119,12 @@ namespace RawParser.Format.IFD
                         if (k < 4)
                             fileStream.ReadBytes(4 - k);
                     }
-                }else
+                }
+                /*else
                 {
                     temp.dataCount = 0;
                     temp.data = null;
-                }
+                }*/
                 if (!tags.ContainsKey(temp.tagId))
                 {
                     tags.Add(temp.tagId, temp);
