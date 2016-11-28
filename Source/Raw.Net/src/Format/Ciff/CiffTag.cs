@@ -1,5 +1,3 @@
-using System;
-
 namespace RawSpeed
 {
     public enum CiffTag

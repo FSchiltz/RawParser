@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System;
-using Windows.Storage.Streams;
-using Windows.UI.Xaml.Media.Imaging;
-using System.IO;
+﻿using Windows.UI.Xaml.Media.Imaging;
 
 namespace RawNet
 {

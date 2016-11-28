@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Windows.Graphics.Imaging;
 using System;
 using System.Diagnostics;
 using System.Linq;
