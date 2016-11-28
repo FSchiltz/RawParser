@@ -108,7 +108,7 @@ namespace RawNet
             UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
             UInt32 height = raw.getEntry(TagType.IMAGELENGTH).getUInt();
             UInt32 bitPerPixel = raw.getEntry(TagType.BITSPERSAMPLE).getUInt();
-
+            mRaw.colorDepth = (ushort)bitPerPixel;
             mRaw.dim = new iPoint2D((int)width, (int)height);
 
             data = rootIFD.getIFDsWithTag((TagType)0x8c);

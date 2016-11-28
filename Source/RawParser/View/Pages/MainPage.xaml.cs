@@ -168,12 +168,11 @@ namespace RawEditor
                         displayImage(JpegHelper.getJpegInArrayAsync(thumbnail));
                     }
 
-                    decoder.decodeRaw();
+                    raw = decoder.decodeRaw();
                     decoder.decodeMetaData(metadata);
-                    raw = decoder.mRaw;
                     raw.fileName = file.DisplayName;
                     //read the exifs
-                    if (raw.exif != null) displayExif();
+                    //if (raw.exif != null) displayExif();
                     //demos                                        
                     if (raw.cfa != null)
                         Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
@@ -200,11 +199,11 @@ namespace RawEditor
                     {
                         previewFactor = SettingStorage.previewFactor;
                     }
-                    raw.previewDim = new iPoint2D(raw.dim.y / previewFactor, raw.dim.x / previewFactor);
+                    raw.previewDim = new iPoint2D(raw.dim.x / previewFactor, raw.dim.y / previewFactor);
                     raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * 3];
-                    for (int i = 0; i < raw.previewDim.x; i++)
+                    for (int i = 0; i < raw.previewDim.y; i++)
                     {
-                        for (int j = 0; j < raw.previewDim.y; j++)
+                        for (int j = 0; j < raw.previewDim.x; j++)
                         {
                             raw.previewData[((i * raw.previewDim.x) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor];
                             raw.previewData[(((i * raw.previewDim.x) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor) + 1];
@@ -470,7 +469,11 @@ namespace RawEditor
             {
                 int[] value = new int[256];
                 ushort[] copyofpreview = new ushort[raw.previewData.Length];
-                for (int i = 0; i < copyofpreview.Length; i++) copyofpreview[i] = raw.previewData[i];
+                for (int i = 0; i < copyofpreview.Length; i++)
+                {
+                    copyofpreview[i] = raw.previewData[i];
+                }
+
                 applyUserModif(ref copyofpreview, raw.previewDim.y, raw.previewDim.x, raw.colorDepth);
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
