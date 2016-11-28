@@ -1,13 +1,6 @@
-﻿using RawParser.Effect;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
+﻿using RawEditor.Effect;
 
-namespace RawParser.Image
+namespace RawEditor
 {
     class ImageEffect
     {
@@ -26,7 +19,7 @@ namespace RawParser.Image
         public double vibrance = 0;
         public double[] camCurve;
 
-        public void applyModification(ref ushort[] image, uint height, uint width, int colorDepth)
+        public void applyModification(ref ushort[] image, int height, int width, int colorDepth)
         {
             maxValue = (uint)(1 << colorDepth);
             if (!cameraWB)
@@ -76,7 +69,7 @@ namespace RawParser.Image
                 /*Balance.sRGBToRGB(ref red, maxValue - 1);
                 Balance.sRGBToRGB(ref green, maxValue - 1);
                 Balance.sRGBToRGB(ref blue, maxValue - 1);*/
-               
+
                 //scale according to the white balance
                 Balance.scaleColor(ref red, ref green, ref blue, mul);
                 //clip

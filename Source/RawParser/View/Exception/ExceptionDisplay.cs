@@ -3,7 +3,7 @@ using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 
-namespace RawParser.View.Exception
+namespace RawEditor.View.Exception
 {
     class ExceptionDisplay
     {

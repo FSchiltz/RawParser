@@ -1,6 +1,6 @@
 ﻿using Windows.Storage;
 
-namespace RawParser.Model.Encoder
+namespace RawEditor.Model.Encoder
 {
     class JpegEncoder
     {

@@ -9,21 +9,20 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using RawParser.View.Exception;
+using RawEditor.View.Exception;
 using Windows.Storage.Provider;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using System.Runtime.InteropServices;
-using RawParser.View.UIHelper;
-using RawParser.Image;
-using RawParser.Parser;
-using RawParser.Effect;
-using RawParser.Model.Settings;
-using RawParser.Model.Encoder;
+using RawEditor.View.UIHelper;
+using RawEditor.Effect;
+using RawEditor.Model.Settings;
+using RawEditor.Model.Encoder;
 using Windows.UI.ViewManagement;
 using Windows.Foundation;
+using RawNet;
 
-namespace RawParser
+namespace RawEditor
 {
     [ComImport]
     [Guid("5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D")]
@@ -44,18 +43,34 @@ namespace RawParser
         private int currentImageDisplayedHeight;
         private int currentImageDisplayedWidth;
         bool cameraWB = true;
+        CameraMetaData metadata = null;
+        public byte[] thumbnail;
 
         public MainPage()
         {
             InitializeComponent();
+            if (null == metadata)
+            {
+                try
+                {
+                    StorageFolder installationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+                    var stringfile = @"\Assets\Data\cameras.xml";
+                    metadata = new CameraMetaData(installationFolder.Path + stringfile);
+                }
+                catch (CameraMetadataException e)
+                {
+                    ExceptionDisplay.display(e.Message);
+                }
+            }
             SettingStorage.init();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
-            if(VisualStateGroupeMainUI.CurrentState == narrowState)
+            if (VisualStateGroupeMainUI.CurrentState == narrowState)
             {
                 ChangeUIForMobile(wideState, narrowState);
-            }else if(VisualStateGroupeMainUI.CurrentState == mediumState)
+            }
+            else if (VisualStateGroupeMainUI.CurrentState == mediumState)
             {
                 ChangeUIForMobile(wideState, mediumState);
             }
@@ -135,130 +150,93 @@ namespace RawParser
             setScrollProperty();
         }
 
-        private void OpenFile(StorageFile file)
+        private async void OpenFile(StorageFile file)
         {
-            //Open the file with the correct parser
-            AParser parser;
-            switch (file.FileType.ToUpper())
-            {
-
-                case ".NEF":
-                    parser = new NEFParser();
-                    break;
-                case ".DNG":
-                    parser = new DNGParser();
-                    break;
-                case ".TIFF":
-                case ".TIF":
-                    parser = new TiffParser();
-                    break;
-                case ".JPG":
-                case ".JPEG":
-                    parser = new JPGParser();
-                    break;
-                default:
-                   throw new System.Exception("File not supported"); //todo change exception types
-            }
 
             //Add a loading screen
             progressDisplay.Visibility = Visibility.Visible;
             histoLoadingBar.Visibility = Visibility.Visible;
             emptyImage();
-
             Task t = Task.Run(async () =>
             {
-                using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
+                try
                 {
-                    try
+                    Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
+                    RawParser parser = new RawParser(ref stream);
+                    RawDecoder decoder = parser.decoder;
+                    decoder.failOnUnknown = false;
+                    decoder.checkSupport(metadata);
+
+                    //read the thumbnail
+                    thumbnail = decoder.decodeThumb();
+                    Task.Run(() =>
                     {
-                        raw = new RawImage();
-                        raw.fileName = file.DisplayName;
+                        if (thumbnail != null) displayImage(JpegHelper.getJpegInArray(thumbnail));
+                    });
 
-                        parser.Parse(stream);
+                    decoder.decodeRaw();
+                    decoder.decodeMetaData(metadata);
+                    RawImage raw = decoder.mRaw;
+                    raw.fileName = file.DisplayName;
+                    //read the exifs
+                    if (raw.exif != null) displayExif();
+                    //demos                                        
+                    if (raw.cfa != null)
+                        Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
 
-                        //read the thumbnail
-
-                        raw.thumbnail = parser.parseThumbnail();
-                        if (raw.thumbnail != null) displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
-
-                        //read the preview
-                        //parser.parsePreview();
-                        //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
-
-                        //read the exifs
-                        raw.exif = parser.parseExif();
-                        if (raw.exif != null) displayExif();
-
-                        
-                        //read the data 
-                        raw.rawData = parser.parseRAWImage();
-                        if (raw.rawData == null) throw new FormatException("Image not compatible");
-                        raw.height = parser.height;
-                        raw.width = parser.width;
-                        raw.colorDepth = parser.colorDepth;
-                        raw.cfa = parser.cfa;
-                        raw.camMul = parser.camMul;
-                        raw.curve = parser.curve;                   
-
-                        //demos                                        
-                        //if (raw.cfa != null)
-                         //   Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
-
-                        //activate the editing control
-                        enableEditingControl(true);
-
-                        //create a small image from raw to display
-                        bool autoFactor = SettingStorage.autoPreviewFactor;
-                        int previewFactor = 0;
-                        if (autoFactor)
+                    //create a small image from raw to display
+                    bool autoFactor = SettingStorage.autoPreviewFactor;
+                    int previewFactor = 0;
+                    if (autoFactor)
+                    {
+                        if (raw.dim.y > raw.dim.x)
                         {
-                            if (raw.height > raw.width)
-                            {
-                                previewFactor = (int)(raw.height / 720);
-                            }
-                            else
-                            {
-                                previewFactor = (int)(raw.width / 1080);
-                            }
-                            int start = 1;
-                            for (; previewFactor > (start << 1); start <<= 1) ;
-                            if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
-                            else previewFactor <<= 1;
+                            previewFactor = (int)(raw.dim.y / 720);
                         }
                         else
                         {
-                            previewFactor = SettingStorage.previewFactor;
+                            previewFactor = (int)(raw.dim.x / 1080);
                         }
-                        raw.previewHeight = (uint)(raw.height / previewFactor);
-                        raw.previewWidth = (uint)(raw.width / previewFactor);
-                        raw.previewData = new ushort[raw.previewHeight * raw.previewWidth * 3];
-                        for (int i = 0; i < raw.previewHeight; i++)
-                        {
-                            for (int j = 0; j < raw.previewWidth; j++)
-                            {
-                                raw.previewData[((i * raw.previewWidth) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor];
-                                raw.previewData[(((i * raw.previewWidth) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 1];
-                                raw.previewData[(((i * raw.previewWidth) + j) * 3) + 2] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 2];
-                            }
-                        }
-                        updatePreview();
-
-                        //dispose
-                        file = null;
-                        parser = null;
-                        
+                        int start = 1;
+                        for (; previewFactor > (start << 1); start <<= 1) ;
+                        if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
+                        else previewFactor <<= 1;
                     }
-                    catch (FormatException e)
+                    else
                     {
-                        ExceptionDisplay.display(e.Message);
+                        previewFactor = SettingStorage.previewFactor;
                     }
+                    raw.previewDim.y = raw.dim.y / previewFactor;
+                    raw.previewDim.x = raw.dim.x / previewFactor;
+                    raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * 3];
+                    for (int i = 0; i < raw.previewDim.x; i++)
+                    {
+                        for (int j = 0; j < raw.previewDim.y; j++)
+                        {
+                            raw.previewData[((i * raw.previewDim.x) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor];
+                            raw.previewData[(((i * raw.previewDim.x) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor) + 1];
+                            raw.previewData[(((i * raw.previewDim.x) + j) * 3) + 2] = raw.rawData[(((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor) + 2];
+                        }
+                    }
+                    updatePreview();
+
+                    //activate the editing control
+                    enableEditingControl(true);
+                    //dispose
+                    file = null;
+                    parser = null;
                 }
+                catch (FormatException e)
+                {
+                    ExceptionDisplay.display(e.Message);
+                }
+
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                //Hide the loading screen
-                                progressDisplay.Visibility = Visibility.Collapsed;
-                            });
+                                            {
+                                                //Do some UI-code that must be run on the UI thread.
+                                                //Hide the loading screen
+                                                progressDisplay.Visibility = Visibility.Collapsed;
+                                            });
             });
         }
 
@@ -378,7 +356,7 @@ namespace RawParser
                 {
                     ushort[] copyOfimage = new ushort[raw.rawData.Length];
                     for (int i = 0; i < raw.rawData.Length; i++) copyOfimage[i] = raw.rawData[i];
-                    applyUserModif(ref copyOfimage, raw.height, raw.width, raw.colorDepth);
+                    applyUserModif(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth);
 
                     // write to file
                     if (file.FileType == ".jpg")
@@ -391,11 +369,11 @@ namespace RawParser
                             SoftwareBitmap bitmap = null;
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
-                                encoder.SetSoftwareBitmap(bitmap);
-                            });
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
+                            encoder.SetSoftwareBitmap(bitmap);
+                        });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -410,11 +388,11 @@ namespace RawParser
                             SoftwareBitmap bitmap = null;
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
-                                encoder.SetSoftwareBitmap(bitmap);
-                            });
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
+                            encoder.SetSoftwareBitmap(bitmap);
+                        });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -429,11 +407,11 @@ namespace RawParser
                             SoftwareBitmap bitmap = null;
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
-                                encoder.SetSoftwareBitmap(bitmap);
-                            });
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
+                            encoder.SetSoftwareBitmap(bitmap);
+                        });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -442,14 +420,14 @@ namespace RawParser
                     else if (file.FileType == ".ppm")
                     {
                         Stream str = await file.OpenStreamForWriteAsync();
-                        PpmEncoder.WriteToFile(str, ref copyOfimage, raw.height, raw.width, raw.colorDepth);
+                        PpmEncoder.WriteToFile(str, ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth);
                     }
                     else throw new FormatException("Format not supported: " + file.FileType);
                     // Let Windows know that we're finished changing the file so
                     // the other app can update the remote version of the file.
                     // Completing updates may require Windows to ask for user input.
                     FileUpdateStatus status =
-                            await CachedFileManager.CompleteUpdatesAsync(file);
+                        await CachedFileManager.CompleteUpdatesAsync(file);
 
                     if (status != FileUpdateStatus.Complete)
                     {
@@ -499,18 +477,18 @@ namespace RawParser
                 int[] value = new int[256];
                 ushort[] copyofpreview = new ushort[raw.previewData.Length];
                 for (int i = 0; i < copyofpreview.Length; i++) copyofpreview[i] = raw.previewData[i];
-                applyUserModif(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth);
+                applyUserModif(ref copyofpreview, raw.previewDim.y, raw.previewDim.x, raw.colorDepth);
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher
-                 .RunAsync(CoreDispatcherPriority.Normal, () =>
-                 {
-                     histoLoadingBar.Visibility = Visibility.Visible;
-                     //Writeablebitmap use BGRA
-                     bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
-                 });
+             .RunAsync(CoreDispatcherPriority.Normal, () =>
+             {
+                 histoLoadingBar.Visibility = Visibility.Visible;
+                 //Writeablebitmap use BGRA
+                 bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyofpreview, raw.previewDim.y, raw.previewDim.x, raw.colorDepth, null, ref value, true, true);
+             });
                 displayImage(bitmap);
-                Histogram.Create(value, raw.colorDepth, raw.previewHeight, raw.previewWidth, histogramCanvas);
+                Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     histoLoadingBar.Visibility = Visibility.Collapsed;
@@ -521,7 +499,7 @@ namespace RawParser
         /**
          * Apply the change over the image preview
          */
-        private void applyUserModif(ref ushort[] image, uint imageHeight, uint imageWidth, ushort colorDepth)
+        private void applyUserModif(ref ushort[] image, int imageHeight, int imageWidth, ushort colorDepth)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -587,15 +565,15 @@ namespace RawParser
                 PivotGrid.Children.Remove(ControlPivot);
                 Grid.SetRow(ControlPivot, 1);
                 MainGrid.Children.Add(ControlPivot);
-               // MainGridRow1.Height = new GridLength(2,GridUnitType.Star);
-               // MainGridRow2.Height = new GridLength(3, GridUnitType.Star);
+                // MainGridRow1.Height = new GridLength(2,GridUnitType.Star);
+                // MainGridRow2.Height = new GridLength(3, GridUnitType.Star);
             }
             else if (oldState == narrowState)
             {
                 MainGrid.Children.Remove(ControlPivot);
-                Grid.SetRow(ControlPivot, 0);                
+                Grid.SetRow(ControlPivot, 0);
                 PivotGrid.Children.Add(ControlPivot);
-               // MainGridRow1.Height = new GridLength(1, GridUnitType.Star);
+                // MainGridRow1.Height = new GridLength(1, GridUnitType.Star);
                 MainGridRow2.Height = new GridLength(0, GridUnitType.Star);
             }
         }

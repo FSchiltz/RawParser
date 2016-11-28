@@ -1,4 +1,4 @@
-﻿namespace RawParser.Effect
+﻿namespace RawEditor.Effect
 {
     class Luminance
     {

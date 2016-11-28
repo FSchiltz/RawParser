@@ -1,8 +1,8 @@
 ﻿<Application
-    x:Class="RawParser.App"
+    x:Class="RawEditor.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:RawParser"
+    xmlns:local="using:RawEditor"
     RequestedTheme="Light">
 
 </Application>
