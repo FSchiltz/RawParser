@@ -1,4 +1,4 @@
-﻿namespace RawParser.View.UIHelper
+﻿namespace RawEditor.View.UIHelper
 {
     public static class UIImageHelper
     {

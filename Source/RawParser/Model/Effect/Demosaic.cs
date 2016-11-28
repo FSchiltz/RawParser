@@ -1,6 +1,6 @@
-﻿using RawParser.Image;
+﻿using RawNet;
 
-namespace RawParser.Effect
+namespace RawEditor.Effect
 {
     enum demosAlgorithm
     {
@@ -24,18 +24,18 @@ namespace RawParser.Effect
                     break;
                 case demosAlgorithm.NearNeighbour:
                 default:
-                    Demosaic.NearNeighbour(ref image, (int)image.height, (int)image.width, image.colorDepth, image.cfa);
+                    Demosaic.NearNeighbour(ref image, (int)image.dim.y, (int)image.dim.x, image.colorDepth, image.cfa);
                     break;
             }
         }
 
-        private static void NearNeighbour(ref RawImage image, int height, int width, ushort colorDepth, byte[] cfa)
+        private static void NearNeighbour(ref RawImage image, int height, int width, ushort colorDepth, ColorFilterArray cfa)
         {
             for (int row = 0; row < height; row++)
             {
                 for (int col = 0; col < width; col++)
                 {
-                    var pixeltype = cfa[((row % 2) * 2) + col % 2];
+                    int pixeltype = (int)cfa.cfa[((row % 2) * 2) + col % 2];
                     if (pixeltype == 1)
                     {
                         //if green

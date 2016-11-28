@@ -1,6 +1,6 @@
 ﻿using Windows.Storage;
 
-namespace RawParser.Model.Settings
+namespace RawEditor.Model.Settings
 {
     static class SettingStorage
     {

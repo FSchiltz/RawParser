@@ -1,11 +1,11 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace RawParser.Model.Encoder
+namespace RawEditor.Model.Encoder
 {
     class PpmEncoder
     {
-        public static void WriteToFile(Stream str, ref ushort [] image, uint height, uint width, int colorDepth)
+        public static void WriteToFile(Stream str, ref ushort [] image, int height, int width, int colorDepth)
         {
     
             var stream = new StreamWriter(str, Encoding.ASCII);

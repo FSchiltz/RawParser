@@ -1,4 +1,4 @@
-﻿namespace RawParser.Model.Effect
+﻿namespace RawEditor.Model.Effect
 {
     static public class Rotate
     {

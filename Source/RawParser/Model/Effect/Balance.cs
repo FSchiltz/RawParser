@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RawParser.Effect
+namespace RawEditor.Effect
 {
     public class Balance
     {
