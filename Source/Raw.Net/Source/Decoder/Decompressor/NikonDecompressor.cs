@@ -5,7 +5,6 @@ namespace RawNet
     public class NikonDecompressor : LJpegDecompressor
     {
         public bool uncorrectedRawValues;
-        public LinearisationTable table;
         private UInt16[] curve = new UInt16[65536];
         public byte[][] nikon_tree =
             {
@@ -95,8 +94,6 @@ namespace RawNet
                 }
                 _max = (int)csize;
             }
-            //Correct until here
-
             initTable(huffSelect);
 
             mRaw.whitePoint = curve[_max - 1];
@@ -132,7 +129,7 @@ namespace RawNet
                 mRaw.setWithLookUp((ushort)Common.clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
                 for (x = 1; x < cw; x++)
                 {
-                    bits.checkPos();                    
+                    bits.checkPos();
                     pLeft1 += HuffDecodeNikon(bits);
                     pLeft2 += HuffDecodeNikon(bits);
                     mRaw.setWithLookUp((ushort)Common.clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);

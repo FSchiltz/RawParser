@@ -24,7 +24,7 @@ namespace RawEditor.Effect
                     break;
                 case demosAlgorithm.NearNeighbour:
                 default:
-                    Demosaic.NearNeighbour(ref image, (int)image.dim.y, (int)image.dim.x, image.colorDepth, image.cfa);
+                    Demosaic.NearNeighbour(ref image, image.dim.y, image.dim.x, image.colorDepth, image.cfa);
                     break;
             }
         }
