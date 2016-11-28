@@ -40,6 +40,7 @@ namespace RawEditor
                 t.Wait();
                 if (decoder.Status == AsyncStatus.Error)
                 {
+
                     throw decoder.ErrorCode;
                 }
 
