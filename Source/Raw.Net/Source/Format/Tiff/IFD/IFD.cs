@@ -170,6 +170,7 @@ namespace RawNet
                         goto case TagType.SUBIFDS;
                     case TagType.SUBIFDS:
                     case TagType.EXIFIFDPOINTER:
+                    case TagType.NIKONTHUMB:
                         long p = fileStream.Position;
                         try
                         {

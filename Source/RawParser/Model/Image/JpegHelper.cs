@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
+using System;
 
 namespace RawEditor
 {
@@ -17,48 +18,27 @@ namespace RawEditor
 
     class JpegHelper
     {
-
-        public static SoftwareBitmap getJpegInArray(byte[] im)
+        public static SoftwareBitmap getJpegInArrayAsync(byte[] im)
         {
-            if (im == null) return null;
-            Task t;
-            IAsyncOperation<BitmapDecoder> decoder;
-            IAsyncOperation<SoftwareBitmap> bitmapasync;
-            using (MemoryStream ms = new MemoryStream())
+            try
             {
+                if (im == null) return null;
+
+                MemoryStream ms = new MemoryStream();
                 ms.Write(im, 0, im.Length);
                 ms.Position = 0; //reset the stream after populate
 
-                decoder = BitmapDecoder.CreateAsync(ms.AsRandomAccessStream());
+                var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId ,ms.AsRandomAccessStream()).AsTask();
+                decoder.Wait();
 
-                t = Task.Run(() =>
-                {
-                    while (decoder.Status == AsyncStatus.Started)
-                    {
-                    }
-                });
-                t.Wait();
-                if (decoder.Status == AsyncStatus.Error)
-                {
-
-                    throw decoder.ErrorCode;
-                }
-
-                bitmapasync = decoder.GetResults().GetSoftwareBitmapAsync();
-
-                t = Task.Run(() =>
-                {
-                    while (bitmapasync.Status == AsyncStatus.Started)
-                    {
-                    }
-                });
-                t.Wait();
-                if (bitmapasync.Status == AsyncStatus.Error)
-                {
-                    throw bitmapasync.ErrorCode;
-                }
+                var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
+                bitmapasync.Wait();
+                return bitmapasync.Result;
             }
-            return bitmapasync.GetResults();
+            catch (AggregateException e)
+            {
+                throw e;
+            }
         }
 
         public static unsafe SoftwareBitmap getImageAs8bitsBitmap(ref ushort[] data, int height, int width, int colorDepth, object[] curve, ref int[] value, bool histo, bool bgr)
