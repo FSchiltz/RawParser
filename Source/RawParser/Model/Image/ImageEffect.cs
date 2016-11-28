@@ -12,7 +12,7 @@ namespace RawEditor
         public double brightness = 0;
         public double hightlight = 1;
         public double shadow = 1;
-        public double[] mul;
+        public float[] mul;
         public bool cameraWB;
         public uint maxValue;
         public double saturation = 1;
@@ -24,10 +24,10 @@ namespace RawEditor
             maxValue = (uint)(1 << colorDepth);
             if (!cameraWB)
             {
-                mul = new double[4];
+                mul = new float[4];
                 //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
-                mul[0] = 255 / temperature;
-                mul[1] = 255 / tint;
+                mul[0] = (float)(255 / temperature);
+                mul[1] = (float)(255.0 / tint);
                 mul[2] = 1;
             }
             //generate the curve            

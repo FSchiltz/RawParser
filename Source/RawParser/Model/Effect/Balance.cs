@@ -107,7 +107,7 @@ namespace RawEditor.Effect
         }*/
 
 
-        public static void scaleColor(ref double r, ref double g, ref double b, double[] mul)
+        public static void scaleColor(ref double r, ref double g, ref double b, float[] mul)
         {
             r *= mul[0];
             g *= mul[1];

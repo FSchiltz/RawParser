@@ -513,7 +513,7 @@ namespace RawEditor
                 });
             });
             t.Wait();
-            effect.mul = raw.camMul;
+            effect.mul = raw.metadata.wbCoeffs;
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
