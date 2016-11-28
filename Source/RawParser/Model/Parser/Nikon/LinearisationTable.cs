@@ -118,7 +118,6 @@ namespace RawParser.Parser.Nikon
             }
 
             //else if otherversion
-
             else if (version0 != 0x46 && curveSize <= 0x4001)
             {
                 for (int i = 0; i < curveSize; i++)

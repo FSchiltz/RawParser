@@ -201,8 +201,8 @@ namespace RawParser
                         raw.curve = parser.curve;                   
 
                         //demos                                        
-                        if (raw.cfa != null)
-                            Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
+                        //if (raw.cfa != null)
+                         //   Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
 
                         //activate the editing control
                         enableEditingControl(true);
