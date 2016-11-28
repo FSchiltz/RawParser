@@ -165,17 +165,12 @@ namespace RawEditor
                     thumbnail = decoder.decodeThumb();
                     if (thumbnail != null)
                     {
-                        CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            //Hide the loading screen
-                            displayImage(JpegHelper.getJpegInArray(thumbnail));
-                        });
+                        displayImage(JpegHelper.getJpegInArrayAsync(thumbnail));
                     }
 
                     decoder.decodeRaw();
                     decoder.decodeMetaData(metadata);
-                    RawImage raw = decoder.mRaw;
+                    raw = decoder.mRaw;
                     raw.fileName = file.DisplayName;
                     //read the exifs
                     if (raw.exif != null) displayExif();
@@ -205,8 +200,7 @@ namespace RawEditor
                     {
                         previewFactor = SettingStorage.previewFactor;
                     }
-                    raw.previewDim.y = raw.dim.y / previewFactor;
-                    raw.previewDim.x = raw.dim.x / previewFactor;
+                    raw.previewDim = new iPoint2D(raw.dim.y / previewFactor, raw.dim.x / previewFactor);
                     raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * 3];
                     for (int i = 0; i < raw.previewDim.x; i++)
                     {
@@ -262,7 +256,8 @@ namespace RawEditor
                 }
                 else
                 {
-                    //TODO
+
+                    ExceptionDisplay.display("No file selected");
                 }
             }
         }

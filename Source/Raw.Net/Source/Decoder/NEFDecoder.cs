@@ -28,14 +28,21 @@ namespace RawNet
 
         protected override byte[] decodeThumbInternal()
         {
-            List<IFD> ifds = rootIFD.getIFDsWithTag((TagType)0x0201);
+            //find the preview ifd inside the makernote
+            List<IFD> makernote = rootIFD.getIFDsWithTag((TagType)0x011);
+            IFD preview = makernote[0].getIFDsWithTag((TagType)0x0201)[0];
             //no thumbnail
-            if (ifds == null || ifds.Count == 0) return null;
-            var thumb = ifds[0].getEntryRecursive((TagType)0x0201);
-            var size = ifds[0].getEntryRecursive((TagType)0x0202);
-            if (size == null) return null;
+            if (preview == null) return null;
+
+            var thumb = preview.getEntry((TagType)0x0201);
+            var size = preview.getEntry((TagType)0x0202);
+            if (size == null || thumb == null) return null;
+
+            //get the makernote offset
             List<IFD> exifs = rootIFD.getIFDsWithTag((TagType)0x927C);
+
             if (exifs == null || exifs.Count == 0) return null;
+
             Tag makerNoteOffsetTag = exifs[0].getEntryRecursive((TagType)0x927C);
             if (makerNoteOffsetTag == null) return null;
             reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
