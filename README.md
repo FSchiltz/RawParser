@@ -10,7 +10,7 @@ The next work is the support of DNG and rotation of file
   - Nikon nef (12/14 bits)
   - Tiff (uncompressed only)
   - Jpeg
-  - Png
+  - Png 
 ### output:
   - Tiff
   - PPM
