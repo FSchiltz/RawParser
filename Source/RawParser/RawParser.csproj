@@ -7,8 +7,8 @@
     <ProjectGuid>{B48F638D-E18B-48E6-8008-C2C2CDC7CBED}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RawParser</RootNamespace>
-    <AssemblyName>RawParser</AssemblyName>
+    <RootNamespace>RawEditor</RootNamespace>
+    <AssemblyName>RawEditor</AssemblyName>
     <DefaultLanguage>en</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
@@ -120,6 +120,10 @@
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\data\cameras.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\data\showcameras.xsl" />
     <Content Include="Assets\Dic\NikonToStandard.dic">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -134,40 +138,23 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Model\Base\ByteArrayWithIndexValue.cs" />
-    <Compile Include="Model\Base\DictionnaryFromFileString.cs" />
-    <Compile Include="Model\Base\DictionnaryFromFileUShort.cs" />
-    <Compile Include="Model\Base\DictionnaryFromFile.cs" />
-    <Compile Include="Model\Base\StreamHelper.cs" />
     <Compile Include="Model\Effect\Color.cs" />
     <Compile Include="Model\Effect\Curve.cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
     <Compile Include="Model\Effect\Rotate.cs" />
     <Compile Include="Model\Encoder\JpegEncoder.cs" />
     <Compile Include="Model\Encoder\PpmEncoder.cs" />
-    <Compile Include="Model\Format\IFD\Tag.cs" />
     <Compile Include="Model\Effect\Demosaic.cs" />
+    <Compile Include="Model\Encoder\TiffWriter.cs" />
     <Compile Include="Model\Image\JpegHelper.cs" />
     <Compile Include="Model\Image\ImageEffect.cs" />
-    <Compile Include="Model\Parser\Export\TiffWriter.cs" />
-    <Compile Include="Model\Parser\JPGParser.cs" />
+    <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="View\UIHelper\UIImageHelper.cs" />
-    <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
-    <Compile Include="Model\Base\Settings\SettingStorage.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\Exception\ExceptionDisplay.cs" />
-    <Compile Include="Model\Image\RawImage.cs" />
-    <Compile Include="Model\Format\IFD\Header.cs" />
-    <Compile Include="Model\Format\IFD\IFD.cs" />
-    <Compile Include="Model\Parser\Nikon\NikonMakerNote.cs" />
-    <Compile Include="Model\Base\Reader\BinaryReaderBE.cs" />
-    <Compile Include="Model\Parser\DNGParser.cs" />
-    <Compile Include="Model\Parser\NEFParser.cs" />
-    <Compile Include="Model\Parser\AParser.cs" />
-    <Compile Include="Model\Parser\TIFFParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="View\Pages\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
@@ -244,6 +231,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="RawParser\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Raw.Net\Raw.Net.csproj">
+      <Project>{907a8c92-5648-4c05-9e85-93e327ba2823}</Project>
+      <Name>Raw.Net</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
