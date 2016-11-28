@@ -135,13 +135,13 @@ namespace RawNet
          * Should be allows if possible
          * not efficient but allows more concise code
          * 
-         */
-        public ushort this[int row, int col, int k]
+         */      
+        public ushort this[int row, int col]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var a = (((row * dim.x) + col) * 3) + k;
+                var a = (row * dim.x) + col;
                 if (row < 0 || row >= dim.y || col < 0 || col >= dim.x)
                 {
                     return 0;
@@ -152,7 +152,7 @@ namespace RawNet
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                rawData[(((row * dim.x) + col) * 3) + k] = value;
+                rawData[(row * dim.x) + col] = value;
             }
         }
 
@@ -161,8 +161,8 @@ namespace RawNet
             TableLookUp t = new TableLookUp(1, dither);
             t.setTable(0, table, nfilled);
             this.table = (t);
-        }       
-       
+        }
+
         public void subFrame(iRectangle2D crop)
         {
             if (!crop.dim.isThisInside(dim - crop.pos))
