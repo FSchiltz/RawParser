@@ -174,7 +174,7 @@ namespace RawEditor
                     //read the exifs
                     //if (raw.exif != null) displayExif();
                     //demos                                        
-                    if (raw.cfa != null)
+                    if (raw.cfa != null && raw.cpp == 1)
                         Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
 
                     //create a small image from raw to display

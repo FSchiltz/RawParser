@@ -27,6 +27,7 @@ namespace RawEditor.Effect
                     Demosaic.NearNeighbour(ref image, image.dim.y, image.dim.x, image.colorDepth, image.cfa);
                     break;
             }
+            image.cpp = 3;
         }
 
         private static void NearNeighbour(ref RawImage image, int height, int width, ushort colorDepth, ColorFilterArray cfa)
@@ -39,6 +40,8 @@ namespace RawEditor.Effect
                     int pixeltype = (int)cfa.cfa[((row % 2) * 2) + col % 2];
                     if (pixeltype == 1)
                     {
+                        //get the green
+                        deflated[(((row * width) + col) * 3) + 1] = image[row, col];
                         //if green
                         //get the red(                        
                         deflated[((row * width) + col) * 3] = (ushort)((image[row - 1, col] + image[row + 1, col]) >> 1);
@@ -47,10 +50,13 @@ namespace RawEditor.Effect
                     }
                     else
                     {
+                        deflated[(((row * width) + col) * 3) + pixeltype] = image[row, col];
+
                         //get the green value from around
                         pixeltype ^= 2;
                         deflated[(((row * width) + col) * 3) + 1] = (ushort)((image[row - 1, col] + image[row + 1, col] + image[row, col - 1] + image[row, col + 1]) >> 2);
 
+                        //get the other value
                         deflated[(((row * width) + col) * 3) + pixeltype] = (ushort)((image[row - 1, col - 1] + image[row - 1, col + 1] + image[row + 1, col - 1] + image[row + 1, col + 1]) >> 2);
                     }
                 }
