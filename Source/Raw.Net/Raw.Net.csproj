@@ -122,6 +122,7 @@
     <Compile Include="Source\Decoder\Decompressor\NikonDecompressor.cs" />
     <Compile Include="Source\Decoder\DngDecoder.cs" />
     <Compile Include="Source\Decoder\JPGDecoder.cs" />
+    <Compile Include="Source\Decoder\LJpegPlain.cs" />
     <Compile Include="Source\Decoder\Metadata\Camera.cs" />
     <Compile Include="Source\Decoder\Metadata\CameraMetaData.cs" />
     <Compile Include="Source\Decoder\Metadata\CameraSensorInfo.cs" />
@@ -134,6 +135,7 @@
     <Compile Include="Source\Exception\RawDecoderException.cs" />
     <Compile Include="Source\Exception\TiffParserException.cs" />
     <Compile Include="Source\Format\Ciff\CiffTag.cs" />
+    <Compile Include="Source\Format\DNG\DngDecoderSlices.cs" />
     <Compile Include="Source\Format\Image\BitOrder.cs" />
     <Compile Include="Source\Format\Image\BlackArea.cs" />
     <Compile Include="Source\Format\Image\ColorFilterArray.cs" />
