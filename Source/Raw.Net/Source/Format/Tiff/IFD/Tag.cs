@@ -174,13 +174,34 @@ namespace RawNet
             return size;
         }
 
+        public void getShortArray(out ushort[] array, int num)
+        {
+            array = new ushort[num];
+            for (int i = 0; i < num; i++)
+                array[i] = Convert.ToUInt16(data[i]);
+        }
+
+        public void getIntArray(out int[] array, int num)
+        {
+            array = new int[num];
+            for (int i = 0; i < num; i++)
+                array[i] = Convert.ToInt32(data[i]);
+        }
+
+        public void getFloatArray(out float[] array, int num)
+        {
+            array = new float[num];
+            for (int i = 0; i < num; i++)
+                array[i] = (float)Convert.ToDecimal(data[i]);
+        }
+
         public int getInt(int v)
         {
             try
             {
                 return Convert.ToInt32(data[0]);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return v;
             }
@@ -210,6 +231,12 @@ namespace RawNet
             }
         }
 
+
+        internal float getFloat()
+        {
+            return (float)Convert.ToDouble(data[0]);
+        }
+
         public short getShort(short v)
         {
             try
@@ -221,6 +248,17 @@ namespace RawNet
                 return v;
             }
         }
+
+        internal ushort getUShort()
+        {
+            return Convert.ToUInt16(data[0]);
+        }
+
+        internal short getShort()
+        {
+            return Convert.ToInt16(data[0]);
+        }
+
 
         public void writeToStream(Stream s, ushort name, ulong count, object data, long offset)
         {
@@ -237,6 +275,7 @@ namespace RawNet
         {
             return (ushort)((((ushort)(data)[pos + 1]) << 8) | ((ushort)(data)[pos]));
         }
+
         public uint get4BE(uint pos)
         {
             return ((((uint)(data)[pos + 0]) << 24) | (((uint)(data)[pos + 1]) << 16) | (((uint)(data)[pos + 2]) << 8) | ((uint)(data)[pos + 3]));
