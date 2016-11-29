@@ -625,6 +625,16 @@ namespace RawNet
                 mRaw.metadata.wbCoeffs[2] *= (float)(256 / 317.0);
             }
 
+            //TODO replace with info from camer
+            //decode Nikon metadata
+            /*
+               mRaw.metadata.make = make;
+               mRaw.metadata.model = model;
+               mRaw.metadata.mode = getMode();
+               //iso
+
+               */
+
             string mode = getMode();
             string extended_mode = getExtendedMode(mode);
             if (meta.hasCamera(make, model, extended_mode))
@@ -645,6 +655,7 @@ namespace RawNet
             hints.TryGetValue("nikon_override_auto_black", out string k);
             if (black >= 0 && k == null)
                 mRaw.blackLevel = black;
+
         }
 
 
