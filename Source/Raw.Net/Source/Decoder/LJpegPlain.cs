@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace RawNet
 {
@@ -10,18 +11,15 @@ namespace RawNet
     public class LJpegPlain : LJpegDecompressor
     {
         UInt32[] offset;
-        int[] slice_width;
+        uint[] slice_width;
 
 
-        LJpegPlain(TIFFBinaryReader file, RawImage img) :
-    base(file, img)
+        LJpegPlain(TIFFBinaryReader file, RawImage img) : base(file, img)
         {
-            offset = 0;
-            slice_width = 0;
         }
 
 
-        void decodeScan()
+        public override void decodeScan()
         {
 
             // Fix for Canon 6D mRaw, which has flipped width & height for some part of the image
@@ -35,9 +33,9 @@ namespace RawNet
 
             // If image attempts to decode beyond the image bounds, strip it.
             if ((frame.w * frame.cps + offX * mRaw.cpp) > mRaw.dim.x * mRaw.cpp)
-                skipX = ((frame.w * frame.cps + offX * mRaw.cpp) - mRaw.dim.x * mRaw.cpp) / frame.cps;
+                skipX = (uint)((frame.w * frame.cps + offX * mRaw.cpp) - mRaw.dim.x * mRaw.cpp) / frame.cps;
             if (frame.h + offY > (UInt32)mRaw.dim.y)
-                skipY = frame.h + offY - mRaw.dim.y;
+                skipY = (uint)(frame.h + offY - mRaw.dim.y);
 
             // Swap back (see above)
             if (mCanonFlipDim)
@@ -48,11 +46,11 @@ namespace RawNet
             }
 
             /* Correct wrong slice count (Canon G16) */
-            if (slicesW.size() == 1)
-                slicesW[0] = frame.w * frame.cps;
+            if (slicesW.Count == 1)
+                slicesW[0] = (int)(frame.w * frame.cps);
 
-            if (slicesW.empty())
-                slicesW.push_back(frame.w * frame.cps);
+            if (slicesW.Count == 0)
+                slicesW.Add((int)(frame.w * frame.cps));
 
             if (0 == frame.h || 0 == frame.w)
                 throw new RawDecoderException("LJpegPlain::decodeScan: Image width or height set to zero");
@@ -64,7 +62,7 @@ namespace RawNet
                     if (mRaw.isCFA)
                         throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot decode subsampled image to CFA data");
 
-                    if (mRaw.getCpp() != frame.cps)
+                    if (mRaw.cpp != frame.cps)
                         throw new RawDecoderException("LJpegDecompressor::decodeScan: Subsampled component count does not match image.");
 
                     if (pred == 1)
@@ -139,9 +137,10 @@ namespace RawNet
 
         void decodeScanLeftGeneric()
         {
+            /*
             _ASSERTE(slicesW.size() < 16);  // We only have 4 bits for slice number.
             _ASSERTE(!(slicesW.size() > 1 && skipX)); // Check if this is a valid state
-
+            */
             UInt32 comps = frame.cps;  // Components
             HuffmanTable[] dctbl = new HuffmanTable[4];   // Tables for up to 4 components
             UInt16[] predict;         // Prediction pointer
@@ -159,50 +158,50 @@ namespace RawNet
 
             for (UInt32 i = 0; i < comps; i++)
             {
-                dctbl[i] = &huff[frame.compInfo[i].dcTblNo];
+                dctbl[i] = huff[frame.compInfo[i].dcTblNo];
                 samplesH[i] = frame.compInfo[i].superH;
-                if (!isPowerOfTwo(samplesH[i]))
+                if (!Common.isPowerOfTwo(samplesH[i]))
                     throw new RawDecoderException("LJpegPlain::decodeScanLeftGeneric: Horizontal sampling is not power of two.");
                 maxSuperH = Math.Max(samplesH[i], maxSuperH);
                 samplesV[i] = frame.compInfo[i].superV;
-                if (!isPowerOfTwo(samplesV[i]))
+                if (!Common.isPowerOfTwo(samplesV[i]))
                     throw new RawDecoderException("LJpegPlain::decodeScanLeftGeneric: Vertical sampling is not power of two.");
                 maxSuperV = Math.Max(samplesV[i], maxSuperV);
                 samplesComp[i] = samplesV[i] * samplesH[i];
                 pixGroup += samplesComp[i];
             }
 
-            mRaw.metadata.subsampling.x = maxSuperH;
-            mRaw.metadata.subsampling.y = maxSuperV;
+            mRaw.metadata.subsampling.x = (int)maxSuperH;
+            mRaw.metadata.subsampling.y = (int)maxSuperV;
 
             //Prepare slices (for CR2)
-            UInt32 slices = (UInt32)slicesW.size() * (frame.h - skipY) / maxSuperV;
-            UInt16** imagePos = new UInt16*[slices + 1];
-            int* sliceWidth = new int[slices + 1];
+            UInt32 slices = (UInt32)slicesW.Count * (frame.h - skipY) / maxSuperV;
+            UInt16[] imagePos = new UInt16[(int)slices + 1];
+            uint[] sliceWidth = new uint[(int)slices + 1];
 
             UInt32 t_y = 0;
             UInt32 t_x = 0;
             UInt32 t_s = 0;
             UInt32 slice = 0;
             UInt32 pitch_s = mRaw.pitch / 2;  // Pitch in shorts
-            slice_width = new int[slices];
+            slice_width = new uint[slices];
 
             // This is divided by comps, since comps pixels are processed at the time
-            for (UInt32 i = 0; i < slicesW.size(); i++)
-                slice_width[i] = slicesW[i] / pixGroup / maxSuperH; // This is a guess, but works for sRaw1+2.
+            for (Int32 i = 0; i < slicesW.Count; i++)
+                slice_width[i] = (uint)slicesW[i] / pixGroup / maxSuperH; // This is a guess, but works for sRaw1+2.
 
-            if (skipX && (maxSuperV > 1 || maxSuperH > 1))
+            if (skipX != 0 && (maxSuperV > 1 || maxSuperH > 1))
             {
                 throw new RawDecoderException("LJpegPlain::decodeScanLeftGeneric: Cannot skip right border in subsampled mode");
             }
-            if (skipX)
+            if (skipX != 0)
             {
-                slice_width[slicesW.size() - 1] -= skipX;
+                slice_width[slicesW.Count - 1] -= skipX;
             }
 
             for (slice = 0; slice < slices; slice++)
             {
-                imagePos[slice] = (UInt16*)&draw[(t_x + offX) * mRaw.getBpp() + ((offY + t_y) * mRaw.pitch)];
+                imagePos[slice] = draw[(t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)];
                 sliceWidth[slice] = slice_width[t_s];
                 t_y += maxSuperV;
                 if (t_y >= (frame.h - skipY))
@@ -214,7 +213,7 @@ namespace RawNet
             slice_width = null;
 
             // We check the final position. If bad slice sizes are given we risk writing outside the image
-            if (imagePos[slices - 1] >= (UInt16*)&mRaw.getData()[mRaw.pitch * mRaw.dim.y])
+            if (imagePos[slices - 1] >= mRaw.rawData[mRaw.pitch * mRaw.dim.y])
             {
                 throw new RawDecoderException("LJpegPlain::decodeScanLeft: Last slice out of bounds");
             }
@@ -222,9 +221,9 @@ namespace RawNet
             sliceWidth[slices] = sliceWidth[slices - 1];        // Extra offset to avoid branch in loop.
 
             // Predictors for components
-            int p[4];
+            int[] p = new int[4];
             UInt16[] dest = imagePos[0];
-
+            int destI = 0;
             // Always points to next slice
             slice = 1;
             UInt32 pixInSlice = sliceWidth[0];
@@ -241,23 +240,24 @@ namespace RawNet
                         // First pixel is not predicted, all other are.
                         if (y2 == 0 && x2 == 0)
                         {
-                            *dest = p[i] = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl[i]);
+                            p[i] = ((1 << (int)(frame.prec - Pt - 1)) + HuffDecode(ref dctbl[i]));
+                            dest[destI] = (ushort)p[i];
                         }
                         else
                         {
-                            p[i] += HuffDecode(dctbl[i]);
-                            _ASSERTE(p[i] >= 0 && p[i] < 65536);
-                            dest[x2 * comps + y2 * pitch_s] = p[i];
+                            p[i] += HuffDecode(ref dctbl[i]);
+                            // _ASSERTE(p[i] >= 0 && p[i] < 65536);
+                            dest[x2 * comps + y2 * pitch_s] = (ushort)p[i];
                         }
                     }
                 }
                 // Set predictor for this component
                 // Next component
-                dest++;
+                destI++;
             }
 
             // Increment destination to next group
-            dest += (maxSuperH - 1) * comps;
+            destI += (int)((maxSuperH - 1) * comps);
             x = maxSuperH;
             pixInSlice -= maxSuperH;
 
@@ -286,24 +286,24 @@ namespace RawNet
                         {
                             for (UInt32 x2 = 0; x2 < samplesH[i]; x2++)
                             {
-                                p[i] += HuffDecode(dctbl[i]);
-                                _ASSERTE(p[i] >= 0 && p[i] < 65536);
-                                dest[x2 * comps + y2 * pitch_s] = p[i];
+                                p[i] += HuffDecode(ref dctbl[i]);
+                                // _ASSERTE(p[i] >= 0 && p[i] < 65536);
+                                dest[x2 * comps + y2 * pitch_s + destI] = (ushort)p[i];
                             }
                         }
-                        dest++;
+                        destI++;
                     }
-                    dest += (maxSuperH * comps) - comps;
+                    destI += (int)((maxSuperH * comps) - comps);
                     pixInSlice -= maxSuperH;
                 }
 
-                if (skipX)
+                if (skipX != 0)
                 {
                     for (UInt32 sx = 0; sx < skipX; sx++)
                     {
                         for (UInt32 i = 0; i < comps; i++)
                         {
-                            HuffDecode(dctbl[i]);
+                            HuffDecode(ref dctbl[i]);
                         }
                     }
                 }
@@ -321,8 +321,6 @@ namespace RawNet
                 predict = dest;
                 x = 0;
             }
-            delete[] imagePos;
-            delete[] sliceWidth;
         }
 
         int COMPS = 3;
@@ -333,6 +331,7 @@ namespace RawNet
 
         void decodeScanLeft4_2_0()
         {
+            /*
             _ASSERTE(slicesW.size() < 16);  // We only have 4 bits for slice number.
             _ASSERTE(!(slicesW.size() > 1 && skipX)); // Check if this is a valid state
             _ASSERTE(frame.compInfo[0].superH == 2);   // Check if this is a valid state
@@ -343,10 +342,10 @@ namespace RawNet
             _ASSERTE(frame.compInfo[2].superV == 1);   // Check if this is a valid state
             _ASSERTE(frame.cps == COMPS);
             _ASSERTE(skipX == 0);
-
-            HuffmanTable[] dctbl1 = huff[frame.compInfo[0].dcTblNo];
-            HuffmanTable[] dctbl2 = huff[frame.compInfo[1].dcTblNo];
-            HuffmanTable[] dctbl3 = huff[frame.compInfo[2].dcTblNo];
+            */
+            HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.compInfo[2].dcTblNo];
 
             UInt16[] predict;      // Prediction pointer
 
@@ -358,7 +357,7 @@ namespace RawNet
             UInt32 real_h = mCanonFlipDim ? frame.w : frame.h;
 
             //Prepare slices (for CR2)
-            UInt32 slices = (UInt32)slicesW.size() * (real_h - skipY) / 2;
+            UInt32 slices = (UInt32)slicesW.Count * (real_h - skipY) / 2;
             offset = new UInt32[slices + 1];
 
             UInt32 t_y = 0;
@@ -366,21 +365,21 @@ namespace RawNet
             UInt32 t_s = 0;
             UInt32 slice = 0;
             UInt32 pitch_s = mRaw.pitch / 2;  // Pitch in shorts
-            slice_width = new int[slices];
+            slice_width = new uint[slices];
 
             // This is divided by comps, since comps pixels are processed at the time
-            for (UInt32 i = 0; i < slicesW.size(); i++)
-                slice_width[i] = slicesW[i] / COMPS;
+            for (Int32 i = 0; i < slicesW.Count; i++)
+                slice_width[i] = (uint)(slicesW[i] / COMPS);
 
             for (slice = 0; slice < slices; slice++)
             {
-                offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
-                _ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
+                offset[slice] = (int)((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (int)(t_s << 28);
+                //_ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                 t_y += 2;
                 if (t_y >= (real_h - skipY))
                 {
                     t_y = 0;
-                    t_x += slice_width[t_s++];
+                    t_x += (uint)slice_width[t_s++];
                 }
             }
 
@@ -392,15 +391,15 @@ namespace RawNet
 
             offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-            if (skipX)
-                slice_width[slicesW.size() - 1] -= skipX;
+            if (skipX != 0)
+                slice_width[slicesW.Count - 1] -= skipX;
 
             // Predictors for components
-            UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
+            UInt16[] dest = draw.Skip((int)(offset[0] & 0x0fffffff) / 2).ToArray();
 
             // Always points to next slice
             slice = 1;
-            UInt32 pixInSlice = slice_width[0];
+            UInt32 pixInSlice = (uint)slice_width[0];
 
             // Initialize predictors and decode one group.
             UInt32 x = 0;
@@ -408,14 +407,14 @@ namespace RawNet
             int p2;
             int p3;
             // First pixel is not predicted, all other are.
-            *dest = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl1);
-            p1 = dest[COMPS] = p1 + HuffDecode(dctbl1);
-            p1 = dest[pitch_s] = p1 + HuffDecode(dctbl1);
-            p1 = dest[COMPS + pitch_s] = p1 + HuffDecode(dctbl1);
+            *dest = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl1);
+            p1 = dest[COMPS] = p1 + HuffDecode(ref dctbl1);
+            p1 = dest[pitch_s] = p1 + HuffDecode(ref dctbl1);
+            p1 = dest[COMPS + pitch_s] = p1 + HuffDecode(ref dctbl1);
             predict = dest;
 
-            dest[1] = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl2);
-            dest[2] = p3 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl3);
+            dest[1] = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl2);
+            dest[2] = p3 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl3);
 
             // Skip next
             dest += COMPS * 2;
@@ -435,7 +434,7 @@ namespace RawNet
                             throw new RawDecoderException("LJpegPlain::decodeScanLeft: Ran out of slices");
                         UInt32 o = offset[slice++];
                         dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                        _ASSERTE((o & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
+                        //_ASSERTE((o & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                         if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.y)
                             throw new RawDecoderException("LJpegPlain::decodeScanLeft: Offset out of bounds");
                         pixInSlice = slice_width[o >> 28];
@@ -446,17 +445,17 @@ namespace RawNet
                             predict = dest;
                         }
                     }
-                    p1 += HuffDecode(dctbl1);
+                    p1 += HuffDecode(ref dctbl1);
                     *dest = p1;
-                    p1 += HuffDecode(dctbl1);
+                    p1 += HuffDecode(ref dctbl1);
                     dest[COMPS] = p1;
-                    p1 += HuffDecode(dctbl1);
+                    p1 += HuffDecode(ref dctbl1);
                     dest[pitch_s] = p1;
-                    p1 += HuffDecode(dctbl1);
+                    p1 += HuffDecode(ref dctbl1);
                     dest[pitch_s + COMPS] = p1;
 
-                    dest[1] = p2 = p2 + HuffDecode(dctbl2);
-                    dest[2] = p3 = p3 + HuffDecode(dctbl3);
+                    dest[1] = p2 = p2 + HuffDecode(ref dctbl2);
+                    dest[2] = p3 = p3 + HuffDecode(ref dctbl3);
 
                     dest += COMPS * 2;
                     pixInSlice -= 2;
@@ -466,8 +465,8 @@ namespace RawNet
                 p1 = predict[0];
                 p2 = predict[1];
                 p3 = predict[2];
-                _ASSERTE(pixInSlice == 0);  // Ensure, that there is a slice shift at new line
-                                            // Check if we are still within the file.
+                // _ASSERTE(pixInSlice == 0);  // Ensure, that there is a slice shift at new line
+                // Check if we are still within the file.
                 bits.checkPos();
 
                 x = 0;
@@ -476,6 +475,7 @@ namespace RawNet
 
         void decodeScanLeft4_2_2()
         {
+            /*
             _ASSERTE(slicesW.size() < 16);  // We only have 4 bits for slice number.
             _ASSERTE(!(slicesW.size() > 1 && skipX)); // Check if this is a valid state
             _ASSERTE(frame.compInfo[0].superH == 2);   // Check if this is a valid state
@@ -486,41 +486,41 @@ namespace RawNet
             _ASSERTE(frame.compInfo[2].superV == 1);   // Check if this is a valid state
             _ASSERTE(frame.cps == COMPS);
             _ASSERTE(skipX == 0);
-
-            HuffmanTable* dctbl1 = &huff[frame.compInfo[0].dcTblNo];
-            HuffmanTable* dctbl2 = &huff[frame.compInfo[1].dcTblNo];
-            HuffmanTable* dctbl3 = &huff[frame.compInfo[2].dcTblNo];
+            */
+            HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.compInfo[2].dcTblNo];
 
             mRaw.metadata.subsampling.x = 2;
             mRaw.metadata.subsampling.y = 1;
 
-            UInt16* predict;      // Prediction pointer
+            UInt16 predict;      // Prediction pointer
 
-            byte* draw = mRaw.getData();
+            byte[] draw = mRaw.rawData;
 
             //Prepare slices (for CR2)
-            UInt32 slices = (UInt32)slicesW.size() * (frame.h - skipY);
-            offset = new UInt32[slices + 1];
+            UInt32 slices = (UInt32)slicesW.Count * (frame.h - skipY);
+            offset = new Int32[slices + 1];
 
             UInt32 t_y = 0;
             UInt32 t_x = 0;
             UInt32 t_s = 0;
             UInt32 slice = 0;
-            slice_width = new int[slices];
+            slice_width = new uint[slices];
 
             // This is divided by comps, since comps pixels are processed at the time
-            for (UInt32 i = 0; i < slicesW.size(); i++)
-                slice_width[i] = slicesW[i] / 2;
+            for (Int32 i = 0; i < slicesW.Count; i++)
+                slice_width[i] = (uint)slicesW[i] / 2;
 
             for (slice = 0; slice < slices; slice++)
             {
-                offset[slice] = ((t_x + offX) * mRaw.getBpp() + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
-                _ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
+                offset[slice] = (int)(((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28));
+                //_ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                 t_y++;
                 if (t_y >= (frame.h - skipY))
                 {
                     t_y = 0;
-                    t_x += slice_width[t_s++];
+                    t_x += (uint)slice_width[t_s++];
                 }
             }
             if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.y)
@@ -530,8 +530,8 @@ namespace RawNet
 
             offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-            if (skipX)
-                slice_width[slicesW.size() - 1] -= skipX;
+            if (skipX != 0)
+                slice_width[slicesW.Count - 1] -= skipX;
 
             // Predictors for components
             UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
@@ -547,11 +547,11 @@ namespace RawNet
             int p3;
             // First pixel is not predicted, all other are.
             *dest = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl1);
-            p1 = dest[COMPS] = p1 + HuffDecode(dctbl1);
+            p1 = dest[COMPS] = p1 + HuffDecode(ref dctbl1);
             predict = dest;
 
-            dest[1] = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl2);
-            dest[2] = p3 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl3);
+            dest[1] = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl2);
+            dest[2] = p3 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl3);
 
             // Skip to next
             dest += COMPS * 2;
@@ -581,13 +581,13 @@ namespace RawNet
                             predict = dest;
                         }
                     }
-                    p1 += HuffDecode(dctbl1);
+                    p1 += HuffDecode(ref dctbl1);
                     *dest = p1;
-                    p1 += HuffDecode(dctbl1);
+                    p1 += HuffDecode(ref dctbl1);
                     dest[COMPS] = p1;
 
-                    dest[1] = p2 = p2 + HuffDecode(dctbl2);
-                    dest[2] = p3 = p3 + HuffDecode(dctbl3);
+                    dest[1] = p2 = p2 + HuffDecode(ref dctbl2);
+                    dest[2] = p3 = p3 + HuffDecode(ref dctbl3);
 
                     dest += COMPS * 2;
                     pixInSlice -= 2;
@@ -607,16 +607,16 @@ namespace RawNet
         void decodeScanLeft2Comps()
         {
             int COMPS = 2;
-            _ASSERTE(slicesW.size() < 16);  // We only have 4 bits for slice number.
-            _ASSERTE(!(slicesW.size() > 1 && skipX)); // Check if this is a valid state
+            //_ASSERTE(slicesW.size() < 16);  // We only have 4 bits for slice number.
+            //_ASSERTE(!(slicesW.size() > 1 && skipX)); // Check if this is a valid state
 
             byte* draw = mRaw.getData();
             // First line
-            HuffmanTable* dctbl1 = &huff[frame.compInfo[0].dcTblNo];
-            HuffmanTable* dctbl2 = &huff[frame.compInfo[1].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
 
             //Prepare slices (for CR2)
-            UInt32 slices = (UInt32)slicesW.size() * (frame.h - skipY);
+            UInt32 slices = (UInt32)slicesW.Count * (frame.h - skipY);
             offset = new UInt32[slices + 1];
 
             UInt32 t_y = 0;
@@ -626,13 +626,13 @@ namespace RawNet
             UInt32 cw = (frame.w - skipX);
             for (slice = 0; slice < slices; slice++)
             {
-                offset[slice] = ((t_x + offX) * mRaw.getBpp() + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
-                _ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
+                offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
+                // _ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                 t_y++;
                 if (t_y == (frame.h - skipY))
                 {
                     t_y = 0;
-                    t_x += slicesW[t_s++];
+                    t_x += (uint)slicesW[(int)t_s++];
                 }
             }
             // We check the final position. If bad slice sizes are given we risk writing outside the image
@@ -642,22 +642,22 @@ namespace RawNet
             }
             offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-            slice_width = new int[slices];
+            slice_width = new uint[slices];
 
             // This is divided by comps, since comps pixels are processed at the time
-            for (UInt32 i = 0; i < slicesW.size(); i++)
-                slice_width[i] = slicesW[i] / COMPS;
+            for (Int32 i = 0; i < slicesW.Count; i++)
+                slice_width[i] = (uint)(slicesW[i] / COMPS);
 
-            if (skipX)
-                slice_width[slicesW.size() - 1] -= skipX;
+            if (skipX != 0)
+                slice_width[slicesW.Count - 1] -= skipX;
 
             // First pixels are obviously not predicted
             int p1;
             int p2;
             UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
             UInt16* predict = dest;
-            *dest++ = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl1);
-            *dest++ = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl2);
+            *dest++ = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl1);
+            *dest++ = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl2);
 
             slice = 1;    // Always points to next slice
             UInt32 pixInSlice = slice_width[0] - 1;  // Skip first pixel
@@ -667,12 +667,12 @@ namespace RawNet
             {
                 for (; x < cw; x++)
                 {
-                    int diff = HuffDecode(dctbl1);
+                    int diff = HuffDecode(ref dctbl1);
                     p1 += diff;
                     *dest++ = (UInt16)p1;
                     //    _ASSERTE(p1 >= 0 && p1 < 65536);
 
-                    diff = HuffDecode(dctbl2);
+                    diff = HuffDecode(ref dctbl2);
                     p2 += diff;
                     *dest++ = (UInt16)p2;
                     //      _ASSERTE(p2 >= 0 && p2 < 65536);
@@ -689,12 +689,12 @@ namespace RawNet
                     }
                 }
 
-                if (skipX)
+                if (skipX != 0)
                 {
                     for (UInt32 i = 0; i < skipX; i++)
                     {
-                        HuffDecode(dctbl1);
-                        HuffDecode(dctbl2);
+                        HuffDecode(ref dctbl1);
+                        HuffDecode(ref dctbl2);
                     }
                 }
 
@@ -713,12 +713,12 @@ namespace RawNet
             int COMPS = 3;
             byte* draw = mRaw.getData();
             // First line
-            HuffmanTable* dctbl1 = &huff[frame.compInfo[0].dcTblNo];
-            HuffmanTable* dctbl2 = &huff[frame.compInfo[1].dcTblNo];
-            HuffmanTable* dctbl3 = &huff[frame.compInfo[2].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.compInfo[2].dcTblNo];
 
             //Prepare slices (for CR2)
-            UInt32 slices = (UInt32)slicesW.size() * (frame.h - skipY);
+            UInt32 slices = (UInt32)slicesW.Count * (frame.h - skipY);
             offset = new UInt32[slices + 1];
 
             UInt32 t_y = 0;
@@ -727,13 +727,13 @@ namespace RawNet
             UInt32 slice = 0;
             for (slice = 0; slice < slices; slice++)
             {
-                offset[slice] = ((t_x + offX) * mRaw.getBpp() + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
-                _ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
+                offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
+               // _ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                 t_y++;
                 if (t_y == (frame.h - skipY))
                 {
                     t_y = 0;
-                    t_x += slicesW[t_s++];
+                    t_x += (uint)slicesW[(int)t_s++];
                 }
             }
             // We check the final position. If bad slice sizes are given we risk writing outside the image
@@ -744,14 +744,14 @@ namespace RawNet
 
             offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-            slice_width = new int[slices];
+            slice_width = new uint[slices];
 
             // This is divided by comps, since comps pixels are processed at the time
-            for (UInt32 i = 0; i < slicesW.size(); i++)
-                slice_width[i] = slicesW[i] / COMPS;
+            for (Int32 i = 0; i < slicesW.Count; i++)
+                slice_width[i] = (uint)(slicesW[i] / COMPS);
 
-            if (skipX)
-                slice_width[slicesW.size() - 1] -= skipX;
+            if (skipX !=0)
+                slice_width[slicesW.Count - 1] -= skipX;
 
             // First pixels are obviously not predicted
             int p1;
@@ -759,9 +759,9 @@ namespace RawNet
             int p3;
             UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
             UInt16* predict = dest;
-            *dest++ = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl1);
-            *dest++ = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl2);
-            *dest++ = p3 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl3);
+            *dest++ = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl1);
+            *dest++ = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl2);
+            *dest++ = p3 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl3);
 
             slice = 1;
             UInt32 pixInSlice = slice_width[0] - 1;
@@ -773,13 +773,13 @@ namespace RawNet
             {
                 for (; x < cw; x++)
                 {
-                    p1 += HuffDecode(dctbl1);
+                    p1 += HuffDecode(ref dctbl1);
                     *dest++ = (UInt16)p1;
 
-                    p2 += HuffDecode(dctbl2);
+                    p2 += HuffDecode(ref dctbl2);
                     *dest++ = (UInt16)p2;
 
-                    p3 += HuffDecode(dctbl3);
+                    p3 += HuffDecode(ref dctbl3);
                     *dest++ = (UInt16)p3;
 
                     if (0 == --pixInSlice)
@@ -790,18 +790,18 @@ namespace RawNet
                         dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
                         if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.y)
                             throw new RawDecoderException("LJpegPlain::decodeScanLeft: Offset out of bounds");
-                        _ASSERTE((o >> 28) < slicesW.size());
+                        //_ASSERTE((o >> 28) < slicesW.size());
                         pixInSlice = slice_width[o >> 28];
                     }
                 }
 
-                if (skipX)
+                if (skipX != 0)
                 {
                     for (UInt32 i = 0; i < skipX; i++)
                     {
-                        HuffDecode(dctbl1);
-                        HuffDecode(dctbl2);
-                        HuffDecode(dctbl3);
+                        HuffDecode(ref dctbl1);
+                        HuffDecode(ref dctbl2);
+                        HuffDecode(ref  dctbl3);
                     }
                 }
 
@@ -819,22 +819,21 @@ namespace RawNet
         {
             int COMPS = 4;
             // First line
-            HuffmanTable* dctbl1 = &huff[frame.compInfo[0].dcTblNo];
-            HuffmanTable* dctbl2 = &huff[frame.compInfo[1].dcTblNo];
-            HuffmanTable* dctbl3 = &huff[frame.compInfo[2].dcTblNo];
-            HuffmanTable* dctbl4 = &huff[frame.compInfo[3].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.compInfo[2].dcTblNo];
+            HuffmanTable dctbl4 = huff[frame.compInfo[3].dcTblNo];
 
             if (mCanonDoubleHeight)
             {
                 frame.h *= 2;
-                mRaw.dim = iPoint2D(frame.w * 2, frame.h);
-                mRaw.destroyData();
-                mRaw.createData();
+                mRaw.dim = new iPoint2D((int)frame.w * 2, (int)frame.h);
+         
             }
             byte* draw = mRaw.getData();
 
             //Prepare slices (for CR2)
-            UInt32 slices = (UInt32)slicesW.size() * (frame.h - skipY);
+            UInt32 slices = (UInt32)slicesW.Count * (frame.h - skipY);
             offset = new UInt32[slices + 1];
 
             UInt32 t_y = 0;
@@ -843,13 +842,13 @@ namespace RawNet
             UInt32 slice = 0;
             for (slice = 0; slice < slices; slice++)
             {
-                offset[slice] = ((t_x + offX) * mRaw.getBpp() + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
-                _ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
+                offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
+               // _ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                 t_y++;
                 if (t_y == (frame.h - skipY))
                 {
                     t_y = 0;
-                    t_x += slicesW[t_s++];
+                    t_x += (uint)slicesW[(int)t_s++];
                 }
             }
             // We check the final position. If bad slice sizes are given we risk writing outside the image
@@ -859,14 +858,14 @@ namespace RawNet
             }
             offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-            slice_width = new int[slices];
+            slice_width = new uint[slices];
 
             // This is divided by comps, since comps pixels are processed at the time
-            for (UInt32 i = 0; i < slicesW.size(); i++)
-                slice_width[i] = slicesW[i] / COMPS;
+            for (Int32 i = 0; i < slicesW.Count; i++)
+                slice_width[i] = (uint)(slicesW[i] / COMPS);
 
-            if (skipX)
-                slice_width[slicesW.size() - 1] -= skipX;
+            if (skipX != 0)
+                slice_width[slicesW.Count - 1] -= skipX;
 
             // First pixels are obviously not predicted
             int p1;
@@ -875,10 +874,10 @@ namespace RawNet
             int p4;
             UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
             UInt16* predict = dest;
-            *dest++ = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl1);
-            *dest++ = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl2);
-            *dest++ = p3 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl3);
-            *dest++ = p4 = (1 << (frame.prec - Pt - 1)) + HuffDecode(dctbl4);
+            *dest++ = p1 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl1);
+            *dest++ = p2 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl2);
+            *dest++ = p3 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl3);
+            *dest++ = p4 = (1 << (frame.prec - Pt - 1)) + HuffDecode(ref dctbl4);
 
             slice = 1;
             UInt32 pixInSlice = slice_width[0] - 1;
@@ -893,16 +892,16 @@ namespace RawNet
             {
                 for (; x < cw; x++)
                 {
-                    p1 += HuffDecode(dctbl1);
+                    p1 += HuffDecode(ref dctbl1);
                     *dest++ = (UInt16)p1;
 
-                    p2 += HuffDecode(dctbl2);
+                    p2 += HuffDecode(ref dctbl2);
                     *dest++ = (UInt16)p2;
 
-                    p3 += HuffDecode(dctbl3);
+                    p3 += HuffDecode( ref dctbl3);
                     *dest++ = (UInt16)p3;
 
-                    p4 += HuffDecode(dctbl4);
+                    p4 += HuffDecode(ref dctbl4);
                     *dest++ = (UInt16)p4;
 
                     if (0 == --pixInSlice)
@@ -916,14 +915,14 @@ namespace RawNet
                         pixInSlice = slice_width[o >> 28];
                     }
                 }
-                if (skipX)
+                if (skipX != 0)
                 {
                     for (UInt32 i = 0; i < skipX; i++)
                     {
-                        HuffDecode(dctbl1);
-                        HuffDecode(dctbl2);
-                        HuffDecode(dctbl3);
-                        HuffDecode(dctbl4);
+                        HuffDecode(ref dctbl1);
+                        HuffDecode(ref dctbl2);
+                        HuffDecode(ref dctbl3);
+                        HuffDecode(ref dctbl4);
                     }
                 }
                 bits.checkPos();
