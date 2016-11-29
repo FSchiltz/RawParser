@@ -107,6 +107,7 @@ namespace RawNet
         public List<String> errors;
         internal bool isCFA;
         public TableLookUp table;
+        public ColorFilterArray UncroppedCfa;
 
         public RawImage()
         {

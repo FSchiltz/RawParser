@@ -173,10 +173,12 @@ namespace RawEditor
                     raw.fileName = file.DisplayName;
                     //read the exifs
                     //if (raw.exif != null) displayExif();
-                    //demos                                        
+                    //demos   
+                    if (raw.UncroppedCfa != null) raw.cfa = raw.UncroppedCfa; //TODO remove and use crop
                     if (raw.cfa != null && raw.cpp == 1)
+                    {
                         Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
-
+                    }
                     //create a small image from raw to display
                     bool autoFactor = SettingStorage.autoPreviewFactor;
                     int previewFactor = 0;

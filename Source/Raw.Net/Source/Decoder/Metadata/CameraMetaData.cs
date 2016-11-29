@@ -71,7 +71,7 @@ namespace RawNet
 
         public bool addCamera(Camera cam)
         {
-            string id = "" + cam.make + cam.model + cam.mode;
+            string id = "" + cam.make.Trim() + cam.model.Trim() + cam.mode.Trim();
             cameras.TryGetValue(id, out Camera tmp);
             if (null != tmp)
             {

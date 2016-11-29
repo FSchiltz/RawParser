@@ -97,9 +97,9 @@ namespace RawNet
             mFile = file;
             decoderVersion = 0;
             failOnUnknown = false;
-            interpolateBadPixels = true;
+            interpolateBadPixels = false;
             applyStage1DngOpcodes = true;
-            applyCrop = true;
+            applyCrop = false;
             uncorrectedRawValues = false;
             fujiRotate = true;
         }
@@ -732,7 +732,7 @@ namespace RawNet
 
             hints = cam.hints;
             return true;
-        }
+        }        
 
         public void setMetaData(CameraMetaData meta, string make, string model, string mode, int iso_speed)
         {
@@ -755,7 +755,7 @@ namespace RawNet
             mRaw.metadata.make = make;
             mRaw.metadata.model = model;
             mRaw.metadata.mode = mode;
-
+            
             if (applyCrop)
             {
                 iPoint2D new_size = cam.cropSize;
@@ -770,6 +770,7 @@ namespace RawNet
                 mRaw.subFrame(new iRectangle2D(cam.cropPos, new_size));
 
                 // Shift CFA to match crop
+                mRaw.UncroppedCfa = new ColorFilterArray(mRaw.cfa);
                 if ((cam.cropPos.x & 1) != 0)
                     mRaw.cfa.shiftLeft(0);
                 if ((cam.cropPos.y & 1) != 0)
@@ -803,10 +804,9 @@ namespace RawNet
             // A hint could be:
             // <Hint name="override_cfa_black" value="10,20,30,20"/>
             cam.hints.TryGetValue("override_cfa_black", out string value);
-            if (value != cam.hints.Last().Value)
+            if (value != null)
             {
-                cam.hints.TryGetValue("override_cfa_black", out string tmp);
-                string rgb = tmp;
+                string rgb = value;
                 var v = rgb.Split(',');
                 if (v.Length != 4)
                 {
