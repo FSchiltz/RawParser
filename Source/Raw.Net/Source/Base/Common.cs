@@ -121,5 +121,10 @@ namespace RawNet
             }
             return temp;
         }
+
+        internal static bool isPowerOfTwo(uint v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
