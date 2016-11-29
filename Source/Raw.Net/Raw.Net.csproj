@@ -120,7 +120,7 @@
     <Compile Include="Source\Decoder\Decompressor\BitPumpPlain.cs" />
     <Compile Include="Source\Decoder\Decompressor\LJpegDecompressor.cs" />
     <Compile Include="Source\Decoder\Decompressor\NikonDecompressor.cs" />
-    <Compile Include="Source\Decoder\DNGDecoder.cs" />
+    <Compile Include="Source\Decoder\DngDecoder.cs" />
     <Compile Include="Source\Decoder\JPGDecoder.cs" />
     <Compile Include="Source\Decoder\Metadata\Camera.cs" />
     <Compile Include="Source\Decoder\Metadata\CameraMetaData.cs" />
