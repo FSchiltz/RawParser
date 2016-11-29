@@ -39,7 +39,7 @@ namespace RawNet
 
         public Camera getCamera(string make, string model, string mode)
         {
-            string id = "" + make + model + mode;
+            string id = "" + make.Trim() + model.Trim() + mode.Trim();
             cameras.TryGetValue(id, out var value);
             if (null == value)
                 return null;
@@ -48,7 +48,7 @@ namespace RawNet
 
         public bool hasCamera(string make, string model, string mode)
         {
-            string id = "" + make + model + mode;
+            string id = "" + make.Trim() + model.Trim() + mode.Trim();
             cameras.TryGetValue(id, out var value);
             if (null == value)
                 return false;
