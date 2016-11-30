@@ -536,7 +536,7 @@ namespace RawNet
             p = 0;
             while (huffsize[p] != 0)
             {
-                while (((int)huffsize[p]) == si)
+                while (huffsize[p] == si)
                 {
                     huffcode[p++] = code;
                     code++;
@@ -652,7 +652,7 @@ namespace RawNet
                     l = 8;
                     while (code > htbl.maxcode[l])
                     {
-                        temp = (int)input >> (int)(15 - l) & 1;
+                        temp = input >> (int)(15 - l) & 1;
                         code = (code << 1) | temp;
                         l++;
                     }

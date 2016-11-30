@@ -14,7 +14,7 @@ namespace RawNet
         {
             int _y_temp = x >> n;
             if ((_y_temp != 0))
-                x = (int)~_y_temp >> (32 - n);
+                x = ~_y_temp >> (32 - n);
             return x;
         }
 
