@@ -25,7 +25,7 @@ namespace RawNet
                 throw new RawDecoderException("Cannot construct 0 tables");
             }
             tables = new ushort[ntables * TABLE_SIZE];
-            Common.memset<ushort>(tables, 0, sizeof(ushort) * ntables * TABLE_SIZE);
+            //Common.memset<ushort>(tables, 0, sizeof(ushort) * ntables * TABLE_SIZE);
         }
 
 
@@ -79,7 +79,7 @@ namespace RawNet
         public string fileName { get; set; }
         public Dictionary<ushort, Tag> exif;
         public ushort colorDepth;
-        public iPoint2D dim, mOffset, previewDim, uncropped_dim;
+        public iPoint2D dim, mOffset = new iPoint2D(), previewDim, previewOffset = new iPoint2D(), uncroppedDim;
         public ColorFilterArray cfa = new ColorFilterArray();
         public double[] camMul, black, curve;
         public int rotation = 0, blackLevel, saturation, dark;
@@ -113,7 +113,7 @@ namespace RawNet
             rawData = new ushort[dim.x * dim.y];
             if (rawData == null)
                 throw new RawDecoderException("RawImageData::createData: Memory Allocation failed.");
-            uncropped_dim = dim;
+            uncroppedDim = dim;
         }
 
         /*
@@ -160,8 +160,9 @@ namespace RawNet
                 Debug.WriteLine("WARNING: RawImageData::subFrame - Negative crop offset. Crop skipped.");
                 return;
             }
-            
+
             mOffset += crop.pos;
+
             dim = crop.dim;
         }
         /*
@@ -329,7 +330,7 @@ namespace RawNet
                 /* Process horizontal area */
                 if (!area.isVertical)
                 {
-                    if (area.offset + area.size > uncropped_dim.y)
+                    if (area.offset + area.size > uncroppedDim.y)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
                     for (int y = area.offset; y < area.offset + area.size; y++)
                     {
@@ -346,7 +347,7 @@ namespace RawNet
                 /* Process vertical area */
                 if (area.isVertical)
                 {
-                    if (area.offset + area.size > uncropped_dim.x)
+                    if (area.offset + area.size > uncroppedDim.x)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
                     for (int y = mOffset.y; y < dim.y + mOffset.y; y++)
                     {
