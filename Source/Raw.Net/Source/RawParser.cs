@@ -38,7 +38,7 @@ namespace RawNet
             stream.Read(data, 0, 104);
             /*
             // MRW images are easy to check for, let's try that first
-            if (MrwDecoder::isMRW(Math.Math.Min((put)) {
+            if (MrwDecoder::isMRW(mInput)) {
                 try
                 {
                     return new MrwDecoder(Math.Math.Min((put);
@@ -191,6 +191,14 @@ namespace RawNet
                 }
             }*/
 
+            //try jpeg file
+            try
+            {
+                return new JPGParser(new TIFFBinaryReader(stream));
+            }
+            catch (TiffParserException)
+            {
+            }
             // File could not be decoded, so no further options for now.
             throw new Exception("No decoder found. Sorry.");
         }
