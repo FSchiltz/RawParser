@@ -154,5 +154,25 @@ namespace RawNet
             }
             else throw new FormatException("Photometric interpretation " + photoMetricTag.dataAsString + " not supported yet");
         }
+
+        protected override RawImage decodeRawInternal()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override byte[] decodeThumbInternal()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void decodeMetaDataInternal(CameraMetaData meta)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void checkSupportInternal(CameraMetaData meta)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

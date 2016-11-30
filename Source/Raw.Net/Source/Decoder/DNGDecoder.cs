@@ -689,6 +689,11 @@ namespace RawNet
 
             return mRaw;
         }
+
+        protected override byte[] decodeThumbInternal()
+        {
+            return null;
+        }
     };
 
 }
