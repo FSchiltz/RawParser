@@ -6,12 +6,13 @@ namespace RawNet
     class TiffDecoder : RawDecoder
     {
         protected TIFFBinaryReader fileStream;
-        protected IFD ifd, exif;
+        protected IFD ifd;
         protected Header header;
-        protected IFD[] subifd;
 
-        public TiffDecoder(ref TIFFBinaryReader file) : base(ref file)
+        public TiffDecoder(IFD rootifd,ref TIFFBinaryReader file) : base(ref file)
         {
+            decoderVersion = 1;
+            ifd = rootifd;
         }
 
         public void Parse(Stream file)

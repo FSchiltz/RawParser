@@ -18,23 +18,6 @@ namespace RawNet
             public UInt32 count = 0;
         }
 
-        /* Class with information delivered to decodeThreaded() */
-        public class RawDecoderThread
-        {
-            public RawDecoderThread()
-            {
-                error = (char)0;
-                //= -1 in original check why
-                taskNo = 0;
-            }
-            UInt32 start_y;
-            UInt32 end_y;
-            char error;
-            Task threadid;
-            RawDecoder parent;
-            UInt32 taskNo;
-        }
-
         /* The decoded image - undefined if image has not or could not be decoded. */
         /* Remember this is automatically refcounted, so a reference is retained until this class is destroyed */
         public RawImage mRaw;

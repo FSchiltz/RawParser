@@ -15,7 +15,6 @@ namespace RawNet
         public ushort nextOffset { get; set; }
         public Endianness endian;
         public int depth;
-        private TIFFBinaryReader fileStream;
 
         char[] fuji_signature = {
   'F', 'U', 'J', 'I', 'F', 'I', 'L', 'M', (char)0x0c,(char) 0x00,(char) 0x00,(char) 0x00
@@ -99,6 +98,7 @@ namespace RawNet
                             break;
                         case TiffDataType.SRATIONAL:
                             //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.
+                            //TODO remove this Fix
                             if (temp.dataOffset == 0)
                             {
                                 temp.data[j] = .0;

@@ -150,7 +150,8 @@ namespace RawNet
                 p.parseData();
                 return p.getDecoder();
             }
-            catch (TiffParserException e) {
+            catch (TiffParserException)
+            {
             }
 
             /*
