@@ -68,7 +68,7 @@ namespace RawNet
         public int decoderVersion;
 
         /* Hints set for the camera after checkCameraSupported has been called from the implementation*/
-        public Dictionary<string, string> hints;
+        public Dictionary<string, string> hints = new Dictionary<string, string>();
 
 
         /* Construct decoder instance - FileMap is a filemap of the file to be decoded */

@@ -67,9 +67,9 @@ namespace RawEditor
                 {
                     int realPix = realY + (3 * x);
                     //get the RGB value
-                    double red = image[realPix * 3],
-                    green = image[(realPix * 3) + 1],
-                    blue = image[(realPix * 3) + 2];
+                    double red = image[realPix],
+                    green = image[realPix + 1],
+                    blue = image[realPix + 2];
 
                     //convert to linear rgb (not needed, the raw should be in linear already)
                     /*Balance.sRGBToRGB(ref red, maxValue - 1);
@@ -100,9 +100,9 @@ namespace RawEditor
 
                     //clip
                     Luminance.Clip(ref red, ref green, ref blue, maxValue);
-                    image[realPix * 3] = (ushort)red;
-                    image[(realPix * 3) + 1] = (ushort)green;
-                    image[(realPix * 3) + 2] = (ushort)blue;
+                    image[realPix] = (ushort)red;
+                    image[realPix + 1] = (ushort)green;
+                    image[realPix + 2] = (ushort)blue;
                     //change gamma from curve 
                     /*
                     image[i * 3] = (ushort)gammaCurve[(int)red];

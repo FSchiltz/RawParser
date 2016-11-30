@@ -97,7 +97,7 @@ namespace RawNet
                 if (Convert.ToInt32(c[0]) > 1)
                     throw new TiffParserException("DNG version too new.");
                 rootIFD = null;
-                return new DngDecoder(root,ref reader);
+                return new DngDecoder(root, ref reader);
             }
 
             potentials = rootIFD.getIFDsWithTag(TagType.MAKE);
@@ -108,7 +108,7 @@ namespace RawNet
                 {
                     i.tags.TryGetValue((ushort)TagType.MAKE, out Tag tag);
                     string make = tag.dataAsString;
-                    make = Common.Trim(make);
+                    make = make.Trim();
                     //remove trailing \0 if any
 
                     string model = "";
@@ -116,7 +116,7 @@ namespace RawNet
                     if (tagModel != null)
                     {
                         model = tagModel.dataAsString;
-                        model = Common.Trim(make);
+                        model = make.Trim();
                     }
                     switch (make)
                     {
@@ -199,7 +199,7 @@ namespace RawNet
                 }*/
             }
             //TODO add detection of Tiff
-            throw new TiffParserException("No decoder found. Sorry.");           
+            throw new TiffParserException("No decoder found. Sorry.");
         }
     }
 }
