@@ -239,8 +239,9 @@ namespace RawNet
                 throw new RawDecoderException("DNG Decoder: No image data found");
 
             // Erase the ones not with JPEG compression
-            foreach (IFD i in data)
+            for (int k = data.Count - 1; k >= 0; k--)
             {
+                IFD i = data[k];
                 int comp = i.getEntry(TagType.COMPRESSION).getShort(0);
                 bool isSubsampled = false;
                 try
@@ -269,7 +270,7 @@ namespace RawNet
             if (raw.hasEntry(TagType.SAMPLEFORMAT))
                 sample_format = raw.getEntry(TagType.SAMPLEFORMAT).getUInt();
 
-            if (sample_format == 1)
+            if (sample_format != 1)
                 throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported.");
 
             mRaw.isCFA = (raw.getEntry(TagType.PHOTOMETRICINTERPRETATION).getUShort() == 32803);
@@ -289,6 +290,7 @@ namespace RawNet
 
             try
             {
+                mRaw.dim = new iPoint2D();
                 mRaw.dim.x = raw.getEntry(TagType.IMAGEWIDTH).getInt();
                 mRaw.dim.y = raw.getEntry(TagType.IMAGELENGTH).getInt();
             }

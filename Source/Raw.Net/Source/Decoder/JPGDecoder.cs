@@ -1,4 +1,5 @@
-﻿using Windows.Storage.Streams;
+﻿using System;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace RawNet
@@ -7,15 +8,22 @@ namespace RawNet
     {
         public JPGParser(ref TIFFBinaryReader file) : base(ref file)
         {
-            /*
-            image = new WriteableBitmap(1, 1);
-            image.SetSource(file.BaseStream);
-            IBuffer buffer = image.PixelBuffer;
-            ushort[] raw = new ushort[image.PixelHeight * image.PixelWidth * 3];
-            for (int i = 0; i < image.PixelWidth * image.PixelHeight * 3; i++)
-            {
-                 //raw[i] = buffer;
-            }*/
+
+        }
+
+        protected override void checkSupportInternal(CameraMetaData meta)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void decodeMetaDataInternal(CameraMetaData meta)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override RawImage decodeRawInternal()
+        {
+            throw new NotImplementedException();
         }
     }
 }
