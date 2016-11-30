@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="20,0">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="wideState">
@@ -31,31 +31,35 @@
             Settings
             </TextBlock>
 
-            <TextBlock TextWrapping="Wrap" FontSize="30">
+            <TextBlock TextWrapping="Wrap" FontSize="30" Margin="5,20,0,0">
             Display
             </TextBlock>
             <!--Display border-->
             <Grid HorizontalAlignment="Left" >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
                     Relative border around the image:
                 </TextBlock>
-                <Slider ValueChanged="Slider_ValueChanged" Grid.Column="2" Width="100" HorizontalAlignment="Right"/>
+                <Slider ValueChanged="Slider_ValueChanged" Grid.Row="2" Width="100" HorizontalAlignment="Center" Margin="0,10"/>
             </Grid>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
                         Scaling factor of the preview images:
                 </TextBlock>
-                <ComboBox Grid.Column="2" SelectionChanged="ComboBox_SelectionChanged">
+                <ComboBox Grid.Row="2" SelectionChanged="ComboBox_SelectionChanged" HorizontalAlignment="Center" Margin="0,10,0,0">
                     <ComboBoxItem>Auto</ComboBoxItem>
                     <ComboBoxItem>1</ComboBoxItem>
                     <ComboBoxItem>2</ComboBoxItem>
@@ -63,7 +67,6 @@
                     <ComboBoxItem>8</ComboBoxItem>
                     <ComboBoxItem>16</ComboBoxItem>
                     <ComboBoxItem>32</ComboBoxItem>
-                    <HyperlinkButton Content="HyperlinkButton" HorizontalAlignment="Left"/>
                 </ComboBox>
             </Grid>
             <Grid>
@@ -71,28 +74,19 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>               
+                </Grid.ColumnDefinitions>
             </Grid>
 
-            <TextBlock TextWrapping="Wrap" FontSize="30">
+            <TextBlock TextWrapping="Wrap" FontSize="30" Margin="5,20,0,0">
             Abouts
             </TextBlock>
             <TextBlock FontSize="18" >
                 This app is currently work in progress.
             </TextBlock>
             <TextBlock FontSize="18" >
-                To report issue, go to 
-                https://github.com/arimhan/RawParser/issues
+                To report issue, go to
             </TextBlock>
-            <TextBlock FontSize="18" >
-                To contribue to the code, go to 
-                https://github.com/arimhan/RawParser
-            </TextBlock>
-            <TextBlock FontSize="18" >
-                Decompression code from DCraw 
-                (http://www.cybercom.net/~dcoffin/dcraw/).
-            </TextBlock>
+            <HyperlinkButton Content="https://github.com/arimhan/RawParser/issues" HorizontalAlignment="Left"/>
         </StackPanel>
-
     </Grid>
 </Page>
