@@ -337,7 +337,7 @@ namespace RawNet
                     {
                         for (int x = 0; x < cfaSize.x; x++)
                         {
-                            UInt32 c1 = (uint)cPat[x + y * cfaSize.x];
+                            UInt32 c1 = Convert.ToUInt32(cPat[x + y * cfaSize.x]);
                             CFAColor c2;
                             switch (c1)
                             {
