@@ -144,7 +144,7 @@ namespace RawNet
 
         public void init()
         {
-            Common.memset<byte>(current_buffer, 0, 16);
+            //Common.memset<byte>(current_buffer, 0, 16);
             fill();
         }
 

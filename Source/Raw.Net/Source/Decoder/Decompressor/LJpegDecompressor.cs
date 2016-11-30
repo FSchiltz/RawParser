@@ -460,7 +460,7 @@ namespace RawNet
                     acc += t.bits[i + 1];
                 }
                 t.bits[0] = 0;
-                Common.memset<uint>(t.huffval, 0, sizeof(uint) * t.huffval.Length);
+                //Common.memset<uint>(t.huffval, 0, sizeof(uint) * t.huffval.Length);
                 if (acc > 256)
                     throw new Exception("parseDHT: Invalid DHT table.");
 

@@ -76,13 +76,6 @@ namespace RawNet
             return (BitConverter.IsLittleEndian) ? Endianness.little : Endianness.big;
         }
 
-        internal static string Trim(string make)
-        {
-            make = make.Trim();
-            // if(make[make.Length -1] == '0' && make[make.Length-2] == '\\')make.Substring(0,make.Length)
-            return make;
-        }
-
         internal static bool strncmp(byte[] data, string v1, int count)
         {
             for (int i = 0; i < count; i++)
