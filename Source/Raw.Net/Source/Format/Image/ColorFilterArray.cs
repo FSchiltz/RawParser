@@ -39,7 +39,7 @@ namespace RawNet
             cfa = null;
             setSize(other.size);
             if (cfa != null)
-                Common.memcopy(ref cfa, ref other.cfa, size.area() * sizeof(CFAColor));
+                Common.memcopy(ref cfa, ref other.cfa, size.area());
         }
 
         // FC macro from dcraw outputs, given the filters definition, the dcraw color
