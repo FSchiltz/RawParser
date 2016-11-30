@@ -299,6 +299,8 @@ namespace RawNet
                 throw new RawDecoderException("DNG Decoder: Could not read basic image information.");
             }
 
+            //init the raw image
+            mRaw.Init();
             int compression = -1;
 
             try
@@ -363,7 +365,6 @@ namespace RawNet
                         }
                     }
                 }
-
 
                 // Now load the image
                 if (compression == 1)
@@ -525,6 +526,7 @@ namespace RawNet
                 throw new RawDecoderException("DNG Decoder: Image could not be read:" + e.Message);
             }
 
+            //TODO optimise
             // Fetch the white balance
             if (mRootIFD.hasEntryRecursive(TagType.ASSHOTNEUTRAL))
             {
@@ -532,22 +534,22 @@ namespace RawNet
                 if (as_shot_neutral.dataCount == 3)
                 {
                     for (UInt32 i = 0; i < 3; i++)
-                        mRaw.metadata.wbCoeffs[i] = 1.0f / as_shot_neutral.getFloat(i);
+                        mRaw.metadata.wbCoeffs[i] = 1.0f / Convert.ToSingle(as_shot_neutral.data[i]);
                 }
             }
             else if (mRootIFD.hasEntryRecursive(TagType.ASSHOTWHITEXY))
             {
-                // Commented out because I didn't have an example file to verify it's correct
-                /* TiffEntry *as_shot_white_xy = mRootIFD.getEntryRecursive(ASSHOTWHITEXY);
-                if (as_shot_white_xy.count == 2) {
-                  mRaw.metadata.wbCoeffs[0] = as_shot_white_xy.getFloat(0);
-                  mRaw.metadata.wbCoeffs[1] = as_shot_white_xy.getFloat(1);
-                  mRaw.metadata.wbCoeffs[2] = 1 - mRaw.metadata.wbCoeffs[0] - mRaw.metadata.wbCoeffs[1];
+                Tag as_shot_white_xy = mRootIFD.getEntryRecursive(TagType.ASSHOTWHITEXY);
+                if (as_shot_white_xy.dataCount == 2)
+                {
+                    mRaw.metadata.wbCoeffs[0] = as_shot_white_xy.getFloat(0);
+                    mRaw.metadata.wbCoeffs[1] = as_shot_white_xy.getFloat(1);
+                    mRaw.metadata.wbCoeffs[2] = 1 - mRaw.metadata.wbCoeffs[0] - mRaw.metadata.wbCoeffs[1];
 
-                  float d65_white[3] = { 0.950456, 1, 1.088754 };
-                  for (UInt32 i=0; i<3; i++)
-                      mRaw.metadata.wbCoeffs[i] /= d65_white[i];
-                } */
+                    float[] d65_white = { 0.950456F, 1, 1.088754F };
+                    for (UInt32 i = 0; i < 3; i++)
+                        mRaw.metadata.wbCoeffs[i] /= d65_white[i];
+                }
             }
 
             // Crop

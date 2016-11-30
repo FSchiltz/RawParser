@@ -221,10 +221,8 @@ namespace RawNet
             }
         }
 
-
         /* Attempt to decode the image */
-        /* A RawDecoderException will be thrown if the image cannot be decoded, */
-        /* and there will not be any data in the mRaw image. */
+        /* A RawDecoderException will be thrown if the image cannot be decoded
         public void readUncompressedRaw(ref TIFFBinaryReader input, iPoint2D size, iPoint2D offset, int inputPitch, int bitPerPixel, BitOrder order)
         {
             UInt32 outPitch = mRaw.pitch;
@@ -264,9 +262,9 @@ namespace RawNet
                 if (bitPerPixel != 32)
                     throw new RawDecoderException("readUncompressedRaw: Only 32 bit float point supported");
                 BitBlt(&data[offset.x * sizeof(float) * cpp + y * outPitch], outPitch,
-                    input.getData(), inputPitch, w * mRaw.getBpp(), h - y);
+                    input.getData(), inputPitch, w * mRaw.bpp, h - y);
                 return;
-            }*/
+            }
 
             if (BitOrder.Jpeg == order)
             {
@@ -336,6 +334,126 @@ namespace RawNet
                         mRaw.rawData[(offset.x * sizeof(ushort) + (int)y * (int)outPitch) + x] = (ushort)b;
                     }
                     bits.skipBits(skipBits);
+                }
+            }
+        }
+        */
+
+        public unsafe void readUncompressedRaw(ref TIFFBinaryReader input, iPoint2D size, iPoint2D offset, int inputPitch, int bitPerPixel, BitOrder order)
+        {
+            fixed (ushort* d = mRaw.rawData)
+            {
+                byte* data = (byte*)d;
+                uint outPitch = mRaw.pitch;
+                int w = size.x;
+                int h = size.y;
+                uint cpp = mRaw.cpp;
+                int ox = offset.x;
+                int oy = offset.y;
+
+                if (input.getRemainSize() < (inputPitch * h))
+                {
+                    if ((int)input.getRemainSize() > inputPitch)
+                    {
+                        h = input.getRemainSize() / inputPitch - 1;
+                        mRaw.errors.Add("Image truncated (file is too short)");
+                    }
+                    else
+                        throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                }
+                if (bitPerPixel > 16)
+                    throw new RawDecoderException("readUncompressedRaw: Unsupported bit depth");
+
+                uint skipBits = (uint)(inputPitch - w * cpp * bitPerPixel / 8);  // Skip per line
+                if (oy > mRaw.dim.y)
+                    throw new RawDecoderException("readUncompressedRaw: Invalid y offset");
+                if (ox + size.x > mRaw.dim.x)
+                    throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
+
+                int y = oy;
+                h = (int)Math.Min(h + oy, (uint)mRaw.dim.y);
+
+                /*if (mRaw.getDataType() == TYPE_FLOAT32)
+                {
+                    if (bitPerPixel != 32)
+                        throw new RawDecoderException("readUncompressedRaw: Only 32 bit float point supported");
+                    BitBlt(&data[offset.x * sizeof(float) * cpp + y * outPitch], outPitch,
+                        input.getData(), inputPitch, w * mRaw.bpp, h - y);
+                    return;
+                }*/
+
+                if (BitOrder.Jpeg == order)
+                {
+                    BitPumpMSB bits = new BitPumpMSB(ref input);
+                    w *= (int)cpp;
+                    for (; y < h; y++)
+                    {
+                        bits.checkPos();
+                        for (uint x = 0; x < w; x++)
+                        {
+                            uint b = bits.getBits((uint)bitPerPixel);
+                            mRaw.rawData[x + (offset.x * cpp + y * mRaw.dim.x * cpp)] = (ushort)b;
+                        }
+                        bits.skipBits(skipBits);
+                    }
+                }
+                else if (BitOrder.Jpeg16 == order)
+                {
+                    BitPumpMSB16 bits = new BitPumpMSB16(ref input);
+                    w *= (int)cpp;
+                    for (; y < h; y++)
+                    {
+                        UInt16* dest = (UInt16*)&data[offset.x * sizeof(UInt16) * cpp + y * outPitch];
+                        bits.checkPos();
+                        for (uint x = 0; x < w; x++)
+                        {
+                            uint b = bits.getBits((uint)bitPerPixel);
+                            dest[x] = (ushort)b;
+                        }
+                        bits.skipBits(skipBits);
+                    }
+                }
+                else if (BitOrder.Jpeg32 == order)
+                {
+                    BitPumpMSB32 bits = new BitPumpMSB32(ref input);
+                    w *= (int)cpp;
+                    for (; y < h; y++)
+                    {
+                        UInt16* dest = (UInt16*)&data[offset.x * sizeof(UInt16) * cpp + y * outPitch];
+                        bits.checkPos();
+                        for (uint x = 0; x < w; x++)
+                        {
+                            uint b = bits.getBits((uint)bitPerPixel);
+                            dest[x] = (ushort)b;
+                        }
+                        bits.skipBits(skipBits);
+                    }
+                }
+                else
+                {
+                    if (bitPerPixel == 16 && Common.getHostEndianness() == Endianness.little)
+                    {
+                        Decode16BitRawUnpacked(input, (uint)w, (uint)h);
+                        return;
+                    }
+                    if (bitPerPixel == 12 && (int)w == inputPitch * 8 / 12 && Common.getHostEndianness() == Endianness.little)
+                    {
+                        Decode12BitRaw(input, (uint)w, (uint)h);
+                        return;
+                    }
+                    BitPumpPlain bits = new BitPumpPlain(ref input);
+                    w *= (int)cpp;
+                    for (; y < h; y++)
+                    {
+                        UInt16* dest = (UInt16*)&data[offset.x * sizeof(UInt16) + y * outPitch];
+                        bits.checkPos();
+                        for (uint x = 0; x < w; x++)
+                        {
+                            uint b = bits.getBits((uint)bitPerPixel);
+                            dest[x] = (ushort)b;
+                        }
+                        bits.skipBits(skipBits);
+                    }
                 }
             }
         }

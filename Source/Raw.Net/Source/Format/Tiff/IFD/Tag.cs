@@ -186,7 +186,7 @@ namespace RawNet
         {
             array = new float[num];
             for (int i = 0; i < num; i++)
-                array[i] = (float)Convert.ToDecimal(data[i]);
+                array[i] = Convert.ToSingle(data[i]);
         }
 
         public int getInt(int v)

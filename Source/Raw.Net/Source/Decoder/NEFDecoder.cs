@@ -257,6 +257,8 @@ namespace RawNet
                 bitorder = (v1 == "true");
 
             offY = 0;
+            //init the raw image
+            mRaw.Init();
             for (Int32 i = 0; i < slices.Count; i++)
             {
                 NefSlice slice = slices[i];
@@ -315,7 +317,7 @@ namespace RawNet
             UInt32 y = (uint)offset.y;
             h = Math.Min(h + (UInt32)offset.y, (UInt32)mRaw.dim.y);
             w *= cpp;
-            BitPumpMSB32 inputMSB = new BitPumpMSB32(input);
+            BitPumpMSB32 inputMSB = new BitPumpMSB32(ref input);
             for (; y < h; y++)
             {
                 for (UInt32 x = 0; x < w; x++)
@@ -520,8 +522,8 @@ namespace RawNet
                 if (wb.dataCount == 4)
                 {
                     mRaw.metadata.wbCoeffs[0] = wb.getFloat(0);
-                    mRaw.metadata.wbCoeffs[1] = (float)Convert.ToDecimal(wb.data[2]);
-                    mRaw.metadata.wbCoeffs[2] = (float)Convert.ToDecimal(wb.data[1]);
+                    mRaw.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[2]);
+                    mRaw.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[1]);
                     if (mRaw.metadata.wbCoeffs[1] == 0.0f)
                         mRaw.metadata.wbCoeffs[1] = 1.0f;
                 }
