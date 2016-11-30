@@ -533,7 +533,7 @@ namespace RawNet
                 {
                     UInt32 version = 0;
                     for (UInt32 i = 0; i < 4; i++)
-                        version = (version << 4) + (uint)(wb.data[i]) - '0';
+                        version = (version << 4) + Convert.ToUInt32(wb.data[i]) - '0';
                     if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == TiffDataType.UNDEFINED)
                     {
                         mRaw.metadata.wbCoeffs[0] = wb.getShort(36);

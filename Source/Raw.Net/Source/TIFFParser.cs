@@ -198,8 +198,8 @@ namespace RawNet
                     }
                 }*/
             }
-            throw new TiffParserException("No decoder found. Sorry.");
-            return null;
+            //TODO add detection of Tiff
+            throw new TiffParserException("No decoder found. Sorry.");           
         }
     }
 }

@@ -23,25 +23,12 @@ namespace RawNet
         public bool mUseBigtable;
     };
 
-
-    class DngDecoderThread
-    {
-        public DngDecoderThread()
-        { }
-
-        public Queue<DngSliceElement> slices;
-        public DngDecoderSlices parent;
-    };
-
-
     class DngDecoderSlices
     {
         public Queue<DngSliceElement> slices;
-        public List<DngDecoderThread> threads;
         TIFFBinaryReader mFile;
         RawImage mRaw;
         public bool mFixLjpeg;
-        UInt32 nThreads;
         int compression;
 
         /*
