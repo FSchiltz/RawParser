@@ -97,7 +97,7 @@ namespace RawNet
                 if ((int)(c[0]) > 1)
                     throw new TiffParserException("DNG version too new.");
                 rootIFD = null;
-                return new DngDecoder(root,reader);
+                return new DngDecoder(root,ref reader);
             }
 
             potentials = rootIFD.getIFDsWithTag(TagType.MAKE);
