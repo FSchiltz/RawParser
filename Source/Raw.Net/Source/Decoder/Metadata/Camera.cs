@@ -219,19 +219,19 @@ namespace RawNet
                     //not efficient, TODO move the tolower
                     char v = key.ToLower()[x];
                     if (v == 'g')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_GREEN);
+                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.GREEN);
                     else if (v == 'r')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_RED);
+                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.RED);
                     else if (v == 'b')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_BLUE);
+                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.BLUE);
                     else if (v == 'f')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_FUJI_GREEN);
+                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.FUJI_GREEN);
                     else if (v == 'c')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_CYAN);
+                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CYAN);
                     else if (v == 'm')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_MAGENTA);
+                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.MAGENTA);
                     else if (v == 'y')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_YELLOW);
+                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.YELLOW);
                     else
                         supported = false;
                 }
@@ -252,19 +252,19 @@ namespace RawNet
 
                 string key = cur.Value;
                 if (key == "GREEN")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_GREEN);
+                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.GREEN);
                 else if (key == "RED")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_RED);
+                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.RED);
                 else if (key == "BLUE")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_BLUE);
+                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.BLUE);
                 else if (key == "FUJIGREEN")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_FUJI_GREEN);
+                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.FUJI_GREEN);
                 else if (key == "CYAN")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_CYAN);
+                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CYAN);
                 else if (key == "MAGENTA")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_MAGENTA);
+                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.MAGENTA);
                 else if (key == "YELLOW")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CFA_YELLOW);
+                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.YELLOW);
             }
         }
 
