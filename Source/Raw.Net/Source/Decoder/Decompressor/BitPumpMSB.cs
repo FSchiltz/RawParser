@@ -138,7 +138,7 @@ namespace RawNet
 
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpMSB(ref TIFFBinaryReader s) : this(ref s, 0, (uint)s.BaseStream.Length)
+        public BitPumpMSB(ref TIFFBinaryReader s) : this(ref s, (uint)s.Position, (uint)s.BaseStream.Length)
         {
 
         }

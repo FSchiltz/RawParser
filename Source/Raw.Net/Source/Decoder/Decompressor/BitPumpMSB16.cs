@@ -70,7 +70,7 @@ namespace RawNet
         UInt32 off;                  // Offset in bytes
         UInt32 mStuffed = 0;
 
-        public BitPumpMSB16(TIFFBinaryReader s)
+        public BitPumpMSB16(ref TIFFBinaryReader s)
         {
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
             s.Read(buffer, (int)s.Position, (int)s.BaseStream.Length);

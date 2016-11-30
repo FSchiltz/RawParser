@@ -16,7 +16,7 @@ namespace RawNet
         int BITS_PER_LONG = (8 * sizeof(UInt32));
         int MIN_GET_BITS;// = (BITS_PER_LONG - 7);  /* max value for long getBuffer */
 
-        public BitPumpPlain(TIFFBinaryReader s)
+        public BitPumpPlain(ref TIFFBinaryReader s)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
             s.Read(buffer, (int)s.Position, (int)s.BaseStream.Length);
