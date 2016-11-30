@@ -67,57 +67,59 @@ namespace RawNet
                     //todo check if correct
                 }
 
-                for (int j = 0; j < temp.dataCount; j++)
+                if (temp.tagId != TagType.MAKERNOTE && temp.tagId != TagType.MAKERNOTE_ALT)
                 {
-                    switch (temp.dataType)
+                    for (int j = 0; j < temp.dataCount; j++)
                     {
-                        case TiffDataType.BYTE:
-                        case TiffDataType.UNDEFINED:
-                        case TiffDataType.ASCII:
-                        case TiffDataType.OFFSET:
-                            temp.data[j] = fileStream.ReadByte();
-                            break;
-                        case TiffDataType.SHORT:
-                            temp.data[j] = fileStream.ReadUInt16();
-                            break;
-                        case TiffDataType.LONG:
-                            temp.data[j] = fileStream.ReadUInt32();
-                            break;
-                        case TiffDataType.RATIONAL:
-                            temp.data[j] = fileStream.ReadDouble();
-                            break;
-                        case TiffDataType.SBYTE:
-                            temp.data[j] = fileStream.ReadSByte();
-                            break;
-                        case TiffDataType.SSHORT:
-                            temp.data[j] = fileStream.ReadInt16();
-                            //if (temp.dataOffset == 0 && temp.dataCount == 1) fileStream.ReadInt16();
-                            break;
-                        case TiffDataType.SLONG:
-                            temp.data[j] = fileStream.ReadInt32();
-                            break;
-                        case TiffDataType.SRATIONAL:
-                            //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.
-                            //TODO remove this Fix
-                            if (temp.dataOffset == 0)
-                            {
-                                temp.data[j] = .0;
-                            }
-                            else
-                            {
+                        switch (temp.dataType)
+                        {
+                            case TiffDataType.BYTE:
+                            case TiffDataType.UNDEFINED:
+                            case TiffDataType.ASCII:
+                            case TiffDataType.OFFSET:
+                                temp.data[j] = fileStream.ReadByte();
+                                break;
+                            case TiffDataType.SHORT:
+                                temp.data[j] = fileStream.ReadUInt16();
+                                break;
+                            case TiffDataType.LONG:
+                                temp.data[j] = fileStream.ReadUInt32();
+                                break;
+                            case TiffDataType.RATIONAL:
                                 temp.data[j] = fileStream.ReadDouble();
-                            }
-                            break;
-                        case TiffDataType.FLOAT:
-                            temp.data[j] = fileStream.ReadSingle();
-                            break;
-                        case TiffDataType.DOUBLE:
-                            temp.data[j] = fileStream.ReadDouble();
-                            break;
+                                break;
+                            case TiffDataType.SBYTE:
+                                temp.data[j] = fileStream.ReadSByte();
+                                break;
+                            case TiffDataType.SSHORT:
+                                temp.data[j] = fileStream.ReadInt16();
+                                //if (temp.dataOffset == 0 && temp.dataCount == 1) fileStream.ReadInt16();
+                                break;
+                            case TiffDataType.SLONG:
+                                temp.data[j] = fileStream.ReadInt32();
+                                break;
+                            case TiffDataType.SRATIONAL:
+                                //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.
+                                //TODO remove this Fix
+                                if (temp.dataOffset == 0)
+                                {
+                                    temp.data[j] = .0;
+                                }
+                                else
+                                {
+                                    temp.data[j] = fileStream.ReadDouble();
+                                }
+                                break;
+                            case TiffDataType.FLOAT:
+                                temp.data[j] = fileStream.ReadSingle();
+                                break;
+                            case TiffDataType.DOUBLE:
+                                temp.data[j] = fileStream.ReadDouble();
+                                break;
+                        }
                     }
 
-                }
-                //Special tag
+                }//Special tag
                 switch (temp.tagId)
                 {
                     case TagType.DNGPRIVATEDATA:
@@ -146,10 +148,8 @@ namespace RawNet
                                 //save current position
                                 long pos = fileStream.Position;
 
-                                //byte[] byteData = fileStream.ReadBytes();
-                                Common.ConvertArray(ref temp.data, out byte[] byteData);
-                                subIFD.Add(parseMakerNote(byteData, endian));
-                                temp.data = null;
+                                subIFD.Add(parseMakerNote(fileStream, temp.dataOffset, endian));
+
                                 //correct here
                                 fileStream.BaseStream.Position = pos;
                                 //return to current position
@@ -230,19 +230,20 @@ namespace RawNet
         }
 
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) :
-                    this(fileStream, offset, endian)
+                this(fileStream, offset, endian)
         {
 
             this.depth = depth;
         }
 
         /* This will attempt to parse makernotes and return it as an IFD */
-        IFD parseMakerNote(byte[] data, Endianness parent_end)
+        IFD parseMakerNote(TIFFBinaryReader reader, uint off, Endianness parent_end)
         {
             IFD maker_ifd = null;
             uint offset = 0;
             TIFFBinaryReader mFile = null;
-
+            reader.Position = off;
+            byte[] data = reader.ReadBytes(100);
             // Pentax makernote starts with AOC\0 - If it's there, skip it
             if (data[0] == 0x41 && data[1] == 0x4f && data[2] == 0x43 && data[3] == 0)
             {
@@ -254,7 +255,7 @@ namespace RawNet
             if (data[0 + offset] == 0x50 && data[1 + offset] == 0x45
                 && data[2 + offset] == 0x4e && data[3 + offset] == 0x54 && data[4 + offset] == 0x41 && data[5 + offset] == 0x58)
             {
-                mFile = new TIFFBinaryReader(Common.AsStream(data), offset, (uint)data.Length);
+                mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
                 parent_end = getTiffEndianness(data.Skip(8).ToArray());
                 if (parent_end == Endianness.unknown)
                     throw new TiffParserException("Cannot determine Pentax makernote endianness");
@@ -265,7 +266,7 @@ namespace RawNet
             else if (Common.memcmp(ref fuji_signature, ref data))
             {
                 offset = 12;
-                mFile = new TIFFBinaryReader(Common.AsStream(data), offset, (uint)data.Length);
+                mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
             }
             else if (Common.memcmp(ref nikon_v3_signature, ref data))
             {
@@ -275,13 +276,13 @@ namespace RawNet
                 if (data[0 + offset] == 0x49 && data[1 + offset] == 0x49)
                 {
                     parent_end = Endianness.little;
-                    mFile = new TIFFBinaryReader(Common.AsStream(data), offset, (uint)data.Length);
+                    mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
                     offset = 8;
                 }
                 else if (data[0 + offset] == 0x4D && data[1 + offset] == 0x4D)
                 {
                     parent_end = Endianness.big;
-                    mFile = new TIFFBinaryReaderRE(Common.AsStream(data), offset, (uint)data.Length);
+                    mFile = new TIFFBinaryReaderRE(reader.BaseStream, offset + off, (uint)data.Length);
                     offset = 8;
                 }
             }
@@ -331,11 +332,11 @@ namespace RawNet
                 {
                     if (parent_end == Endianness.little)
                     {
-                        mFile = new TIFFBinaryReader(Common.AsStream(data), offset, (uint)data.Length);
+                        mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
                     }
                     else if (parent_end == Endianness.big)
                     {
-                        mFile = new TIFFBinaryReaderRE(Common.AsStream(data), offset, (uint)data.Length);
+                        mFile = new TIFFBinaryReaderRE(reader.BaseStream, offset + off, (uint)data.Length);
                     }
                 }
                 /* if (parent_end == getHostEndianness())
@@ -345,9 +346,9 @@ namespace RawNet
                 maker_ifd = new IFD(mFile, offset, endian, depth);
 
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                if (!(e is TiffParserException)) throw new TiffParserException(e.Message);
             }
             // If the structure cannot be read, a TiffParserException will be thrown.
 
@@ -403,14 +404,14 @@ namespace RawNet
                 throw new TiffParserException("Adobe Private data: original offset of makernote is past 300MB offset");
 
             /* Create fake tiff with original offsets */
-            byte[] maker_data = new byte[count];
-            Common.memcopy(ref maker_data, ref data, count, 0, 0);
-            //TIFFBinaryReader maker_map = new TIFFBinaryReader(Common.AsStream(maker_data), org_offset + count, (uint)maker_data.Length);
+            //byte[] maker_data = new byte[count];
+            // Common.memcopy(ref maker_data, ref data, count, 0, 0);
+            TIFFBinaryReader maker_map = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(data));
 
             IFD maker_ifd;
             try
             {
-                maker_ifd = parseMakerNote(maker_data, makernote_endian);
+                maker_ifd = parseMakerNote(maker_map, 0, makernote_endian);
             }
             catch (TiffParserException e)
             {

@@ -94,7 +94,7 @@ namespace RawNet
                 IFD t = potentials[0];
                 t.tags.TryGetValue((ushort)TagType.DNGVERSION, out Tag tag);
                 object[] c = tag.data;
-                if ((int)(c[0]) > 1)
+                if (Convert.ToInt32(c[0]) > 1)
                     throw new TiffParserException("DNG version too new.");
                 rootIFD = null;
                 return new DngDecoder(root,ref reader);

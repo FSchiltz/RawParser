@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace RawNet
 {
     //TODO fix comment from original
-    public class RawDecoder
+    public abstract class RawDecoder
     {
         public class RawSlice
         {
@@ -124,7 +124,7 @@ namespace RawNet
         {
             try
             {
-                byte[] raw = decodeThumbInternal();              
+                byte[] raw = decodeThumbInternal();
                 return raw;
             }
             catch (TiffParserException e)
@@ -715,7 +715,7 @@ namespace RawNet
 
             hints = cam.hints;
             return true;
-        }        
+        }
 
         public void setMetaData(CameraMetaData meta, string make, string model, string mode, int iso_speed)
         {
@@ -738,7 +738,7 @@ namespace RawNet
             mRaw.metadata.make = make;
             mRaw.metadata.model = model;
             mRaw.metadata.mode = mode;
-            
+
             if (applyCrop)
             {
                 iPoint2D new_size = cam.cropSize;
@@ -850,9 +850,9 @@ namespace RawNet
         /* A RawDecoderException will be thrown if the image cannot be decoded, */
         /* and there will not be any data in the mRaw image. */
         /* This function must be overridden by actual decoders. */
-        protected virtual RawImage decodeRawInternal() { throw new NotImplementedException(); }
-        protected virtual byte[] decodeThumbInternal() { throw new NotImplementedException(); }
-        protected virtual void decodeMetaDataInternal(CameraMetaData meta) { throw new NotImplementedException(); }
-        protected virtual void checkSupportInternal(CameraMetaData meta) { throw new NotImplementedException(); }
+        protected abstract RawImage decodeRawInternal();
+        protected abstract byte[] decodeThumbInternal();
+        protected abstract void decodeMetaDataInternal(CameraMetaData meta);
+        protected abstract void checkSupportInternal(CameraMetaData meta);
     }
 }

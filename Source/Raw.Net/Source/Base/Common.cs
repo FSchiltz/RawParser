@@ -106,11 +106,6 @@ namespace RawNet
             return true;
         }
 
-        internal static Stream AsStream(byte[] maker_data)
-        {
-            return new MemoryStream(maker_data);
-        }
-
         internal static uint[] convertByteToUInt(byte[] array)
         {
             int bytePerInt = sizeof(uint);

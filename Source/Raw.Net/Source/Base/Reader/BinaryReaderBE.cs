@@ -138,6 +138,13 @@ namespace RawNet
         {
             return offset < this.BaseStream.Length;
         }
+
+        public static Stream streamFromArray(byte[] data)
+        {
+            Stream stream = new MemoryStream(data);
+            stream.Position = 0;
+            return stream;
+        }
     }
 
     public class TIFFBinaryReaderRE : TIFFBinaryReader
