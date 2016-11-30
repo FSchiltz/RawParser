@@ -44,9 +44,9 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
-                    Relative border around the image:
+                    Relative border around the image (not working yet):
                 </TextBlock>
-                <Slider ValueChanged="Slider_ValueChanged" Grid.Row="2" Width="100" HorizontalAlignment="Center" Margin="0,10"/>
+                <Slider ValueChanged="Slider_ValueChanged" Grid.Row="2" Width="100" HorizontalAlignment="Center" Margin="0,10" IsEnabled="False"/>
             </Grid>
             <Grid>
                 <Grid.ColumnDefinitions>
