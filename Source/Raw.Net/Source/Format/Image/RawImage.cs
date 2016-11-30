@@ -160,7 +160,7 @@ namespace RawNet
                 Debug.WriteLine("WARNING: RawImageData::subFrame - Negative crop offset. Crop skipped.");
                 return;
             }
-
+            
             mOffset += crop.pos;
             dim = crop.dim;
         }

@@ -82,7 +82,7 @@ namespace RawNet
             failOnUnknown = false;
             interpolateBadPixels = false;
             applyStage1DngOpcodes = true;
-            applyCrop = false;
+            applyCrop = true;
             uncorrectedRawValues = false;
             fujiRotate = true;
         }
