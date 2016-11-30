@@ -13,29 +13,10 @@ namespace RawNet
         {
             decoderVersion = 1;
             ifd = rootifd;
+            //check if no 
         }
 
-        public void Parse(Stream file)
-        {
-            //Open a binary stream on the file
-            fileStream = new TIFFBinaryReader(file);
-            Endianness endian = Endianness.little;
-            //read the first bit to get the endianness of the file           
-            if (fileStream.ReadUInt16() == 0x4D4D)
-            {
-                //File is in reverse bit order
-                // fileStream.Dispose(); //DO NOT dispose, because it remove the filestream not the reader and crash the parse
-                fileStream = new TIFFBinaryReaderRE(file);
-                endian = Endianness.big;
-            }
-
-            //read the header
-            header = new Header(fileStream, 0);
-            //Read the IFD
-            ifd = new IFD(fileStream, header.TIFFoffset, endian, 0);
-        }
-
-        public ushort[] parseRAWImage()
+        protected override RawImage decodeRawInternal()
         {
             Tag imageOffsetTag, imageWidthTag, imageHeightTag, imageCompressedTag, photoMetricTag, rowPerStripTag, stripSizeTag;
             if (!ifd.tags.TryGetValue(0x0106, out photoMetricTag)) throw new FormatException("File not correct");
@@ -150,14 +131,10 @@ namespace RawNet
                     }
                 }
                 else throw new FormatException("Compression mode " + imageCompressedTag.dataAsString + " not supported yet");
-                return image;
+                mRaw.rawData = image;
+                return mRaw;
             }
             else throw new FormatException("Photometric interpretation " + photoMetricTag.dataAsString + " not supported yet");
-        }
-
-        protected override RawImage decodeRawInternal()
-        {
-            throw new NotImplementedException();
         }
 
         protected override void decodeMetaDataInternal(CameraMetaData meta)
