@@ -233,7 +233,10 @@ namespace RawNet
             UInt32 cpp = mRaw.cpp;
             UInt64 ox = (ulong)offset.x;
             UInt64 oy = (ulong)offset.y;
-
+            if (this.mRaw.rawData == null)
+            {
+                mRaw.rawData = new ushort[w * h * cpp];
+            }
             if (input.getRemainSize() < (inputPitch * (int)h))
             {
                 if (input.getRemainSize() > inputPitch)
@@ -248,9 +251,9 @@ namespace RawNet
                 throw new RawDecoderException("readUncompressedRaw: Unsupported bit depth");
 
             UInt32 skipBits = (uint)(inputPitch - (int)w * cpp * bitPerPixel / 8);  // Skip per line
-            if (oy > (ulong)mRaw.dim.x)
+            if (oy > (ulong)mRaw.dim.y)
                 throw new RawDecoderException("readUncompressedRaw: Invalid y offset");
-            if (ox + (ulong)size.x > (ulong)mRaw.dim.y)
+            if (ox + (ulong)size.x > (ulong)mRaw.dim.x)
                 throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
 
             UInt64 y = oy;
