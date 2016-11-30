@@ -7,7 +7,7 @@ namespace RawNet
     {
         static public void memset<T>(T[] array, T value, int count)
         {
-            for (int i = 0; i < count && i <array.Length; i++) array[i] = value;
+            for (int i = 0; i < count && i < array.Length; i++) array[i] = value;
         }
 
         static public int clampbits(int x, int n)
@@ -110,9 +110,9 @@ namespace RawNet
             return temp;
         }
 
-        internal static bool isPowerOfTwo(uint v)
+        internal static bool isPowerOfTwo(uint x)
         {
-            throw new NotImplementedException();
+            return (x != 0) && ((x & (x - 1)) == 0);
         }
     }
 }

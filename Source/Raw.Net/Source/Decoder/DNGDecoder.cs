@@ -301,6 +301,7 @@ namespace RawNet
 
             //init the raw image
             mRaw.Init();
+            mRaw.colorDepth = (ushort)bps;
             int compression = -1;
 
             try
