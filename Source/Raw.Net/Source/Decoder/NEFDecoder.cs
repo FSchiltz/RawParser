@@ -272,7 +272,7 @@ namespace RawNet
                     else if (split != hints.Last().Value)
                         readCoolpixSplitRaw(ref input, size, pos, (int)(width * bitPerPixel / 8));
                     else
-                        readUncompressedRaw(ref input, size, pos, (int)(width * bitPerPixel / 8), (int)bitPerPixel, ((bitorder) ? BitOrder.BitOrder_Jpeg : BitOrder.BitOrder_Plain));
+                        readUncompressedRaw(ref input, size, pos, (int)(width * bitPerPixel / 8), (int)bitPerPixel, ((bitorder) ? BitOrder.Jpeg : BitOrder.Plain));
                 }
                 catch (RawDecoderException e)
                 {
@@ -457,7 +457,7 @@ namespace RawNet
         override protected void decodeMetaDataInternal(CameraMetaData meta)
         {
             int iso = 0;
-            mRaw.cfa.setCFA(new iPoint2D(2, 2), CFAColor.CFA_RED, CFAColor.CFA_GREEN, CFAColor.CFA_GREEN2, CFAColor.CFA_BLUE);
+            mRaw.cfa.setCFA(new iPoint2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
 
             List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
 

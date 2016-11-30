@@ -6,20 +6,6 @@ using System.Linq;
 
 namespace RawNet
 {
-
-    public class RawImageWorker
-    {
-        public enum RawImageWorkerTask
-        {
-            SCALE_VALUES = 1, FIX_BAD_PIXELS = 2, APPLY_LOOKUP = 3 | 0x1000, FULL_IMAGE = 0x1000
-        };
-
-        RawImage data;
-        RawImageWorkerTask task;
-        int start_y;
-        int end_y;
-    };
-
     public class TableLookUp
     {
 
@@ -85,8 +71,6 @@ namespace RawNet
             return tables.Skip(n * TABLE_SIZE).ToArray();
         }
     };
-
-    public enum RawImageType { TYPE_ushort, TYPE_FLOAT32 };
 
     public class RawImage
     {

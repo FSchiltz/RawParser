@@ -282,7 +282,7 @@ namespace RawNet
                 return;
             }*/
 
-            if (BitOrder.BitOrder_Jpeg == order)
+            if (BitOrder.Jpeg == order)
             {
                 BitPumpMSB bits = new BitPumpMSB(ref input);
                 w *= cpp;
@@ -297,7 +297,7 @@ namespace RawNet
                     bits.skipBits(skipBits);
                 }
             }
-            else if (BitOrder.BitOrder_Jpeg16 == order)
+            else if (BitOrder.Jpeg16 == order)
             {
                 BitPumpMSB16 bits = new BitPumpMSB16(input);
                 w *= cpp;
@@ -312,7 +312,7 @@ namespace RawNet
                     bits.skipBits(skipBits);
                 }
             }
-            else if (BitOrder.BitOrder_Jpeg32 == order)
+            else if (BitOrder.Jpeg32 == order)
             {
                 BitPumpMSB32 bits = new BitPumpMSB32(input);
                 w *= cpp;

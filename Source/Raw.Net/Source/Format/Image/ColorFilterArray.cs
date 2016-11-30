@@ -5,18 +5,17 @@ namespace RawNet
 {
     public enum CFAColor
     {
-        CFA_COLOR_MIN = 0,
-        CFA_RED = 0,
-        CFA_GREEN = 1,
-        CFA_GREEN2 = 1,
-        CFA_BLUE = 2,
-        CFA_CYAN = 4,
-        CFA_MAGENTA = 5,
-        CFA_YELLOW = 6,
-        CFA_WHITE = 7,
-        CFA_COLOR_MAX = 8,
-        CFA_FUJI_GREEN = 9,
-        CFA_UNKNOWN = 255
+        COLOR_MIN = 0,
+        RED = 0,
+        GREEN = 1,
+        BLUE = 2,
+        CYAN = 4,
+        MAGENTA = 5,
+        YELLOW = 6,
+        WHITE = 7,
+        COLOR_MAX = 8,
+        FUJI_GREEN = 9,
+        UNKNOWN = 255
     };
 
     public class ColorFilterArray
@@ -85,7 +84,7 @@ namespace RawNet
             cfa = new CFAColor[size.area()];
             if (cfa == null)
                 throw new RawDecoderException("ColorFilterArray:setSize Unable to allocate memory");
-            Common.memset(cfa, CFAColor.CFA_UNKNOWN, (int)(size.area()));
+            Common.memset(cfa, CFAColor.UNKNOWN, (int)(size.area()));
         }
 
         public CFAColor getColorAt(UInt32 x, UInt32 y)
@@ -173,21 +172,21 @@ namespace RawNet
         {
             switch (c)
             {
-                case CFAColor.CFA_RED:
+                case CFAColor.RED:
                     return "RED";
-                case CFAColor.CFA_GREEN:
+                case CFAColor.GREEN:
                     return "GREEN";
-                case CFAColor.CFA_BLUE:
+                case CFAColor.BLUE:
                     return "BLUE";
-                case CFAColor.CFA_CYAN:
+                case CFAColor.CYAN:
                     return "CYAN";
-                case CFAColor.CFA_MAGENTA:
+                case CFAColor.MAGENTA:
                     return "MAGENTA";
-                case CFAColor.CFA_YELLOW:
+                case CFAColor.YELLOW:
                     return "YELLOW";
-                case CFAColor.CFA_WHITE:
+                case CFAColor.WHITE:
                     return "WHITE";
-                case CFAColor.CFA_FUJI_GREEN:
+                case CFAColor.FUJI_GREEN:
                     return "FUJIGREEN";
                 default:
                     return "UNKNOWN";
@@ -243,25 +242,25 @@ namespace RawNet
         {
             switch (dcrawColor)
             {
-                case 0: return CFAColor.CFA_RED;
-                case 1: return CFAColor.CFA_GREEN;
-                case 2: return CFAColor.CFA_BLUE;
-                case 3: return CFAColor.CFA_GREEN2;
+                case 0: return CFAColor.RED;
+                case 1: return CFAColor.GREEN;
+                case 2: return CFAColor.BLUE;
+                case 3: return CFAColor.GREEN;
             }
-            return CFAColor.CFA_UNKNOWN;
+            return CFAColor.UNKNOWN;
         }
 
         public UInt32 toDcrawColor(CFAColor c)
         {
             switch (c)
             {
-                case CFAColor.CFA_FUJI_GREEN:
-                case CFAColor.CFA_RED: return 0;
-                case CFAColor.CFA_MAGENTA:
-                case CFAColor.CFA_GREEN: return 1;
-                case CFAColor.CFA_CYAN:
-                case CFAColor.CFA_BLUE: return 2;
-                case CFAColor.CFA_YELLOW:
+                case CFAColor.FUJI_GREEN:
+                case CFAColor.RED: return 0;
+                case CFAColor.MAGENTA:
+                case CFAColor.GREEN: return 1;
+                case CFAColor.CYAN:
+                case CFAColor.BLUE: return 2;
+                case CFAColor.YELLOW:
                 default:
                     break;
             }

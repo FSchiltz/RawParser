@@ -340,21 +340,21 @@ namespace RawNet
                             switch (c1)
                             {
                                 case 0:
-                                    c2 = CFAColor.CFA_RED; break;
+                                    c2 = CFAColor.RED; break;
                                 case 1:
-                                    c2 = CFAColor.CFA_GREEN; break;
+                                    c2 = CFAColor.GREEN; break;
                                 case 2:
-                                    c2 = CFAColor.CFA_BLUE; break;
+                                    c2 = CFAColor.BLUE; break;
                                 case 3:
-                                    c2 = CFAColor.CFA_CYAN; break;
+                                    c2 = CFAColor.CYAN; break;
                                 case 4:
-                                    c2 = CFAColor.CFA_MAGENTA; break;
+                                    c2 = CFAColor.MAGENTA; break;
                                 case 5:
-                                    c2 = CFAColor.CFA_YELLOW; break;
+                                    c2 = CFAColor.YELLOW; break;
                                 case 6:
-                                    c2 = CFAColor.CFA_WHITE; break;
+                                    c2 = CFAColor.WHITE; break;
                                 default:
-                                    c2 = CFAColor.CFA_UNKNOWN;
+                                    c2 = CFAColor.UNKNOWN;
                                     throw new RawDecoderException("DNG Decoder: Unsupported CFA Color.");
                             }
                             mRaw.cfa.setColorAt(new iPoint2D(x, y), c2);
@@ -416,7 +416,7 @@ namespace RawNet
                                 big_endian = true;
                             try
                             {
-                                readUncompressedRaw(ref input, size, pos, (int)(mRaw.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.BitOrder_Jpeg : BitOrder.BitOrder_Plain);
+                                readUncompressedRaw(ref input, size, pos, (int)(mRaw.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
                             }
                             catch (IOException ex)
                             {
