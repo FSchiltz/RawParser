@@ -25,6 +25,7 @@ namespace RawNet
         }
         static public iPoint2D operator +(iPoint2D a, iPoint2D b)
         {
+            if (a == null) return b;
             return new iPoint2D(a.x + b.x, a.y + b.y);
         }
         public static bool operator ==(iPoint2D a, iPoint2D rhs) { return a.x == rhs.x && a.y == rhs.y; }
