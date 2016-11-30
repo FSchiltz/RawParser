@@ -174,7 +174,6 @@ namespace RawEditor
                     //read the exifs
                     //if (raw.exif != null) displayExif();
                     //demos   
-                    if (raw.UncroppedCfa != null) raw.cfa = raw.UncroppedCfa; //TODO remove and use crop
                     if (raw.cfa != null && raw.cpp == 1)
                     {
                         Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
@@ -203,9 +202,9 @@ namespace RawEditor
                     }
                     raw.previewDim = new iPoint2D(raw.dim.x / previewFactor, raw.dim.y / previewFactor);
                     raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * 3];
-                    for (int i = 0; i < raw.previewDim.y; i++)
+                    for (int i = raw.mOffset.y; i < raw.previewDim.y; i++)
                     {
-                        for (int j = 0; j < raw.previewDim.x; j++)
+                        for (int j = raw.mOffset.x; j < raw.previewDim.x; j++)
                         {
                             raw.previewData[((i * raw.previewDim.x) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor];
                             raw.previewData[(((i * raw.previewDim.x) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor) + 1];
@@ -351,7 +350,7 @@ namespace RawEditor
                 {
                     ushort[] copyOfimage = new ushort[raw.rawData.Length];
                     for (int i = 0; i < raw.rawData.Length; i++) copyOfimage[i] = raw.rawData[i];
-                    applyUserModif(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth);
+                    applyUserModif(ref copyOfimage, raw.dim, raw.mOffset, raw.colorDepth);
 
                     // write to file
                     if (file.FileType == ".jpg")
@@ -476,7 +475,7 @@ namespace RawEditor
                     copyofpreview[i] = raw.previewData[i];
                 }
 
-                applyUserModif(ref copyofpreview, raw.previewDim.y, raw.previewDim.x, raw.colorDepth);
+                applyUserModif(ref copyofpreview, raw.previewDim, new iPoint2D(), raw.colorDepth);
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher
@@ -498,7 +497,7 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
-        private void applyUserModif(ref ushort[] image, int imageHeight, int imageWidth, ushort colorDepth)
+        private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -522,7 +521,7 @@ namespace RawEditor
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
-            effect.applyModification(ref image, imageHeight, imageWidth, colorDepth);
+            effect.applyModification(ref image, dim,offset, colorDepth);
         }
 
         #region WBSlider
