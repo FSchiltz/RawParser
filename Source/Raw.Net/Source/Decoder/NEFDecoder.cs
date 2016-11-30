@@ -534,13 +534,13 @@ namespace RawNet
                     UInt32 version = 0;
                     for (UInt32 i = 0; i < 4; i++)
                         version = (version << 4) + (uint)(wb.data[i]) - '0';
-                    if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == (ushort)TiffDataType.UNDEFINED)
+                    if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == TiffDataType.UNDEFINED)
                     {
                         mRaw.metadata.wbCoeffs[0] = wb.getShort(36);
                         mRaw.metadata.wbCoeffs[2] = wb.getShort(37);
                         mRaw.metadata.wbCoeffs[1] = wb.getShort(38);
                     }
-                    else if (version == 0x103 && wb.dataCount >= 26 && wb.dataType == (ushort)TiffDataType.UNDEFINED)
+                    else if (version == 0x103 && wb.dataCount >= 26 && wb.dataType == TiffDataType.UNDEFINED)
                     {
                         mRaw.metadata.wbCoeffs[0] = wb.getShort(10);
                         mRaw.metadata.wbCoeffs[1] = wb.getShort(11);
@@ -592,7 +592,7 @@ namespace RawNet
             {
                 Tag wb = rootIFD.getEntryRecursive((TagType)0x0014);
 
-                if (wb.dataCount == 2560 && wb.dataType == (ushort)TiffDataType.UNDEFINED)
+                if (wb.dataCount == 2560 && wb.dataType == TiffDataType.UNDEFINED)
                 {
                     UInt32 red = (uint)wb.data[1249] | (((UInt32)wb.data[1248]) << 8);
                     UInt32 blue = (uint)wb.data[1251] | (((UInt32)wb.data[1250]) << 8);
@@ -687,7 +687,7 @@ namespace RawNet
                 throw new RawDecoderException("NEF Decoder: Unable to locate whitebalance needed for decompression");
 
             Tag wb = note[0].getEntry((TagType)12);
-            if (wb.dataCount != 4 || wb.dataType != (ushort)TiffDataType.RATIONAL)
+            if (wb.dataCount != 4 || wb.dataType != TiffDataType.RATIONAL)
                 throw new RawDecoderException("NEF Decoder: Whitebalance has unknown count or type");
 
             float wb_r = wb.getFloat(0);
