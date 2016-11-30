@@ -114,7 +114,7 @@ namespace RawNet
         {
             Tag masked = raw.getEntry(TagType.MASKEDAREAS);
 
-            if (masked.dataType != (ushort)TiffDataType.TIFF_SHORT && masked.dataType != (ushort)TiffDataType.TIFF_LONG)
+            if (masked.dataType != TiffDataType.SHORT && masked.dataType != TiffDataType.LONG)
                 return false;
 
             Int32 nrects = (int)masked.dataCount / 4;

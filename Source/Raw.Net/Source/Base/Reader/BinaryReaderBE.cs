@@ -29,15 +29,15 @@ namespace RawNet
             //get type of array
             switch (type)
             {
-                case TiffDataType.TIFF_BYTE: /* 8-bit unsigned integer */
-                case TiffDataType.TIFF_ASCII: /* 8-bit bytes w/ last byte null */
-                case TiffDataType.TIFF_UNDEFINED: /* !8-bit untyped data */
-                case TiffDataType.TIFF_SBYTE: /* !8-bit signed integer */
+                case TiffDataType.BYTE: /* 8-bit unsigned integer */
+                case TiffDataType.ASCII: /* 8-bit bytes w/ last byte null */
+                case TiffDataType.UNDEFINED: /* !8-bit untyped data */
+                case TiffDataType.SBYTE: /* !8-bit signed integer */
                     temp = new byte[array.Length];
                     for (int i = 0; i < array.Length; i++) temp[i] = (byte)array[i];
                     break;
-                case TiffDataType.TIFF_SHORT: /* 16-bit unsigned integer */
-                case TiffDataType.TIFF_SSHORT: /* !16-bit signed integer */
+                case TiffDataType.SHORT: /* 16-bit unsigned integer */
+                case TiffDataType.SSHORT: /* !16-bit signed integer */
                     temp = new byte[array.Length * 2];
                     for (int i = 0; i < temp.Length; i++)
                     {
@@ -45,10 +45,10 @@ namespace RawNet
                         temp[i + 1] = (byte)((int)array[i]);
                     }
                     break;
-                case TiffDataType.TIFF_LONG: /* 32-bit unsigned integer */
-                case TiffDataType.TIFF_OFFSET: /* 32-bit unsigned offset used in ORF at least */
-                case TiffDataType.TIFF_FLOAT: /* !32-bit IEEE floating point */
-                case TiffDataType.TIFF_SLONG: /* !32-bit signed integer */
+                case TiffDataType.LONG: /* 32-bit unsigned integer */
+                case TiffDataType.OFFSET: /* 32-bit unsigned offset used in ORF at least */
+                case TiffDataType.FLOAT: /* !32-bit IEEE floating point */
+                case TiffDataType.SLONG: /* !32-bit signed integer */
                     temp = new byte[array.Length * 4];
                     for (int i = 0; i < temp.Length; i++)
                     {
@@ -58,9 +58,9 @@ namespace RawNet
                         temp[i + 3] = (byte)((int)array[i]);
                     }
                     break;
-                case TiffDataType.TIFF_SRATIONAL:/* !64-bit signed fraction */
-                case TiffDataType.TIFF_DOUBLE: /* !64-bit IEEE floating point */
-                case TiffDataType.TIFF_RATIONAL: /* 64-bit unsigned fraction */
+                case TiffDataType.SRATIONAL:/* !64-bit signed fraction */
+                case TiffDataType.DOUBLE: /* !64-bit IEEE floating point */
+                case TiffDataType.RATIONAL: /* 64-bit unsigned fraction */
                     temp = new byte[array.Length * 8];
                     for (int i = 0; i < temp.Length; i++)
                     {

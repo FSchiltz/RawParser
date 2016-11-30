@@ -17,26 +17,26 @@ namespace RawNet
      */
     public enum TiffDataType
     {
-        TIFF_NOTYPE = 0, /* placeholder */
-        TIFF_BYTE = 1, /* 8-bit unsigned integer */
-        TIFF_ASCII = 2, /* 8-bit bytes w/ last byte null */
-        TIFF_SHORT = 3, /* 16-bit unsigned integer */
-        TIFF_LONG = 4, /* 32-bit unsigned integer */
-        TIFF_RATIONAL = 5, /* 64-bit unsigned fraction */
-        TIFF_SBYTE = 6, /* !8-bit signed integer */
-        TIFF_UNDEFINED = 7, /* !8-bit untyped data */
-        TIFF_SSHORT = 8, /* !16-bit signed integer */
-        TIFF_SLONG = 9, /* !32-bit signed integer */
-        TIFF_SRATIONAL = 10, /* !64-bit signed fraction */
-        TIFF_FLOAT = 11, /* !32-bit IEEE floating point */
-        TIFF_DOUBLE = 12, /* !64-bit IEEE floating point */
-        TIFF_OFFSET = 13, /* 32-bit unsigned offset used in ORF at least */
+        NOTYPE = 0, /* placeholder */
+        BYTE = 1, /* 8-bit unsigned integer */
+        ASCII = 2, /* 8-bit bytes w/ last byte null */
+        SHORT = 3, /* 16-bit unsigned integer */
+        LONG = 4, /* 32-bit unsigned integer */
+        RATIONAL = 5, /* 64-bit unsigned fraction */
+        SBYTE = 6, /* !8-bit signed integer */
+        UNDEFINED = 7, /* !8-bit untyped data */
+        SSHORT = 8, /* !16-bit signed integer */
+        SLONG = 9, /* !32-bit signed integer */
+        SRATIONAL = 10, /* !64-bit signed fraction */
+        FLOAT = 11, /* !32-bit IEEE floating point */
+        DOUBLE = 12, /* !64-bit IEEE floating point */
+        OFFSET = 13, /* 32-bit unsigned offset used in ORF at least */
     };
 
     public class Tag
     {
         public TagType tagId { get; set; }
-        public ushort dataType;
+        public TiffDataType dataType;
         public uint dataCount;
         public uint dataOffset;
         public object[] data;
@@ -50,9 +50,9 @@ namespace RawNet
                     string temp = "";
                     switch (dataType)
                     {
-                        case 1:
-                        case 6:
-                        case 7:
+                        case TiffDataType.BYTE:
+                        case TiffDataType.SBYTE:
+                        case TiffDataType.UNDEFINED:
                             foreach (object t in data)
                             {
                                 temp += (byte)t;
@@ -60,10 +60,10 @@ namespace RawNet
                             }
                             temp += "\0";
                             break;
-                        case 2:
+                        case TiffDataType.ASCII:
                             temp = (string)data[0];
                             break;
-                        case 3:
+                        case TiffDataType.SHORT:
                             foreach (object t in data)
                             {
                                 temp += (ushort)t;
@@ -71,7 +71,7 @@ namespace RawNet
                             }
                             temp += "\0";
                             break;
-                        case 4:
+                        case TiffDataType.LONG:
                             foreach (object t in data)
                             {
                                 temp += (uint)t;
@@ -79,7 +79,7 @@ namespace RawNet
                             }
                             temp += "\0";
                             break;
-                        case 8:
+                        case TiffDataType.SSHORT:
                             foreach (object t in data)
                             {
                                 temp += (short)t;
@@ -87,7 +87,7 @@ namespace RawNet
                             }
                             temp += "\0";
                             break;
-                        case 9:
+                        case TiffDataType.SLONG:
                             foreach (object t in data)
                             {
                                 temp += (int)t;
@@ -95,18 +95,11 @@ namespace RawNet
                             }
                             temp += "\0";
                             break;
-                        case 11:
-                            foreach (object t in data)
-                            {
-                                temp += (int)t;
-                                temp += " ";
-                            }
-                            temp += "\0";
-                            break;
+                        case TiffDataType.FLOAT:
 
-                        case 5:
-                        case 10:
-                        case 12:
+                        case TiffDataType.RATIONAL:
+                        case TiffDataType.DOUBLE:
+                        case TiffDataType.SRATIONAL:
                             foreach (object t in data)
                             {
                                 temp += (double)t;
@@ -140,34 +133,35 @@ namespace RawNet
         {
             data = new object[1];
             dataCount = 1;
-            dataType = 1;
+            dataType = TiffDataType.UNDEFINED;
             displayName = "";
 
         }
 
-        public int getTypeSize(ushort id)
+        public int getTypeSize(TiffDataType id)
         {
             int size = 0;
             switch (id)
             {
-                case 1:
-                case 2:
-                case 6:
-                case 7:
+                case TiffDataType.BYTE:
+                case TiffDataType.ASCII:
+                case TiffDataType.SBYTE:
+                case TiffDataType.UNDEFINED:
+                case TiffDataType.OFFSET:
                     size = 1;
                     break;
-                case 3:
-                case 8:
+                case TiffDataType.SHORT:
+                case TiffDataType.SSHORT:
                     size = 2;
                     break;
-                case 4:
-                case 9:
-                case 11:
+                case TiffDataType.LONG:
+                case TiffDataType.SLONG:
+                case TiffDataType.FLOAT:
                     size = 4;
                     break;
-                case 10:
-                case 5:
-                case 12:
+                case TiffDataType.RATIONAL:
+                case TiffDataType.DOUBLE:
+                case TiffDataType.SRATIONAL:
                     size = 8;
                     break;
             }
