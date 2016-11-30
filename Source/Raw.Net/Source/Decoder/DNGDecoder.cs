@@ -23,7 +23,7 @@ namespace RawNet
         IFD mRootIFD;
         bool mFixLjpeg;
 
-        DngDecoder(IFD rootIFD, ref TIFFBinaryReader file) : base(ref file)
+        public DngDecoder(IFD rootIFD, ref TIFFBinaryReader file) : base(ref file)
         {
             mRootIFD = (rootIFD);
             List<IFD> data = mRootIFD.getIFDsWithTag(TagType.DNGVERSION);
