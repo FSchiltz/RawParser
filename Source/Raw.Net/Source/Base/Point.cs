@@ -4,8 +4,20 @@ namespace RawNet
 {
     public class iPoint2D
     {
+        public override bool Equals(object obj)
+        {
+            if (obj is iPoint2D) return this == (iPoint2D)obj;
+            return base.Equals(obj);
+        }
+
+        //TODO check
+        public override int GetHashCode()
+        {
+            return x + y;
+        }
+
         public iPoint2D() { x = y = 0; }
-        public iPoint2D(int a, int b) { x = a; y = b; }
+        public iPoint2D(int x, int y) { this.x = x; this.y = y; }
         public iPoint2D(iPoint2D pt) { x = pt.x; y = pt.y; }
         static public iPoint2D operator -(iPoint2D a, iPoint2D b)
         {
