@@ -47,7 +47,7 @@ namespace RawNet
                 //add the displayname 
                 temp.displayName = null;
 
-                temp.dataType = fileStream.ReadUInt16();
+                temp.dataType = (TiffDataType)fileStream.ReadUInt16();
                 temp.dataCount = fileStream.ReadUInt32();
 
                 //IF makernote, do not parse data
@@ -72,31 +72,32 @@ namespace RawNet
                 {
                     switch (temp.dataType)
                     {
-                        case 1:
-                        case 2:
-                        case 7:
+                        case TiffDataType.BYTE:
+                        case TiffDataType.UNDEFINED:
+                        case TiffDataType.ASCII:
+                        case TiffDataType.OFFSET:
                             temp.data[j] = fileStream.ReadByte();
                             break;
-                        case 3:
+                        case TiffDataType.SHORT:
                             temp.data[j] = fileStream.ReadUInt16();
                             break;
-                        case 4:
+                        case TiffDataType.LONG:
                             temp.data[j] = fileStream.ReadUInt32();
                             break;
-                        case 5:
+                        case TiffDataType.RATIONAL:
                             temp.data[j] = fileStream.ReadDouble();
                             break;
-                        case 6:
+                        case TiffDataType.SBYTE:
                             temp.data[j] = fileStream.ReadSByte();
                             break;
-                        case 8:
+                        case TiffDataType.SSHORT:
                             temp.data[j] = fileStream.ReadInt16();
                             //if (temp.dataOffset == 0 && temp.dataCount == 1) fileStream.ReadInt16();
                             break;
-                        case 9:
+                        case TiffDataType.SLONG:
                             temp.data[j] = fileStream.ReadInt32();
                             break;
-                        case 10:
+                        case TiffDataType.SRATIONAL:
                             //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.
                             if (temp.dataOffset == 0)
                             {
@@ -107,10 +108,10 @@ namespace RawNet
                                 temp.data[j] = fileStream.ReadDouble();
                             }
                             break;
-                        case 11:
+                        case TiffDataType.FLOAT:
                             temp.data[j] = fileStream.ReadSingle();
                             break;
-                        case 12:
+                        case TiffDataType.DOUBLE:
                             temp.data[j] = fileStream.ReadDouble();
                             break;
                     }
@@ -165,8 +166,8 @@ namespace RawNet
                         break;
 
                     case TagType.FUJI_RAW_IFD:
-                        if (temp.dataType == 0xd) // FUJI - correct type
-                            temp.dataType = (int)TiffDataType.TIFF_LONG;
+                        if (temp.dataType == TiffDataType.OFFSET) // FUJI - correct type
+                            temp.dataType = TiffDataType.LONG;
                         goto case TagType.SUBIFDS;
                     case TagType.SUBIFDS:
                     case TagType.EXIFIFDPOINTER:
@@ -191,7 +192,7 @@ namespace RawNet
                         break;
                 }
                 //transform data ToString
-                if (temp.dataType == 2)
+                if (temp.dataType == TiffDataType.ASCII)
                 {
                     //remove \0 if any
                     if ((byte)temp.data[temp.dataCount - 1] == 0) temp.data[temp.dataCount - 1] = (byte)' ';
