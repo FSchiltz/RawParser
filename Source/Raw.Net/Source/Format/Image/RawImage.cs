@@ -279,6 +279,18 @@ namespace RawNet
             }
         }
 
+        /*
+         * return the n byte of the image
+         */
+        internal byte getByteAt(uint n)
+        {
+            //find the index of the short
+            int index = (int)n / 2;
+            int reste = (int)n % 2;
+            ushort value = rawData[index];
+            return (reste == 0) ? (byte)(value >> 8) : (byte)value;
+        }
+
         public void scaleBlackWhite()
         {
             const int skipBorder = 250;

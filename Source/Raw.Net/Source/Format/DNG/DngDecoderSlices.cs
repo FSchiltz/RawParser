@@ -44,7 +44,7 @@ namespace RawNet
         UInt32 nThreads;
         int compression;
 
-        
+        /*
         void DecodeThread()
         {
             DngDecoderThread me = _this;
@@ -59,7 +59,7 @@ namespace RawNet
                 parent.mRaw.errors.Add("DNGDEcodeThread: Caught exception.");
             }
             return;
-        }
+        }*/
         
 
         public DngDecoderSlices(TIFFBinaryReader file, RawImage img, int _compression)
@@ -84,9 +84,8 @@ namespace RawNet
                 {
                     LJpegPlain l = new LJpegPlain(mFile, mRaw);
                     l.mDNGCompatible = mFixLjpeg;
-                    DngSliceElement e = t.slices.Peek();
-                    l.mUseBigtable = e.mUseBigtable;
-                    slices.Dequeue();
+                    DngSliceElement e = slices.Dequeue();
+                    l.mUseBigtable = e.mUseBigtable;                    
                     try
                     {
                         l.startDecoder(e.byteOffset, e.byteCount, e.offX, e.offY);
