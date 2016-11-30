@@ -83,7 +83,7 @@ namespace RawNet
         public ColorFilterArray cfa = new ColorFilterArray();
         public double[] camMul, black, curve;
         public int rotation = 0, blackLevel, saturation, dark;
-        public List<BlackArea> blackAreas;
+        public List<BlackArea> blackAreas = new List<BlackArea>();
         public bool mDitherScale;           // Should upscaling be done with dither to mimize banding?
         public ImageMetaData metadata = new ImageMetaData();
         public uint pitch, cpp, bpp, whitePoint;
@@ -218,9 +218,38 @@ namespace RawNet
             dst[offset] = table.tables[value];
         }
 
-        public void scaleValues(int start_y, int end_y)
+        public void scaleValues()
         {
-            int gw = (int)(dim.x * cpp);
+            //skip 250 pixel to reduce calculation
+            const int skipBorder = 250;
+            int gw = (int)((dim.x - skipBorder) * cpp);
+            if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
+            {  // Estimate
+                int b = 65536;
+                uint m = 0;
+                for (int row = skipBorder; row < (dim.y - skipBorder); row++)
+                {
+                    for (int col = skipBorder; col < gw; col++)
+                    {
+                        b = Math.Min(rawData[row * dim.x + col], b);
+                        m = Math.Min(rawData[row * dim.x + col], m);
+                    }
+                }
+                if (blackLevel < 0)
+                    blackLevel = b;
+                if (whitePoint >= 65536)
+                    whitePoint = m;
+                Debug.WriteLine("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + ", Estimated white:" + whitePoint);
+            }
+
+            /* Skip, if not needed */
+            if ((blackAreas.Count == 0 && blackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || dim.area() <= 0)
+                return;
+
+            /* If filter has not set separate blacklevel, compute or fetch it */
+            if (blackLevelSeparate[0] < 0)
+                calculateBlackAreas();
+            gw = (int)(dim.x * cpp);
             int[] mul = new int[4];
             int[] sub = new int[4];
             int depth_values = (int)(whitePoint - blackLevelSeparate[0]);
@@ -241,25 +270,30 @@ namespace RawNet
                 mul[i] = (int)(16384.0f * 65535.0f / (whitePoint - blackLevelSeparate[v]));
                 sub[i] = blackLevelSeparate[v];
             }
-            for (int y = start_y; y < end_y; y++)
+            unsafe
             {
-                int v = dim.x + y * 36969;
-                ushort[] pixel = previewData.Skip(dim.x * y).ToArray();
-                int[] mul_local = mul.Skip(2 * (y & 1)).ToArray();
-                int[] sub_local = sub.Skip(2 * (y & 1)).ToArray();
-                for (int x = 0; x < gw; x++)
+                fixed (int* mulFixed = mul, subFixed = sub)
                 {
-                    int rand;
-                    if (mDitherScale)
+                    for (int y = mOffset.y; y < dim.y; y++)
                     {
-                        v = 18000 * (v & 65535) + (v >> 16);
-                        rand = half_scale_fp - (full_scale_fp * (v & 2047));
+                        int v = dim.x + y * 36969;
+                        int* mul_local = &mulFixed[2 * (y & 1)];
+                        int* sub_local = &subFixed[2 * (y & 1)];
+                        for (int x = mOffset.x; x < gw; x++)
+                        {
+                            int rand;
+                            if (mDitherScale)
+                            {
+                                v = 18000 * (v & 65535) + (v >> 16);
+                                rand = half_scale_fp - (full_scale_fp * (v & 2047));
+                            }
+                            else
+                            {
+                                rand = 0;
+                            }
+                            rawData[x + (y * dim.x * cpp)] = (ushort)Common.clampbits(((rawData[(y * dim.x * cpp) + x] - sub_local[x & 1]) * mul_local[x & 1] + 8192 + rand) >> 14, 16);
+                        }
                     }
-                    else
-                    {
-                        rand = 0;
-                    }
-                    pixel[x] = (ushort)Common.clampbits(((pixel[x] - sub_local[x & 1]) * mul_local[x & 1] + 8192 + rand) >> 14, 16);
                 }
             }
         }
@@ -310,7 +344,7 @@ namespace RawNet
             if (blackLevelSeparate[0] < 0)
                 calculateBlackAreas();
 
-            scaleValues(0, dim.y);
+            scaleValues();
         }
 
         void calculateBlackAreas()

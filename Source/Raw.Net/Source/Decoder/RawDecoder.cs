@@ -97,9 +97,10 @@ namespace RawNet
                 {
                     raw.metadata.pixelAspectRatio = Double.Parse(pixelRatio);
                 }
+                //if (!uncorrectedRawValues) mRaw.scaleValues();
                 /*
                 if (interpolateBadPixels)
-                    raw-fixBadPixels();*/
+                    raw-fixBadPixels();*/                    
                 return raw;
             }
             catch (TiffParserException e)

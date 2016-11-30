@@ -126,6 +126,7 @@ namespace RawNet
                 meta = data[0].getEntry((TagType)0x8c);  // Fall back
             }
 
+            mRaw.Init();
             try
             {
 
