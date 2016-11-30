@@ -104,9 +104,7 @@ namespace RawNet
             }
 
             UInt32 x, y;
-            BitPumpMSB bits = new BitPumpMSB(ref input, offset, size);
-            //init the raw image
-            mRaw.Init();
+            BitPumpMSB bits = new BitPumpMSB(ref input, offset, size);           
             UInt32 pitch = w;
 
             int pLeft1 = 0;
