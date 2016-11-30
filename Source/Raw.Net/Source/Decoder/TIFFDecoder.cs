@@ -160,11 +160,6 @@ namespace RawNet
             throw new NotImplementedException();
         }
 
-        protected override byte[] decodeThumbInternal()
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void decodeMetaDataInternal(CameraMetaData meta)
         {
             throw new NotImplementedException();

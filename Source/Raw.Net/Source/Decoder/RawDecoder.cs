@@ -851,7 +851,7 @@ namespace RawNet
         /* and there will not be any data in the mRaw image. */
         /* This function must be overridden by actual decoders. */
         protected abstract RawImage decodeRawInternal();
-        protected abstract byte[] decodeThumbInternal();
+        protected virtual byte[] decodeThumbInternal() { return null; }
         protected abstract void decodeMetaDataInternal(CameraMetaData meta);
         protected abstract void checkSupportInternal(CameraMetaData meta);
     }
