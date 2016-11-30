@@ -172,8 +172,8 @@ namespace RawNet
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)((frame.h - skipY) / maxSuperV);
-                UInt16** imagePos = stackalloc UInt16*[(int)slices + 1];
-                int* sliceWidth = stackalloc int[(int)slices + 1];
+                UInt16** imagePos = stackalloc UInt16*[(slices + 1)];
+                int* sliceWidth = stackalloc int[(slices + 1)];
 
                 UInt32 t_y = 0;
                 UInt32 t_x = 0;
@@ -181,7 +181,7 @@ namespace RawNet
                 UInt32 slice = 0;
                 UInt32 pitch_s = mRaw.pitch / 2;  // Pitch in shorts 
 
-                int* slice_width = stackalloc int[(int)slices];
+                int* slice_width = stackalloc int[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)
@@ -361,7 +361,7 @@ namespace RawNet
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(real_h - skipY) / 2;
 
-                uint* offset = stackalloc uint[(int)slices + 1];
+                uint* offset = stackalloc uint[(slices + 1)];
 
                 UInt32 t_y = 0;
                 UInt32 t_x = 0;
@@ -369,7 +369,7 @@ namespace RawNet
                 UInt32 slice = 0;
                 UInt32 pitch_s = mRaw.pitch / 2;  // Pitch in shorts
 
-                int* slice_width = stackalloc int[(int)slices];
+                int* slice_width = stackalloc int[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)
@@ -512,13 +512,13 @@ namespace RawNet
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
 
-                uint* offset = stackalloc UInt32[(int)slices + 1];
+                uint* offset = stackalloc UInt32[(slices + 1)];
 
                 UInt32 t_y = 0;
                 UInt32 t_x = 0;
                 UInt32 t_s = 0;
                 UInt32 slice = 0;
-                int* slice_width = stackalloc int[(int)slices];
+                int* slice_width = stackalloc int[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)
@@ -637,7 +637,7 @@ namespace RawNet
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
-                uint* offset = stackalloc UInt32[(int)slices + 1];
+                uint* offset = stackalloc UInt32[(slices + 1)];
 
                 UInt32 t_y = 0;
                 UInt32 t_x = 0;
@@ -662,7 +662,7 @@ namespace RawNet
                 }
                 offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-                int* slice_width = stackalloc int[(int)slices];
+                int* slice_width = stackalloc int[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)
@@ -743,7 +743,7 @@ namespace RawNet
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
-                uint* offset = stackalloc UInt32[(int)slices + 1];
+                uint* offset = stackalloc UInt32[(slices + 1)];
 
                 UInt32 t_y = 0;
                 UInt32 t_x = 0;
@@ -768,7 +768,7 @@ namespace RawNet
 
                 offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-                int* slice_width = stackalloc int[(int)slices];
+                int* slice_width = stackalloc int[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)
@@ -864,7 +864,7 @@ namespace RawNet
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
-                uint* offset = stackalloc UInt32[(int)slices + 1];
+                uint* offset = stackalloc UInt32[(slices + 1)];
 
                 UInt32 t_y = 0;
                 UInt32 t_x = 0;

@@ -207,12 +207,12 @@ namespace RawNet
                 TIFFBinaryReader input;
                 if (mFile is TIFFBinaryReaderRE) input = new TIFFBinaryReaderRE(mFile.BaseStream, slice.offset, slice.count);
                 else input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, slice.count);
-                iPoint2D size = new iPoint2D((int)width, (int)slice.h);
+                iPoint2D size = new iPoint2D(width, (int)slice.h);
                 iPoint2D pos = new iPoint2D(0, (int)offY);
                 bitPerPixel = (int)(slice.count * 8u / (slice.h * width));
                 try
                 {
-                    readUncompressedRaw(ref input, size, pos, (int)(width * bitPerPixel / 8), bitPerPixel, order);
+                    readUncompressedRaw(ref input, size, pos, width * bitPerPixel / 8, bitPerPixel, order);
                 }
                 catch (RawDecoderException e)
                 {

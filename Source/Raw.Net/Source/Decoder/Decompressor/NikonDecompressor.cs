@@ -206,7 +206,7 @@ namespace RawNet
                 }
                 else
                 {
-                    rv = (int)dctbl1.huffval[dctbl1.valptr[l] + (int)(code - dctbl1.minCode[l])];
+                    rv = (int)dctbl1.huffval[dctbl1.valptr[l] + (code - dctbl1.minCode[l])];
                 }
             }
 

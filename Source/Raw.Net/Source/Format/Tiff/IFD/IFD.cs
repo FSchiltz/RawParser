@@ -376,7 +376,7 @@ namespace RawNet
             data = data.Skip(10).ToArray();
             uint count;
 
-            count = (uint)data[0] << 24 | (uint)data[1] << 16 | (uint)data[2] << 8 | (uint)data[3];
+            count = (uint)data[0] << 24 | (uint)data[1] << 16 | (uint)data[2] << 8 | data[3];
 
             data = data.Skip(4).ToArray();
             if (count > size)
@@ -394,7 +394,7 @@ namespace RawNet
             uint org_offset;
 
 
-            org_offset = (uint)data[0] << 24 | (uint)data[1] << 16 | (uint)data[2] << 8 | (uint)data[3];
+            org_offset = (uint)data[0] << 24 | (uint)data[1] << 16 | (uint)data[2] << 8 | data[3];
 
             data = data.Skip(4).ToArray();
             /* We don't parse original makernotes that are placed after 300MB mark in the original file */

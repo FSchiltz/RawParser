@@ -33,7 +33,7 @@ namespace RawNet
         public UInt32 peekBitsNoFill(UInt32 nbits)
         {
             int shift = (int)(mLeft - nbits);
-            UInt32 ret = (uint)current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
+            UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
             ret >>= shift & 7;
             /*
             for (int i = 0; i < shift >> 3; i++)
@@ -81,7 +81,7 @@ namespace RawNet
         public UInt32 peekByteNoFill()
         {
             int shift = mLeft - 8;
-            UInt32 ret = (uint)current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
+            UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
             ret >>= shift & 7;
             return ret & 0xff;
         }
@@ -147,7 +147,7 @@ namespace RawNet
         public BitPumpMSB(ref TIFFBinaryReader s, uint offset, uint count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
-            size = (uint)(count + sizeof(UInt32));
+            size = count + sizeof(UInt32);
             buffer = new byte[size];
             s.BaseStream.Position = offset;
             s.BaseStream.Read(buffer, 0, (int)count);

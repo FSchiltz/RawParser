@@ -129,8 +129,8 @@ namespace RawNet
 
             for (UInt32 i = 0; i < nrects; i++)
             {
-                iPoint2D topleft = new iPoint2D((int)rects[i * 4 + 1], (int)rects[i * 4]);
-                iPoint2D bottomright = new iPoint2D((int)rects[i * 4 + 3], (int)rects[i * 4 + 2]);
+                iPoint2D topleft = new iPoint2D(rects[i * 4 + 1], rects[i * 4]);
+                iPoint2D bottomright = new iPoint2D(rects[i * 4 + 3], rects[i * 4 + 2]);
                 // Is this a horizontal box, only add it if it covers the active width of the image
                 if (topleft.x <= top.x && bottomright.x >= (mRaw.dim.x + top.x))
                     mRaw.blackAreas.Add(new BlackArea(topleft.y, bottomright.y - topleft.y, false));
@@ -199,7 +199,7 @@ namespace RawNet
                     black_sum[i & 1] += blackleveldeltav.getFloat(i);
 
                 for (int i = 0; i < 4; i++)
-                    mRaw.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / (float)mRaw.dim.y * 2.0f);
+                    mRaw.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / mRaw.dim.y * 2.0f);
             }
 
             if (raw.hasEntry(TagType.BLACKLEVELDELTAH))
@@ -212,7 +212,7 @@ namespace RawNet
                     black_sum[i & 1] += blackleveldeltah.getFloat(i);
 
                 for (int i = 0; i < 4; i++)
-                    mRaw.blackLevelSeparate[i] += (int)(black_sum[i & 1] / (float)mRaw.dim.x * 2.0f);
+                    mRaw.blackLevelSeparate[i] += (int)(black_sum[i & 1] / mRaw.dim.x * 2.0f);
             }
             return true;
         }

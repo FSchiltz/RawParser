@@ -221,8 +221,8 @@ namespace RawNet
                 uint basevalue = lookup & 0xffff;
                 uint delta = lookup >> 16;*/
 
-                uint basevalue = (uint)table.tables[value * 2];
-                uint delta = (uint)table.tables[value * 2 + 1];
+                uint basevalue = table.tables[value * 2];
+                uint delta = table.tables[value * 2 + 1];
                 uint r = random;
 
                 uint pix = basevalue + ((delta * (r & 2047) + 1024) >> 12);
@@ -253,7 +253,7 @@ namespace RawNet
                     v ^= 1;
                 if ((mOffset.y & 1) != 0)
                     v ^= 2;
-                mul[i] = (int)(16384.0f * 65535.0f / (float)(whitePoint - blackLevelSeparate[v]));
+                mul[i] = (int)(16384.0f * 65535.0f / (whitePoint - blackLevelSeparate[v]));
                 sub[i] = blackLevelSeparate[v];
             }
             for (int y = start_y; y < end_y; y++)
@@ -345,7 +345,7 @@ namespace RawNet
                 /* Process horizontal area */
                 if (!area.isVertical)
                 {
-                    if ((int)area.offset + (int)area.size > uncropped_dim.y)
+                    if (area.offset + area.size > uncropped_dim.y)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
                     for (int y = area.offset; y < area.offset + area.size; y++)
                     {
@@ -362,7 +362,7 @@ namespace RawNet
                 /* Process vertical area */
                 if (area.isVertical)
                 {
-                    if ((int)area.offset + (int)area.size > uncropped_dim.x)
+                    if (area.offset + area.size > uncropped_dim.x)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
                     for (int y = mOffset.y; y < dim.y + mOffset.y; y++)
                     {
