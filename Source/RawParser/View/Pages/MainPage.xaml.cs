@@ -13,10 +13,8 @@ using RawEditor.View.Exception;
 using Windows.Storage.Provider;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
-using System.Runtime.InteropServices;
 using RawEditor.View.UIHelper;
 using RawEditor.Effect;
-using RawEditor.Model.Settings;
 using RawEditor.Model.Encoder;
 using Windows.UI.ViewManagement;
 using Windows.Foundation;
@@ -63,10 +61,6 @@ namespace RawEditor
             if (VisualStateGroupeMainUI.CurrentState == narrowState)
             {
                 ChangeUIForMobile(wideState, narrowState);
-            }
-            else if (VisualStateGroupeMainUI.CurrentState == mediumState)
-            {
-                ChangeUIForMobile(wideState, mediumState);
             }
         }
 
@@ -148,7 +142,6 @@ namespace RawEditor
 
         private void OpenFile(StorageFile file)
         {
-
             //Add a loading screen
             progressDisplay.Visibility = Visibility.Visible;
             histoLoadingBar.Visibility = Visibility.Visible;
@@ -266,7 +259,7 @@ namespace RawEditor
 
         private void appbarSettingClick(object sender, RoutedEventArgs e)
         {
-            Frame.Navigate(typeof(View.Pages.Settings), null);
+            Frame.Navigate(typeof(SettingsView), null);
         }
 
         private void appbarShowSplitClick(object sender, RoutedEventArgs e)
