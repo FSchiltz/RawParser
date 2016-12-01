@@ -152,18 +152,22 @@ namespace RawEditor
                     decoder.failOnUnknown = false;
                     decoder.checkSupport(metadata);
 
-                    //read the thumbnail
+
                     thumbnail = decoder.decodeThumb();
                     if (thumbnail != null)
                     {
-                        displayImage(JpegHelper.getJpegInArrayAsync(thumbnail));
+                        //read the thumbnail
+                        Task.Run(() =>
+                        {
+                            displayImage(JpegHelper.getJpegInArrayAsync(thumbnail));
+                        });
                     }
 
                     raw = decoder.decodeRaw();
                     decoder.decodeMetaData(metadata);
                     raw.fileName = file.DisplayName;
                     //read the exifs
-                    //if (raw.exif != null) displayExif();
+                    displayExif();
                     //demos   
                     if (raw.cfa != null && raw.cpp == 1)
                     {
@@ -193,9 +197,9 @@ namespace RawEditor
                     }
                     raw.previewDim = new iPoint2D(raw.dim.x / previewFactor, raw.dim.y / previewFactor);
                     raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * 3];
-                    for (int i = raw.mOffset.y; i < raw.previewDim.y; i++)
+                    for (int i = raw.mOffset.y; i < raw.previewDim.y + raw.mOffset.y; i++)
                     {
-                        for (int j = raw.mOffset.x; j < raw.previewDim.x; j++)
+                        for (int j = raw.mOffset.x; j < raw.previewDim.x + raw.mOffset.x; j++)
                         {
                             raw.previewData[((i * raw.previewDim.x) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor];
                             raw.previewData[(((i * raw.previewDim.x) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor) + 1];
@@ -298,7 +302,7 @@ namespace RawEditor
                 {
                     //Do some UI-code that must be run on the UI thread.
                     //set exif datasource
-                    exifDisplay.ItemsSource = raw.exif.Values;
+                    //TODO add
                 });
             }
             //*/
@@ -455,22 +459,15 @@ namespace RawEditor
             Task histoTask = Task.Run(async () =>
             {
                 int[] value = new int[256];
-                ushort[] copyofpreview = new ushort[raw.previewData.Length];
-                for (int i = 0; i < copyofpreview.Length; i++)
-                {
-                    copyofpreview[i] = raw.previewData[i];
-                }
 
-                applyUserModif(ref copyofpreview, raw.previewDim, new iPoint2D(), raw.colorDepth);
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
-                await CoreApplication.MainView.CoreWindow.Dispatcher
-             .RunAsync(CoreDispatcherPriority.Normal, () =>
-             {
-                 histoLoadingBar.Visibility = Visibility.Visible;
-                 //Writeablebitmap use BGRA
-                 bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyofpreview, raw.previewDim.y, raw.previewDim.x, raw.colorDepth, null, ref value, true, true);
-             });
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    histoLoadingBar.Visibility = Visibility.Visible;
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
+                });
+                applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap);
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -483,6 +480,35 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
+        private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth, ref SoftwareBitmap bitmap)
+        {
+            ImageEffect effect = new ImageEffect();
+            //get all the value 
+            Task t = Task.Run(async () =>
+            {
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    effect.exposure = exposureSlider.Value;
+                    effect.temperature = colorTempSlider.Value - 1;
+                    effect.tint = colorTintSlider.Value - 1;
+                    effect.gamma = gammaSlider.Value;
+                    effect.contrast = contrastSlider.Value / 10;
+                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
+                    effect.shadow = ShadowSlider.Value;
+                    effect.hightlight = HighLightSlider.Value;
+                    effect.saturation = 1 + saturationSlider.Value / 100;
+                });
+            });
+            t.Wait();
+            effect.mul = raw.metadata.wbCoeffs;
+            effect.cameraWB = cameraWB;
+            effect.exposure = Math.Pow(2, effect.exposure);
+            effect.camCurve = raw.curve;
+
+            //get the softwarebitmap buffer
+            effect.applyModification(ref image, dim, offset, colorDepth, ref bitmap);
+        }
+
         private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth)
         {
             ImageEffect effect = new ImageEffect();
@@ -509,7 +535,6 @@ namespace RawEditor
             effect.camCurve = raw.curve;
             effect.applyModification(ref image, dim, offset, colorDepth);
         }
-
         #region WBSlider
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
