@@ -47,7 +47,7 @@
         </CommandBar>
     </Page.BottomAppBar>
 
-    <Grid x:Name="MainGrid">
+    <Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="VisualStateGroupeMainUI">
 
@@ -63,17 +63,13 @@
                         <Setter Target="shareButton2.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
 
-                        <!-- Edition control -->
-                        <Setter Target="PivotGrid.(RelativePanel.Below)" Value="ImageDisplay"/>
-                        <Setter Target="PivotGrid.(RelativePanel.LeftOf)" Value=""/>
-
-                        <Setter Target="PivotGrid.(RelativePanel.AlignLeftWithPanel)" Value="False"/>
-                        <Setter Target="PivotGrid.(RelativePanel.AlignTopWithPanel)" Value="True"/>
-                        <Setter Target="PivotGrid.MaxWidth" Value="250"/>
-                        
-                        <!-- Image -->
-                        <Setter Target="ImageDisplay.(RelativePanel.AlignRightWithPanel)" Value="False"/>
-                        <Setter Target="ImageDisplay.(RelativePanel.AlignBottomWithPanel)" Value="True"/>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[0].Width" Value="2*"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*"/>
+                        <Setter Target="ImageDisplay.Margin" Value="0 0 1 0"/>
+                        <Setter Target="PivotGrid.Margin" Value="1 0 0 0"/>
+                        <Setter Target="PivotGrid.(Grid.Column)" Value="1"/>
+                        <Setter Target="PivotGrid.(Grid.Row)" Value="0"/>
                     </VisualState.Setters>
                 </VisualState>
 
@@ -89,23 +85,27 @@
                         <Setter Target="shareButton2.Visibility" Value="Visible" />
                         <Setter Target="settingsButton2.Visibility" Value="Visible" />
 
-                        <!-- edition control -->
-                        <Setter Target="PivotGrid.(RelativePanel.Below)" Value="ImageDisplay"/>
-                        <Setter Target="PivotGrid.(RelativePanel.LeftOf)" Value=""/>
-
-                        <Setter Target="PivotGrid.(RelativePanel.AlignLeftWithPanel)" Value="True"/>
-                        <Setter Target="PivotGrid.(RelativePanel.AlignTopWithPanel)" Value="False"/>
-                        <Setter Target="PivotGrid.MaxWidth" Value="9999"/>                        
-                        <!-- Image -->
-                        <Setter Target="ImageDisplay.(RelativePanel.AlignRightWithPanel)" Value="True"/>
-                        <Setter Target="ImageDisplay.(RelativePanel.AlignBottomWithPanel)" Value="False"/>
-                        
-                       
+                        <Setter Target="ImageDisplay.Margin" Value="0 0 0 1"/>
+                        <Setter Target="PivotGrid.Margin" Value="0 1 0 0"/>
+                        <Setter Target="MainGrid.RowDefinitions[0].Height" Value="2*"/>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="3*"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="auto"/>
+                        <Setter Target="PivotGrid.(Grid.Column)" Value="0"/>
+                        <Setter Target="PivotGrid.(Grid.Row)" Value="1"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <RelativePanel>
+
+        <Grid x:Name="MainGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
             <ScrollViewer x:Name="ImageDisplay" ZoomMode="Enabled"
                           MinZoomFactor="1" 
                           MaxZoomFactor="10"                             
@@ -200,8 +200,8 @@
                     </PivotItem>
                 </Pivot>
             </Grid>
-        </RelativePanel>
 
+        </Grid>
         <ProgressBar x:Name="progressDisplay"  
                       VerticalAlignment="Top" 
                       Background="{x:Null}" 
