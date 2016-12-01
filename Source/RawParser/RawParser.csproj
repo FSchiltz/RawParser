@@ -123,13 +123,6 @@
     <Content Include="Assets\data\cameras.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\data\showcameras.xsl" />
-    <Content Include="Assets\Dic\NikonToStandard.dic">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Dic\StandardExif.dic">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="project.json" />
     <None Include="RawParser_StoreKey.pfx" />
     <None Include="RawParser_TemporaryKey.pfx" />
@@ -169,51 +162,54 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\NewStoreLogo.scale-100.png" />
-    <Content Include="Assets\NewStoreLogo.scale-125.png" />
-    <Content Include="Assets\NewStoreLogo.scale-150.png" />
-    <Content Include="Assets\NewStoreLogo.scale-200.png" />
-    <Content Include="Assets\NewStoreLogo.scale-400.png" />
-    <Content Include="Assets\SplashScreen.scale-100.png" />
-    <Content Include="Assets\SplashScreen.scale-125.png" />
-    <Content Include="Assets\SplashScreen.scale-150.png" />
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\SplashScreen.scale-400.png" />
-    <Content Include="Assets\Square150x150Logo.scale-100.png" />
-    <Content Include="Assets\Square150x150Logo.scale-125.png" />
-    <Content Include="Assets\Square150x150Logo.scale-150.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-400.png" />
-    <Content Include="Assets\Square310x310Logo.scale-100.png" />
-    <Content Include="Assets\Square310x310Logo.scale-125.png" />
-    <Content Include="Assets\Square310x310Logo.scale-150.png" />
-    <Content Include="Assets\Square310x310Logo.scale-200.png" />
-    <Content Include="Assets\Square310x310Logo.scale-400.png" />
-    <Content Include="Assets\Square44x44Logo.scale-100.png" />
-    <Content Include="Assets\Square44x44Logo.scale-125.png" />
-    <Content Include="Assets\Square44x44Logo.scale-150.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-400.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-16.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-16_altform-unplated.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-256.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-256_altform-unplated.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-32.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-32_altform-unplated.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-48.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-unplated.png" />
-    <Content Include="Assets\Square71x71Logo.scale-100.png" />
-    <Content Include="Assets\Square71x71Logo.scale-125.png" />
-    <Content Include="Assets\Square71x71Logo.scale-150.png" />
-    <Content Include="Assets\Square71x71Logo.scale-200.png" />
-    <Content Include="Assets\Square71x71Logo.scale-400.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-100.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-125.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-150.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <Content Include="Assets\icon\BadgeLogo.scale-100.png" />
+    <Content Include="Assets\icon\BadgeLogo.scale-125.png" />
+    <Content Include="Assets\icon\BadgeLogo.scale-150.png" />
+    <Content Include="Assets\icon\BadgeLogo.scale-200.png" />
+    <Content Include="Assets\icon\BadgeLogo.scale-400.png" />
+    <Content Include="Assets\icon\NewStoreLogo.scale-100.png" />
+    <Content Include="Assets\icon\NewStoreLogo.scale-125.png" />
+    <Content Include="Assets\icon\NewStoreLogo.scale-150.png" />
+    <Content Include="Assets\icon\NewStoreLogo.scale-200.png" />
+    <Content Include="Assets\icon\NewStoreLogo.scale-400.png" />
+    <Content Include="Assets\icon\SplashScreen.scale-100.png" />
+    <Content Include="Assets\icon\SplashScreen.scale-125.png" />
+    <Content Include="Assets\icon\SplashScreen.scale-150.png" />
+    <Content Include="Assets\icon\SplashScreen.scale-200.png" />
+    <Content Include="Assets\icon\SplashScreen.scale-400.png" />
+    <Content Include="Assets\icon\Square150x150Logo.scale-100.png" />
+    <Content Include="Assets\icon\Square150x150Logo.scale-125.png" />
+    <Content Include="Assets\icon\Square150x150Logo.scale-150.png" />
+    <Content Include="Assets\icon\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\icon\Square150x150Logo.scale-400.png" />
+    <Content Include="Assets\icon\Square310x310Logo.scale-100.png" />
+    <Content Include="Assets\icon\Square310x310Logo.scale-125.png" />
+    <Content Include="Assets\icon\Square310x310Logo.scale-150.png" />
+    <Content Include="Assets\icon\Square310x310Logo.scale-200.png" />
+    <Content Include="Assets\icon\Square310x310Logo.scale-400.png" />
+    <Content Include="Assets\icon\Square44x44Logo.altform-unplated_targetsize-16.png" />
+    <Content Include="Assets\icon\Square44x44Logo.altform-unplated_targetsize-24.png" />
+    <Content Include="Assets\icon\Square44x44Logo.altform-unplated_targetsize-256.png" />
+    <Content Include="Assets\icon\Square44x44Logo.altform-unplated_targetsize-48.png" />
+    <Content Include="Assets\icon\Square44x44Logo.scale-100.png" />
+    <Content Include="Assets\icon\Square44x44Logo.scale-125.png" />
+    <Content Include="Assets\icon\Square44x44Logo.scale-150.png" />
+    <Content Include="Assets\icon\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\icon\Square44x44Logo.scale-400.png" />
+    <Content Include="Assets\icon\Square44x44Logo.targetsize-16.png" />
+    <Content Include="Assets\icon\Square44x44Logo.targetsize-24.png" />
+    <Content Include="Assets\icon\Square44x44Logo.targetsize-256.png" />
+    <Content Include="Assets\icon\Square44x44Logo.targetsize-48.png" />
+    <Content Include="Assets\icon\Square71x71Logo.scale-100.png" />
+    <Content Include="Assets\icon\Square71x71Logo.scale-125.png" />
+    <Content Include="Assets\icon\Square71x71Logo.scale-150.png" />
+    <Content Include="Assets\icon\Square71x71Logo.scale-200.png" />
+    <Content Include="Assets\icon\Square71x71Logo.scale-400.png" />
+    <Content Include="Assets\icon\Wide310x150Logo.scale-100.png" />
+    <Content Include="Assets\icon\Wide310x150Logo.scale-125.png" />
+    <Content Include="Assets\icon\Wide310x150Logo.scale-150.png" />
+    <Content Include="Assets\icon\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\icon\Wide310x150Logo.scale-400.png" />
     <None Include="Package.StoreAssociation.xml" />
     <Content Include="Properties\Default.rd.xml" />
   </ItemGroup>

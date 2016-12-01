@@ -292,3 +292,4 @@ paket-files/
 .idea/
 *.sln.iml
 Source/RawParser/Package.appxmanifest
+Source/RawParser/Package.appxmanifest
