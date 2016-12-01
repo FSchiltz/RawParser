@@ -143,6 +143,7 @@
     <Compile Include="Model\Image\JpegHelper.cs" />
     <Compile Include="Model\Image\ImageEffect.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
+    <Compile Include="View\UIHelper\PortraitOrLandscapeTrigger.cs" />
     <Compile Include="View\UIHelper\UIImageHelper.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
