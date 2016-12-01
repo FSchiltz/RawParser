@@ -173,39 +173,7 @@ namespace RawEditor
                     {
                         Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
                     }
-                    //create a small image from raw to display
-                    bool autoFactor = SettingStorage.autoPreviewFactor;
-                    int previewFactor = 0;
-                    if (autoFactor)
-                    {
-                        if (raw.dim.y > raw.dim.x)
-                        {
-                            previewFactor = (int)(raw.dim.y / 720);
-                        }
-                        else
-                        {
-                            previewFactor = (int)(raw.dim.x / 1080);
-                        }
-                        int start = 1;
-                        for (; previewFactor > (start << 1); start <<= 1) ;
-                        if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
-                        else previewFactor <<= 1;
-                    }
-                    else
-                    {
-                        previewFactor = SettingStorage.previewFactor;
-                    }
-                    raw.previewDim = new iPoint2D(raw.dim.x / previewFactor, raw.dim.y / previewFactor);
-                    raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * 3];
-                    for (int i = raw.mOffset.y; i < raw.previewDim.y + raw.mOffset.y; i++)
-                    {
-                        for (int j = raw.mOffset.x; j < raw.previewDim.x + raw.mOffset.x; j++)
-                        {
-                            raw.previewData[((i * raw.previewDim.x) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor];
-                            raw.previewData[(((i * raw.previewDim.x) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor) + 1];
-                            raw.previewData[(((i * raw.previewDim.x) + j) * 3) + 2] = raw.rawData[(((i * previewFactor * raw.previewDim.x) + j) * 3 * previewFactor) + 2];
-                        }
-                    }
+                    createPreview();
                     updatePreview();
 
                     //activate the editing control
@@ -226,6 +194,45 @@ namespace RawEditor
                                                 progressDisplay.Visibility = Visibility.Collapsed;
                                             });
             });
+        }
+
+        private void createPreview()
+        {
+            //create a small image from raw to display
+            bool autoFactor = SettingStorage.autoPreviewFactor;
+            int previewFactor = 0;
+            if (autoFactor)
+            {
+                if (raw.dim.y > raw.dim.x)
+                {
+                    previewFactor = (int)(raw.dim.y / 720);
+                }
+                else
+                {
+                    previewFactor = (int)(raw.dim.x / 1080);
+                }
+                int start = 1;
+                for (; previewFactor > (start << 1); start <<= 1) ;
+                if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
+                else previewFactor <<= 1;
+            }
+            else
+            {
+                previewFactor = SettingStorage.previewFactor;
+            }
+            raw.previewDim = new iPoint2D(raw.dim.x / previewFactor, raw.dim.y / previewFactor);
+            raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * raw.cpp];
+            for (int y = 0; y < raw.previewDim.y; y++)
+            {
+                int realY = (raw.mOffset.y + y * previewFactor) * raw.previewDim.x ;
+                for (int x = 0; x < raw.previewDim.x; x++)
+                {
+                    int realPix = (int)(((x + realY )* previewFactor + raw.mOffset.x  ) * raw.cpp );
+                    raw.previewData[((y * raw.previewDim.x) + x) * raw.cpp] = raw.rawData[realPix];
+                    raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 1] = raw.rawData[realPix+ 1];
+                    raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 2] = raw.rawData[realPix + 2];
+                }
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -260,7 +267,6 @@ namespace RawEditor
         {
             Frame.Navigate(typeof(SettingsView), null);
         }
-
 
         private void setScrollProperty()
         {
@@ -467,7 +473,7 @@ namespace RawEditor
                     histoLoadingBar.Visibility = Visibility.Visible;
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
                 });
-                applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap);
+                applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap,ref value);
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -480,7 +486,7 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
-        private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth, ref SoftwareBitmap bitmap)
+        private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth, ref SoftwareBitmap bitmap,ref int[] value)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -506,7 +512,7 @@ namespace RawEditor
             effect.camCurve = raw.curve;
 
             //get the softwarebitmap buffer
-            effect.applyModification(ref image, dim, offset, colorDepth, ref bitmap);
+            effect.applyModification(ref image, dim, offset, colorDepth, ref bitmap,ref value);
         }
 
         private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth)

@@ -114,7 +114,7 @@ namespace RawEditor
         }
 
 
-        public unsafe void applyModification(ref ushort[] image, iPoint2D dim, iPoint2D offset, int colorDepth, ref SoftwareBitmap bitmap)
+        public unsafe void applyModification(ref ushort[] image, iPoint2D dim, iPoint2D offset, int colorDepth, ref SoftwareBitmap bitmap, ref int[] value)
         {
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
             {
@@ -209,6 +209,7 @@ namespace RawEditor
                             temp[bufferPix + 1] = (byte)((int)green >> shift);
                             temp[bufferPix + 2] = (byte)((int)red >> shift);
 
+                            value[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]++;
                             //set transparency to 255 else image will be blank
                             temp[bufferPix + 3] = 255;
                             //change gamma from curve 

@@ -874,6 +874,7 @@ namespace RawNet
 
                 mRaw.subFrame(new iRectangle2D(cam.cropPos, new_size));
 
+                
                 // Shift CFA to match crop
                 mRaw.UncroppedCfa = new ColorFilterArray(mRaw.cfa);
                 if ((cam.cropPos.x & 1) != 0)
