@@ -150,7 +150,6 @@
     <Compile Include="Source\Format\Image\ImageMetadata.cs" />
     <Compile Include="Source\Format\Image\JpegHelper.cs" />
     <Compile Include="Source\Format\Image\RawImage.cs" />
-    <Compile Include="Source\Format\Tiff\IFD\Header.cs" />
     <Compile Include="Source\Format\Tiff\IFD\IFD.cs" />
     <Compile Include="Source\Format\Tiff\IFD\Tag.cs" />
     <Compile Include="Source\Format\Tiff\IFD\TagType.cs" />

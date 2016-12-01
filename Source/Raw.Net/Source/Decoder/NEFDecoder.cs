@@ -117,7 +117,7 @@ namespace RawNet
                 throw new RawDecoderException("NEF Decoder: Decompression info tag not found");
 
             Tag meta;
-            if (data[0].tags.ContainsKey(0x96))
+            if (data[0].tags.ContainsKey((TagType)0x96))
             {
                 meta = data[0].getEntry((TagType)0x96);
             }
@@ -475,8 +475,8 @@ namespace RawNet
             string make = data[0].getEntry(TagType.MAKE).dataAsString;
             string model = data[0].getEntry(TagType.MODEL).dataAsString;
 
-            if (rootIFD.hasEntryRecursive(TagType.ISOSPEEDRATINGS))
-                iso = rootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS).getInt();
+            var t = rootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            if (t != null) iso = t.getInt();
 
             // Read the whitebalance
 
@@ -529,98 +529,109 @@ namespace RawNet
                         mRaw.metadata.wbCoeffs[1] = 1.0f;
                 }
             }
-            else if (rootIFD.hasEntryRecursive((TagType)0x0097))
+            else
             {
                 Tag wb = rootIFD.getEntryRecursive((TagType)0x0097);
-                if (wb.dataCount > 4)
+                if (wb != null)
                 {
-                    UInt32 version = 0;
-                    for (UInt32 i = 0; i < 4; i++)
-                        version = (version << 4) + Convert.ToUInt32(wb.data[i]) - '0';
-                    if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == TiffDataType.UNDEFINED)
+                    if (wb.dataCount > 4)
                     {
-                        mRaw.metadata.wbCoeffs[0] = wb.getShort(36);
-                        mRaw.metadata.wbCoeffs[2] = wb.getShort(37);
-                        mRaw.metadata.wbCoeffs[1] = wb.getShort(38);
-                    }
-                    else if (version == 0x103 && wb.dataCount >= 26 && wb.dataType == TiffDataType.UNDEFINED)
-                    {
-                        mRaw.metadata.wbCoeffs[0] = wb.getShort(10);
-                        mRaw.metadata.wbCoeffs[1] = wb.getShort(11);
-                        mRaw.metadata.wbCoeffs[2] = wb.getShort(12);
-                    }
-                    else if (((version == 0x204 && wb.dataCount >= 564) ||
-                              (version == 0x205 && wb.dataCount >= 284)) &&
-                             rootIFD.hasEntryRecursive((TagType)0x001d) &&
-                             rootIFD.hasEntryRecursive((TagType)0x00a7))
-                    {
-                        // Get the serial number
-                        Tag serial = rootIFD.getEntryRecursive((TagType)0x001d);
-                        UInt32 serialno = 0;
-                        for (UInt32 i = 0; i < serial.dataCount; i++)
+                        UInt32 version = 0;
+                        for (UInt32 i = 0; i < 4; i++)
+                            version = (version << 4) + Convert.ToUInt32(wb.data[i]) - '0';
+                        if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == TiffDataType.UNDEFINED)
                         {
-                            if ((byte)serial.data[i] == 0) break;
-                            if ((byte)serial.data[i] >= (byte)'0' && (byte)serial.data[i] <= (byte)'9')
-                                serialno = serialno * 10 + (uint)serial.data[i] - '0';
-                            else
-                                serialno = serialno * 10 + (uint)serial.data[(int)i] % 10;
+                            mRaw.metadata.wbCoeffs[0] = wb.getShort(36);
+                            mRaw.metadata.wbCoeffs[2] = wb.getShort(37);
+                            mRaw.metadata.wbCoeffs[1] = wb.getShort(38);
                         }
+                        else if (version == 0x103 && wb.dataCount >= 26 && wb.dataType == TiffDataType.UNDEFINED)
+                        {
+                            mRaw.metadata.wbCoeffs[0] = wb.getShort(10);
+                            mRaw.metadata.wbCoeffs[1] = wb.getShort(11);
+                            mRaw.metadata.wbCoeffs[2] = wb.getShort(12);
+                        }
+                        else
+                        {
+                            if (((version == 0x204 && wb.dataCount >= 564) ||
+                                (version == 0x205 && wb.dataCount >= 284)))
+                            {
+                                // Get the serial number
+                                Tag serial = rootIFD.getEntryRecursive((TagType)0x001d);
+                                if (serial != null)
+                                {
+                                    UInt32 serialno = 0;
+                                    for (UInt32 i = 0; i < serial.dataCount; i++)
+                                    {
+                                        if ((byte)serial.data[i] == 0) break;
+                                        if ((byte)serial.data[i] >= (byte)'0' && (byte)serial.data[i] <= (byte)'9')
+                                            serialno = serialno * 10 + (uint)serial.data[i] - '0';
+                                        else
+                                            serialno = serialno * 10 + (uint)serial.data[(int)i] % 10;
+                                    }
 
-                        // Get the decryption key
-                        Tag key = rootIFD.getEntryRecursive((TagType)0x00a7);
-                        UInt32 keyno = (uint)key.data[0] ^ (uint)key.data[1] ^ (uint)key.data[2] ^ (uint)key.data[3];
+                                    // Get the decryption key
+                                    Tag key = rootIFD.getEntryRecursive((TagType)0x00a7);
+                                    if (key != null)
+                                    {
+                                        UInt32 keyno = (uint)key.data[0] ^ (uint)key.data[1] ^ (uint)key.data[2] ^ (uint)key.data[3];
 
-                        // "Decrypt" the block using the serial and key
-                        uint bitOff = 4;
-                        if (version == 0x204)
-                            bitOff += 280;
-                        byte ci = serialmap[serialno & 0xff];
-                        byte cj = keymap[keyno & 0xff];
-                        byte ck = 0x60;
+                                        // "Decrypt" the block using the serial and key
+                                        uint bitOff = 4;
+                                        if (version == 0x204)
+                                            bitOff += 280;
+                                        byte ci = serialmap[serialno & 0xff];
+                                        byte cj = keymap[keyno & 0xff];
+                                        byte ck = 0x60;
 
-                        byte[] buff = new byte[wb.dataCount];
-                        for (UInt32 i = 0; i < 280; i++)
-                            wb.data[i + bitOff] = (byte)((byte)wb.data[i + bitOff] ^ (cj += (byte)(ci * ck++)));
+                                        byte[] buff = new byte[wb.dataCount];
+                                        for (UInt32 i = 0; i < 280; i++)
+                                            wb.data[i + bitOff] = (byte)((byte)wb.data[i + bitOff] ^ (cj += (byte)(ci * ck++)));
 
-                        // Finally set the WB coeffs
-                        UInt32 off = (uint)((version == 0x204) ? 6 : 14);
-                        off += bitOff;
-                        mRaw.metadata.wbCoeffs[0] = wb.get2BE(off);
-                        mRaw.metadata.wbCoeffs[1] = wb.get2BE(off + 2);
-                        mRaw.metadata.wbCoeffs[2] = wb.get2BE(off + 6);
+                                        // Finally set the WB coeffs
+                                        UInt32 off = (uint)((version == 0x204) ? 6 : 14);
+                                        off += bitOff;
+                                        mRaw.metadata.wbCoeffs[0] = wb.get2BE(off);
+                                        mRaw.metadata.wbCoeffs[1] = wb.get2BE(off + 2);
+                                        mRaw.metadata.wbCoeffs[2] = wb.get2BE(off + 6);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
-            else if (rootIFD.hasEntryRecursive((TagType)0x0014))
-            {
-                Tag wb = rootIFD.getEntryRecursive((TagType)0x0014);
-
-                if (wb.dataCount == 2560 && wb.dataType == TiffDataType.UNDEFINED)
+                else
                 {
-                    UInt32 red = (uint)wb.data[1249] | (((UInt32)wb.data[1248]) << 8);
-                    UInt32 blue = (uint)wb.data[1251] | (((UInt32)wb.data[1250]) << 8);
-                    mRaw.metadata.wbCoeffs[0] = red / 256.0f;
-                    mRaw.metadata.wbCoeffs[1] = 1.0f;
-                    mRaw.metadata.wbCoeffs[2] = blue / 256.0f;
-                }
-                else if (wb.dataAsString.StartsWith("NRW "))
-                {
-                    UInt32 offset = 0;
-                    if (((string)(wb.dataAsString.Skip(4)) == "0100") && wb.dataCount > 72)
-                        offset = 56;
-                    else if (wb.dataCount > 1572)
-                        offset = 1556;
-
-                    if (offset != 0)
+                    wb = rootIFD.getEntryRecursive((TagType)0x0014);
+                    if (wb != null)
                     {
-                        //TODO check iftag is byte type
-                        mRaw.metadata.wbCoeffs[0] = wb.get4LE(offset) << 2;
-                        mRaw.metadata.wbCoeffs[1] = wb.get4LE(offset + 4) + wb.get4LE(offset + 8);
-                        mRaw.metadata.wbCoeffs[2] = wb.get4LE(offset + 12) << 2;
+                        if (wb.dataCount == 2560 && wb.dataType == TiffDataType.UNDEFINED)
+                        {
+                            UInt32 red = (uint)wb.data[1249] | (((UInt32)wb.data[1248]) << 8);
+                            UInt32 blue = (uint)wb.data[1251] | (((UInt32)wb.data[1250]) << 8);
+                            mRaw.metadata.wbCoeffs[0] = red / 256.0f;
+                            mRaw.metadata.wbCoeffs[1] = 1.0f;
+                            mRaw.metadata.wbCoeffs[2] = blue / 256.0f;
+                        }
+                        else if (wb.dataAsString.StartsWith("NRW "))
+                        {
+                            UInt32 offset = 0;
+                            if (((string)(wb.dataAsString.Skip(4)) == "0100") && wb.dataCount > 72)
+                                offset = 56;
+                            else if (wb.dataCount > 1572)
+                                offset = 1556;
+
+                            if (offset != 0)
+                            {
+                                //TODO check iftag is byte type
+                                mRaw.metadata.wbCoeffs[0] = wb.get4LE(offset) << 2;
+                                mRaw.metadata.wbCoeffs[1] = wb.get4LE(offset + 4) + wb.get4LE(offset + 8);
+                                mRaw.metadata.wbCoeffs[2] = wb.get4LE(offset + 12) << 2;
+                            }
+                        }
                     }
                 }
             }
-
             hints.TryGetValue("nikon_wb_adjustment", out string vt);
             if (vt != null)
             {

@@ -10,7 +10,7 @@ namespace RawNet
     public class IFD
     {
         public ushort tagNumber;
-        public Dictionary<ushort, Tag> tags;
+        public Dictionary<TagType, Tag> tags;
         public List<IFD> subIFD = new List<IFD>();
         public ushort nextOffset { get; set; }
         public Endianness endian;
@@ -37,7 +37,7 @@ namespace RawNet
             this.endian = endian;
             fileStream.Position = offset;
             tagNumber = fileStream.ReadUInt16();
-            tags = new Dictionary<ushort, Tag>();
+            tags = new Dictionary<TagType, Tag>();
 
             for (int i = 0; i < tagNumber; i++)
             {
@@ -217,9 +217,9 @@ namespace RawNet
                     temp.dataCount = 0;
                     temp.data = null;
                 }*/
-                if (!tags.ContainsKey((ushort)temp.tagId))
+                if (!tags.ContainsKey(temp.tagId))
                 {
-                    tags.Add((ushort)temp.tagId, temp);
+                    tags.Add(temp.tagId, temp);
                 }
                 else
                 {
@@ -227,6 +227,11 @@ namespace RawNet
                 }
             }
             nextOffset = fileStream.ReadUInt16();
+        }
+
+        internal bool hasEntry(TagType t)
+        {
+            return tags.ContainsKey(t);
         }
 
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) :
@@ -420,17 +425,16 @@ namespace RawNet
             return maker_ifd;
         }
 
-
         public Tag getEntry(TagType type)
         {
-            tags.TryGetValue((ushort)type, out Tag tag);
+            tags.TryGetValue(type, out Tag tag);
             return tag;
         }
 
         public List<IFD> getIFDsWithTag(TagType tag)
         {
             List<IFD> matchingIFDs = new List<IFD>();
-            if (tags.ContainsKey((ushort)tag))
+            if (tags.ContainsKey(tag))
             {
                 matchingIFDs.Add(this);
             }
@@ -446,27 +450,7 @@ namespace RawNet
             return matchingIFDs;
         }
 
-        internal bool hasEntry(TagType t)
-        {
-            foreach (var tag in tags)
-            {
-                if (tag.Value.tagId == t) return true;
-            }
-            return false;
-        }
-
-        internal bool hasEntryRecursive(TagType t)
-        {
-            if (hasEntry(t)) return true;
-            foreach (IFD ifd in subIFD)
-            {
-                if (ifd.hasEntryRecursive(t))
-                    return true;
-            }
-            return false;
-        }
-
-        internal Tag getEntryRecursive(TagType t)
+        public Tag getEntryRecursive(TagType t)
         {
             Tag tag = null;
             tag = getEntry(t);
