@@ -5,7 +5,7 @@
   <Properties>
     <DisplayName>Raw Editor</DisplayName>
     <PublisherDisplayName>Arimhan</PublisherDisplayName>
-    <Logo>Assets\NewStoreLogo.png</Logo>
+    <Logo>Assets\icon\NewStoreLogo.png</Logo>
   </Properties>
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
@@ -15,15 +15,15 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="RawParserUWP.App">
-      <uap:VisualElements DisplayName="Raw photo editor" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="A simple photo editor supporting Nikon Raw file, DNG and TIFF." BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="Raw photo editor" Square310x310Logo="Assets\Square310x310Logo.png" Square71x71Logo="Assets\Square71x71Logo.png">
+      <uap:VisualElements DisplayName="Raw photo editor" Square150x150Logo="Assets\icon\Square150x150Logo.png" Square44x44Logo="Assets\icon\Square44x44Logo.png" Description="A simple photo editor supporting Nikon Raw file, DNG and TIFF." BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="Assets\icon\Wide310x150Logo.png" ShortName="Raw photo editor" Square310x310Logo="Assets\icon\Square310x310Logo.png" Square71x71Logo="Assets\icon\Square71x71Logo.png">
           <uap:ShowNameOnTiles>
             <uap:ShowOn Tile="square150x150Logo" />
             <uap:ShowOn Tile="wide310x150Logo" />
             <uap:ShowOn Tile="square310x310Logo" />
           </uap:ShowNameOnTiles>
         </uap:DefaultTile>
-        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        <uap:SplashScreen Image="Assets\icon\SplashScreen.png" />
         <uap:InitialRotationPreference>
           <uap:Rotation Preference="portrait" />
           <uap:Rotation Preference="landscape" />
