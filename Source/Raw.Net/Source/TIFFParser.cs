@@ -70,7 +70,7 @@ namespace RawNet
                 rootIFD.subIFD.Add(i);
             }
 
-            foreach (KeyValuePair<ushort, Tag> i in other_root.tags)
+            foreach (KeyValuePair<TagType, Tag> i in other_root.tags)
             {
                 rootIFD.tags.Add(i.Key, i.Value); ;
             }
@@ -92,7 +92,7 @@ namespace RawNet
             if (potentials.Count != 0)
             {  // We have a dng image entry
                 IFD t = potentials[0];
-                t.tags.TryGetValue((ushort)TagType.DNGVERSION, out Tag tag);
+                t.tags.TryGetValue(TagType.DNGVERSION, out Tag tag);
                 object[] c = tag.data;
                 if (Convert.ToInt32(c[0]) > 1)
                     throw new TiffParserException("DNG version too new.");
@@ -106,13 +106,13 @@ namespace RawNet
             {  // We have make entry
                 foreach (IFD i in potentials)
                 {
-                    i.tags.TryGetValue((ushort)TagType.MAKE, out Tag tag);
+                    i.tags.TryGetValue(TagType.MAKE, out Tag tag);
                     string make = tag.dataAsString;
                     make = make.Trim();
                     //remove trailing \0 if any
 
                     string model = "";
-                    i.tags.TryGetValue((int)TagType.MODEL, out Tag tagModel);
+                    i.tags.TryGetValue(TagType.MODEL, out Tag tagModel);
                     if (tagModel != null)
                     {
                         model = tagModel.dataAsString;

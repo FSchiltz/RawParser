@@ -7,9 +7,8 @@ namespace RawNet
     {
         protected TIFFBinaryReader fileStream;
         protected IFD ifd;
-        protected Header header;
 
-        public TiffDecoder(IFD rootifd,ref TIFFBinaryReader file) : base(ref file)
+        public TiffDecoder(IFD rootifd, ref TIFFBinaryReader file) : base(ref file)
         {
             decoderVersion = 1;
             ifd = rootifd;
@@ -19,19 +18,19 @@ namespace RawNet
         protected override RawImage decodeRawInternal()
         {
             Tag imageOffsetTag, imageWidthTag, imageHeightTag, imageCompressedTag, photoMetricTag, rowPerStripTag, stripSizeTag;
-            if (!ifd.tags.TryGetValue(0x0106, out photoMetricTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue(0x0111, out imageOffsetTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue(0x0100, out imageWidthTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue(0x0101, out imageHeightTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue(0x0103, out imageCompressedTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue(0x0116, out rowPerStripTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue(0x0117, out stripSizeTag)) throw new FormatException("File not correct");
+            if (!ifd.tags.TryGetValue((TagType)0x0106, out photoMetricTag)) throw new FormatException("File not correct");
+            if (!ifd.tags.TryGetValue((TagType)0x0111, out imageOffsetTag)) throw new FormatException("File not correct");
+            if (!ifd.tags.TryGetValue((TagType)0x0100, out imageWidthTag)) throw new FormatException("File not correct");
+            if (!ifd.tags.TryGetValue((TagType)0x0101, out imageHeightTag)) throw new FormatException("File not correct");
+            if (!ifd.tags.TryGetValue((TagType)0x0103, out imageCompressedTag)) throw new FormatException("File not correct");
+            if (!ifd.tags.TryGetValue((TagType)0x0116, out rowPerStripTag)) throw new FormatException("File not correct");
+            if (!ifd.tags.TryGetValue((TagType)0x0117, out stripSizeTag)) throw new FormatException("File not correct");
 
             if ((ushort)photoMetricTag.data[0] == 2)
             {
                 Tag samplesPerPixel, bitPerSampleTag;
-                if (!ifd.tags.TryGetValue(0x0102, out bitPerSampleTag)) throw new FormatException("File not correct");
-                if (!ifd.tags.TryGetValue(0x0115, out samplesPerPixel)) throw new FormatException("File not correct");
+                if (!ifd.tags.TryGetValue((TagType)0x0102, out bitPerSampleTag)) throw new FormatException("File not correct");
+                if (!ifd.tags.TryGetValue((TagType)0x0115, out samplesPerPixel)) throw new FormatException("File not correct");
                 uint height = Convert.ToUInt32(imageHeightTag.data[0]);
                 uint width = Convert.ToUInt32(imageWidthTag.data[0]);
                 //suppose that image are always 8,8,8 or 16,16,16

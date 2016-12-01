@@ -42,14 +42,16 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal(CameraMetaData meta)
         {
-            if (mRootIFD.hasEntryRecursive(TagType.ISOSPEEDRATINGS))
-                mRaw.metadata.isoSpeed = mRootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS).getInt();
+            var t = mRootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            if (t != null) mRaw.metadata.isoSpeed = t.getInt();
 
             // Set the make and model
-            if (mRootIFD.hasEntryRecursive(TagType.MAKE) && mRootIFD.hasEntryRecursive(TagType.MODEL))
+            t = mRootIFD.getEntryRecursive(TagType.MAKE);
+            var t2 = mRootIFD.getEntryRecursive(TagType.MODEL);
+            if (t != null && t != null)
             {
-                string make = mRootIFD.getEntryRecursive(TagType.MAKE).dataAsString;
-                string model = mRootIFD.getEntryRecursive(TagType.MODEL).dataAsString;
+                string make = t.dataAsString;
+                string model = t2.dataAsString;
                 make = make.Trim();
                 model = model.Trim();
                 mRaw.metadata.make = make;
@@ -69,9 +71,10 @@ namespace RawNet
                 {
                     mRaw.metadata.canonical_make = make;
                     mRaw.metadata.canonical_model = mRaw.metadata.canonical_alias = model;
-                    if (mRootIFD.hasEntryRecursive(TagType.UNIQUECAMERAMODEL))
+                    t = mRootIFD.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
+                    if (t != null)
                     {
-                        mRaw.metadata.canonical_id = mRootIFD.getEntryRecursive(TagType.UNIQUECAMERAMODEL).dataAsString;
+                        mRaw.metadata.canonical_id = t.dataAsString;
                     }
                     else
                     {
@@ -86,13 +89,15 @@ namespace RawNet
         {
             // We set this, since DNG's are not explicitly added.
             failOnUnknown = false;
-
-            if (!(mRootIFD.hasEntryRecursive(TagType.MAKE) && mRootIFD.hasEntryRecursive(TagType.MODEL)))
+            var t = mRootIFD.getEntryRecursive(TagType.MAKE);
+            var t2 = mRootIFD.getEntryRecursive(TagType.MODEL);
+            if (!(t != null && t2 != null))
             {
                 // Check "Unique Camera Model" instead, uses this for both make + model.
-                if (mRootIFD.hasEntryRecursive(TagType.UNIQUECAMERAMODEL))
+                var t3 = mRootIFD.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
+                if (t3 != null)
                 {
-                    string unique = mRootIFD.getEntryRecursive(TagType.UNIQUECAMERAMODEL).dataAsString;
+                    string unique = t3.dataAsString;
                     this.checkCameraSupported(meta, unique, unique, "dng");
                     return;
                 }
@@ -146,9 +151,10 @@ namespace RawNet
         bool decodeBlackLevels(IFD raw)
         {
             iPoint2D blackdim = new iPoint2D(1, 1);
-            if (raw.hasEntry(TagType.BLACKLEVELREPEATDIM))
+
+            Tag bleveldim = raw.getEntry(TagType.BLACKLEVELREPEATDIM);
+            if (bleveldim != null)
             {
-                Tag bleveldim = raw.getEntry(TagType.BLACKLEVELREPEATDIM);
                 if (bleveldim.dataCount != 2)
                     return false;
                 blackdim = new iPoint2D(bleveldim.getInt(0), bleveldim.getInt(1));
@@ -157,7 +163,7 @@ namespace RawNet
             if (blackdim.x == 0 || blackdim.y == 0)
                 return false;
 
-            if (!raw.hasEntry(TagType.BLACKLEVEL))
+            if (raw.getEntry(TagType.BLACKLEVEL) == null)
                 return true;
 
             if (mRaw.cpp != 1)
@@ -189,9 +195,10 @@ namespace RawNet
 
             //TODO remove hasEntry
             // DNG Spec says we must add black in deltav and deltah
-            if (raw.hasEntry(TagType.BLACKLEVELDELTAV))
+
+            Tag blackleveldeltav = raw.getEntry(TagType.BLACKLEVELDELTAV);
+            if (blackleveldeltav != null)
             {
-                Tag blackleveldeltav = raw.getEntry(TagType.BLACKLEVELDELTAV);
                 if ((int)blackleveldeltav.dataCount < mRaw.dim.y)
                     throw new RawDecoderException("DNG: BLACKLEVELDELTAV array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
@@ -202,9 +209,10 @@ namespace RawNet
                     mRaw.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / mRaw.dim.y * 2.0f);
             }
 
-            if (raw.hasEntry(TagType.BLACKLEVELDELTAH))
+
+            Tag blackleveldeltah = raw.getEntry(TagType.BLACKLEVELDELTAH);
+            if (blackleveldeltah != null)
             {
-                Tag blackleveldeltah = raw.getEntry(TagType.BLACKLEVELDELTAH);
                 if ((int)blackleveldeltah.dataCount < mRaw.dim.x)
                     throw new RawDecoderException("DNG: BLACKLEVELDELTAH array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
@@ -227,7 +235,7 @@ namespace RawNet
             // Black defaults to 0
             // Common.memset(mRaw.blackLevelSeparate, 0, sizeof(mRaw.blackLevelSeparate));
 
-            if (raw.hasEntry(TagType.BLACKLEVEL))
+            if (raw.getEntry(TagType.BLACKLEVEL) != null)
                 decodeBlackLevels(raw);
         }
 
@@ -529,36 +537,41 @@ namespace RawNet
 
             //TODO optimise
             // Fetch the white balance
-            if (mRootIFD.hasEntryRecursive(TagType.ASSHOTNEUTRAL))
+
+            Tag as_shot_neutral = mRootIFD.getEntryRecursive(TagType.ASSHOTNEUTRAL);
+            if (as_shot_neutral != null)
             {
-                Tag as_shot_neutral = mRootIFD.getEntryRecursive(TagType.ASSHOTNEUTRAL);
                 if (as_shot_neutral.dataCount == 3)
                 {
                     for (UInt32 i = 0; i < 3; i++)
                         mRaw.metadata.wbCoeffs[i] = 1.0f / Convert.ToSingle(as_shot_neutral.data[i]);
                 }
             }
-            else if (mRootIFD.hasEntryRecursive(TagType.ASSHOTWHITEXY))
+            else
             {
                 Tag as_shot_white_xy = mRootIFD.getEntryRecursive(TagType.ASSHOTWHITEXY);
-                if (as_shot_white_xy.dataCount == 2)
+                if (as_shot_white_xy != null)
                 {
-                    mRaw.metadata.wbCoeffs[0] = as_shot_white_xy.getFloat(0);
-                    mRaw.metadata.wbCoeffs[1] = as_shot_white_xy.getFloat(1);
-                    mRaw.metadata.wbCoeffs[2] = 1 - mRaw.metadata.wbCoeffs[0] - mRaw.metadata.wbCoeffs[1];
+                    if (as_shot_white_xy.dataCount == 2)
+                    {
+                        mRaw.metadata.wbCoeffs[0] = as_shot_white_xy.getFloat(0);
+                        mRaw.metadata.wbCoeffs[1] = as_shot_white_xy.getFloat(1);
+                        mRaw.metadata.wbCoeffs[2] = 1 - mRaw.metadata.wbCoeffs[0] - mRaw.metadata.wbCoeffs[1];
 
-                    float[] d65_white = { 0.950456F, 1, 1.088754F };
-                    for (UInt32 i = 0; i < 3; i++)
-                        mRaw.metadata.wbCoeffs[i] /= d65_white[i];
+                        float[] d65_white = { 0.950456F, 1, 1.088754F };
+                        for (UInt32 i = 0; i < 3; i++)
+                            mRaw.metadata.wbCoeffs[i] /= d65_white[i];
+                    }
                 }
             }
 
+
             // Crop
-            if (raw.hasEntry(TagType.ACTIVEAREA))
+
+            Tag active_area = raw.getEntry(TagType.ACTIVEAREA);
+            if (active_area != null)
             {
                 iPoint2D new_size = new iPoint2D(mRaw.dim.x, mRaw.dim.y);
-
-                Tag active_area = raw.getEntry(TagType.ACTIVEAREA);
                 if (active_area.dataCount != 4)
                     throw new RawDecoderException("DNG: active area has " + active_area.dataCount + " values instead of 4");
 
@@ -573,12 +586,13 @@ namespace RawNet
                 }
             }
 
-            if (raw.hasEntry(TagType.DEFAULTCROPORIGIN) && raw.hasEntry(TagType.DEFAULTCROPSIZE))
+
+
+            Tag origin_entry = raw.getEntry(TagType.DEFAULTCROPORIGIN);
+            Tag size_entry = raw.getEntry(TagType.DEFAULTCROPSIZE);
+            if (origin_entry != null && size_entry != null)
             {
                 iRectangle2D cropped = new iRectangle2D(0, 0, mRaw.dim.x, mRaw.dim.y);
-                Tag origin_entry = raw.getEntry(TagType.DEFAULTCROPORIGIN);
-                Tag size_entry = raw.getEntry(TagType.DEFAULTCROPSIZE);
-
                 /* Read crop position (sometimes is rational so use float) */
                 origin_entry.getFloatArray(out float[] tl, 2);
                 if (new iPoint2D((int)tl[0], (int)tl[1]).isThisInside(mRaw.dim))
@@ -624,45 +638,33 @@ namespace RawNet
                 }
             }
             */
+
             // Linearization
-            if (raw.hasEntry(TagType.LINEARIZATIONTABLE))
+            Tag lintable = raw.getEntry(TagType.LINEARIZATIONTABLE);
+            if (lintable != null)
             {
-                Tag lintable = raw.getEntry(TagType.LINEARIZATIONTABLE);
                 UInt32 len = lintable.dataCount;
                 lintable.getShortArray(out ushort[] table, (int)len);
                 mRaw.setTable(table, (int)len, !uncorrectedRawValues);
                 if (!uncorrectedRawValues)
                 {
+                    //TODO Fix
                     //mRaw.sixteenBitLookup();
                     //mRaw.table = (null);
                 }
-                /*
-                if (0)
-                {
-                    // Test average for bias
-                    UInt32 cw = (uint)mRaw.dim.x * mRaw.cpp;
-                    UInt16[] pixels = mRaw.rawData.Take(500).ToArray();
-                    float avg = 0.0f;
-                    for (UInt32 x = 0; x < cw; x++)
-                    {
-                        avg += (float)pixels[x];
-                    }
-                    Debug.WriteLine("Average:" + avg / (float)cw);
-                }*/
             }
 
             // Default white level is (2 ** BitsPerSample) - 1
             mRaw.whitePoint = (uint)(1 >> raw.getEntry(TagType.BITSPERSAMPLE).getShort()) - 1;
 
-            if (raw.hasEntry(TagType.WHITELEVEL))
+
+            Tag whitelevel = raw.getEntry(TagType.WHITELEVEL);
+            try
             {
-                Tag whitelevel = raw.getEntry(TagType.WHITELEVEL);
-                try
-                {
-                    mRaw.whitePoint = whitelevel.getUInt();
-                }
-                catch (Exception) { }
+                mRaw.whitePoint = whitelevel.getUInt();
             }
+            catch (Exception) { }
+
             // Set black
             setBlack(raw);
 
