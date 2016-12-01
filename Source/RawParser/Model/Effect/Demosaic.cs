@@ -24,40 +24,42 @@ namespace RawEditor.Effect
                     break;
                 case demosAlgorithm.NearNeighbour:
                 default:
-                    Demosaic.NearNeighbour(ref image, image.dim.y, image.dim.x, image.colorDepth, image.cfa);
+                    Demosaic.NearNeighbour(ref image);
                     break;
             }
-            image.cpp = 3;
         }
 
-        private static void NearNeighbour(ref RawImage image, int height, int width, ushort colorDepth, ColorFilterArray cfa)
+        private static void NearNeighbour(ref RawImage image)
         {
-            ushort[] deflated = new ushort[image.rawData.Length * 3];
-            for (int row = 0; row < height; row++)
+            ushort[] deflated = new ushort[image.dim.x * image.dim.y * 3];
+            image.cpp = 3;
+            for (int row = 0; row < image.dim.y; row++)
             {
-                for (int col = 0; col < width; col++)
+                int realRow = row + image.mOffset.y;
+                for (int col = 0; col < image.dim.x; col++)
                 {
-                    int pixeltype = (int)cfa.cfa[((row % 2) * 2) + col % 2];
+                    int realCol = col + image.mOffset.x;
+                    int pixeltype = (int)image.cfa.cfa[((row % 2) * 2) + col % 2];
                     if (pixeltype == 1)
                     {
                         //get the green
-                        deflated[(((row * width) + col) * 3) + 1] = image[row, col];
+                        deflated[(((row * image.dim.x) + col) * 3) + 1] = image[realRow, realCol];
                         //if green
                         //get the red(                        
-                        deflated[((row * width) + col) * 3] = (ushort)((image[row - 1, col] + image[row + 1, col]) >> 1);
+                        deflated[((row * image.dim.x) + col) * 3] = (ushort)((image[realRow - 1, realCol] + image[realRow + 1, realCol]) >> 1);
                         //get the blue (left)
-                        deflated[(((row * width) + col) * 3) + 2] = (ushort)((image[row, col - 1] + image[row, col + 1]) >> 1);
+                        deflated[(((row * image.dim.x) + col) * 3) + 2] = (ushort)((image[realRow, realCol - 1] + image[realRow, realCol + 1]) >> 1);
                     }
                     else
                     {
-                        deflated[(((row * width) + col) * 3) + pixeltype] = image[row, col];
+                        deflated[(((row * image.dim.x) + col) * 3) + pixeltype] = image[realRow, realCol];
 
                         //get the green value from around
                         pixeltype ^= 2;
-                        deflated[(((row * width) + col) * 3) + 1] = (ushort)((image[row - 1, col] + image[row + 1, col] + image[row, col - 1] + image[row, col + 1]) >> 2);
+                        deflated[(((row * image.dim.x) + col) * 3) + 1] = (ushort)((image[realRow - 1, realCol] + image[realRow + 1, realCol] + image[realRow, realCol - 1] + image[realRow, realCol + 1]) >> 2);
 
                         //get the other value
-                        deflated[(((row * width) + col) * 3) + pixeltype] = (ushort)((image[row - 1, col - 1] + image[row - 1, col + 1] + image[row + 1, col - 1] + image[row + 1, col + 1]) >> 2);
+                        deflated[(((row * image.dim.x) + col) * 3) + pixeltype] = (ushort)((image[realRow - 1, realCol - 1] + image[realRow - 1, realCol + 1] + image[realRow + 1, realCol - 1] + image[realRow + 1, realCol + 1]) >> 2);
                     }
                 }
             }
