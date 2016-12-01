@@ -293,3 +293,4 @@ paket-files/
 *.sln.iml
 Source/RawParser/Package.appxmanifest
 Source/RawParser/Package.appxmanifest
+*.appx

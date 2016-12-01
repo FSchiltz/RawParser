@@ -146,7 +146,7 @@ namespace RawEditor
             setScrollProperty();
         }
 
-        private async void OpenFile(StorageFile file)
+        private void OpenFile(StorageFile file)
         {
 
             //Add a loading screen
