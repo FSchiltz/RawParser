@@ -58,10 +58,6 @@ namespace RawEditor
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
-            if (VisualStateGroupeMainUI.CurrentState == narrowState)
-            {
-                ChangeUIForMobile(wideState, narrowState);
-            }
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -73,7 +69,7 @@ namespace RawEditor
             filePicker.FileTypeFilter.Add(".tiff");
             filePicker.FileTypeFilter.Add(".tif");
             filePicker.FileTypeFilter.Add(".dng");
-           // filePicker.FileTypeFilter.Add(".cr2");
+            // filePicker.FileTypeFilter.Add(".cr2");
             filePicker.FileTypeFilter.Add(".jpg");
             filePicker.FileTypeFilter.Add(".jpeg");
             StorageFile file = await filePicker.PickSingleFileAsync();
@@ -104,8 +100,8 @@ namespace RawEditor
                         //empty the previous image data
                         raw = null;
                         //empty the image display
-                        imageBox.Source = null;
-                        imageBox.UpdateLayout();
+                        ImageBox.Source = null;
+                        ImageBox.UpdateLayout();
                         //empty the exif data
                         exifDisplay.ItemsSource = null;
                         //empty the histogram
@@ -251,7 +247,6 @@ namespace RawEditor
                 }
                 else
                 {
-
                     ExceptionDisplay.display("No file selected");
                 }
             }
@@ -262,10 +257,6 @@ namespace RawEditor
             Frame.Navigate(typeof(SettingsView), null);
         }
 
-        private void appbarShowSplitClick(object sender, RoutedEventArgs e)
-        {
-            splitView.IsPaneOpen = !splitView.IsPaneOpen;
-        }
 
         private void setScrollProperty()
         {
@@ -273,28 +264,28 @@ namespace RawEditor
             {
                 float x = 0;
                 double relativeBorder = SettingStorage.imageBoxBorder;
-                if ((currentImageDisplayedWidth / currentImageDisplayedHeight) < (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
+                if ((currentImageDisplayedWidth / currentImageDisplayedHeight) < (ImageDisplay.ActualWidth / ImageDisplay.ActualHeight))
                 {
-                    x = (float)(imageDisplayScroll.ViewportWidth /
+                    x = (float)(ImageDisplay.ViewportWidth /
                         (currentImageDisplayedWidth +
                             (relativeBorder * currentImageDisplayedWidth)
                         ));
                 }
                 else
                 {
-                    x = (float)(imageDisplayScroll.ViewportHeight /
+                    x = (float)(ImageDisplay.ViewportHeight /
                         (currentImageDisplayedHeight +
                             (relativeBorder * currentImageDisplayedHeight)
                         ));
                 }
                 if (x < 0.1) x = 0.1f;
                 else if (x > 1) x = 1;
-                imageDisplayScroll.MinZoomFactor = 0.1f;
-                imageDisplayScroll.MaxZoomFactor = x + 10;
-                //imageDisplayScroll.ZoomToFactor(x);
-                imageDisplayScroll.InvalidateMeasure();
-                imageDisplayScroll.InvalidateArrange();
-                imageDisplayScroll.InvalidateScrollInfo();
+                ImageDisplay.MinZoomFactor = 0.1f;
+                ImageDisplay.MaxZoomFactor = x + 10;
+                //ImageDisplay.ZoomToFactor(x);
+                ImageDisplay.InvalidateMeasure();
+                ImageDisplay.InvalidateArrange();
+                ImageDisplay.InvalidateScrollInfo();
             }
         }
 
@@ -445,10 +436,10 @@ namespace RawEditor
                                 {
                                     //Do some UI-code that must be run on the UI thread.
                                     //display the image preview
-                                    imageBox.Source = null;
+                                    ImageBox.Source = null;
                                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                                     image.CopyToBuffer(bitmap.PixelBuffer);
-                                    imageBox.Source = bitmap;
+                                    ImageBox.Source = bitmap;
                                     currentImageDisplayedHeight = bitmap.PixelHeight;
                                     currentImageDisplayedWidth = bitmap.PixelWidth;
                                     setScrollProperty();
@@ -516,7 +507,7 @@ namespace RawEditor
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
-            effect.applyModification(ref image, dim,offset, colorDepth);
+            effect.applyModification(ref image, dim, offset, colorDepth);
         }
 
         #region WBSlider
@@ -543,31 +534,6 @@ namespace RawEditor
             if (raw?.previewData != null)
             {
                 updatePreview();
-            }
-        }
-
-        private void VisualStateGroup_CurrentStateChanged(object sender, VisualStateChangedEventArgs e)
-        {
-            ChangeUIForMobile(e.OldState, e.NewState);
-        }
-
-        private void ChangeUIForMobile(VisualState oldState, VisualState newState)
-        {
-            if (newState == narrowState)
-            {
-                PivotGrid.Children.Remove(ControlPivot);
-                Grid.SetRow(ControlPivot, 1);
-                MainGrid.Children.Add(ControlPivot);
-                // MainGridRow1.Height = new GridLength(2,GridUnitType.Star);
-                // MainGridRow2.Height = new GridLength(3, GridUnitType.Star);
-            }
-            else if (oldState == narrowState)
-            {
-                MainGrid.Children.Remove(ControlPivot);
-                Grid.SetRow(ControlPivot, 0);
-                PivotGrid.Children.Add(ControlPivot);
-                // MainGridRow1.Height = new GridLength(1, GridUnitType.Star);
-                MainGridRow2.Height = new GridLength(0, GridUnitType.Star);
             }
         }
     }
