@@ -1,6 +1,6 @@
 ﻿using Windows.Storage;
 
-namespace RawEditor.Model.Settings
+namespace RawEditor
 {
     static class SettingStorage
     {
