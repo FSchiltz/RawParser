@@ -113,12 +113,12 @@
                           VerticalScrollBarVisibility="Auto" 
                           RelativePanel.AlignTopWithPanel="True" 
                           RelativePanel.AlignLeftWithPanel="True"  
-                          MinHeight="320" HorizontalContentAlignment="Center" HorizontalAlignment="Center">
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
-            <Grid x:Name="PivotGrid" MaxWidth="300" 
+            <Grid x:Name="PivotGrid" 
                   RelativePanel.AlignRightWithPanel="True" 
-                  RelativePanel.AlignBottomWithPanel="True" HorizontalAlignment="Right" VerticalAlignment="Top" >
+                  RelativePanel.AlignBottomWithPanel="True" >
                 <Pivot x:Name="ControlPivot">
                     <PivotItem Header="Exposure">
                         <ScrollViewer VerticalContentAlignment="Stretch">
