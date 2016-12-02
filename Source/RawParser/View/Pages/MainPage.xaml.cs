@@ -72,6 +72,7 @@ namespace RawEditor
             // filePicker.FileTypeFilter.Add(".cr2");
             filePicker.FileTypeFilter.Add(".jpg");
             filePicker.FileTypeFilter.Add(".jpeg");
+            filePicker.FileTypeFilter.Add(".png");
             StorageFile file = await filePicker.PickSingleFileAsync();
             if (file != null)
             {
