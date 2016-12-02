@@ -110,7 +110,7 @@ namespace RawNet
             if (rawData != null)
                 throw new RawDecoderException("RawImageData: Duplicate data allocation in createData.");
             pitch = (uint)(((dim.x * bpp) + 15) / 16) * 16;
-            rawData = new ushort[dim.x * dim.y];
+            rawData = new ushort[dim.x * dim.y * cpp];
             if (rawData == null)
                 throw new RawDecoderException("RawImageData::createData: Memory Allocation failed.");
             uncroppedDim = dim;
