@@ -160,9 +160,11 @@ namespace RawNet
 
             for (UInt32 s = 0; s < nslices; s++)
             {
-                RawSlice slice = new RawSlice();
-                slice.offset = (uint)offsets.data[s];
-                slice.count = (uint)counts.data[s];
+                RawSlice slice = new RawSlice()
+                {
+                    offset = (uint)offsets.data[s],
+                    count = (uint)counts.data[s]
+                };
                 if (offY + yPerSlice > height)
                     slice.h = height - offY;
                 else

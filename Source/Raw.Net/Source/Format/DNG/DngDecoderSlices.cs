@@ -69,8 +69,10 @@ namespace RawNet
             {
                 while (slices.Count != 0)
                 {
-                    LJpegPlain l = new LJpegPlain(mFile, mRaw);
-                    l.mDNGCompatible = mFixLjpeg;
+                    LJpegPlain l = new LJpegPlain(mFile, mRaw)
+                    {
+                        mDNGCompatible = mFixLjpeg
+                    };
                     DngSliceElement e = slices.Dequeue();
                     l.mUseBigtable = e.mUseBigtable;                    
                     try

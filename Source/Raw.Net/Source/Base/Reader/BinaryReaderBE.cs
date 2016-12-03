@@ -78,8 +78,10 @@ namespace RawNet
                     throw new Exception();                  
             }
 
-            Stream stream = new MemoryStream(temp);
-            stream.Position = 0;
+            Stream stream = new MemoryStream(temp)
+            {
+                Position = 0
+            };
             return stream;
         }
 
@@ -140,8 +142,10 @@ namespace RawNet
 
         public static Stream streamFromArray(byte[] data)
         {
-            Stream stream = new MemoryStream(data);
-            stream.Position = 0;
+            Stream stream = new MemoryStream(data)
+            {
+                Position = 0
+            };
             return stream;
         }
     }
