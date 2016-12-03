@@ -29,7 +29,6 @@ Doc/Format/NEF/DSC_8286.tiff
 *.filters
 *.user
 *.db
-Source/RawParserUWP.VC.VC.opendb
 Source/RawParser/BundleArtifacts/*
 Source/RawParser/project.lock.json
 Source/RawParser/bin/*
@@ -291,6 +290,5 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
-Source/RawParser/Package.appxmanifest
 Source/RawParser/Package.appxmanifest
 *.appx
