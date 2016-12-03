@@ -54,8 +54,8 @@ namespace RawEditor
                 // Placez le frame dans la fenêtre active
                 Window.Current.Content = rootFrame;
             }
-
-            if (e.PrelaunchActivated == false)
+            
+            if (!e.PrelaunchActivated)
             {
                 if (rootFrame.Content == null)
                 {
