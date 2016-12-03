@@ -25,7 +25,7 @@ namespace RawNet
 
     class DngDecoderSlices
     {
-        public Queue<DngSliceElement> slices;
+        public Queue<DngSliceElement> slices = new Queue<DngSliceElement>();
         TIFFBinaryReader mFile;
         RawImage mRaw;
         public bool mFixLjpeg;

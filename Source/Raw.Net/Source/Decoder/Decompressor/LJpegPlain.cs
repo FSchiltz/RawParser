@@ -83,8 +83,7 @@ namespace RawNet
                         else
                         {
                             throw new RawDecoderException("LJpegDecompressor::decodeScan: Unsupported subsampling");
-                            //decodeScanLeftGeneric();
-                            return;
+                            //decodeScanLeftGeneric();                            
                         }
                     }
                     else

@@ -8,13 +8,14 @@ namespace RawNet
         private Stream stream;
         public RawDecoder decoder;
         private CameraMetaData metaData;
+        /*
         bool failOnUnknown = false;
         bool interpolateBadPixels = true;
         bool applyStage1DngOpcodes = true;
         bool applyCrop = true;
         bool uncorrectedRawValues = false;
         bool fujiRotate = true;
-        int decoderVersion = 0;
+        int decoderVersion = 0;*/
 
         public RawParser(ref Stream s)
         {

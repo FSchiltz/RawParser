@@ -267,7 +267,7 @@ namespace RawNet
                     }
                 }
             }
-            catch (IOException e)
+            catch (IOException)
             {
                 throw new Exception("LJpegDecompressor: IO exception, read outside file. Corrupt File.");
             }
@@ -319,8 +319,7 @@ namespace RawNet
                             break;
 
                         case JpegMarker.M_DQT:
-                            throw new Exception("LJpegDecompressor: Not a valid RAW file.");
-                            break;
+                            throw new Exception("LJpegDecompressor: Not a valid RAW file.");                       
 
                         case JpegMarker.M_DRI:
                             //          _RPT0(0,"Found DRI marker\n");

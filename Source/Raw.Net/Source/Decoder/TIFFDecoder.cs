@@ -5,7 +5,6 @@ namespace RawNet
 {
     class TiffDecoder : RawDecoder
     {
-        protected TIFFBinaryReader fileStream;
         protected IFD ifd;
 
         public TiffDecoder(IFD rootifd, ref TIFFBinaryReader file) : base(ref file)
@@ -45,22 +44,22 @@ namespace RawNet
                     {
                         //for each complete strip
                         //move to the offset
-                        fileStream.Position = Convert.ToInt64(imageOffsetTag.data[i]);
+                        mFile.Position = Convert.ToInt64(imageOffsetTag.data[i]);
                         for (int y = 0; y < rowperstrip && !(i == strips && y <= lastStrip); y++)
                         {
                             for (int x = 0; x < width; x++)
                             {
                                 //get the pixel
                                 //red
-                                image[(y + i * rowperstrip) * width * 3 + x * 3] = fileStream.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3] = mFile.ReadByte();
                                 //green
-                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = fileStream.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = mFile.ReadByte();
                                 //blue 
-                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = fileStream.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = mFile.ReadByte();
                                 for (int z = 0; z < (Convert.ToInt32(samplesPerPixel.data[0]) - 3); z++)
                                 {
                                     //pass the other pixel if more light
-                                    fileStream.ReadByte();
+                                    mFile.ReadByte();
                                 }
                             }
                         }
@@ -82,7 +81,7 @@ namespace RawNet
                     {
                         //for each complete strip
                         //move to the offset
-                        fileStream.Position = Convert.ToInt64(imageOffsetTag.data[i]);
+                        mFile.Position = Convert.ToInt64(imageOffsetTag.data[i]);
                         for (int y = 0; y < rowperstrip && !(i == strips && y < lastStrip); y++)
                         {
                             //uncompress line by line of pixel
@@ -91,19 +90,19 @@ namespace RawNet
                             int count = 0;
                             for (int x = 0; x < width * 3;)
                             {
-                                buffer = fileStream.ReadByte();
+                                buffer = mFile.ReadByte();
                                 count = 0;
                                 if (buffer >= 0)
                                 {
                                     for (int k = 0; k < count; ++k, ++x)
                                     {
-                                        temp[x] = fileStream.ReadByte();
+                                        temp[x] = mFile.ReadByte();
                                     }
                                 }
                                 else
                                 {
                                     count = -buffer;
-                                    buffer = fileStream.ReadByte();
+                                    buffer = mFile.ReadByte();
                                     for (int k = 0; k < count; ++k, ++x)
                                     {
                                         temp[x] = (ushort)buffer;
@@ -123,7 +122,7 @@ namespace RawNet
                                 for (int z = 0; z < ((int)samplesPerPixel.data[0] - 3); z++)
                                 {
                                     //pass the other pixel if more light
-                                    fileStream.ReadByte();
+                                    mFile.ReadByte();
                                 }
                             }
                         }

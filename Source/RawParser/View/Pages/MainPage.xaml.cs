@@ -62,9 +62,11 @@ namespace RawEditor
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
         {
-            FileOpenPicker filePicker = new FileOpenPicker();
-            filePicker.ViewMode = PickerViewMode.Thumbnail;
-            filePicker.SuggestedStartLocation = PickerLocationId.ComputerFolder;
+            FileOpenPicker filePicker = new FileOpenPicker()
+            {
+                ViewMode = PickerViewMode.Thumbnail,
+                SuggestedStartLocation = PickerLocationId.ComputerFolder
+            };
             filePicker.FileTypeFilter.Add(".nef");
             filePicker.FileTypeFilter.Add(".tiff");
             filePicker.FileTypeFilter.Add(".tif");
@@ -117,11 +119,12 @@ namespace RawEditor
                      colorTempSlider.IsEnabled = v;
                      colorTintSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
-                     ShadowSlider.IsEnabled = v;
-                     HighLightSlider.IsEnabled = v;
+
+                     //ShadowSlider.IsEnabled = v;
+                     //HighLightSlider.IsEnabled = v;
                      //gammaSlider.IsEnabled = v;
                      contrastSlider.IsEnabled = v;
-                     brightnessSlider.IsEnabled = v;
+                     //brightnessSlider.IsEnabled = v;
                      saturationSlider.IsEnabled = v;
                  });
         }
@@ -498,11 +501,12 @@ namespace RawEditor
                     effect.exposure = exposureSlider.Value;
                     effect.temperature = colorTempSlider.Value - 1;
                     effect.tint = colorTintSlider.Value - 1;
-                    effect.gamma = gammaSlider.Value;
+
                     effect.contrast = contrastSlider.Value / 10;
-                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
-                    effect.shadow = ShadowSlider.Value;
-                    effect.hightlight = HighLightSlider.Value;
+                    /*effect.gamma = gammaSlider.Value;
+                    //effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
+                    //effect.shadow = ShadowSlider.Value;
+                    //effect.hightlight = HighLightSlider.Value;*/
                     effect.saturation = 1 + saturationSlider.Value / 100;
                 });
             });
@@ -527,11 +531,13 @@ namespace RawEditor
                     effect.exposure = exposureSlider.Value;
                     effect.temperature = colorTempSlider.Value - 1;
                     effect.tint = colorTintSlider.Value - 1;
-                    effect.gamma = gammaSlider.Value;
+
                     effect.contrast = contrastSlider.Value / 10;
+                    /*
+                    effect.gamma = gammaSlider.Value;
                     effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
                     effect.shadow = ShadowSlider.Value;
-                    effect.hightlight = HighLightSlider.Value;
+                    effect.hightlight = HighLightSlider.Value;*/
                     effect.saturation = 1 + saturationSlider.Value / 100;
                 });
             });
