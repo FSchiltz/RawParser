@@ -33,11 +33,10 @@
       </uap:VisualElements>
       <Extensions>
         <uap:Extension Category="windows.fileTypeAssociation">
-          <uap:FileTypeAssociation Name="photo">
+          <uap:FileTypeAssociation Name="photo" DesiredView="default">
             <uap:DisplayName>Raw photo editor</uap:DisplayName>
             <uap:Logo>Assets\StoreLogo.png</uap:Logo>
             <uap:InfoTip>Photo</uap:InfoTip>
-            <uap:EditFlags OpenIsSafe="true" />
             <uap:SupportedFileTypes>
               <uap:FileType ContentType="image/jpeg">.jpg</uap:FileType>
               <uap:FileType ContentType="image/raw">.nef</uap:FileType>
@@ -52,8 +51,4 @@
       </Extensions>
     </Application>
   </Applications>
-  <Capabilities>
-    <uap:Capability Name="picturesLibrary" />
-    <uap:Capability Name="removableStorage" />
-  </Capabilities>
 </Package>
