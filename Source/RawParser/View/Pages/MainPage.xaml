@@ -158,7 +158,7 @@
                                 <Slider x:Name="vibranceSlider"    PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
 -->
                                 <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
-                                <TextBlock Foreground="Black" FontSize="16" > Contraste balance</TextBlock>
+                                <TextBlock Foreground="Black" FontSize="16" > Contrast balance</TextBlock>
                                 <!--
                                 <TextBlock FontSize="12">Gamma</TextBlock>
                                 <Slider x:Name="gammaSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="6" Minimum="0.01" LargeChange="1" SmallChange="0.1" Value="1" IsEnabled="False" StepFrequency="0.01"/>
