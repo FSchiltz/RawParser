@@ -67,9 +67,7 @@ namespace RawNet
                     mRaw.Init();
                     unsafe
                     {
-                        byte* temp;
-                        uint capacity;
-                        ((IMemoryBufferByteAccess)reference).GetBuffer(out temp, out capacity);
+                        ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
 
                         for (int y = 0; y < mRaw.dim.y; y++)
                         {
