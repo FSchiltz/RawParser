@@ -48,9 +48,7 @@ namespace RawEditor
             {
                 using (var reference = buffer.CreateReference())
                 {
-                    byte* tempByteArray;
-                    uint capacity;
-                    ((IMemoryBufferByteAccess)reference).GetBuffer(out tempByteArray, out capacity);
+                    ((IMemoryBufferByteAccess)reference).GetBuffer(out var tempByteArray, out uint capacity);
 
                     // Fill-in the BGRA plane
                     BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);

@@ -121,9 +121,7 @@ namespace RawEditor
                 using (var reference = buffer.CreateReference())
                 {
                     BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-                    byte* temp;
-                    uint capacity;
-                    ((IMemoryBufferByteAccess)reference).GetBuffer(out temp, out capacity);
+                    ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
                     maxValue = (uint)(1 << colorDepth);
                     int shift = colorDepth - 8;
                     if (!cameraWB)
