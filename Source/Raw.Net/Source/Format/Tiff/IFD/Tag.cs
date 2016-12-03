@@ -207,7 +207,7 @@ namespace RawNet
             {
                 return Convert.ToUInt32(data[0]);
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 return v;
             }
@@ -219,7 +219,7 @@ namespace RawNet
             {
                 return (float)Convert.ToDouble(data[0]);
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 return v;
             }
@@ -237,7 +237,7 @@ namespace RawNet
             {
                 return Convert.ToInt16(data[0]);
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 return v;
             }

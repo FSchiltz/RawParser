@@ -119,7 +119,7 @@ namespace RawNet
         }
 
         byte[] buffer;
-        byte[] current_buffer;
+        byte[] current_buffer = new byte[16];
         UInt32 size = 0;            // This if the end of buffer.
         int mLeft = 0;
         UInt32 off;                  // Offset in bytes

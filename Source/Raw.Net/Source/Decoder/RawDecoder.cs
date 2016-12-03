@@ -115,7 +115,6 @@ namespace RawNet
             {
                 throw new RawDecoderException(e.Message);
             }
-            return null;
         }
 
         /*
@@ -140,7 +139,6 @@ namespace RawNet
             {
                 throw new RawDecoderException(e.Message);
             }
-            return null;
         }
 
         /* Check if the decoder can decode the image from this camera */
@@ -198,7 +196,7 @@ namespace RawNet
                 {
                     readUncompressedRaw(ref input, size, pos, width * bitPerPixel / 8, bitPerPixel, order);
                 }
-                catch (RawDecoderException e)
+                catch (RawDecoderException )
                 {
                     if (i > 0)
                     {
