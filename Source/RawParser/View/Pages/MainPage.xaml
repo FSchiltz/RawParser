@@ -124,7 +124,7 @@
                   RelativePanel.AlignRightWithPanel="True" 
                   RelativePanel.AlignBottomWithPanel="True" >
                 <Pivot x:Name="ControlPivot">
-                    <PivotItem Header="Exposure">
+                    <PivotItem x:Uid="ExposureHeader">
                         <ScrollViewer VerticalContentAlignment="Stretch">
                             <StackPanel Margin="0,0,16,0" >
                                 <!--The histogram-->
