@@ -171,6 +171,8 @@ namespace RawEditor
                     raw.fileName = file.DisplayName;
                     //read the exifs
                     displayExif();
+                    //scale the value
+                    raw.scaleValues();
                     //demos   
                     if (raw.cfa != null && raw.cpp == 1)
                     {
