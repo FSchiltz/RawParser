@@ -660,25 +660,29 @@ namespace RawNet
             //convert to linear value
             //TODO optimize (super slow)
             double maxVal = Math.Pow(2, mRaw.colorDepth);
+            double coeff = maxVal * (1 / (mRaw.whitePoint - mRaw.blackLevelSeparate[0]));
             for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)
             {
-                int offset = ((y % 2) * 2);
+                //int offset = ((y % 2) * 2);
+                int realY = y * mRaw.dim.x;
                 for (int x = mRaw.mOffset.x; x < mRaw.dim.x + mRaw.mOffset.x; x++)
                 {
-                    int pos = y * mRaw.dim.x + x;
+                    int pos = realY + x;
                     double val;
                     //Linearisation
                     if (mRaw.table != null)
                         val = mRaw.table.tables[mRaw.rawData[pos]];
                     else val = mRaw.rawData[pos];
                     //Black sub
-                    val -= mRaw.blackLevelSeparate[offset + x % 2];
+                    //val -= mRaw.blackLevelSeparate[offset + x % 2];
+                    val -= mRaw.blackLevelSeparate[0];
                     //Rescaling
-                    val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[offset + x % 2]);
+                    //val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[offset + x % 2]);
+                    val *= coeff;//change to take into consideration each individual blacklevel
                     //Clip
-                    if (val > 1) val = 1;
+                    if (val > maxVal) val = maxVal;
                     else if (val < 0) val = 0;
-                    val *= maxVal;
+                    //val *= maxVal;
                     //rescale to colordepth of the original                        
                     mRaw.rawData[pos] = (ushort)val;
                 }
