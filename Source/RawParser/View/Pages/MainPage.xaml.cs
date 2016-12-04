@@ -325,14 +325,14 @@ namespace RawEditor
                 exif.Add("Height", "" + raw.dim.y);
                 //uncropped dim
                 exif.Add("Uncropped height", "" + raw.uncroppedDim.x);
-                exif.Add("Uncropped height", "" + raw.uncroppedDim.y);
+                exif.Add("Uncropped width", "" + raw.uncroppedDim.y);
 
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                         {
                             //Do some UI-code that must be run on the UI thread.
                             //set exif datasource
                             //TODO add
-                            exifDisplay.ItemsSource = exif.Values;
+                            exifDisplay.ItemsSource = exif;
                         });
 
             }

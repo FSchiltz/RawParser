@@ -174,13 +174,13 @@
                             </StackPanel>
                         </ScrollViewer>
                     </PivotItem>
-                    <PivotItem x:Uid="Tools">
+                    <!--<PivotItem x:Uid="Tools">
                         <StackPanel Background="#FFF0F0F0">
                         </StackPanel>
                     </PivotItem>
                     <PivotItem x:Uid="Presets">
                         <GridView Background="White" ></GridView>
-                    </PivotItem>
+                    </PivotItem> -->
                     <PivotItem x:Uid="Exifs">
                         <StackPanel Margin="0,0,0,49">
                             <TextBlock x:Uid="ExifsData"/>
@@ -197,8 +197,8 @@
                                                     <Setter Property="Margin" Value="5,0" />
                                                 </Style>
                                             </Grid.Resources>
-                                            <TextBlock Grid.Column="0" Text="{Binding displayName}" IsDoubleTapEnabled="False" IsTapEnabled="False" IsTextSelectionEnabled="True" />
-                                            <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" TextAlignment="Right" />
+                                            <TextBlock Grid.Column="0" Text="{Binding Key}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Value}" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
