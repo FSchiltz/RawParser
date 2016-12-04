@@ -306,17 +306,36 @@ namespace RawEditor
 
         public async void displayExif()
         {
-            //*
-            if (raw.exif != null)
+            //TODO add localized exifs name
+            if (raw != null && raw.metadata != null)
             {
+                //create a list from the metadata object
+
+                Dictionary<string, string> exif = new Dictionary<string, string>();
+                //iso
+                exif.Add("ISO", "" + raw.metadata.isoSpeed);
+                //maker
+                exif.Add("Maker", raw.metadata.make);
+                //model
+                exif.Add("Model", raw.metadata.model);
+                //mode
+                exif.Add("Image mode", raw.metadata.mode);
+                //dimension
+                exif.Add("Width", "" + raw.dim.x);
+                exif.Add("Height", "" + raw.dim.y);
+                //uncropped dim
+                exif.Add("Uncropped height", "" + raw.uncroppedDim.x);
+                exif.Add("Uncropped height", "" + raw.uncroppedDim.y);
+
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    //Do some UI-code that must be run on the UI thread.
-                    //set exif datasource
-                    //TODO add
-                });
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            //set exif datasource
+                            //TODO add
+                            exifDisplay.ItemsSource = exif.Values;
+                        });
+
             }
-            //*/
         }
 
         private async void saveButton_Click(object sender, RoutedEventArgs e)
@@ -364,11 +383,11 @@ namespace RawEditor
                             SoftwareBitmap bitmap = null;
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
-                            encoder.SetSoftwareBitmap(bitmap);
-                        });
+                    {
+                        //Do some UI-code that must be run on the UI thread.
+                        bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
+                        encoder.SetSoftwareBitmap(bitmap);
+                    });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -383,11 +402,11 @@ namespace RawEditor
                             SoftwareBitmap bitmap = null;
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
-                            encoder.SetSoftwareBitmap(bitmap);
-                        });
+                    {
+                        //Do some UI-code that must be run on the UI thread.
+                        bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
+                        encoder.SetSoftwareBitmap(bitmap);
+                    });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -402,11 +421,11 @@ namespace RawEditor
                             SoftwareBitmap bitmap = null;
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
-                            encoder.SetSoftwareBitmap(bitmap);
-                        });
+                    {
+                        //Do some UI-code that must be run on the UI thread.
+                        bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
+                        encoder.SetSoftwareBitmap(bitmap);
+                    });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -422,7 +441,7 @@ namespace RawEditor
                     // the other app can update the remote version of the file.
                     // Completing updates may require Windows to ask for user input.
                     FileUpdateStatus status =
-                        await CachedFileManager.CompleteUpdatesAsync(file);
+                    await CachedFileManager.CompleteUpdatesAsync(file);
 
                     if (status != FileUpdateStatus.Complete)
                     {
@@ -474,10 +493,10 @@ namespace RawEditor
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    histoLoadingBar.Visibility = Visibility.Visible;
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
-                });
+            {
+                histoLoadingBar.Visibility = Visibility.Visible;
+                bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
+            });
                 applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap, ref value);
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
@@ -549,6 +568,7 @@ namespace RawEditor
             effect.camCurve = raw.curve;
             effect.applyModification(ref image, dim, offset, colorDepth);
         }
+
         #region WBSlider
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
@@ -564,7 +584,14 @@ namespace RawEditor
         {
             cameraWB = true;
             cameraWBCheck.IsEnabled = false;
+            //TODO move slider to the camera WB
+            MoveWB();
             updatePreview();
+        }
+
+        private void MoveWB()
+        {
+
         }
         #endregion
 

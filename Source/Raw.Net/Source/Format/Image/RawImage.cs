@@ -77,7 +77,6 @@ namespace RawNet
         public byte[] thumbnail;
         public ushort[] previewData, rawData;
         public string fileName { get; set; }
-        public Dictionary<ushort, Tag> exif;
         public ushort colorDepth;
         public iPoint2D dim, mOffset = new iPoint2D(), previewDim, previewOffset = new iPoint2D(), uncroppedDim;
         public ColorFilterArray cfa = new ColorFilterArray();
