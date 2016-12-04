@@ -2,6 +2,8 @@
 =========
 ## About
 This is a Windows universal application that allows editing of raw files and other image format.
+The main goal is to provide a way for people who wants to edit the raw file from their camera on there phone over continuum.
+
 This is 2 separate project, a parser and an application. For more information about the parser, see the subfolder Raw.net
 
 ## Device supported
