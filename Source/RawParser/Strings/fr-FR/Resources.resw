@@ -151,7 +151,7 @@
     <value>Correction de l'exposition</value>
   </data>
   <data name="Histogram.Text" xml:space="preserve">
-    <value>Histograme</value>
+    <value>Histogramme</value>
   </data>
   <data name="Issue.Text" xml:space="preserve">
     <value>Cette application est une version de test. Pour signaler un problème:</value>
@@ -175,7 +175,7 @@
     <value>Sauvegarder</value>
   </data>
   <data name="ScalingFactor.Text" xml:space="preserve">
-    <value>Niveau de mise à l'echelle de l'aperçu</value>
+    <value>Niveau de mise à l'échelle de l'aperçu</value>
   </data>
   <data name="Setting.Label" xml:space="preserve">
     <value>Options</value>
@@ -187,7 +187,7 @@
     <value>Partager</value>
   </data>
   <data name="Temperature.Text" xml:space="preserve">
-    <value>Tempèrature</value>
+    <value>Température</value>
   </data>
   <data name="Tools.Header" xml:space="preserve">
     <value>Outils</value>
