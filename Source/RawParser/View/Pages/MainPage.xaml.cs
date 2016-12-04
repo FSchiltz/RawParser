@@ -22,7 +22,6 @@ using RawNet;
 
 namespace RawEditor
 {
-
     /// <summary>
     /// The main class of the appliation
     /// </summary>
@@ -188,7 +187,9 @@ namespace RawEditor
                 }
                 catch (FormatException e)
                 {
-                    ExceptionDisplay.display(e.Message);
+                    var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                    var str = loader.GetString("ExceptionText");
+                    ExceptionDisplay.display(str);
                 }
 
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -228,12 +229,12 @@ namespace RawEditor
             raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * raw.cpp];
             for (int y = 0; y < raw.previewDim.y; y++)
             {
-                int realY = (raw.mOffset.y + y * previewFactor) * raw.previewDim.x ;
+                int realY = (raw.mOffset.y + y * previewFactor) * raw.previewDim.x;
                 for (int x = 0; x < raw.previewDim.x; x++)
                 {
-                    int realPix = (int)(((x + realY )* previewFactor + raw.mOffset.x  ) * raw.cpp );
+                    int realPix = (int)(((x + realY) * previewFactor + raw.mOffset.x) * raw.cpp);
                     raw.previewData[((y * raw.previewDim.x) + x) * raw.cpp] = raw.rawData[realPix];
-                    raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 1] = raw.rawData[realPix+ 1];
+                    raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 1] = raw.rawData[realPix + 1];
                     raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 2] = raw.rawData[realPix + 2];
                 }
             }
@@ -477,7 +478,7 @@ namespace RawEditor
                     histoLoadingBar.Visibility = Visibility.Visible;
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
                 });
-                applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap,ref value);
+                applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap, ref value);
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -490,7 +491,7 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
-        private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth, ref SoftwareBitmap bitmap,ref int[] value)
+        private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth, ref SoftwareBitmap bitmap, ref int[] value)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -517,7 +518,7 @@ namespace RawEditor
             effect.camCurve = raw.curve;
 
             //get the softwarebitmap buffer
-            effect.applyModification(ref image, dim, offset, colorDepth, ref bitmap,ref value);
+            effect.applyModification(ref image, dim, offset, colorDepth, ref bitmap, ref value);
         }
 
         private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth)
