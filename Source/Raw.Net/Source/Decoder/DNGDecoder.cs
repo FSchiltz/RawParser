@@ -193,7 +193,6 @@ namespace RawNet
                 }
             }
 
-            //TODO remove hasEntry
             // DNG Spec says we must add black in deltav and deltah
 
             Tag blackleveldeltav = raw.getEntry(TagType.BLACKLEVELDELTAV);
@@ -227,14 +226,9 @@ namespace RawNet
 
         void setBlack(IFD raw)
         {
-
             if (raw.hasEntry(TagType.MASKEDAREAS))
                 if (decodeMaskedAreas(raw))
                     return;
-
-            // Black defaults to 0
-            // Common.memset(mRaw.blackLevelSeparate, 0, sizeof(mRaw.blackLevelSeparate));
-
             if (raw.getEntry(TagType.BLACKLEVEL) != null)
                 decodeBlackLevels(raw);
         }
@@ -535,9 +529,6 @@ namespace RawNet
                 throw new RawDecoderException("DNG Decoder: Image could not be read:" + e.Message);
             }
 
-            //TODO optimise
-            // Fetch the white balance
-
             Tag as_shot_neutral = mRootIFD.getEntryRecursive(TagType.ASSHOTNEUTRAL);
             if (as_shot_neutral != null)
             {
@@ -567,7 +558,6 @@ namespace RawNet
 
 
             // Crop
-
             Tag active_area = raw.getEntry(TagType.ACTIVEAREA);
             if (active_area != null)
             {
@@ -692,6 +682,32 @@ namespace RawNet
                     mRaw.blackLevelSeparate[0] = mRaw.blackLevelSeparate[1] = mRaw.blackLevelSeparate[2] = mRaw.blackLevelSeparate[3] = 0;
                     mRaw.whitePoint = 65535;
                 }*/
+            }
+            else
+            {
+                double maxVal = Math.Pow(2, mRaw.colorDepth);
+                //convert to linear value
+                //TODO
+                for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)
+                {
+                    for (int x = mRaw.mOffset.x; x < mRaw.dim.x + mRaw.mOffset.x; x++)
+                    {
+                        int pos = y * mRaw.dim.x + x;
+                        //Linearisation
+                        double val = mRaw.table.tables[mRaw.rawData[pos]];
+
+                        //Black sub
+                        val -= mRaw.blackLevelSeparate[((y % 2) * 2) + x % 2];
+                        //Rescaling
+                        val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[((y % 2) * 2) + x % 2]);
+                        //Clip
+                        if (val > 1) val = 1;
+                        else if (val < 0) val = 0;
+                        //rescale to colordepth of the original
+                        val *= maxVal;
+                        mRaw.rawData[pos]= (ushort)val;
+                    }
+                }
             }
 
             return mRaw;
