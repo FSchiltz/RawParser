@@ -1,5 +1,7 @@
 ﻿using RawEditor.Effect;
 using RawNet;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 
 namespace RawEditor
@@ -21,7 +23,7 @@ namespace RawEditor
         public double vibrance = 0;
         public double[] camCurve;
 
-        public void applyModification(ref ushort[] image, iPoint2D dim, iPoint2D offset, int colorDepth)
+        public void applyModification(ushort[] image, iPoint2D dim, iPoint2D offset, int colorDepth)
         {
             maxValue = (uint)(1 << colorDepth);
             if (!cameraWB)
@@ -61,7 +63,7 @@ namespace RawEditor
             //gammacurve from camera
             //double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
 
-            for (int y = offset.y; y < dim.y; y++)
+            Parallel.For(offset.y, dim.y, y =>
             {
                 int realY = y * dim.x * 3;
                 for (int x = offset.x; x < dim.x; x++)
@@ -110,12 +112,13 @@ namespace RawEditor
                     image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
                     image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];*/
                 }
-            }
+            });
         }
 
 
-        public unsafe void applyModification(ref ushort[] image, iPoint2D dim, iPoint2D offset, int colorDepth, ref SoftwareBitmap bitmap, ref int[] value)
+        public unsafe int[] applyModification(ushort[] image, iPoint2D dim, iPoint2D offset, int colorDepth, ref SoftwareBitmap bitmap)
         {
+            int[] value = new int[256];
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
             {
                 using (var reference = buffer.CreateReference())
@@ -161,7 +164,7 @@ namespace RawEditor
                     //gammacurve from camera
                     //double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
 
-                    for (int y = offset.y; y < dim.y + offset.y; y++)
+                    Parallel.For(offset.y, dim.y + offset.y, y =>
                     {
                         int realY = y * dim.x * 3;
                         int bufferY = y * dim.x * 4 + +bufferLayout.StartIndex;
@@ -207,7 +210,7 @@ namespace RawEditor
                             temp[bufferPix + 1] = (byte)((int)green >> shift);
                             temp[bufferPix + 2] = (byte)((int)red >> shift);
 
-                            value[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]++;
+                            Interlocked.Increment(ref value[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
                             //set transparency to 255 else image will be blank
                             temp[bufferPix + 3] = 255;
                             //change gamma from curve 
@@ -216,9 +219,10 @@ namespace RawEditor
                             image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
                             image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];*/
                         }
-                    }
+                    });
                 }
             }
+            return value;
         }
     }
 }
