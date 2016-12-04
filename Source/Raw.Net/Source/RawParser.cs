@@ -201,7 +201,7 @@ namespace RawNet
             {
             }
             // File could not be decoded, so no further options for now.
-            throw new Exception("No decoder found. Sorry.");
+            throw new FormatException("No decoder found. Sorry.");
         }
 
         /* Parse FUJI information */
