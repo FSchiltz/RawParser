@@ -658,10 +658,11 @@ namespace RawNet
             setBlack(raw);
 
             //convert to linear value
-            //TODO
+            //TODO optimize (super slow)
             double maxVal = Math.Pow(2, mRaw.colorDepth);
             for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)
             {
+                int offset = ((y % 2) * 2);
                 for (int x = mRaw.mOffset.x; x < mRaw.dim.x + mRaw.mOffset.x; x++)
                 {
                     int pos = y * mRaw.dim.x + x;
@@ -671,9 +672,9 @@ namespace RawNet
                         val = mRaw.table.tables[mRaw.rawData[pos]];
                     else val = mRaw.rawData[pos];
                     //Black sub
-                    val -= mRaw.blackLevelSeparate[((y % 2) * 2) + x % 2];
+                    val -= mRaw.blackLevelSeparate[offset + x % 2];
                     //Rescaling
-                    val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[((y % 2) * 2) + x % 2]);
+                    val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[offset + x % 2]);
                     //Clip
                     if (val > 1) val = 1;
                     else if (val < 0) val = 0;
