@@ -227,7 +227,7 @@ namespace RawEditor
             }
             raw.previewDim = new iPoint2D(raw.dim.x / previewFactor, raw.dim.y / previewFactor);
             raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * raw.cpp];
-            for (int y = 0; y < raw.previewDim.y; y++)
+            Parallel.For(0, raw.previewDim.y, y =>
             {
                 int realY = (raw.mOffset.y + y * previewFactor) * raw.previewDim.x;
                 for (int x = 0; x < raw.previewDim.x; x++)
@@ -237,7 +237,7 @@ namespace RawEditor
                     raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 1] = raw.rawData[realPix + 1];
                     raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 2] = raw.rawData[realPix + 2];
                 }
-            }
+            });
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -488,7 +488,7 @@ namespace RawEditor
             //display the histogram                    
             Task histoTask = Task.Run(async () =>
             {
-                int[] value = new int[256];
+
 
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
@@ -497,7 +497,7 @@ namespace RawEditor
                 histoLoadingBar.Visibility = Visibility.Visible;
                 bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
             });
-                applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap, ref value);
+                int[] value = applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap);
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -510,7 +510,7 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
-        private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth, ref SoftwareBitmap bitmap, ref int[] value)
+        private int[] applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth, ref SoftwareBitmap bitmap)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -537,7 +537,7 @@ namespace RawEditor
             effect.camCurve = raw.curve;
 
             //get the softwarebitmap buffer
-            effect.applyModification(ref image, dim, offset, colorDepth, ref bitmap, ref value);
+            return effect.applyModification(image, dim, offset, colorDepth, ref bitmap);
         }
 
         private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth)
@@ -566,7 +566,7 @@ namespace RawEditor
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
-            effect.applyModification(ref image, dim, offset, colorDepth);
+            effect.applyModification(image, dim, offset, colorDepth);
         }
 
         #region WBSlider
