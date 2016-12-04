@@ -1,9 +1,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace RawNet
 {
@@ -679,7 +677,7 @@ namespace RawNet
                     //Rescaling
                     //val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[offset + x % 2]);
                     val *= coeff;//change to take into consideration each individual blacklevel
-                    //Clip
+                                 //Clip
                     if (val > maxVal) val = maxVal;
                     else if (val < 0) val = 0;
                     //val *= maxVal;
