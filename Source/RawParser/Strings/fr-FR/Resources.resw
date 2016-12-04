@@ -144,6 +144,9 @@
   <data name="Exposure.Text" xml:space="preserve">
     <value>Exposition</value>
   </data>
+  <data name="ExposureHeader.Header" xml:space="preserve">
+    <value>Exposition</value>
+  </data>
   <data name="ExposureSettings.Text" xml:space="preserve">
     <value>Correction de l'exposition</value>
   </data>
