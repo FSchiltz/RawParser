@@ -197,11 +197,12 @@ namespace RawNet
                         return new MosDecoder(root, reader);
                     }
                 }*/
-
-                //default as astandard tiff
-                rootIFD = null;
-                return new TiffDecoder(root, ref reader);
             }
+
+
+            //default as astandard tiff
+            rootIFD = null;
+            return new TiffDecoder(root, ref reader);
             //TODO add detection of Tiff
             throw new TiffParserException("No decoder found. Sorry.");
         }

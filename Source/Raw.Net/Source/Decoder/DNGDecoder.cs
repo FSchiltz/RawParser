@@ -657,6 +657,7 @@ namespace RawNet
             setBlack(raw);
 
             //convert to linear value
+            /*
             //TODO optimize (super slow)
             double maxVal = Math.Pow(2, mRaw.colorDepth);
             double coeff = maxVal / (mRaw.whitePoint - mRaw.blackLevelSeparate[0]);
@@ -687,6 +688,7 @@ namespace RawNet
                      mRaw.rawData[pos] = (ushort)val;
                  }
              });
+             //*/
             // Apply opcodes to lossy DNG 
             if (compression == 0x884c && !uncorrectedRawValues)
             {

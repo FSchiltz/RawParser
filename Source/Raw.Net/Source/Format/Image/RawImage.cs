@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RawNet
 {
@@ -220,13 +221,14 @@ namespace RawNet
         public void scaleValues()
         {
             //skip 250 pixel to reduce calculation
+            //TODO fix the condiftion
             const int skipBorder = 250;
             int gw = (int)((dim.x - skipBorder) * cpp);
             if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
                 uint m = 0;
-                for (int row = skipBorder; row < (dim.y - skipBorder); row++)
+                for (int row = skipBorder; row < (dim.y - skipBorder + mOffset.y); row++)
                 {
                     for (int col = skipBorder; col < gw; col++)
                     {
@@ -248,7 +250,7 @@ namespace RawNet
             /* If filter has not set separate blacklevel, compute or fetch it */
             if (blackLevelSeparate[0] < 0)
                 calculateBlackAreas();
-            gw = (int)(dim.x * cpp);
+            gw = (int)(dim.x * cpp) + mOffset.x;
             int[] mul = new int[4];
             int[] sub = new int[4];
             int depth_values = (int)(whitePoint - blackLevelSeparate[0]);
@@ -269,32 +271,29 @@ namespace RawNet
                 mul[i] = (int)(16384.0f * 65535.0f / (whitePoint - blackLevelSeparate[v]));
                 sub[i] = blackLevelSeparate[v];
             }
-            unsafe
+
+            Parallel.For(mOffset.y, dim.y + mOffset.y, y =>
+            //for (int y = mOffset.y; y < dim.y + mOffset.y; y++)
             {
-                fixed (int* mulFixed = mul, subFixed = sub)
+                int v = dim.x + y * 36969;
+                for (int x = mOffset.x; x < gw; x++)
                 {
-                    for (int y = mOffset.y; y < dim.y; y++)
+                    int rand;
+                    if (mDitherScale)
                     {
-                        int v = dim.x + y * 36969;
-                        int* mul_local = &mulFixed[2 * (y & 1)];
-                        int* sub_local = &subFixed[2 * (y & 1)];
-                        for (int x = mOffset.x; x < gw; x++)
-                        {
-                            int rand;
-                            if (mDitherScale)
-                            {
-                                v = 18000 * (v & 65535) + (v >> 16);
-                                rand = half_scale_fp - (full_scale_fp * (v & 2047));
-                            }
-                            else
-                            {
-                                rand = 0;
-                            }
-                            rawData[x + (y * dim.x * cpp)] = (ushort)Common.clampbits(((rawData[(y * dim.x * cpp) + x] - sub_local[x & 1]) * mul_local[x & 1] + 8192 + rand) >> 14, 16);
-                        }
+                        v = 18000 * (v & 65535) + (v >> 16);
+                        rand = half_scale_fp - (full_scale_fp * (v & 2047));
                     }
+                    else
+                    {
+                        rand = 0;
+                    }
+                    rawData[x + (y * dim.x * cpp)] = (ushort)Common.clampbits(((rawData[(y * dim.x * cpp) + x] - sub[(2 * (y & 1)) + (x & 1)]) * mul[(2 * (y & 1)) + (x & 1)] + 8192 + rand) >> 14, 16);
                 }
-            }
+
+            });
+            colorDepth = 16;
+            bpp = 2;
         }
 
         /*
@@ -312,12 +311,12 @@ namespace RawNet
         public void scaleBlackWhite()
         {
             const int skipBorder = 250;
-            int gw = (int)((dim.x - skipBorder) * cpp);
+            int gw = (int)((dim.x - skipBorder + mOffset.x) * cpp);
             if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
                 int m = 0;
-                for (int row = skipBorder; row < (dim.y - skipBorder); row++)
+                for (int row = skipBorder; row < (dim.y - skipBorder + mOffset.y); row++)
                 {
                     ushort[] pixel = rawData.Skip(skipBorder + row * dim.x).ToArray();
                     int pix = 0;
