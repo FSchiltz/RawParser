@@ -15,6 +15,7 @@ This is 2 separate project, a parser and an application. For more information ab
   - Tiff (uncompressed only)
   - Jpeg
   - Png 
+  - DNG (uncompressed and Ljpeg)
   
 ### output:
   - Tiff
