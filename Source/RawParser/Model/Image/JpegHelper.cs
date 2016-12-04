@@ -1,7 +1,5 @@
 ﻿using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using System;
 
