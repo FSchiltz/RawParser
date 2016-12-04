@@ -2,24 +2,40 @@
 using System.Collections.Generic;
 using System.IO;
 using RawParser.Format.IFD;
-using RawParser.Reader;
-using RawParser.Image;
+using RawParser.Base;
 
 namespace RawParser.Parser
 {
-    class DNGParser : AParser
+    class DNGParser : TiffParser
     {
-        private TIFFBinaryReader fileStream;
-        private Header header;
 
-        public override RawImage parse(Stream s)
+        public override void Parse(Stream file)
         {
-            throw new NotImplementedException();
+            base.Parse(file);
+            int i = 0;
         }
 
         public override Dictionary<ushort, Tag> parseExif()
         {
-            throw new NotImplementedException();
+            //From Nef parser, to replace
+            Dictionary<ushort, Tag> temp = new Dictionary<ushort, Tag>();
+            Dictionary<ushort, string> standardExifName = new DictionnaryFromFileString(@"Assets\\Dic\StandardExif.dic");
+            foreach (ushort exifTag in standardExifName.Keys)
+            {
+                Tag tempTag = null;
+
+                if (ifd != null && tempTag == null) ifd.tags.TryGetValue(exifTag, out tempTag);
+
+                if (tempTag != null)
+                {
+                    string t = "";
+                    standardExifName.TryGetValue(exifTag, out t);
+                    tempTag.displayName = t;
+
+                    temp.Add(exifTag, tempTag);
+                }
+            }
+            return temp;
         }
 
         public override byte[] parsePreview()
@@ -29,26 +45,47 @@ namespace RawParser.Parser
 
         public override ushort[] parseRAWImage()
         {
-            throw new NotImplementedException();
+            //this return a preview from the dng file, to remplace
+            return base.parseRAWImage();
+
+            //Find the IFD with tag NewSubFileType=0 (it's the raw)
+            //Find the BitsPerSample tag (used to convert from the raw bit/pixel to 16bit/pixel of the raw processor)
+            //Find the SampleFormat tag for integer or float image
+            //Find the compression tag (Compression)
+            //Find the PhotometricInterpretation tag (if RGB or YCbCr)
+            //FInd the orientation for future use
+
+            //Get the linearisation table for decoding
+
+            //Support for croppping active area not in first one
+            //Linearization
+            //Black Subtraction
+            //Rescaling
+            //Clipping
+            //Map from camera color space to CIEXYZ then RGB
+
         }
 
         public override byte[] parseThumbnail()
         {
-            IFD ifd = new IFD(fileStream, header.TIFFoffset, false, false);
-            return null;
-        }
-
-        public override void setStream(Stream s)
-        {
-            fileStream = new TIFFBinaryReader(s);
-
-            Header header = new Header(fileStream, 0);
-            if (header.byteOrder == 0x4D4D)
+            //Thumb is in the ifd
+            //call parse image from the tiff parserover the first ifd
+            /*
+            //Get the full size preview          
+            Tag thumbnailOffset, thumbnailSize, newSubFileType;
+            //Value from tiff (First oneis preview if  NewSubFileType == 1
+            if (!ifd.tags.TryGetValue(0x0FE, out newSubFileType)) throw new FormatException("File not correct");
+            if (Convert.ToInt32(newSubFileType.data[0]) == 1)
             {
-                //File is in reverse bit order
-                fileStream = new TIFFBinaryReaderRE(s, System.Text.Encoding.BigEndianUnicode);
-            }
-            header = new Header(fileStream, 0);
+                if (ifd != null && ifd.tags.TryGetValue(0x0111, out thumbnailOffset))
+                {
+
+                    if (!ifd.tags.TryGetValue(0x0117, out thumbnailSize)) throw new FormatException("File not correct");
+                    fileStream.BaseStream.Position = (uint)(thumbnailOffset.data[0]);//check offset
+                    return fileStream.ReadBytes(Convert.ToInt32(thumbnailSize.data[0]));
+                }
+            }*/
+            return null;
         }
     }
 }

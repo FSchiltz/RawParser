@@ -1,5 +1,4 @@
-﻿using RawParser.Image;
-using System;
+﻿using System;
 
 namespace RawParser.Effect
 {
@@ -7,7 +6,21 @@ namespace RawParser.Effect
     {
         private Balance() { }
 
-        public static void calculateRGB(int temp, out ushort rRefer, out ushort gRefer, out ushort bRefer)
+        public static void sRGBToRGB(ref double value, double maxValue)
+        {
+            value /= maxValue;
+            if (value < 0.04045)
+            {
+                value /= 12.92;
+            }
+            else
+            {
+                value = Math.Pow(((value + 0.055) / 1.055), 2.4);
+            }
+            value *= maxValue;
+        }
+
+        public static void calculateRGB(int temp, out double rRefer, out double gRefer, out double bRefer)
         {
             ushort maxValue = 255;
             temp /= 100;
@@ -53,9 +66,10 @@ namespace RawParser.Effect
                     else if (bRefer > maxValue) bRefer = maxValue;
                 }
             }
-            bRefer /= (255 / 2);
-            gRefer /= (255 / 2);
-            rRefer /= (255 / 2);
+            //TODO fix
+            bRefer = 255 / bRefer;
+            gRefer = 255 / gRefer;
+            rRefer = 255 / rRefer;
         }
 
         /*
@@ -63,6 +77,8 @@ namespace RawParser.Effect
                  but I can't make any promises about the quality of the algorithm's estimates above 40000 K.)
             Note also that the temperature and color variables need to be declared as floating - point.
         */
+        //TODO correct
+        /*
         public static void WhiteBalance(ref ushort[] image, int colorDepth, uint h, uint w, int temp)
         {
             //TODO caclute the real value and remove transforming to 8 bit
@@ -88,55 +104,78 @@ namespace RawParser.Effect
                 image[(i * 3) + 2] = (ushort)((image[(i * 3) + 2] * (1 - aplhablend)) + (bRefer * aplhablend));
                 var b2 = image[(i * 3) + 1];
             }
+        }*/
+
+
+        public static void scaleColor(ref double r, ref double g, ref double b, double[] mul)
+        {
+            r *= mul[0];
+            g *= mul[1];
+            b *= mul[2];
         }
 
-        /*
-         * Does not clip,beware
-         * 
-         */
-        public static void scaleColor(ref RawImage currentRawImage, int dark, int saturation, double[] mul)
+        public static void scaleGamma(ref double r, ref double g, ref double b, double gamma, uint maxValue)
         {
-            for (int i = 0; i < currentRawImage.height * currentRawImage.width; i++)
+            r = maxValue * Math.Pow(r / maxValue, gamma);
+            g = maxValue * Math.Pow(g / maxValue, gamma);
+            b = maxValue * Math.Pow(b / maxValue, gamma);
+        }
+
+        public static double[] gamma_curve(double pwr, double ts, int mode, int imax)
+        {
+            int i;
+            double[] g = new double[6], bnd = { 0, 0 };
+            double r;
+            double[] curve = new double[0x10000];
+
+            g[0] = pwr;
+            g[1] = ts;
+            g[2] = g[3] = g[4] = 0;
+            bnd[Convert.ToInt32(g[1] >= 1)] = 1;
+
+            if (g[1] != 0 && (g[1] - 1) * (g[0] - 1) <= 0)
             {
-                ushort r = (ushort)(currentRawImage.rawData[i * 3] * mul[0]);
-                ushort g = (ushort)(currentRawImage.rawData[(i * 3) + 1] * mul[1]);
-                ushort b = (ushort)(currentRawImage.rawData[(i * 3) + 2] * mul[2]);
-
-                currentRawImage.rawData[i * 3] = (ushort)r;
-                currentRawImage.rawData[(i * 3) + 1] = (ushort)g;
-                currentRawImage.rawData[(i * 3) + 2] = (ushort)b;
+                for (i = 0; i < 48; i++)
+                {
+                    g[2] = (bnd[0] + bnd[1]) / 2;
+                    if (g[0] != 0) bnd[Convert.ToInt32((Math.Pow(g[2] / g[1], -g[0]) - 1) / g[0] - 1 / g[2] > -1)] = g[2];
+                    else bnd[Convert.ToInt32(g[2] / Math.Exp(1 - 1 / g[2]) < g[1])] = g[2];
+                }
+                g[3] = g[2] / g[1];
+                if (g[0] != 0) g[4] = g[2] * (1 / g[0] - 1);
             }
-        }
-
-        public static void scaleGamma(ref RawImage currentRawImage, double gamma)
-        {
-            int maxValue = (int)Math.Pow(2, currentRawImage.colorDepth) - 1;
-            for (int i = 0; i < currentRawImage.height * currentRawImage.width; i++)
+            if (g[0] != 0) g[5] = 1 / (g[1] * (g[3] * g[3]) / 2 - g[4] * (1 - g[3]) +
+                    (1 - Math.Pow(g[3], 1 + g[0])) * (1 + g[4]) / (1 + g[0])) - 1;
+            else g[5] = 1 / (g[1] * (g[3] * g[3]) / 2 + 1
+             - g[2] - g[3] - g[2] * g[3] * (Math.Log(g[3]) - 1)) - 1;
+            if (!Convert.ToBoolean(mode--))
             {
-                gamma = 1 / gamma;
-                currentRawImage.rawData[i * 3] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[i * 3] / maxValue, gamma));
-                currentRawImage.rawData[(i * 3) + 1] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[(i * 3) + 1] / maxValue, gamma));
-                currentRawImage.rawData[(i * 3) + 2] = (ushort)(maxValue * Math.Pow(currentRawImage.rawData[(i * 3) + 2] / maxValue, gamma));
+                //memcpy(gamm, g, sizeof gamm);
+                return null;
             }
-        }
-
-        internal static void WhiteBalance(ref uint[] image, int colorDepth, uint h, uint w, int temp)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static void scaleColor(ref uint[] copyofpreview, uint height, uint width, int dark, int saturation, double[] mul)
-        {
-            for (int i = 0; i < height * width; i++)
+            for (i = 0; i < 0x10000; i++)
             {
-                ushort r = (ushort)(copyofpreview[i * 3] * mul[0]);
-                ushort g = (ushort)(copyofpreview[(i * 3) + 1] * mul[1]);
-                ushort b = (ushort)(copyofpreview[(i * 3) + 2] * mul[2]);
-
-                copyofpreview[i * 3] = (ushort)r;
-                copyofpreview[(i * 3) + 1] = (ushort)g;
-                copyofpreview[(i * 3) + 2] = (ushort)b;
+                curve[i] = 0xffff;
+                if ((r = (double)i / imax) < 1)
+                    curve[i] = 0x10000 * (Convert.ToBoolean(mode)
+                  ? (r < g[3] ? r * g[1] : (Convert.ToBoolean(g[0]) ? Math.Pow(r, g[0]) * (1 + g[4]) - g[4] : Math.Log(r) * g[2] + 1))
+                  : (r < g[2] ? r / g[1] : (Convert.ToBoolean(g[0]) ? Math.Pow((r + g[4]) / (1 + g[4]), 1 / g[0]) : Math.Exp((r - 1) / g[2]))));
             }
+            return curve;
+        }
+
+        internal static double[] contrast_curve(double shadow, double highlight, int v)
+        {
+            double[] curve = new double[v];
+            for (int i = 0; i < v / 2; i++)
+            {
+                curve[i] = i + ((shadow - (i / (v / 2) * 100) > 0) ? shadow - (i / (v / 2) * 100) : 0) * 100;
+            }
+            for (int i = v - 1; i >= v / 2; i--)
+            {
+                curve[i] = i - (((i / (v / 2) * 100) - highlight > 0) ? (i / (v / 2) * 100) - highlight : 0);
+            }
+            return curve;
         }
     }
 }

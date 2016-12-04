@@ -11,8 +11,8 @@
     <AssemblyName>RawParser</AssemblyName>
     <DefaultLanguage>en</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.10586.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.10586.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.14393.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -22,7 +22,7 @@
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <PackageCertificateThumbprint>B33BF4910474061FB02D76AFA3416FF9129794A8</PackageCertificateThumbprint>
-    <AppxPackageDir>D:\Data\Progra\C#\RawParser\Bin\AppPackages\</AppxPackageDir>
+    <AppxPackageDir>E:\Data\Progra\C#\RawParser\Source\RawParser\bin\</AppxPackageDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -139,13 +139,22 @@
     <Compile Include="Model\Base\DictionnaryFromFileUShort.cs" />
     <Compile Include="Model\Base\DictionnaryFromFile.cs" />
     <Compile Include="Model\Base\StreamHelper.cs" />
+    <Compile Include="Model\Effect\Color.cs" />
+    <Compile Include="Model\Effect\Curve.cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
+    <Compile Include="Model\Effect\Rotate.cs" />
+    <Compile Include="Model\Encoder\JpegEncoder.cs" />
+    <Compile Include="Model\Encoder\PpmEncoder.cs" />
     <Compile Include="Model\Format\IFD\Tag.cs" />
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Image\JpegHelper.cs" />
+    <Compile Include="Model\Image\ImageEffect.cs" />
+    <Compile Include="Model\Parser\Export\TiffWriter.cs" />
+    <Compile Include="Model\Parser\JPGParser.cs" />
+    <Compile Include="View\UIHelper\UIImageHelper.cs" />
     <Compile Include="Model\Parser\Nikon\LinearisationTable.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
-    <Compile Include="Model\Settings\Settings.cs" />
+    <Compile Include="Model\Base\Settings\SettingStorage.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -154,7 +163,7 @@
     <Compile Include="Model\Format\IFD\Header.cs" />
     <Compile Include="Model\Format\IFD\IFD.cs" />
     <Compile Include="Model\Parser\Nikon\NikonMakerNote.cs" />
-    <Compile Include="Model\Reader\BinaryReaderBE.cs" />
+    <Compile Include="Model\Base\Reader\BinaryReaderBE.cs" />
     <Compile Include="Model\Parser\DNGParser.cs" />
     <Compile Include="Model\Parser\NEFParser.cs" />
     <Compile Include="Model\Parser\AParser.cs" />
@@ -234,7 +243,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Model\Parser\Export\" />
+    <Folder Include="RawParser\" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
