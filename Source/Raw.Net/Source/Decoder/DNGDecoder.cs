@@ -608,7 +608,7 @@ namespace RawNet
             if (mRaw.dim.area() <= 0)
                 throw new RawDecoderException("DNG Decoder: No image left after crop");
 
-            /*
+
             // Apply stage 1 opcodes
             if (applyStage1DngOpcodes)
             {
@@ -617,8 +617,8 @@ namespace RawNet
                     // Apply stage 1 codes
                     try
                     {
-                        DngOpcodes codes = new DngOpcodes(raw.getEntry(TagType.OPCODELIST1));
-                        mRaw = codes.applyOpCodes(mRaw);
+                        //DngOpcodes codes = new DngOpcodes(raw.getEntry(TagType.OPCODELIST1));
+                        //mRaw = codes.applyOpCodes(mRaw);
                     }
                     catch (RawDecoderException e)
                     {
@@ -627,7 +627,6 @@ namespace RawNet
                     }
                 }
             }
-            */
 
             // Linearization
             Tag lintable = raw.getEntry(TagType.LINEARIZATIONTABLE);
@@ -658,6 +657,31 @@ namespace RawNet
             // Set black
             setBlack(raw);
 
+            //convert to linear value
+            //TODO
+            double maxVal = Math.Pow(2, mRaw.colorDepth);
+            for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)
+            {
+                for (int x = mRaw.mOffset.x; x < mRaw.dim.x + mRaw.mOffset.x; x++)
+                {
+                    int pos = y * mRaw.dim.x + x;
+                    double val;
+                    //Linearisation
+                    if (mRaw.table != null)
+                        val = mRaw.table.tables[mRaw.rawData[pos]];
+                    else val = mRaw.rawData[pos];
+                    //Black sub
+                    val -= mRaw.blackLevelSeparate[((y % 2) * 2) + x % 2];
+                    //Rescaling
+                    val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[((y % 2) * 2) + x % 2]);
+                    //Clip
+                    if (val > 1) val = 1;
+                    else if (val < 0) val = 0;
+                    val *= maxVal;
+                    //rescale to colordepth of the original                        
+                    mRaw.rawData[pos] = (ushort)val;
+                }
+            }
             // Apply opcodes to lossy DNG 
             if (compression == 0x884c && !uncorrectedRawValues)
             {
@@ -683,33 +707,6 @@ namespace RawNet
                     mRaw.whitePoint = 65535;
                 }*/
             }
-            else
-            {
-                double maxVal = Math.Pow(2, mRaw.colorDepth);
-                //convert to linear value
-                //TODO
-                for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)
-                {
-                    for (int x = mRaw.mOffset.x; x < mRaw.dim.x + mRaw.mOffset.x; x++)
-                    {
-                        int pos = y * mRaw.dim.x + x;
-                        //Linearisation
-                        double val = mRaw.table.tables[mRaw.rawData[pos]];
-
-                        //Black sub
-                        val -= mRaw.blackLevelSeparate[((y % 2) * 2) + x % 2];
-                        //Rescaling
-                        val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[((y % 2) * 2) + x % 2]);
-                        //Clip
-                        if (val > 1) val = 1;
-                        else if (val < 0) val = 0;
-                        //rescale to colordepth of the original
-                        val *= maxVal;
-                        mRaw.rawData[pos]= (ushort)val;
-                    }
-                }
-            }
-
             return mRaw;
         }
 
