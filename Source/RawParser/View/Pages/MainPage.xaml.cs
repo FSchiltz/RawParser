@@ -14,12 +14,14 @@ using Windows.Storage.Provider;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using System.Runtime.InteropServices;
-using System.Text;
 using RawParser.View.UIHelper;
 using RawParser.Image;
 using RawParser.Parser;
 using RawParser.Effect;
 using RawParser.Model.Settings;
+using RawParser.Model.Encoder;
+using Windows.UI.ViewManagement;
+using Windows.Foundation;
 
 namespace RawParser
 {
@@ -41,19 +43,22 @@ namespace RawParser
         public double pageHeight;
         private int currentImageDisplayedHeight;
         private int currentImageDisplayedWidth;
-        private int[] value = new int[256];
-
         bool cameraWB = true;
-        private bool ExposuredragStarted;
-        private bool WBdragStarted;
 
         public MainPage()
         {
             InitializeComponent();
-            Settings.InitSettings();
+            SettingStorage.init();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
-
+            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
+            if(VisualStateGroupeMainUI.CurrentState == narrowState)
+            {
+                ChangeUIForMobile(wideState, narrowState);
+            }else if(VisualStateGroupeMainUI.CurrentState == mediumState)
+            {
+                ChangeUIForMobile(wideState, mediumState);
+            }
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -63,7 +68,9 @@ namespace RawParser
             filePicker.SuggestedStartLocation = PickerLocationId.ComputerFolder;
             filePicker.FileTypeFilter.Add(".nef");
             filePicker.FileTypeFilter.Add(".tiff");
+            filePicker.FileTypeFilter.Add(".tif");
             filePicker.FileTypeFilter.Add(".dng");
+            filePicker.FileTypeFilter.Add(".cr2");
             StorageFile file = await filePicker.PickSingleFileAsync();
             if (file != null)
             {
@@ -103,11 +110,17 @@ namespace RawParser
 
         private async void enableEditingControl(bool v)
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher
-                 .RunAsync(CoreDispatcherPriority.Normal, () =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      colorTempSlider.IsEnabled = v;
+                     colorTintSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
+                     ShadowSlider.IsEnabled = v;
+                     HighLightSlider.IsEnabled = v;
+                     //gammaSlider.IsEnabled = v;
+                     contrastSlider.IsEnabled = v;
+                     brightnessSlider.IsEnabled = v;
+                     saturationSlider.IsEnabled = v;
                  });
         }
 
@@ -115,7 +128,6 @@ namespace RawParser
          * For the zoom of the image
          * 
          */
-
         private void PageSizeChanged(object sender, SizeChangedEventArgs e)
         {
             pageWidth = e.NewSize.Width;
@@ -129,6 +141,7 @@ namespace RawParser
             AParser parser;
             switch (file.FileType.ToUpper())
             {
+
                 case ".NEF":
                     parser = new NEFParser();
                     break;
@@ -136,10 +149,15 @@ namespace RawParser
                     parser = new DNGParser();
                     break;
                 case ".TIFF":
-                    parser = new DNGParser();
+                case ".TIF":
+                    parser = new TiffParser();
+                    break;
+                case ".JPG":
+                case ".JPEG":
+                    parser = new JPGParser();
                     break;
                 default:
-                    throw new System.Exception("File not supported"); //todo change exception types
+                   throw new System.Exception("File not supported"); //todo change exception types
             }
 
             //Add a loading screen
@@ -151,78 +169,91 @@ namespace RawParser
             {
                 using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                 {
-                    raw = new RawImage();
-                    raw.fileName = file.DisplayName;
-
-                    //Set the stream
-                    parser.setStream(stream);
-
-                    //read the thumbnail
-                    raw.thumbnail = parser.parseThumbnail();
-                    displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
-
-                    //read the preview
-                    parser.parsePreview();
-                    //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
-
-                    //read the exifi
-                    raw.exif = parser.parseExif();
-                    displayExif();
-                    //read the data 
-                    raw.height = parser.height;
-                    raw.width = parser.width;
-                    raw.colorDepth = parser.colorDepth;
-                    raw.cfa = parser.cfa;
-                    raw.camMul = parser.camMul;
-                    raw.rawData = parser.parseRAWImage();
-                    raw.camMul = parser.camMul;
-
-                    Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
-
-                    //activate the editing control
-                    enableEditingControl(true);
-
-                    //create a small image from raw to display
-                    bool autoFactor = Settings.getBoolSetting("autoPreviewFactor");
-                    int previewFactor = 0;
-                    if (autoFactor)
+                    try
                     {
-                        if (raw.height > raw.width)
+                        raw = new RawImage();
+                        raw.fileName = file.DisplayName;
+
+                        parser.Parse(stream);
+
+                        //read the thumbnail
+
+                        raw.thumbnail = parser.parseThumbnail();
+                        if (raw.thumbnail != null) displayImage(JpegHelper.getJpegInArray(raw.thumbnail));
+
+                        //read the preview
+                        //parser.parsePreview();
+                        //displayImage(RawImage.getImageAsBitmap(parser.parsePreview()));
+
+                        //read the exifs
+                        raw.exif = parser.parseExif();
+                        if (raw.exif != null) displayExif();
+
+                        
+                        //read the data 
+                        raw.rawData = parser.parseRAWImage();
+                        if (raw.rawData == null) throw new FormatException("Image not compatible");
+                        raw.height = parser.height;
+                        raw.width = parser.width;
+                        raw.colorDepth = parser.colorDepth;
+                        raw.cfa = parser.cfa;
+                        raw.camMul = parser.camMul;
+                        raw.curve = parser.curve;                   
+
+                        //demos                                        
+                        //if (raw.cfa != null)
+                         //   Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
+
+                        //activate the editing control
+                        enableEditingControl(true);
+
+                        //create a small image from raw to display
+                        bool autoFactor = SettingStorage.autoPreviewFactor;
+                        int previewFactor = 0;
+                        if (autoFactor)
                         {
-                            previewFactor = (int)(raw.height / 720);
+                            if (raw.height > raw.width)
+                            {
+                                previewFactor = (int)(raw.height / 720);
+                            }
+                            else
+                            {
+                                previewFactor = (int)(raw.width / 1080);
+                            }
+                            int start = 1;
+                            for (; previewFactor > (start << 1); start <<= 1) ;
+                            if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
+                            else previewFactor <<= 1;
                         }
                         else
                         {
-                            previewFactor = (int)(raw.width/1080);
+                            previewFactor = SettingStorage.previewFactor;
                         }
-                    }
-                    else
-                    {
-                        previewFactor = Settings.getIntSetting("previewFactor");               
-                    
-                    }
-                    raw.previewHeight = (uint)(raw.height / previewFactor);
-                    raw.previewWidth = (uint)(raw.width / previewFactor);
-                    raw.previewData = new uint[raw.previewHeight * raw.previewWidth * 3];
-                    for (int i = 0; i < raw.previewHeight; i++)
-                    {
-                        for (int j = 0; j < raw.previewWidth; j++)
+                        raw.previewHeight = (uint)(raw.height / previewFactor);
+                        raw.previewWidth = (uint)(raw.width / previewFactor);
+                        raw.previewData = new ushort[raw.previewHeight * raw.previewWidth * 3];
+                        for (int i = 0; i < raw.previewHeight; i++)
                         {
-                            raw.previewData[((i * raw.previewWidth) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor];
-                            raw.previewData[(((i * raw.previewWidth) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 1];
-                            raw.previewData[(((i * raw.previewWidth) + j) * 3) + 2] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 2];
+                            for (int j = 0; j < raw.previewWidth; j++)
+                            {
+                                raw.previewData[((i * raw.previewWidth) + j) * 3] = raw.rawData[((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor];
+                                raw.previewData[(((i * raw.previewWidth) + j) * 3) + 1] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 1];
+                                raw.previewData[(((i * raw.previewWidth) + j) * 3) + 2] = raw.rawData[(((i * previewFactor * raw.previewWidth) + j) * 3 * previewFactor) + 2];
+                            }
                         }
+                        updatePreview();
+
+                        //dispose
+                        file = null;
+                        parser = null;
+                        
                     }
-                    updatePreview();
-
-
-
-                    //dispose
-                    file = null;
-                    parser = null;
+                    catch (FormatException e)
+                    {
+                        ExceptionDisplay.display(e.Message);
+                    }
                 }
-                await CoreApplication.MainView.CoreWindow.Dispatcher
-                            .RunAsync(CoreDispatcherPriority.Normal, () =>
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
                                 //Do some UI-code that must be run on the UI thread.
                                 //Hide the loading screen
@@ -269,35 +300,12 @@ namespace RawParser
             splitView.IsPaneOpen = !splitView.IsPaneOpen;
         }
 
-        public async void displayImage(SoftwareBitmap image)
-        {
-            if (image != null)
-            {
-                using (image)
-                {
-                    await
-                        CoreApplication.MainView.CoreWindow.Dispatcher
-                            .RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                //display the image preview
-                                WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                                image.CopyToBuffer(bitmap.PixelBuffer);
-                                imageBox.Source = bitmap;
-                                currentImageDisplayedHeight = bitmap.PixelHeight;
-                                currentImageDisplayedWidth = bitmap.PixelWidth;
-                                setScrollProperty();
-                            });
-                }
-            }
-        }
-
         private void setScrollProperty()
         {
             if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
             {
                 float x = 0;
-                double relativeBorder = Settings.geDoubleSetting("imageBoxBorder");
+                double relativeBorder = SettingStorage.imageBoxBorder;
                 if ((currentImageDisplayedWidth / currentImageDisplayedHeight) < (imageDisplayScroll.ActualWidth / imageDisplayScroll.ActualHeight))
                 {
                     x = (float)(imageDisplayScroll.ViewportWidth /
@@ -314,7 +322,7 @@ namespace RawParser
                 }
                 if (x < 0.1) x = 0.1f;
                 else if (x > 1) x = 1;
-                imageDisplayScroll.MinZoomFactor = x;
+                imageDisplayScroll.MinZoomFactor = 0.1f;
                 imageDisplayScroll.MaxZoomFactor = x + 10;
                 //imageDisplayScroll.ZoomToFactor(x);
                 imageDisplayScroll.InvalidateMeasure();
@@ -340,11 +348,9 @@ namespace RawParser
 
         private async void saveButton_Click(object sender, RoutedEventArgs e)
         {
-            string format = Settings.getStringSetting("saveFormat");
-
             //TODO reimplement correclty
             //Just for testing purpose for now
-            if (raw.rawData != null)
+            if (raw?.rawData != null)
             {
                 var savePicker = new FileSavePicker
                 {
@@ -352,70 +358,93 @@ namespace RawParser
                     SuggestedFileName = raw.fileName
                 };
                 // Dropdown of file types the user can save the file as
-                savePicker.FileTypeChoices.Add("Image file", new List<string>() { format });
+                savePicker.FileTypeChoices.Add("Jpeg image file", new List<string>() { ".jpg" });
+                savePicker.FileTypeChoices.Add("PNG image file", new List<string>() { ".png" });
+                savePicker.FileTypeChoices.Add("PPM image file", new List<string>() { ".ppm" });
+                savePicker.FileTypeChoices.Add("TIFF image file", new List<string>() { ".tiff" });
+                savePicker.FileTypeChoices.Add("BitMap image file", new List<string>() { ".bmp" });
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
+
 
                 progressDisplay.Visibility = Visibility.Visible;
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
                 var exposure = exposureSlider.Value;
+                int temperature = (int)colorTempSlider.Value;
                 var temp = (int)colorTempSlider.Value;
                 var task = Task.Run(async () =>
                 {
-
-                    //TODO apply to the real image the correction
-                    //apply the exposure
-                    Luminance.Exposure(ref raw.rawData, raw.height, raw.width, exposure);
-                    //apply the temperature (not yet because slider is not set to correct temp)
-                    /*if (colorTempchanged)
-                        Balance.WhiteBalance(ref raw.rawData, raw.colorDepth, raw.height, raw.width, temp);
-                    colorTempchanged = false;*/
-                    //Check if clipping
-                    Luminance.Clip(ref raw.rawData, raw.height, raw.width, (ushort)Math.Pow(2, raw.colorDepth));
+                    ushort[] copyOfimage = new ushort[raw.rawData.Length];
+                    for (int i = 0; i < raw.rawData.Length; i++) copyOfimage[i] = raw.rawData[i];
+                    applyUserModif(ref copyOfimage, raw.height, raw.width, raw.colorDepth);
 
                     // write to file
-                    if (format == ".jpg")
+                    if (file.FileType == ".jpg")
                     {
                         using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
                             int[] t = new int[3];
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
+                            var x = encoder.BitmapProperties;
+                            SoftwareBitmap bitmap = null;
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
                                 //Do some UI-code that must be run on the UI thread.
-                                encoder.SetSoftwareBitmap(raw.getImageRawAs8bitsBitmap(null, ref t));
-
+                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
+                                encoder.SetSoftwareBitmap(bitmap);
                             });
                             await encoder.FlushAsync();
+                            encoder = null;
+                            bitmap.Dispose();
                         }
                     }
-                    else if (format == ".ppm")
+                    else if (file.FileType == ".png")
                     {
-                        var str = await file.OpenStreamForWriteAsync();
-                        var stream = new StreamWriter(str, Encoding.ASCII);
-                        stream.Write("P3\r\n" + raw.width + " " + raw.height + " 255 \r\n");
-                        for (int i = 0; i < raw.height; i++)
+                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
-                            for (int j = 0; j < raw.width; j++)
+                            int[] t = new int[3];
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, filestream);
+                            SoftwareBitmap bitmap = null;
+                            //Needs to run in the UI thread because fuck performance
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
-                                ushort x = raw.rawData[(int)(((i * raw.width) + j) * 3)];
-                                byte y = (byte)(x >> 6);
-                                stream.Write(y + " ");
-                                x = raw.rawData[(int)(((i * raw.width) + j) * 3) + 1];
-                                y = (byte)(x >> 6);
-                                stream.Write(y + " ");
-                                x = raw.rawData[(int)(((i * raw.width) + j) * 3) + 2];
-                                y = (byte)(x >> 6);
-                                stream.Write(y + " ");
-                            }
-                            stream.Write("\r\n");
+                                //Do some UI-code that must be run on the UI thread.
+                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
+                                encoder.SetSoftwareBitmap(bitmap);
+                            });
+                            await encoder.FlushAsync();
+                            encoder = null;
+                            bitmap.Dispose();
                         }
-                        str.Dispose();
                     }
-                    else throw new FormatException("Format not supported: " + format);
+                    else if (file.FileType == ".bmp")
+                    {
+                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
+                        {
+                            int[] t = new int[3];
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.BmpEncoderId, filestream);
+                            SoftwareBitmap bitmap = null;
+                            //Needs to run in the UI thread because fuck performance
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                            {
+                                //Do some UI-code that must be run on the UI thread.
+                                bitmap = RawImage.getImageAs8bitsBitmap(ref copyOfimage, raw.height, raw.width, raw.colorDepth, null, ref t, false, false);
+                                encoder.SetSoftwareBitmap(bitmap);
+                            });
+                            await encoder.FlushAsync();
+                            encoder = null;
+                            bitmap.Dispose();
+                        }
+                    }
+                    else if (file.FileType == ".ppm")
+                    {
+                        Stream str = await file.OpenStreamForWriteAsync();
+                        PpmEncoder.WriteToFile(str, ref copyOfimage, raw.height, raw.width, raw.colorDepth);
+                    }
+                    else throw new FormatException("Format not supported: " + file.FileType);
                     // Let Windows know that we're finished changing the file so
                     // the other app can update the remote version of the file.
                     // Completing updates may require Windows to ask for user input.
@@ -437,53 +466,51 @@ namespace RawParser
             }
         }
 
+        private void displayImage(SoftwareBitmap image)
+        {
+            if (image != null)
+            {
+                Task t = Task.Run(async () =>
+                {
+                    using (image)
+                    {
+                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                                {
+                                    //Do some UI-code that must be run on the UI thread.
+                                    //display the image preview
+                                    imageBox.Source = null;
+                                    WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                                    image.CopyToBuffer(bitmap.PixelBuffer);
+                                    imageBox.Source = bitmap;
+                                    currentImageDisplayedHeight = bitmap.PixelHeight;
+                                    currentImageDisplayedWidth = bitmap.PixelWidth;
+                                    setScrollProperty();
+                                });
+                    }
+                });
+            }
+        }
+
         private void updatePreview()
         {
             //display the histogram                    
             Task histoTask = Task.Run(async () =>
             {
-                //get all the value
-                double exposure = 0;
-                double temperature = 0;
-                await CoreApplication.MainView.CoreWindow.Dispatcher
-                .RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    exposure = exposureSlider.Value;
-                    temperature = colorTempSlider.Value;
-                });
-                uint[] copyofpreview;
-                //create a copy of the preview
-                lock (raw.previewData)
-                {
-                    copyofpreview = new uint[raw.previewData.Length];
-                    for (int i = 0; i < raw.previewData.Length; i++) copyofpreview[i] = raw.previewData[i];
-
-
-
-                    //aply all thetransformation on it
-
-                    Luminance.Exposure(ref copyofpreview, raw.previewHeight, raw.previewWidth, exposure);
-                    if (cameraWB)
-                    {
-                        Balance.scaleColor(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.dark, raw.saturation, raw.camMul);
-                    }
-                    else
-                    {
-                        ushort[] mul = new ushort[4];
-                        Balance.calculateRGB((int)colorTempSlider.Value,out  mul[0],out  mul[2], out mul[1]);
-                        Balance.scaleColor(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.dark, raw.saturation, raw.camMul);
-                    }
-                }
+                int[] value = new int[256];
+                ushort[] copyofpreview = new ushort[raw.previewData.Length];
+                for (int i = 0; i < copyofpreview.Length; i++) copyofpreview[i] = raw.previewData[i];
+                applyUserModif(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth);
                 SoftwareBitmap bitmap = null;
-                //Needs to run in UI thread because fuck it
+                //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher
                  .RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      histoLoadingBar.Visibility = Visibility.Visible;
-                     bitmap = raw.getImagePreviewAs8bitsBitmapWithCopyOfData(ref copyofpreview, null, ref value);
+                     //Writeablebitmap use BGRA
+                     bitmap = RawImage.getImageAs8bitsBitmap(ref copyofpreview, raw.previewHeight, raw.previewWidth, raw.colorDepth, null, ref value, true, true);
                  });
                 displayImage(bitmap);
-                Histogram.Create(value, raw.colorDepth, histogramCanvas);
+                Histogram.Create(value, raw.colorDepth, raw.previewHeight, raw.previewWidth, histogramCanvas);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     histoLoadingBar.Visibility = Visibility.Collapsed;
@@ -491,56 +518,46 @@ namespace RawParser
             });
         }
 
-        #region ExposureSlider
-        private void exposureSlider_DragStart(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        /**
+         * Apply the change over the image preview
+         */
+        private void applyUserModif(ref ushort[] image, uint imageHeight, uint imageWidth, ushort colorDepth)
         {
-            ExposuredragStarted = true;
-        }
-
-        private void exposureSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (raw?.previewData != null)
+            ImageEffect effect = new ImageEffect();
+            //get all the value 
+            Task t = Task.Run(async () =>
             {
-                updatePreview();
-                ExposuredragStarted = false;
-            }
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    effect.exposure = exposureSlider.Value;
+                    effect.temperature = colorTempSlider.Value - 1;
+                    effect.tint = colorTintSlider.Value - 1;
+                    effect.gamma = gammaSlider.Value;
+                    effect.contrast = contrastSlider.Value / 10;
+                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
+                    effect.shadow = ShadowSlider.Value;
+                    effect.hightlight = HighLightSlider.Value;
+                    effect.saturation = 1 + saturationSlider.Value / 100;
+                });
+            });
+            t.Wait();
+            effect.mul = raw.camMul;
+            effect.cameraWB = cameraWB;
+            effect.exposure = Math.Pow(2, effect.exposure);
+            effect.camCurve = raw.curve;
+            effect.applyModification(ref image, imageHeight, imageWidth, colorDepth);
         }
-
-        private void exposureSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-        {
-            if (raw?.previewData != null && ExposuredragStarted)
-            {
-                updatePreview();
-            }
-        }
-        #endregion
 
         #region WBSlider
-        private void WBSlider_DragStart(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            WBdragStarted = true;
-        }
-
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (raw?.previewData != null)
             {
-                WBdragStarted = false;
                 cameraWB = false;
-                cameraWBCheck.IsEnabled = false;
-                updatePreview();          
-            }
-        }
-
-        private void colorTempSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-        {
-            if (raw?.previewData != null && WBdragStarted)
-            {
-                cameraWB = false;
-                cameraWBCheck.IsEnabled = false;
+                cameraWBCheck.IsEnabled = true;
                 updatePreview();
             }
-        }      
+        }
 
         private void cameraWBCheck_Click(object sender, RoutedEventArgs e)
         {
@@ -549,5 +566,38 @@ namespace RawParser
             updatePreview();
         }
         #endregion
+
+        private void Slider_PointerCaptureLost(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (raw?.previewData != null)
+            {
+                updatePreview();
+            }
+        }
+
+        private void VisualStateGroup_CurrentStateChanged(object sender, VisualStateChangedEventArgs e)
+        {
+            ChangeUIForMobile(e.OldState, e.NewState);
+        }
+
+        private void ChangeUIForMobile(VisualState oldState, VisualState newState)
+        {
+            if (newState == narrowState)
+            {
+                PivotGrid.Children.Remove(ControlPivot);
+                Grid.SetRow(ControlPivot, 1);
+                MainGrid.Children.Add(ControlPivot);
+               // MainGridRow1.Height = new GridLength(2,GridUnitType.Star);
+               // MainGridRow2.Height = new GridLength(3, GridUnitType.Star);
+            }
+            else if (oldState == narrowState)
+            {
+                MainGrid.Children.Remove(ControlPivot);
+                Grid.SetRow(ControlPivot, 0);                
+                PivotGrid.Children.Add(ControlPivot);
+               // MainGridRow1.Height = new GridLength(1, GridUnitType.Star);
+                MainGridRow2.Height = new GridLength(0, GridUnitType.Star);
+            }
+        }
     }
 }

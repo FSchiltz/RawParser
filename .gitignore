@@ -35,3 +35,6 @@ Source/RawParser/project.lock.json
 Source/RawParser/bin/*
 Source/RawParser/obj/*
 Source/RawParser/AppPackages/*
+*.vspx
+*/.vs/*
+*.opendb

@@ -9,15 +9,17 @@
     SizeChanged="PageSizeChanged">
 
     <Page.BottomAppBar>
-        <CommandBar >
+        <CommandBar x:Name="commandBar" >
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
-            <AppBarButton x:Name="rotateLeftButton" 
+            <AppBarButton IsEnabled="False" 
+                x:Name="rotateLeftButton" 
                           Icon="Undo"
-                          Label="Turn left" 
+                          Label="Rotate left" 
                           VerticalAlignment="Top" FontSize="12" Width="48"/>
-            <AppBarButton x:Name="rotateRightButton" 
+            <AppBarButton IsEnabled="False" 
+                          x:Name="rotateRightButton" 
                           Icon="Redo"
                           Label="Rotate right" 
                           VerticalAlignment="Top" FontSize="12" Width="48"/>
@@ -32,7 +34,8 @@
                           Label="Save" 
                           Click="saveButton_Click"
                           VerticalAlignment="Top"/>
-            <AppBarButton x:Name="shareButton" 
+            <AppBarButton IsEnabled="False" 
+                          x:Name="shareButton" 
                           Icon="Link"
                           Label="Share" 
                           VerticalAlignment="Top"/>
@@ -44,16 +47,18 @@
                           Click="appbarShowSplitClick" Icon="Back" FontSize="12" Width="40"/>
             <CommandBar.SecondaryCommands>
                 <AppBarButton x:Name="settingsButton2" Icon="Setting" Label="Setting" Click="appbarSettingClick"/>
-
-                <AppBarButton x:Name="saveButton2" Click="saveButton_Click"  Icon="SaveLocal" Label="Save" VerticalAlignment="Top"/>
                 <AppBarButton x:Name="shareButton2" Icon="Link" Label="Share" VerticalAlignment="Top"/>
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
 
-    <Grid >
+    <Grid x:Name="MainGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="MainGridRow1" />
+            <RowDefinition x:Name="MainGridRow2" />
+        </Grid.RowDefinitions>
         <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
+            <VisualStateGroup x:Name="VisualStateGroupeMainUI" CurrentStateChanged="VisualStateGroup_CurrentStateChanged">
                 <VisualState x:Name="wideState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="1080" />
@@ -61,17 +66,14 @@
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
                         <Setter Target="splitView.DisplayMode" Value="Inline" />
-
                         <Setter Target="showSplitPanelButton.Visibility" Value="Collapsed" />
-
-                        <Setter Target="saveButton.Visibility" Value="Visible" />
                         <Setter Target="shareButton.Visibility" Value="Visible" />
                         <Setter Target="settingsButton.Visibility" Value="Visible" />
-
-                        <Setter Target="saveButton2.Visibility" Value="Collapsed" />
                         <Setter Target="shareButton2.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
                         <Setter Target="splitView.IsPaneOpen" Value="True" />
+
+                        <Setter Target="MainGridRow2.MaxHeight" Value="0"/>
                     </VisualState.Setters>
                 </VisualState>
 
@@ -82,18 +84,14 @@
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
                         <Setter Target="splitView.DisplayMode" Value="Overlay" />
-
                         <Setter Target="showSplitPanelButton.Visibility" Value="Visible" />
-
-                        <Setter Target="saveButton.Visibility" Value="Visible" />
                         <Setter Target="shareButton.Visibility" Value="Visible" />
                         <Setter Target="settingsButton.Visibility" Value="Visible" />
-
-                        <Setter Target="saveButton2.Visibility" Value="Collapsed" />
                         <Setter Target="shareButton2.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
-
                         <Setter Target="splitView.IsPaneOpen" Value="false" />
+
+                        <Setter Target="MainGridRow2.MaxHeight" Value="0"/>
                     </VisualState.Setters>
                 </VisualState>
 
@@ -105,21 +103,18 @@
                         <!-- To make the panel hidable when not enough screen size -->
                         <Setter Target="splitView.DisplayMode" Value="Overlay" />
                         <Setter Target="showSplitPanelButton.Visibility" Value="Visible" />
-
-                        <Setter Target="saveButton.Visibility" Value="Collapsed" />
                         <Setter Target="shareButton.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton.Visibility" Value="Collapsed" />
-
-                        <Setter Target="saveButton2.Visibility" Value="Visible" />
                         <Setter Target="shareButton2.Visibility" Value="Visible" />
                         <Setter Target="settingsButton2.Visibility" Value="Visible" />
-
                         <Setter Target="splitView.IsPaneOpen" Value="False" />
+
+                        <Setter Target="MainGridRow2.MaxHeight" Value="*"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <SplitView x:Name="splitView" PanePlacement="Right" DisplayMode="Inline" IsPaneOpen="True" PaneBackground="#FFF7F7F7">
+        <SplitView x:Name="splitView" DisplayMode="Inline" OpenPaneLength="360" PanePlacement="Right">
             <SplitView.Content>
                 <ScrollViewer x:Name="imageDisplayScroll" ZoomMode="Enabled" 
                             MinZoomFactor="1" 
@@ -131,52 +126,69 @@
                 </ScrollViewer>
             </SplitView.Content>
             <SplitView.Pane >
-                <Pivot>
-                    <PivotItem Header="Exposure">
-                        <StackPanel >
-                            <!--The histogram-->
-                            <TextBlock Foreground="Black" IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left" FontSize="18">
+                <Grid x:Name="PivotGrid">
+                    <Pivot x:Name="ControlPivot">
+                        <PivotItem Header="Exposure">
+                            <ScrollViewer VerticalContentAlignment="Stretch">
+                                <StackPanel Margin="0,0,16,0" >
+                                    <!--The histogram-->
+                                    <TextBlock Foreground="Black" IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left" FontSize="18">
                                 Histogram
-                            </TextBlock>
-                            <Border BorderBrush="#FF818181" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Canvas x:Name="histogramCanvas" Width="256" Height="200" Background="White">
-                                    <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}" Visibility="Collapsed"/>
-                                </Canvas>
-                            </Border>
-                            <TextBlock Foreground="Black" FontSize="22" >
-                                Exposure settings
-                            </TextBlock>
-                            <TextBlock FontSize="12">
-                                Exposure
-                            </TextBlock>
-                            <Slider x:Name="exposureSlider" PointerCaptureLost="exposureSlider_DragStop"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3" Margin="4,0,0,0"/>
-                            <TextBlock FontSize="12">
-                                Temperature
-                            </TextBlock>
-                            <Slider x:Name="colorTempSlider"  ValueChanged="colorTempSlider_ValueChanged" Width="300" Maximum="100000" Minimum="1000" LargeChange="1000" SmallChange="100" Value="1000" IsEnabled="False"/>
+                                    </TextBlock>
+                                    <Canvas x:Name="histogramCanvas" Width="256" Height="100" Background="White" >
+                                        <Canvas.Clip>
+                                            <RectangleGeometry Rect="0 0 256 100"/>
+                                        </Canvas.Clip>
+                                        <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}" Visibility="Collapsed"/>
+                                    </Canvas>
+                                    <TextBlock Foreground="Black" FontSize="16" >Exposure settings</TextBlock>
+                                    <TextBlock FontSize="12">Exposure</TextBlock>
+                                    <Slider x:Name="exposureSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3"/>
+                                    <TextBlock FontSize="12">Brightness</TextBlock>
+                                    <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False" StepFrequency="5"/>
+                                    <TextBlock FontSize="12"> Highlight</TextBlock>
+                                    <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
+                                    <TextBlock FontSize="12">Shadow
+                                    </TextBlock>
+                                    <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
 
-                            <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" x:Name="cameraWBCheck" HorizontalAlignment="Center">
-                                Use camera white balance
-                            </Button>
-                            <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
+                                    <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
 
-                        </StackPanel>
-                    </PivotItem>
-                    <PivotItem Header="Tools">
-                        <StackPanel Background="#FFF0F0F0">
-                        </StackPanel>
-                    </PivotItem>
-                    <PivotItem Header="Presets">
-                        <GridView Background="White" ></GridView>
-                    </PivotItem>
-                    <PivotItem Header="Exifs">
-                        <StackPanel>
-                            <TextBlock>Exifs data:</TextBlock>
-                            <ListView Background="#FFF0F0F0" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                <ItemsControl x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
-                                    <ItemsControl.ItemTemplate>
+                                    <TextBlock Foreground="Black" FontSize="16" >Color balance</TextBlock>
+                                    <TextBlock FontSize="12">Temperature</TextBlock>
+                                    <Slider x:Name="colorTempSlider"   PointerCaptureLost="WBSlider_DragStop"  Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
+                                    <Slider x:Name="colorTintSlider"    PointerCaptureLost="WBSlider_DragStop"  Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
+
+                                    <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" x:Name="cameraWBCheck" HorizontalAlignment="Center">Use camera white balance</Button>
+                                    <TextBlock FontSize="12">Saturation</TextBlock>
+                                    <Slider x:Name="saturationSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False"/>
+                                    <TextBlock FontSize="12">Vibrance</TextBlock>
+                                    <Slider x:Name="vibranceSlider"    PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
+
+                                    <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
+                                    <TextBlock Foreground="Black" FontSize="16" > Contraste balance</TextBlock>
+                                    <TextBlock FontSize="12">Gamma</TextBlock>
+                                    <Slider x:Name="gammaSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="6" Minimum="0.01" LargeChange="1" SmallChange="0.1" Value="1" IsEnabled="False" StepFrequency="0.01"/>
+                                    <TextBlock FontSize="12">Contrast</TextBlock>
+                                    <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="13" LargeChange="1" Value="10" Minimum="7" StepFrequency="0.01" IsEnabled="False" />
+                                    <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </PivotItem>
+                        <PivotItem Header="Tools">
+                            <StackPanel Background="#FFF0F0F0">
+                            </StackPanel>
+                        </PivotItem>
+                        <PivotItem Header="Presets">
+                            <GridView Background="White" ></GridView>
+                        </PivotItem>
+                        <PivotItem Header="Exifs">
+                            <StackPanel Margin="0,0,0,49">
+                                <TextBlock>Exifs data:</TextBlock>
+                                <ListView ScrollViewer.VerticalScrollBarVisibility="Visible" x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
+                                    <ListView.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid BorderBrush="#FF6A6A6A" BorderThickness="0,1,0,0" Background="{x:Null}" >
+                                            <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition />
                                                     <ColumnDefinition />
@@ -190,12 +202,12 @@
                                                 <TextBlock Grid.Column="1" Text="{Binding dataAsString}" IsTextSelectionEnabled="True" IsTapEnabled="False" IsDoubleTapEnabled="False" TextAlignment="Right" />
                                             </Grid>
                                         </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ListView>
-                        </StackPanel>
-                    </PivotItem>
-                </Pivot>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </StackPanel>
+                        </PivotItem>
+                    </Pivot>
+                </Grid>
             </SplitView.Pane>
         </SplitView>
 

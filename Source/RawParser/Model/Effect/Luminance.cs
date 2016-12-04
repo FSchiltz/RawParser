@@ -1,34 +1,55 @@
-﻿using System;
-
-namespace RawParser.Effect
+﻿namespace RawParser.Effect
 {
     class Luminance
     {
         private Luminance() { }
-        public static void Exposure(ref ushort[] image, uint h, uint w, double value)
+
+        /*
+            value = Math.Pow(2, exposure as stop);
+        */
+        public static void Exposure(ref double r, ref double g, ref double b, double value)
         {
-            double v = Math.Pow(2, value);
-            for (int i = 0; i < h * w * 3; ++i)
-            {
-                image[i] = (ushort)(image[i] * v);
-            }
+            r *= value;
+            g *= value;
+            b *= value;
         }
 
-        public static void Clip(ref ushort[] image, uint h, uint w, ushort maxValue)
+        public static void Contraste(ref double r, ref double g, ref double b, uint maxValue, double value)
         {
-            for (int i = 0; i < w * h * 3; ++i)
-            {
-                if (image[i] > maxValue) image[i] = maxValue;
-            }
+            r /= maxValue;
+            r -= 0.5;
+            r *= value * 1.0;
+            r += 0.5;
+            r *= maxValue;
+
+            g /= maxValue;
+            g -= 0.5;
+            g *= value * 1.0;
+            g += 0.5;
+            g *= maxValue;
+
+            b /= maxValue;
+            b -= 0.5;
+            b *= value * 1.0;
+            b += 0.5;
+            b *= maxValue;
         }
 
-        internal static void Exposure(ref uint[] image, uint h, uint w, double value)
+        public static void Clip(ref double red, ref double green, ref double blue,uint maxValue)
         {
-            double v = Math.Pow(2, value);
-            for (int i = 0; i < h * w * 3; ++i)
-            {
-                image[i] = (uint)(image[i] * v);
-            }
+            if (red > maxValue) red = maxValue;
+            if (green > maxValue) green = maxValue;
+            if (blue > maxValue) blue = maxValue;
+            if (red < 0) red = 0;
+            if (green < 0) green = 0;
+            if (blue < 0) blue = 0;
+        }
+
+        internal static void Brightness(ref double red, ref double green, ref double blue, double brightness)
+        {
+            red += brightness;
+            green += brightness;
+            blue += brightness;
         }
     }
 }

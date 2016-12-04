@@ -1,6 +1,5 @@
 ﻿using RawParser.Format.IFD;
 using RawParser.Reader;
-using System;
 
 namespace RawParser.Parser.Nikon
 {
@@ -16,6 +15,7 @@ namespace RawParser.Parser.Nikon
         public NikonMakerNote(TIFFBinaryReader buffer, uint offset, bool compression)
         {
             //read the header
+            buffer.BaseStream.Position = offset;
             stringMagic = "";
             this.offset = offset;
             for (int i = 0; i < 6; i++)
@@ -33,14 +33,14 @@ namespace RawParser.Parser.Nikon
                 buffer = new TIFFBinaryReaderRE(buffer.BaseStream);
                 //TODO see if need to move
             }
-            ifd = new IFD(buffer, header.TIFFoffset + 10 + offset, true, true);
-
+            ifd = new IFD(buffer, header.TIFFoffset + getOffset(), true, true);
+            //ifd = new IFD(buffer, (uint)buffer.BaseStream.Position, true, true);
             Tag previewOffsetTag;
-            if (!ifd.tags.TryGetValue(17, out previewOffsetTag))
+            if (ifd.tags.TryGetValue(17, out previewOffsetTag))
             {
-                throw new Exception("Preview Offset not found");
+                preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + getOffset(), true, false);
             }
-            preview = new IFD(buffer, (uint)previewOffsetTag.data[0] + offset + 10, true, false);
+            else preview = null; //no preview in this file
         }
 
         internal uint getOffset()
