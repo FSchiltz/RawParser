@@ -75,7 +75,11 @@
 
             <TextBlock TextWrapping="Wrap" FontSize="30" x:Uid="About" />
             <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Issue" />
+            
             <HyperlinkButton Content="https://github.com/arimhan/RawParser/issues" HorizontalAlignment="Left"/>
+            <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Privacy" />           
+            <HyperlinkButton Content="https://1drv.ms/b/s!Aiyg02v1U1oplYtcoMe7vPZj99Ha_g" HorizontalAlignment="Left"></HyperlinkButton>
+
         </StackPanel>
     </Grid>
 </Page>
