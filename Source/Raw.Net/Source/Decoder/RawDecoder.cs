@@ -118,12 +118,11 @@ namespace RawNet
         /*
          * return a byte[] containing an JPEG image or null if the file doesn't have a thumbnail
          */
-        public byte[] decodeThumb()
+        public Thumbnail decodeThumb()
         {
             try
             {
-                byte[] raw = decodeThumbInternal();
-                return raw;
+                return decodeThumbInternal();               
             }
             catch (TiffParserException e)
             {
@@ -972,7 +971,7 @@ namespace RawNet
         /* and there will not be any data in the mRaw image. */
         /* This function must be overridden by actual decoders. */
         protected abstract RawImage decodeRawInternal();
-        protected virtual byte[] decodeThumbInternal() { return null; }
+        protected virtual Thumbnail decodeThumbInternal() { return null; }
         protected abstract void decodeMetaDataInternal(CameraMetaData meta);
         protected abstract void checkSupportInternal(CameraMetaData meta);
     }

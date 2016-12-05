@@ -126,6 +126,7 @@
     <None Include="project.json" />
     <None Include="RawParser_StoreKey.pfx" />
     <None Include="RawParser_TemporaryKey.pfx" />
+    <PRIResource Include="Strings\fr-FR\Resources.resw" />
     <PRIResource Include="Strings\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
@@ -231,7 +232,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="RawParser\" />
-    <Folder Include="Strings\fr-FR\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Raw.Net\Raw.Net.csproj">
