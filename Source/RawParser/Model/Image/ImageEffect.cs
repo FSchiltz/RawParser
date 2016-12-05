@@ -31,7 +31,7 @@ namespace RawEditor
                 mul = new float[4];
                 //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
                 mul[0] = (float)(255 / temperature);
-                mul[1] = (float)(255.0 / tint);
+                mul[1] = (float)(255 / tint);
                 mul[2] = 1;
             }
 
@@ -80,7 +80,10 @@ namespace RawEditor
                     Balance.sRGBToRGB(ref blue, maxValue - 1);*/
 
                     //scale according to the white balance
-                    Balance.scaleColor(ref red, ref green, ref blue, mul);
+                    //Balance.scaleColor(ref red, ref green, ref blue, mul);
+                    red *= mul[0];
+                    green *= mul[1];
+                    blue *= mul[2];
                     //clip
                     Luminance.Clip(ref red, ref green, ref blue, maxValue);
                     double h = 0, s = 0, l = 0;
@@ -131,9 +134,9 @@ namespace RawEditor
                     {
                         mul = new float[4];
                         //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
-                        mul[0] = (float)(255 / temperature);
-                        mul[1] = (float)(255.0 / tint);
-                        mul[2] = 1;
+                        mul[2] = (float)(255 / temperature);
+                        mul[0] = (float)(255.0 / tint);
+                        mul[1] = 1;
                     }
 
                     //generate the curve            
@@ -183,7 +186,9 @@ namespace RawEditor
                             Balance.sRGBToRGB(ref blue, maxValue - 1);*/
 
                             //scale according to the white balance
-                            Balance.scaleColor(ref red, ref green, ref blue, mul);
+                            red *= mul[0];
+                            green *= mul[1];
+                            blue *= mul[2];
                             //clip
                             Luminance.Clip(ref red, ref green, ref blue, maxValue);
                             double h = 0, s = 0, l = 0;

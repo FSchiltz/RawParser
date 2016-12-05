@@ -172,11 +172,15 @@ namespace RawEditor
                     //read the exifs
                     displayExif();
                     //scale the value
-                    raw.scaleValues();
+                    //raw.scaleValues();
+
+                    //correctWB
+                    //raw.CorrectWB();
+
                     //demos   
                     if (raw.cfa != null && raw.cpp == 1)
                     {
-                        Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
+                        Demosaic.demos(ref raw, demosAlgorithm.Deflate);
                     }
                     createPreview();
                     updatePreview();
@@ -196,7 +200,6 @@ namespace RawEditor
 
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                                             {
-                                                //Do some UI-code that must be run on the UI thread.
                                                 //Hide the loading screen
                                                 progressDisplay.Visibility = Visibility.Collapsed;
                                             });

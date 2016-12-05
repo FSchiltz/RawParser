@@ -5,7 +5,6 @@ namespace RawNet
 {
     public enum CFAColor
     {
-        COLOR_MIN = 0,
         RED = 0,
         GREEN = 1,
         BLUE = 2,
@@ -84,7 +83,7 @@ namespace RawNet
             cfa = new CFAColor[size.area()];
             if (cfa == null)
                 throw new RawDecoderException("ColorFilterArray:setSize Unable to allocate memory");
-            Common.memset(cfa, CFAColor.UNKNOWN, (int)(size.area()));
+            //Common.memset(cfa, CFAColor.UNKNOWN, (int)(size.area()));
         }
 
         public CFAColor getColorAt(UInt32 x, UInt32 y)

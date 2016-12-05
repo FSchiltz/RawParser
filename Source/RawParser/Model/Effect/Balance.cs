@@ -106,14 +106,6 @@ namespace RawEditor.Effect
             }
         }*/
 
-
-        public static void scaleColor(ref double r, ref double g, ref double b, float[] mul)
-        {
-            r *= mul[0];
-            g *= mul[1];
-            b *= mul[2];
-        }
-
         public static void scaleGamma(ref double r, ref double g, ref double b, double gamma, uint maxValue)
         {
             r = maxValue * Math.Pow(r / maxValue, gamma);
