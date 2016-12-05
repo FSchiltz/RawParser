@@ -156,13 +156,16 @@
   <data name="Issue.Text" xml:space="preserve">
     <value>This app is currently work in progress. To report issue, go to</value>
   </data>
+  <data name="Legal.Text" xml:space="preserve">
+    <value>Legal:</value>
+  </data>
   <data name="OpenImage.Label" xml:space="preserve">
     <value>Open an Image</value>
   </data>
   <data name="Presets.Header" xml:space="preserve">
     <value>Presets</value>
   </data>
-  <data name="Privacy.Text" xml:space="preserve">
+  <data name="Privacy.Content" xml:space="preserve">
     <value>Privacy policy:</value>
   </data>
   <data name="RotateLeft.Label" xml:space="preserve">
