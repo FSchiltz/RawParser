@@ -17,7 +17,7 @@ namespace RawNet
         public UInt32 offsetY;
     };
 
-    class DngDecoder : RawDecoder
+    public class DngDecoder : RawDecoder
     {
         IFD mRootIFD;
         bool mFixLjpeg;
@@ -664,31 +664,31 @@ namespace RawNet
             Parallel.For(mRaw.mOffset.y, mRaw.dim.y + mRaw.mOffset.y, y =>
             //for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)
             {
-                 //int offset = ((y % 2) * 2);
-                 int realY = y * mRaw.dim.x;
-                 for (int x = mRaw.mOffset.x; x < mRaw.dim.x + mRaw.mOffset.x; x++)
-                 {
-                     int pos = realY + x;
-                     double val;
-                     //Linearisation
-                     if (mRaw.table != null)
-                         val = mRaw.table.tables[mRaw.rawData[pos]];
-                     else val = mRaw.rawData[pos];
-                     //Black sub
-                     //val -= mRaw.blackLevelSeparate[offset + x % 2];
-                     val -= mRaw.blackLevelSeparate[0];
-                     //Rescaling
-                     //val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[offset + x % 2]);
-                     val *= coeff;//change to take into consideration each individual blacklevel
-                                  //Clip
-                     if (val > maxVal) val = maxVal;
-                     else if (val < 0) val = 0;
-                     //val *= maxVal;
-                     //rescale to colordepth of the original                        
-                     mRaw.rawData[pos] = (ushort)val;
-                 }
-             });
-             //*/
+                //int offset = ((y % 2) * 2);
+                int realY = y * mRaw.dim.x;
+                for (int x = mRaw.mOffset.x; x < mRaw.dim.x + mRaw.mOffset.x; x++)
+                {
+                    int pos = realY + x;
+                    double val;
+                    //Linearisation
+                    if (mRaw.table != null)
+                        val = mRaw.table.tables[mRaw.rawData[pos]];
+                    else val = mRaw.rawData[pos];
+                    //Black sub
+                    //val -= mRaw.blackLevelSeparate[offset + x % 2];
+                    val -= mRaw.blackLevelSeparate[0];
+                    //Rescaling
+                    //val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[offset + x % 2]);
+                    val *= coeff;//change to take into consideration each individual blacklevel
+                                 //Clip
+                    if (val > maxVal) val = maxVal;
+                    else if (val < 0) val = 0;
+                    //val *= maxVal;
+                    //rescale to colordepth of the original                        
+                    mRaw.rawData[pos] = (ushort)val;
+                }
+            });
+            //*/
             // Apply opcodes to lossy DNG 
             if (compression == 0x884c && !uncorrectedRawValues)
             {
@@ -717,8 +717,190 @@ namespace RawNet
             return mRaw;
         }
 
-        protected override byte[] decodeThumbInternal()
+        protected override Thumbnail decodeThumbInternal()
         {
+            //find the preview IFD (usually the first if any)
+            try
+            {
+                List<IFD> potential = mRootIFD.getIFDsWithTag(TagType.NEWSUBFILETYPE);
+                if (potential != null || potential.Count != 0)
+                {
+                    IFD thumbIFD = null;
+                    for (int i = 0; i < potential.Count; i++)
+                    {
+                        var subFile = potential[i].getEntry(TagType.NEWSUBFILETYPE);
+                        if (subFile.getInt() == 1)
+                        {
+                            thumbIFD = potential[i];
+                            break;
+                        }
+                    }
+                    if (thumbIFD != null)
+                    {
+                        //there is a thumbnail
+                        UInt32 sample_format = 1;
+                        UInt32 bps = thumbIFD.getEntry(TagType.BITSPERSAMPLE).getUInt();
+
+                        if (thumbIFD.hasEntry(TagType.SAMPLEFORMAT))
+                            sample_format = thumbIFD.getEntry(TagType.SAMPLEFORMAT).getUInt();
+                        try
+                        {
+                            var dim = new iPoint2D()
+                            {
+                                x = thumbIFD.getEntry(TagType.IMAGEWIDTH).getInt(),
+                                y = thumbIFD.getEntry(TagType.IMAGELENGTH).getInt()
+                            };
+                        }
+                        catch (TiffParserException)
+                        {
+                            throw new RawDecoderException("DNG Decoder: Could not read basic image information.");
+                        }
+
+                        int compression = thumbIFD.getEntry(TagType.COMPRESSION).getShort();
+                        // Now load the image
+                        if (compression == 1)
+                        {  // Uncompressed.
+
+                            UInt32 cpp = thumbIFD.getEntry(TagType.SAMPLESPERPIXEL).getUInt();
+                            if (cpp > 4)
+                                throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
+                            
+
+                            Tag offsets = thumbIFD.getEntry(TagType.STRIPOFFSETS);
+                            Tag counts = thumbIFD.getEntry(TagType.STRIPBYTECOUNTS);
+                            UInt32 yPerSlice = thumbIFD.getEntry(TagType.ROWSPERSTRIP).getUInt();
+                            UInt32 width = thumbIFD.getEntry(TagType.IMAGEWIDTH).getUInt();
+                            UInt32 height = thumbIFD.getEntry(TagType.IMAGELENGTH).getUInt();
+
+                            if (counts.dataCount != offsets.dataCount)
+                            {
+                                throw new RawDecoderException("DNG Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
+                            }
+
+                            UInt32 offY = 0;
+                            List<DngStrip> slices = new List<DngStrip>();
+                            for (UInt32 s = 0; s < offsets.dataCount; s++)
+                            {
+                                DngStrip slice = new DngStrip();
+                                slice.offset = offsets.getUInt(s);
+                                slice.count = counts.getUInt(s);
+                                slice.offsetY = offY;
+                                if (offY + yPerSlice > height)
+                                    slice.h = height - offY;
+                                else
+                                    slice.h = yPerSlice;
+
+                                offY += yPerSlice;
+
+                                if (mFile.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                                    slices.Add(slice);
+                            }
+
+                            for (int i = 0; i < slices.Count; i++)
+                            {
+                                DngStrip slice = slices[i];
+                                TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, (uint)mFile.BaseStream.Length);
+                                iPoint2D size = new iPoint2D((int)width, (int)slice.h);
+                                iPoint2D pos = new iPoint2D(0, (int)slice.offsetY);
+
+                                bool big_endian = (thumbIFD.endian == Endianness.big);
+                                // DNG spec says that if not 8 or 16 bit/sample, always use big endian
+                                if (bps != 8 && bps != 16)
+                                    big_endian = true;
+                                try
+                                {
+                                    readUncompressedRaw(ref input, size, pos, (int)(mRaw.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
+                                }
+                                catch (IOException ex)
+                                {
+                                    
+                                        throw new RawDecoderException("DNG decoder: IO error occurred in first slice, unable to decode more. Error is: " + ex.Message);
+                                }
+                            }
+                        }
+                        else if (compression == 7 || compression == 0x884c)
+                        {
+
+                            // Let's try loading it as tiles instead
+
+                            uint cpp = (thumbIFD.getEntry(TagType.SAMPLESPERPIXEL).getUInt());
+
+                            if (sample_format != 1)
+                                throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported for compressed data.");
+
+                            DngDecoderSlices slices = new DngDecoderSlices(mFile, mRaw, compression);
+                            if (thumbIFD.hasEntry(TagType.TILEOFFSETS))
+                            {
+                                UInt32 tilew = thumbIFD.getEntry(TagType.TILEWIDTH).getUInt();
+                                UInt32 tileh = thumbIFD.getEntry(TagType.TILELENGTH).getUInt();
+                                if (tilew == 0 || tileh == 0)
+                                    throw new RawDecoderException("DNG Decoder: Invalid tile size");
+
+                                UInt32 tilesX = (uint)(mRaw.dim.x + tilew - 1) / tilew;
+                                UInt32 tilesY = (uint)(mRaw.dim.y + tileh - 1) / tileh;
+                                UInt32 nTiles = tilesX * tilesY;
+
+                                Tag offsets = thumbIFD.getEntry(TagType.TILEOFFSETS);
+                                Tag counts = thumbIFD.getEntry(TagType.TILEBYTECOUNTS);
+                                if (offsets.dataCount != counts.dataCount || offsets.dataCount != nTiles)
+                                    throw new RawDecoderException("DNG Decoder: Tile count mismatch: offsets:" + offsets.dataCount + " count:" + counts.dataCount + ", calculated:" + nTiles);
+
+                                slices.mFixLjpeg = mFixLjpeg;
+
+                                for (UInt32 y = 0; y < tilesY; y++)
+                                {
+                                    for (UInt32 x = 0; x < tilesX; x++)
+                                    {
+                                        DngSliceElement e = new DngSliceElement(offsets.getUInt(x + y * tilesX), counts.getUInt(x + y * tilesX), tilew * x, tileh * y);
+                                        e.mUseBigtable = tilew * tileh > 1024 * 1024;
+                                        slices.addSlice(e);
+                                    }
+                                }
+                            }
+                            else
+                            {  // Strips
+                                Tag offsets = thumbIFD.getEntry(TagType.STRIPOFFSETS);
+                                Tag counts = thumbIFD.getEntry(TagType.STRIPBYTECOUNTS);
+
+                                UInt32 yPerSlice = thumbIFD.getEntry(TagType.ROWSPERSTRIP).getUInt();
+
+                                if (counts.dataCount != offsets.dataCount)
+                                {
+                                    throw new RawDecoderException("DNG Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", stips:" + offsets.dataCount);
+                                }
+
+                                if (yPerSlice == 0 || yPerSlice > (UInt32)height)
+                                    throw new RawDecoderException("DNG Decoder: Invalid y per slice");
+
+                                UInt32 offY = 0;
+                                for (UInt32 s = 0; s < counts.dataCount; s++)
+                                {
+                                    DngSliceElement e = new DngSliceElement(offsets.getUInt(s), counts.getUInt(s), 0, offY);
+                                    e.mUseBigtable = yPerSlice * mRaw.dim.y > 1024 * 1024;
+                                    offY += yPerSlice;
+
+                                    if (mFile.isValid(e.byteOffset, e.byteCount)) // Only decode if size is valid
+                                        slices.addSlice(e);
+                                }
+                            }
+                            UInt32 nSlices = (uint)slices.slices.Count;
+                            if (nSlices == 0)
+                                throw new RawDecoderException("DNG Decoder: No valid slices found.");
+
+                            slices.decodeSlice();
+                            
+                        }
+                        else
+                        {
+                            throw new RawDecoderException("DNG Decoder: Unknown compression: " + compression);
+                        }
+                    }
+                }                
+            }
+            catch (Exception)
+            {
+                //thumbnail are optional so ignore all exception
+            }
             return null;
         }
     };

@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Windows.Graphics.Imaging;
 using System;
+using RawNet;
 
 namespace RawEditor
 {
@@ -82,5 +83,9 @@ namespace RawEditor
             return image;
         }
 
+        internal static void getThumbnailAsSoftwareBitmap(Thumbnail thumbnail)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -26,7 +26,7 @@ namespace RawNet
             reader = file;
         }
 
-        protected override byte[] decodeThumbInternal()
+        protected override Thumbnail decodeThumbInternal()
         {
             //find the preview ifd inside the makernote
             List<IFD> makernote = rootIFD.getIFDsWithTag((TagType)0x011);
@@ -46,7 +46,13 @@ namespace RawNet
             Tag makerNoteOffsetTag = exifs[0].getEntryRecursive((TagType)0x927C);
             if (makerNoteOffsetTag == null) return null;
             reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
-            return reader.ReadBytes(Convert.ToInt32(size.data[0]));
+            Thumbnail temp = new Thumbnail()
+            {
+                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                type = ThumbnailType.JPEG,
+                dim = new iPoint2D()
+            };
+            return temp;
         }
 
         protected override RawImage decodeRawInternal()

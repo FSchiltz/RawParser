@@ -35,7 +35,7 @@ namespace RawEditor
         private int currentImageDisplayedWidth;
         bool cameraWB = true;
         CameraMetaData metadata = null;
-        public byte[] thumbnail;
+        public Thumbnail thumbnail;
 
         public MainPage()
         {
@@ -162,7 +162,15 @@ namespace RawEditor
                         //read the thumbnail
                         Task.Run(() =>
                         {
-                            displayImage(JpegHelper.getJpegInArrayAsync(thumbnail));
+                            if (thumbnail.type == ThumbnailType.JPEG)
+                            {
+                                displayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data));
+                            }
+                            else if(thumbnail.type == ThumbnailType.RAW)
+                            {
+                                //this is a raw image in an array
+                                JpegHelper.getThumbnailAsSoftwareBitmap(thumbnail);
+                            }
                         });
                     }
 
