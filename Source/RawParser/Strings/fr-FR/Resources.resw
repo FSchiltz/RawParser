@@ -162,6 +162,9 @@
   <data name="Presets.Header" xml:space="preserve">
     <value>Presets</value>
   </data>
+  <data name="Privacy.Text" xml:space="preserve">
+    <value>Privacy policy:</value>
+  </data>
   <data name="RotateLeft.Label" xml:space="preserve">
     <value>Rotation à gauche</value>
   </data>

@@ -36,6 +36,7 @@ namespace RawEditor.Effect
 
         private static void Deflate(RawImage image)
         {
+            //TODO check if correct
             ushort[] deflated = new ushort[image.dim.x * image.dim.y * 3];
             image.cpp = 3;
             Parallel.For(0, image.dim.y, row =>
