@@ -127,7 +127,8 @@ namespace RawNet
                             try
                             {
                                 IFD maker_ifd = parseDngPrivateData(temp);
-                                subIFD.Add(maker_ifd);
+                                if (maker_ifd != null)
+                                    subIFD.Add(maker_ifd);
                                 temp.data = null;
                             }
                             catch (TiffParserException)
@@ -147,8 +148,8 @@ namespace RawNet
                             {
                                 //save current position
                                 long pos = fileStream.Position;
-
-                                subIFD.Add(parseMakerNote(fileStream, temp.dataOffset, endian));
+                                IFD makernote = parseMakerNote(fileStream, temp.dataOffset, endian);
+                                if (makernote != null) subIFD.Add(makernote);
 
                                 //correct here
                                 fileStream.BaseStream.Position = pos;
@@ -353,7 +354,8 @@ namespace RawNet
             }
             catch (Exception e)
             {
-                if (!(e is TiffParserException)) throw new TiffParserException(e.Message);
+                Debug.WriteLine(e.Message);
+                return null;
             }
             // If the structure cannot be read, a TiffParserException will be thrown.
 
@@ -375,10 +377,16 @@ namespace RawNet
             Common.ByteToChar(ref data, out char[] dataAsChar);
             string id = new String(dataAsChar);
             if (!id.StartsWith("Adobe"))
-                throw new TiffParserException("Not Adobe Private data");
+            {
+                Debug.WriteLine("Not Adobe Private data");
+                return null;
+            }
 
             if (!(data[6] == 'M' && data[7] == 'a' && data[8] == 'k' && data[9] == 'N'))
-                throw new TiffParserException("Not Makernote");
+            {
+                Debug.WriteLine("Not Makernote");
+                return null;
+            }
 
             data = data.Skip(10).ToArray();
             uint count;
@@ -387,16 +395,20 @@ namespace RawNet
 
             data = data.Skip(4).ToArray();
             if (count > size)
-                throw new TiffParserException("Error reading TIFF structure (invalid size). File Corrupt");
-
+            {
+                Debug.WriteLine("Error reading TIFF structure (invalid size). File Corrupt");
+                return null;
+            }
             Endianness makernote_endian = Endianness.unknown;
             if (data[0] == 0x49 && data[1] == 0x49)
                 makernote_endian = Endianness.little;
             else if (data[0] == 0x4D && data[1] == 0x4D)
                 makernote_endian = Endianness.big;
             else
-                throw new TiffParserException("Cannot determine endianess of DNG makernote");
-
+            {
+                Debug.WriteLine("Cannot determine endianess of DNG makernote");
+                return null;
+            }
             data = data.Skip(2).ToArray();
             uint org_offset;
 
@@ -406,8 +418,10 @@ namespace RawNet
             data = data.Skip(4).ToArray();
             /* We don't parse original makernotes that are placed after 300MB mark in the original file */
             if (org_offset + count > 300 * 1024 * 1024)
-                throw new TiffParserException("Adobe Private data: original offset of makernote is past 300MB offset");
-
+            {
+                Debug.WriteLine("Adobe Private data: original offset of makernote is past 300MB offset");
+                return null;
+            }
             /* Create fake tiff with original offsets */
             //byte[] maker_data = new byte[count];
             // Common.memcopy(ref maker_data, ref data, count, 0, 0);
@@ -420,7 +434,8 @@ namespace RawNet
             }
             catch (TiffParserException e)
             {
-                throw e;
+                Debug.WriteLine(e.Message);
+                return null;
             }
             return maker_ifd;
         }

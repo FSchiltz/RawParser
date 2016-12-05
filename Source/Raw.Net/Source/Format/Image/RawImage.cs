@@ -308,6 +308,14 @@ namespace RawNet
             return (reste == 0) ? (byte)(value >> 8) : (byte)value;
         }
 
+        public void CorrectWB()
+        {
+            float i = metadata.wbCoeffs[2];
+            float k = metadata.wbCoeffs[0];
+            metadata.wbCoeffs[0] = i;
+            metadata.wbCoeffs[2] = k;
+        }
+
         public void scaleBlackWhite()
         {
             const int skipBorder = 250;

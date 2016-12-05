@@ -657,7 +657,7 @@ namespace RawNet
             setBlack(raw);
 
             //convert to linear value
-            /*
+            //*
             //TODO optimize (super slow)
             double maxVal = Math.Pow(2, mRaw.colorDepth);
             double coeff = maxVal / (mRaw.whitePoint - mRaw.blackLevelSeparate[0]);
