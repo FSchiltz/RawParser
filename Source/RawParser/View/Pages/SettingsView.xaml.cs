@@ -55,36 +55,40 @@ namespace RawEditor
 
         private async void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            //load the pdf
-            StorageFile f = await
-                StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/PrivacyPolicy.pdf"));
-            PdfDocument doc = await PdfDocument.LoadFromFileAsync(f);
-
-            PdfPages.Clear();
-
-            for (uint i = 0; i < doc.PageCount; i++)
+            if (PdfPages.Count == 0)
             {
-                BitmapImage image = new BitmapImage();
+                //load the pdf
+                StorageFile f = await
+                    StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/PrivacyPolicy.pdf"));
+                PdfDocument doc = await PdfDocument.LoadFromFileAsync(f);
 
-                var page = doc.GetPage(i);
+                PdfPages.Clear();
 
-                using (InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream())
+                for (uint i = 0; i < doc.PageCount; i++)
                 {
-                    await page.RenderToStreamAsync(stream);
-                    await image.SetSourceAsync(stream);
-                }
+                    BitmapImage image = new BitmapImage();
 
-                PdfPages.Add(image);
+                    var page = doc.GetPage(i);
+
+                    using (InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream())
+                    {
+                        await page.RenderToStreamAsync(stream);
+                        await image.SetSourceAsync(stream);
+                    }
+
+                    PdfPages.Add(image);
+                }
+                scroll.Height = Window.Current.Bounds.Height;
+                scroll.ChangeView(null, null, (float)((Window.Current.Bounds.Width - 20) / PdfPages[0].PixelWidth));
+                pop.ItemsSource = PdfPages;
             }
-            scroll.Height = Window.Current.Bounds.Height;
-            pop.ItemsSource = PdfPages;
-            PrivacyPopUp.IsOpen = true;
+            PopUp.IsOpen = true;
         }
 
-        private void Popup_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private void Button_Tapped_1(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            PrivacyPopUp.IsOpen = false;
-            PdfPages.Clear();
+            PopUp.IsOpen = false;
         }
     }
 }
+
