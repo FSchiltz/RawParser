@@ -48,7 +48,7 @@ namespace RawEditor
                     var f = StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/Data/cameras.xml")).AsTask();
                     f.Wait();
                     var t = f.Result.OpenStreamForReadAsync();
-                    t.Wait();                  
+                    t.Wait();
                     metadata = new CameraMetaData(t.Result);
                 }
                 catch (CameraMetadataException e)
@@ -368,7 +368,7 @@ namespace RawEditor
                 // Dropdown of file types the user can save the file as
                 savePicker.FileTypeChoices.Add("Jpeg image file", new List<string>() { ".jpg" });
                 savePicker.FileTypeChoices.Add("PNG image file", new List<string>() { ".png" });
-                savePicker.FileTypeChoices.Add("PPM image file", new List<string>() { ".ppm" });
+                //savePicker.FileTypeChoices.Add("PPM image file", new List<string>() { ".ppm" });
                 savePicker.FileTypeChoices.Add("TIFF image file", new List<string>() { ".tiff" });
                 savePicker.FileTypeChoices.Add("BitMap image file", new List<string>() { ".bmp" });
                 StorageFile file = await savePicker.PickSaveFileAsync();
@@ -383,9 +383,15 @@ namespace RawEditor
                 var temp = (int)colorTempSlider.Value;
                 var task = Task.Run(async () =>
                 {
-                    ushort[] copyOfimage = new ushort[raw.rawData.Length];
-                    for (int i = 0; i < raw.rawData.Length; i++) copyOfimage[i] = raw.rawData[i];
-                    applyUserModif(ref copyOfimage, raw.dim, raw.mOffset, raw.colorDepth);
+                    SoftwareBitmap bitmap = null;
+                    //Needs to run in UI thread
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
+                    });
+                    applyUserModif(ref raw.rawData, raw.dim, raw.mOffset, raw.colorDepth, ref bitmap);
+
+                    //get the image as bitmap
 
                     // write to file
                     if (file.FileType == ".jpg")
@@ -395,14 +401,12 @@ namespace RawEditor
                             int[] t = new int[3];
                             BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
                             var x = encoder.BitmapProperties;
-                            SoftwareBitmap bitmap = null;
+
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        //Do some UI-code that must be run on the UI thread.
-                        bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
-                        encoder.SetSoftwareBitmap(bitmap);
-                    });
+                            {
+                                encoder.SetSoftwareBitmap(bitmap);
+                            });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -414,14 +418,13 @@ namespace RawEditor
                         {
                             int[] t = new int[3];
                             BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, filestream);
-                            SoftwareBitmap bitmap = null;
+
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        //Do some UI-code that must be run on the UI thread.
-                        bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
-                        encoder.SetSoftwareBitmap(bitmap);
-                    });
+                            {
+                                //Do some UI-code that must be run on the UI thread.
+                                encoder.SetSoftwareBitmap(bitmap);
+                            });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -433,24 +436,24 @@ namespace RawEditor
                         {
                             int[] t = new int[3];
                             BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.BmpEncoderId, filestream);
-                            SoftwareBitmap bitmap = null;
+
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        //Do some UI-code that must be run on the UI thread.
-                        bitmap = JpegHelper.getImageAs8bitsBitmap(ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth, null, ref t, false, false);
-                        encoder.SetSoftwareBitmap(bitmap);
-                    });
+                            {
+                                //Do some UI-code that must be run on the UI thread.
+                                encoder.SetSoftwareBitmap(bitmap);
+                            });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
                         }
                     }
+                    /*
                     else if (file.FileType == ".ppm")
                     {
                         Stream str = await file.OpenStreamForWriteAsync();
                         PpmEncoder.WriteToFile(str, ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth);
-                    }
+                    }*/
                     else throw new FormatException("Format not supported: " + file.FileType);
                     // Let Windows know that we're finished changing the file so
                     // the other app can update the remote version of the file.
@@ -503,15 +506,13 @@ namespace RawEditor
             //display the histogram                    
             Task histoTask = Task.Run(async () =>
             {
-
-
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                histoLoadingBar.Visibility = Visibility.Visible;
-                bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
-            });
+                {
+                    histoLoadingBar.Visibility = Visibility.Visible;
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
+                });
                 int[] value = applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap);
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
