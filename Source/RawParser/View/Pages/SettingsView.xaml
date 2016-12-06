@@ -19,7 +19,6 @@
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -78,19 +77,30 @@
 
             <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" HorizontalAlignment="Left"/>
             <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Legal" />
-            <Button x:Uid="Privacy"  HorizontalAlignment="Left" Tapped="Button_Tapped"></Button>
             <HyperlinkButton Content="Icon from flaticon.com" NavigateUri="https://www.flaticon.com/"/>
+            <Button x:Uid="Privacy"  HorizontalAlignment="Left" Tapped="Button_Tapped"></Button>
+         
         </StackPanel>
-        <Popup x:Name="PrivacyPopUp" IsOpen="False" IsLightDismissEnabled="True" Tapped="Popup_Tapped" >
-            <ScrollViewer x:Name="scroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="10" Background="Black">
-                <ItemsControl x:Name="pop" HorizontalContentAlignment="Stretch" Padding="5" VerticalContentAlignment="Stretch">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Image Source="{Binding}" Margin="0 2" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+        <Popup IsOpen="False" x:Name="PopUp" IsLightDismissEnabled="True">
+            <Popup.ChildTransitions>
+                <TransitionCollection>
+                    <!--<EdgeUIThemeTransition Edge="Left" />-->
+                    <PaneThemeTransition Edge="Bottom"/>
+                </TransitionCollection>
+            </Popup.ChildTransitions>
+            <Grid Background="Black">                
+                <ScrollViewer x:Name="scroll"  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="Black" Margin="2,2,2,0" ZoomMode="Enabled">
+                    <ItemsControl x:Name="pop"  Padding="1,1,1,1">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <Button Tapped="Button_Tapped_1"  HorizontalAlignment="Right" VerticalAlignment="Top" FocusVisualPrimaryBrush="#FFC90000" Foreground="#FFC70000" Background="#00000000" Margin="2,0,20,0" 
+                        FontFamily="Segoe MDL2 Assets" Content="&#xE711;" FontSize="20"/>
+            </Grid>
         </Popup>
-    </Grid>
+    </Grid>    
 </Page>

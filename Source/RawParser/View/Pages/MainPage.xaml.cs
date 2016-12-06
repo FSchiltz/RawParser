@@ -390,9 +390,6 @@ namespace RawEditor
                         bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.x, raw.dim.y);
                     });
                     applyUserModif(ref raw.rawData, raw.dim, raw.mOffset, raw.colorDepth, ref bitmap);
-
-                    //get the image as bitmap
-
                     // write to file
                     if (file.FileType == ".jpg")
                     {
