@@ -211,6 +211,7 @@ namespace RawEditor
 
                             //clip
                             Luminance.Clip(ref red, ref green, ref blue, maxValue);
+
                             temp[bufferPix] = (byte)((int)blue >> shift);
                             temp[bufferPix + 1] = (byte)((int)green >> shift);
                             temp[bufferPix + 2] = (byte)((int)red >> shift);

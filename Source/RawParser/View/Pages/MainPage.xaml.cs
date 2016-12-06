@@ -387,7 +387,7 @@ namespace RawEditor
                     //Needs to run in UI thread
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
+                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.x, raw.dim.y);
                     });
                     applyUserModif(ref raw.rawData, raw.dim, raw.mOffset, raw.colorDepth, ref bitmap);
 
