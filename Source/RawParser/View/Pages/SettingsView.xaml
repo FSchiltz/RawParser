@@ -75,11 +75,22 @@
 
             <TextBlock TextWrapping="Wrap" FontSize="30" x:Uid="About" />
             <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Issue" />
-            
+
             <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" HorizontalAlignment="Left"/>
             <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Legal" />
-            <HyperlinkButton x:Uid="Privacy" NavigateUri="https://1drv.ms/b/s!Aiyg02v1U1oplYtcoMe7vPZj99Ha_g" HorizontalAlignment="Left"></HyperlinkButton>
+            <Button x:Uid="Privacy"  HorizontalAlignment="Left" Tapped="Button_Tapped"></Button>
             <HyperlinkButton Content="Icon from flaticon.com" NavigateUri="https://www.flaticon.com/"/>
         </StackPanel>
+        <Popup x:Name="PrivacyPopUp" IsOpen="False" IsLightDismissEnabled="True" Tapped="Popup_Tapped" >
+            <ScrollViewer x:Name="scroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="10" Background="Black">
+                <ItemsControl x:Name="pop" HorizontalContentAlignment="Stretch" Padding="5" VerticalContentAlignment="Stretch">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Image Source="{Binding}" Margin="0 2" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Popup>
     </Grid>
 </Page>
