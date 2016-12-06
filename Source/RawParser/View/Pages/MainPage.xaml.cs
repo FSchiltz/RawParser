@@ -45,8 +45,11 @@ namespace RawEditor
                 try
                 {
                     StorageFolder installationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
-                    var stringfile = @"\Assets\Data\cameras.xml";
-                    metadata = new CameraMetaData(installationFolder.Path + stringfile);
+                    var f = StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/Data/cameras.xml")).AsTask();
+                    f.Wait();
+                    var t = f.Result.OpenStreamForReadAsync();
+                    t.Wait();                  
+                    metadata = new CameraMetaData(t.Result);
                 }
                 catch (CameraMetadataException e)
                 {
@@ -67,8 +70,8 @@ namespace RawEditor
                 SuggestedStartLocation = PickerLocationId.ComputerFolder
             };
             filePicker.FileTypeFilter.Add(".nef");
-           // filePicker.FileTypeFilter.Add(".tiff");
-           // filePicker.FileTypeFilter.Add(".tif");
+            // filePicker.FileTypeFilter.Add(".tiff");
+            // filePicker.FileTypeFilter.Add(".tif");
             filePicker.FileTypeFilter.Add(".dng");
             // filePicker.FileTypeFilter.Add(".cr2");
             filePicker.FileTypeFilter.Add(".jpg");
@@ -166,7 +169,7 @@ namespace RawEditor
                             {
                                 displayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data));
                             }
-                            else if(thumbnail.type == ThumbnailType.RAW)
+                            else if (thumbnail.type == ThumbnailType.RAW)
                             {
                                 //this is a raw image in an array
                                 JpegHelper.getThumbnailAsSoftwareBitmap(thumbnail);
@@ -370,7 +373,6 @@ namespace RawEditor
                 savePicker.FileTypeChoices.Add("BitMap image file", new List<string>() { ".bmp" });
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
-
 
                 progressDisplay.Visibility = Visibility.Visible;
                 // Prevent updates to the remote version of the file until

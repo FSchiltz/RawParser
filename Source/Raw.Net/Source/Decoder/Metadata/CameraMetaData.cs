@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Xml.Linq;
+using Windows.Storage;
 
 namespace RawNet
 {
@@ -12,9 +14,9 @@ namespace RawNet
         Dictionary<UInt32, Camera> chdkCameras = new Dictionary<uint, Camera>();
 
 
-        public CameraMetaData(string docname)
+        public CameraMetaData(Stream docFile)
         {
-            XDocument doc = XDocument.Load(docname);
+            XDocument doc = XDocument.Load(docFile);
 
             if (doc == null)
             {

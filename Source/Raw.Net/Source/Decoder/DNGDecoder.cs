@@ -740,12 +740,12 @@ namespace RawNet
                         //there is a thumbnail
                         UInt32 sample_format = 1;
                         UInt32 bps = thumbIFD.getEntry(TagType.BITSPERSAMPLE).getUInt();
-
+                        iPoint2D dim;
                         if (thumbIFD.hasEntry(TagType.SAMPLEFORMAT))
                             sample_format = thumbIFD.getEntry(TagType.SAMPLEFORMAT).getUInt();
                         try
                         {
-                            var dim = new iPoint2D()
+                            dim = new iPoint2D()
                             {
                                 x = thumbIFD.getEntry(TagType.IMAGEWIDTH).getInt(),
                                 y = thumbIFD.getEntry(TagType.IMAGELENGTH).getInt()
@@ -809,7 +809,7 @@ namespace RawNet
                                     big_endian = true;
                                 try
                                 {
-                                    readUncompressedRaw(ref input, size, pos, (int)(mRaw.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
+                                   // readUncompressedRaw(ref input, size, pos, (int)(mRaw.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
                                 }
                                 catch (IOException ex)
                                 {
@@ -820,7 +820,7 @@ namespace RawNet
                         }
                         else if (compression == 7 || compression == 0x884c)
                         {
-
+                            /*
                             // Let's try loading it as tiles instead
 
                             uint cpp = (thumbIFD.getEntry(TagType.SAMPLESPERPIXEL).getUInt());
@@ -869,7 +869,7 @@ namespace RawNet
                                     throw new RawDecoderException("DNG Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", stips:" + offsets.dataCount);
                                 }
 
-                                if (yPerSlice == 0 || yPerSlice > (UInt32)height)
+                                if (yPerSlice == 0 || yPerSlice > (UInt32)dim.y)
                                     throw new RawDecoderException("DNG Decoder: Invalid y per slice");
 
                                 UInt32 offY = 0;
@@ -888,12 +888,8 @@ namespace RawNet
                                 throw new RawDecoderException("DNG Decoder: No valid slices found.");
 
                             slices.decodeSlice();
-                            
-                        }
-                        else
-                        {
-                            throw new RawDecoderException("DNG Decoder: Unknown compression: " + compression);
-                        }
+                            */
+                        }                     
                     }
                 }                
             }
