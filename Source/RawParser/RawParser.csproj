@@ -123,6 +123,9 @@
     <Content Include="Assets\data\cameras.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\PrivacyPolicy.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="project.json" />
     <None Include="RawParser_StoreKey.pfx" />
     <None Include="RawParser_TemporaryKey.pfx" />
