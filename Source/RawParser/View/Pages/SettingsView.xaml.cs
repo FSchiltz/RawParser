@@ -79,7 +79,8 @@ namespace RawEditor
                     PdfPages.Add(image);
                 }
                 scroll.Height = Window.Current.Bounds.Height;
-                scroll.ChangeView(null, null, (float)((Window.Current.Bounds.Width - 20) / PdfPages[0].PixelWidth));
+                scroll.Width = Window.Current.Bounds.Width;
+                scroll.ChangeView(null, null, (float)((Window.Current.Bounds.Width) / PdfPages[0].PixelWidth));
                 pop.ItemsSource = PdfPages;
             }
             PopUp.IsOpen = true;
