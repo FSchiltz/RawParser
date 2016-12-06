@@ -286,7 +286,7 @@ namespace RawEditor
 
         private void appbarSettingClick(object sender, RoutedEventArgs e)
         {
-            Frame.Navigate(typeof(SettingsView), null);
+            Frame.Navigate(typeof(SettingsView),null);
         }
 
         private void setScrollProperty()

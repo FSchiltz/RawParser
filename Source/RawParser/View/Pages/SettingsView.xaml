@@ -5,8 +5,17 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="20,0">
+    <Page.Transitions>
+        <TransitionCollection>
+            <NavigationThemeTransition>
+                <NavigationThemeTransition.DefaultNavigationTransitionInfo>
+                    <DrillInNavigationTransitionInfo/>
+                </NavigationThemeTransition.DefaultNavigationTransitionInfo>
+            </NavigationThemeTransition>
+        </TransitionCollection>
+    </Page.Transitions>
+    
+    <Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="wideState">
@@ -23,13 +32,13 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <StackPanel x:Name="listView" >
+        <StackPanel x:Name="listView" Padding="0" Margin="10,0">
+          
+            <TextBlock TextWrapping="WrapWholeWords" FontSize="48" x:Uid="Settings"/>
 
-            <TextBlock TextWrapping="Wrap" FontSize="48" x:Uid="Settings"/>
-
-            <TextBlock TextWrapping="Wrap" FontSize="30" x:Uid="Display"/>
+            <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="Display" Margin="5,0,0,0"/>
             <!--Display border-->
-            <Grid HorizontalAlignment="Left" >
+            <Grid HorizontalAlignment="Left" Margin="10,0,0,0" >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -44,7 +53,7 @@
                 <Slider ValueChanged="Slider_ValueChanged" Grid.Row="2" Width="100" HorizontalAlignment="Center" Margin="0,10" IsEnabled="False"/>
             -->
             </Grid>
-            <Grid>
+            <Grid Margin="10,0,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -64,21 +73,14 @@
                     <ComboBoxItem>32</ComboBoxItem>
                 </ComboBox>
             </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-            </Grid>
+          
+            <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="About" Margin="5,0,0,0" />
+            <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Issue" Margin="10,0,0,0" />
 
-            <TextBlock TextWrapping="Wrap" FontSize="30" x:Uid="About" />
-            <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Issue" />
-
-            <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" HorizontalAlignment="Left"/>
-            <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Legal" />
-            <HyperlinkButton Content="Icon from flaticon.com" NavigateUri="https://www.flaticon.com/"/>
-            <Button x:Uid="Privacy"  HorizontalAlignment="Left" Tapped="Button_Tapped"></Button>
+            <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+            <TextBlock FontSize="30" TextWrapping="WrapWholeWords" x:Uid="Legal" Margin="5,10,0,0" />
+            <HyperlinkButton Content="Icon from flaticon.com" NavigateUri="https://www.flaticon.com/" Margin="10,10,0,0"/>
+            <Button x:Uid="Privacy"  HorizontalAlignment="Left" Tapped="Button_Tapped" Margin="10,20,0,0"></Button>
          
         </StackPanel>
         <Popup IsOpen="False" x:Name="PopUp" IsLightDismissEnabled="True">
