@@ -22,14 +22,18 @@ namespace RawEditor
             set;
         } = new List<BitmapImage>();
 
+
         public SettingsView()
         {
             InitializeComponent();
-            var _enumval = Enum.GetValues(typeof(DemosAlgorithm)).Cast<DemosAlgorithm>();
-            DemosComboBox.ItemsSource = _enumval.ToList();
+            var enumval = Enum.GetValues(typeof(DemosAlgorithm)).Cast<DemosAlgorithm>();
+            DemosComboBox.ItemsSource = enumval.ToList();
 
-            var _enumval2 = Enum.GetValues(typeof(FactorValue)).Cast<FactorValue>();
-            ScaleComboBox.ItemsSource = _enumval2.ToList();
+            var enumval2 = Enum.GetValues(typeof(FactorValue)).Cast<FactorValue>();
+            ScaleComboBox.ItemsSource = enumval2.ToList();
+
+            var enumval3 = Enum.GetValues(typeof(ThemeEnum)).Cast<ThemeEnum>();
+            ThemeComboBox.ItemsSource = enumval3.ToList();
 
             UpdateView();
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
@@ -50,6 +54,8 @@ namespace RawEditor
             ScaleComboBox.SelectedItem = SettingStorage.PreviewFactor;
             //for demos
             DemosComboBox.SelectedItem = SettingStorage.DemosAlgo;
+
+            ThemeComboBox.SelectedItem = SettingStorage.SelectedTheme;
         }
 
         private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
@@ -111,6 +117,11 @@ namespace RawEditor
             SettingStorage.Reset();
             //update view
             UpdateView();
+        }
+
+        private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SettingStorage.SelectedTheme = ((ThemeEnum)e.AddedItems[0]);
         }
     }
 }
