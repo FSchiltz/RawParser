@@ -146,7 +146,7 @@
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Encoder\TiffWriter.cs" />
     <Compile Include="Model\Image\JpegHelper.cs" />
-    <Compile Include="Model\Image\ImageEffect.cs" />
+    <Compile Include="Model\Effect\ImageEffect.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="View\UIHelper\PortraitOrLandscapeTrigger.cs" />
     <Compile Include="View\UIHelper\UIImageHelper.cs" />

@@ -12,6 +12,7 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
+            
             <AppBarButton IsEnabled="False" 
                 x:Name="rotateLeftButton" 
                           Icon="Undo"
@@ -42,6 +43,7 @@
             <AppBarButton x:Name="settingsButton"  
                           Icon="Setting" x:Uid="Setting" 
                           Click="appbarSettingClick"/>
+            
             <CommandBar.SecondaryCommands>
                 <AppBarButton x:Name="settingsButton2" 
                               Icon="Setting" x:Uid="Setting" 
@@ -120,6 +122,13 @@
                           HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
+            <ProgressRing x:Name="progressDisplay"  
+                      VerticalAlignment="Center" 
+                      Background="{x:Null}" 
+                      Foreground="#FF00589C" Margin="0"
+                     RenderTransformOrigin="0.5,0.5"
+                     Visibility="Collapsed" Canvas.ZIndex="99" Width="40" Height="40">
+            </ProgressRing>
             <Grid x:Name="PivotGrid" 
                   RelativePanel.AlignRightWithPanel="True" 
                   RelativePanel.AlignBottomWithPanel="True" >
@@ -135,7 +144,6 @@
                                     <Canvas.Clip>
                                         <RectangleGeometry Rect="0 0 256 100"/>
                                     </Canvas.Clip>
-                                    <ProgressBar x:Name="histoLoadingBar" VerticalAlignment="Center" IsIndeterminate="True" Width="{Binding ActualWidth, ElementName=histogramCanvas, Mode=OneWay}" Visibility="Collapsed"/>
                                 </Canvas>
                                 <TextBlock Foreground="Black" FontSize="16" x:Uid="ExplosureSettings" />
                                 <TextBlock FontSize="12" x:Uid="Exposure"/>
@@ -207,18 +215,6 @@
                     </PivotItem>
                 </Pivot>
             </Grid>
-
-        </Grid>
-        <ProgressBar x:Name="progressDisplay"  
-                      VerticalAlignment="Top" 
-                      Background="{x:Null}" 
-                      Foreground="#FF00589C" 
-                      IsIndeterminate="True" Margin="0"
-                     RenderTransformOrigin="0.5,0.5"
-                     Visibility="Collapsed">
-            <ProgressBar.RenderTransform>
-                <CompositeTransform ScaleY="-1"/>
-            </ProgressBar.RenderTransform>
-        </ProgressBar>
+        </Grid> 
     </Grid>
 </Page>

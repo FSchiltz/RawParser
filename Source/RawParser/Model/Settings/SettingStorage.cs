@@ -48,7 +48,7 @@ namespace RawEditor
             localSettings.Values["saveFormat" + def] = ".jpg";
             localSettings.Values["autoPreviewFormat" + def] = false;
             localSettings.Values["demosAlgo" + def] = DemosAlgorithm.NearNeighbour.ToString();
-            if (localSettings.Values["version"] == null || (int)localSettings.Values["version"] < version)
+            if (localSettings.Values["version"] == null || (uint)localSettings.Values["version"] < version)
                 Reset();
             localSettings.Values["version"] = version;
         }

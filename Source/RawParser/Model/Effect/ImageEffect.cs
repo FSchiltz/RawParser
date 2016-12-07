@@ -23,7 +23,7 @@ namespace RawEditor
         public double vibrance = 0;
         public double[] camCurve;
 
-        public void applyModification(ushort[] image, iPoint2D dim, iPoint2D offset, int colorDepth)
+        public void applyModification(ushort[] image, iPoint2D dim, int colorDepth)
         {
             maxValue = (uint)(1 << colorDepth);
             if (!cameraWB)
@@ -63,10 +63,10 @@ namespace RawEditor
             //gammacurve from camera
             //double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
 
-            Parallel.For(offset.y, dim.y, y =>
+            Parallel.For(0, dim.y, y =>
             {
                 int realY = y * dim.x * 3;
-                for (int x = offset.x; x < dim.x; x++)
+                for (int x = 0; x < dim.x; x++)
                 {
                     int realPix = realY + (3 * x);
                     //get the RGB value
@@ -118,8 +118,7 @@ namespace RawEditor
             });
         }
 
-
-        public unsafe int[] applyModification(ushort[] image, iPoint2D dim, iPoint2D offset, int colorDepth, ref SoftwareBitmap bitmap)
+        public unsafe int[] applyModification(ushort[] image, iPoint2D dim, int colorDepth, ref SoftwareBitmap bitmap)
         {
             int[] value = new int[256];
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
@@ -167,18 +166,18 @@ namespace RawEditor
                     //gammacurve from camera
                     //double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
 
-                    Parallel.For(offset.y, dim.y + offset.y, y =>
-                    {
-                        int realY = y * dim.x * 3;
-                        int bufferY = y * dim.x * 4 + +bufferLayout.StartIndex;
-                        for (int x = offset.x; x < dim.x + offset.x; x++)
-                        {
-                            int realPix = realY + (3 * x);
-                            int bufferPix = bufferY + (4 * x);
+                    Parallel.For(0, dim.y, y =>
+                   {
+                       int realY = y * dim.x * 3;
+                       int bufferY = y * dim.x * 4 + +bufferLayout.StartIndex;
+                       for (int x = 0; x < dim.x; x++)
+                       {
+                           int realPix = realY + (3 * x);
+                           int bufferPix = bufferY + (4 * x);
                             //get the RGB value
                             double red = image[realPix],
-                            green = image[realPix + 1],
-                            blue = image[realPix + 2];
+                           green = image[realPix + 1],
+                           blue = image[realPix + 2];
 
                             //convert to linear rgb (not needed, the raw should be in linear already)
                             /*Balance.sRGBToRGB(ref red, maxValue - 1);
@@ -187,20 +186,20 @@ namespace RawEditor
 
                             //scale according to the white balance
                             red *= mul[0];
-                            green *= mul[1];
-                            blue *= mul[2];
+                           green *= mul[1];
+                           blue *= mul[2];
                             //clip
                             Luminance.Clip(ref red, ref green, ref blue, maxValue);
-                            double h = 0, s = 0, l = 0;
+                           double h = 0, s = 0, l = 0;
                             //transform to HSL value
                             Color.rgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
                             //change brightness from curve
                             //add saturation
                             l = contrastCurve[(uint)(l * maxValue)] / maxValue;
-                            s *= saturation;
-                            s += vibrance;
-                            l *= exposure;
-                            l += brightness / 100;
+                           s *= saturation;
+                           s += vibrance;
+                           l *= exposure;
+                           l += brightness / 100;
                             //change back to RGB
                             Color.hslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
 
@@ -212,11 +211,11 @@ namespace RawEditor
                             //clip
                             Luminance.Clip(ref red, ref green, ref blue, maxValue);
 
-                            temp[bufferPix] = (byte)((int)blue >> shift);
-                            temp[bufferPix + 1] = (byte)((int)green >> shift);
-                            temp[bufferPix + 2] = (byte)((int)red >> shift);
+                           temp[bufferPix] = (byte)((int)blue >> shift);
+                           temp[bufferPix + 1] = (byte)((int)green >> shift);
+                           temp[bufferPix + 2] = (byte)((int)red >> shift);
 
-                            Interlocked.Increment(ref value[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
+                           Interlocked.Increment(ref value[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
                             //set transparency to 255 else image will be blank
                             temp[bufferPix + 3] = 255;
                             //change gamma from curve 
@@ -224,8 +223,8 @@ namespace RawEditor
                             image[i * 3] = (ushort)gammaCurve[(int)red];
                             image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
                             image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];*/
-                        }
-                    });
+                       }
+                   });
                 }
             }
             return value;

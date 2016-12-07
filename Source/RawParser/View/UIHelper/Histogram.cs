@@ -12,12 +12,7 @@ namespace RawEditor.View.UIHelper
     {
         //TODO simplify if memory saver mode
         public static async void Create(int[] value, ushort colorDepth, uint height, uint width, Canvas histogramCanvas)
-        {
-            await CoreApplication.MainView.CoreWindow.Dispatcher
-                 .RunAsync(CoreDispatcherPriority.Normal, () =>
-                 {
-                     histogramCanvas.Children.Clear();
-                 });
+        {           
             for (int i = 0; i < value.Length; i++)
             {
                 Line line = null;
