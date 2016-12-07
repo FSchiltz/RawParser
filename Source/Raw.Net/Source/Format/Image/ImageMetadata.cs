@@ -4,6 +4,8 @@ namespace RawNet
 {
     public class ImageMetaData
     {
+        public string fileName { get; set; }
+        public string fileNameComplete { get; set; }
         // Aspect ratio of the pixels, usually 1 but some cameras need scaling
         // <1 means the image needs to be stretched vertically, (0.5 means 2x)
         // >1 means the image needs to be stretched horizontally (2 mean 2x)
@@ -35,10 +37,10 @@ namespace RawNet
             isoSpeed = 0;
             pixelAspectRatio = 1;
             fujiRotationPos = 0;
-            wbCoeffs[0] = 0;
-            wbCoeffs[1] = 0;
-            wbCoeffs[2] = 0;
-            wbCoeffs[3] = 0;
+            wbCoeffs[0] = 1;
+            wbCoeffs[1] = 1;
+            wbCoeffs[2] = 1;
+            wbCoeffs[3] = 1;
         }
     }
 }

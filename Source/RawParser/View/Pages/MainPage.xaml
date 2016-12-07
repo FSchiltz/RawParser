@@ -12,7 +12,7 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
-            
+
             <AppBarButton IsEnabled="False" 
                 x:Name="rotateLeftButton" 
                           Icon="Undo"
@@ -43,7 +43,7 @@
             <AppBarButton x:Name="settingsButton"  
                           Icon="Setting" x:Uid="Setting" 
                           Click="appbarSettingClick"/>
-            
+
             <CommandBar.SecondaryCommands>
                 <AppBarButton x:Name="settingsButton2" 
                               Icon="Setting" x:Uid="Setting" 
@@ -122,16 +122,17 @@
                           HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
-            <ProgressRing x:Name="progressDisplay"  
-                      VerticalAlignment="Center" 
-                      Background="{x:Null}" 
-                      Foreground="#FF00589C" Margin="0"
-                     RenderTransformOrigin="0.5,0.5"
-                     Visibility="Collapsed" Canvas.ZIndex="99" Width="40" Height="40">
-            </ProgressRing>
             <Grid x:Name="PivotGrid" 
                   RelativePanel.AlignRightWithPanel="True" 
                   RelativePanel.AlignBottomWithPanel="True" >
+                <ProgressBar x:Name="progressDisplay"  
+                      VerticalAlignment="Center" 
+                      Background="{x:Null}" 
+                      IsIndeterminate="True"
+                      Foreground="#FF00589C" Margin="0"
+                     RenderTransformOrigin="0.5,0.5"
+                     Visibility="Collapsed" Canvas.ZIndex="99" >
+                </ProgressBar>
                 <Pivot x:Name="ControlPivot">
                     <PivotItem x:Uid="ExposureHeader">
                         <ScrollViewer VerticalContentAlignment="Stretch">
@@ -215,6 +216,6 @@
                     </PivotItem>
                 </Pivot>
             </Grid>
-        </Grid> 
+        </Grid>
     </Grid>
 </Page>
