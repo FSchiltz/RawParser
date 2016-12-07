@@ -42,10 +42,10 @@ Support for Xbox and hololens could be added if someone can test them.
 
 ## Installation
 ### From the store (recommended)
-The app will be available at [this address when available]
+The app is available at [this address]
 (https://www.microsoft.com/store/apps/9pfwlj4lxftf)
 If you hav ealready insatlledot from the appx directly,please uninstall before insatlling from the store.
 
 ### From the github
-You need to activatee the developper mod and then dowloading the package from the latest release and opening it from the file explorer on your device.
+You need to activate the developper mode and then dowloading the package from the latest release and opening it from the file explorer on your device.
 (on phone the installation will be done in the background).
