@@ -1,4 +1,6 @@
-﻿using Windows.Storage;
+﻿using RawNet;
+using System;
+using Windows.Storage;
 
 namespace RawEditor
 {
@@ -7,38 +9,52 @@ namespace RawEditor
         static private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         private static string def = "Default";
-        //checkif settings already exists
-        public static double imageBoxBorder
+        private static uint version = 1;
+        //check if settings already exists
+        public static double ImageBoxBorder
         {
-            get { return getDoubleSetting("imageBoxBorder"); }
+            get { return GetDoubleSetting("imageBoxBorder"); }
             set { localSettings.Values["imageBoxBorder"] = value; }
         }
-        public static int previewFactor
+        public static FactorValue PreviewFactor
         {
-            get { return getIntSetting("previewFactor"); }
-            set { localSettings.Values["previewFactor"] = value; }
+            get
+            {
+                Enum.TryParse(GetStringSetting("previewFactor"), out FactorValue res);
+                return res;
+            }
+            set { localSettings.Values["previewFactor"] = value.ToString(); }
         }
-        public static string saveFormat
+        public static string SaveFormat
         {
-            get { return getStringSetting("saveFormat"); }
+            get { return GetStringSetting("saveFormat"); }
             set { localSettings.Values["saveFormat"] = value; }
         }
-        public static bool autoPreviewFactor
+
+        public static DemosAlgorithm DemosAlgo
         {
-            get { return getBoolSetting("autoPreviewFormat"); }
-            set { localSettings.Values["autoPreviewFormat"] = value; }
+            get
+            {
+                Enum.TryParse(GetStringSetting("demosAlgo"), out DemosAlgorithm res);
+                return res;
+            }
+            set { localSettings.Values["demosAlgo"] = value.ToString(); }
         }
 
-        public static void init()
+        public static void Init()
         {
             localSettings.Values["imageBoxBorder" + def] = 0.05;
-            localSettings.Values["previewFactor" + def] = 4;
+            localSettings.Values["previewFactor" + def] = "O2";
             localSettings.Values["saveFormat" + def] = ".jpg";
-            localSettings.Values["autoPreviewFormat" + def] = true;
+            localSettings.Values["autoPreviewFormat" + def] = false;
+            localSettings.Values["demosAlgo" + def] = DemosAlgorithm.NearNeighbour.ToString();
+            if (localSettings.Values["version"] == null || (int)localSettings.Values["version"] < version)
+                Reset();
+            localSettings.Values["version"] = version;
         }
 
         //ToDO replace by getonread member
-        private static bool getBoolSetting(string name)
+        private static bool GetBoolSetting(string name)
         {
             if (localSettings.Values[name] != null)
             {
@@ -46,12 +62,12 @@ namespace RawEditor
             }
             else
             {
-                localSettings.Values[name] = localSettings.Values[name + "Default"];
+                localSettings.Values[name] = localSettings.Values[name + def];
             }
             return (bool)localSettings.Values[name];
         }
 
-        private static int getIntSetting(string name)
+        private static int GetIntSetting(string name)
         {
             if (localSettings.Values[name] != null)
             {
@@ -59,12 +75,12 @@ namespace RawEditor
             }
             else
             {
-                localSettings.Values[name] = localSettings.Values[name + "Default"];
+                localSettings.Values[name] = localSettings.Values[name + def];
             }
             return (int)localSettings.Values[name];
         }
 
-        private static double getDoubleSetting(string name)
+        private static double GetDoubleSetting(string name)
         {
             if (localSettings.Values[name] != null)
             {
@@ -72,12 +88,12 @@ namespace RawEditor
             }
             else
             {
-                localSettings.Values[name] = localSettings.Values[name + "Default"];
+                localSettings.Values[name] = localSettings.Values[name + def];
             }
             return (double)localSettings.Values[name];
         }
 
-        private static string getStringSetting(string name)
+        private static string GetStringSetting(string name)
         {
             if (localSettings.Values[name] != null)
             {
@@ -85,9 +101,18 @@ namespace RawEditor
             }
             else
             {
-                localSettings.Values[name] = localSettings.Values[name + "Default"];
+                localSettings.Values[name] = localSettings.Values[name + def];
             }
             return (string)localSettings.Values[name];
+        }
+
+        internal static void Reset()
+        {
+            localSettings.Values["imageBoxBorder"] = localSettings.Values["imageBoxBorder" + def];
+            localSettings.Values["previewFactor"] = localSettings.Values["previewFactor" + def];
+            localSettings.Values["saveFormat"] = localSettings.Values["saveFormat" + def];
+            localSettings.Values["autoPreviewFormat"] = localSettings.Values["autoPreviewFormat" + def];
+            localSettings.Values["demosAlgo"] = localSettings.Values["demosAlgo" + def];
         }
     }
 }

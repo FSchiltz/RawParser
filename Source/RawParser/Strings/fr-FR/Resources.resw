@@ -129,6 +129,12 @@
   <data name="ContrastBalance.Text" xml:space="preserve">
     <value>Correction du contraste</value>
   </data>
+  <data name="Demos.Text" xml:space="preserve">
+    <value>Algorithme de dématriçage</value>
+  </data>
+  <data name="DemosWarningText.Text" xml:space="preserve">
+    <value>Attention, ne pas changer sauf si vous savez ce que vous faites. Certain des algorithmes peuvent ne pas etre fonctionnels et ne feront donc rien. Deflate ne dematrice pas et transforme l'image en une image RGB sans remplir les pixels manquants.</value>
+  </data>
   <data name="Display.Text" xml:space="preserve">
     <value>Affichage</value>
   </data>

@@ -127,7 +127,7 @@
     <Compile Include="Source\Base\ByteArrayWithIndexValue.cs" />
     <Compile Include="Source\Base\Common.cs" />
     <Compile Include="Source\Base\Point.cs" />
-    <Compile Include="Source\Base\Reader\BinaryReaderBE.cs" />
+    <Compile Include="Source\Decoder\Decompressor\Reader\BinaryReaderBE.cs" />
     <Compile Include="Source\Decoder\Decoder.cs" />
     <Compile Include="Source\Decoder\Decompressor\BitPumpJPEG.cs" />
     <Compile Include="Source\Decoder\Decompressor\BitPumpMSB.cs" />
@@ -152,11 +152,11 @@
     <Compile Include="Source\Exception\TiffParserException.cs" />
     <Compile Include="Source\Format\Ciff\CiffTag.cs" />
     <Compile Include="Source\Format\DNG\DngDecoderSlices.cs" />
-    <Compile Include="Source\Format\Image\BitOrder.cs" />
+    <Compile Include="Source\Decoder\Decompressor\Reader\BitOrder.cs" />
     <Compile Include="Source\Format\Image\BlackArea.cs" />
     <Compile Include="Source\Format\Image\ColorFilterArray.cs" />
     <Compile Include="Source\Format\Image\ImageMetadata.cs" />
-    <Compile Include="Source\Format\Image\JpegHelper.cs" />
+    <Compile Include="Source\Decoder\JpegHelper.cs" />
     <Compile Include="Source\Format\Image\RawImage.cs" />
     <Compile Include="Source\Format\Image\Thumbnail.cs" />
     <Compile Include="Source\Format\Tiff\IFD\IFD.cs" />

@@ -14,7 +14,7 @@
             </NavigationThemeTransition>
         </TransitionCollection>
     </Page.Transitions>
-    
+
     <Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
@@ -33,12 +33,10 @@
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
         <StackPanel x:Name="listView" Padding="0" Margin="10,0">
-          
             <TextBlock TextWrapping="WrapWholeWords" FontSize="48" x:Uid="Settings"/>
-
             <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="Display" Margin="5,0,0,0"/>
             <!--Display border-->
-            <Grid HorizontalAlignment="Left" Margin="10,0,0,0" >
+            <!-- <Grid HorizontalAlignment="Left" Margin="10,0,0,0" >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -46,13 +44,13 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <!--
+            
                 <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
                     Relative border around the image (not working yet):
                 </TextBlock>
                 <Slider ValueChanged="Slider_ValueChanged" Grid.Row="2" Width="100" HorizontalAlignment="Center" Margin="0,10" IsEnabled="False"/>
-            -->
-            </Grid>
+         
+            </Grid>   -->
             <Grid Margin="10,0,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -63,17 +61,27 @@
                 </Grid.RowDefinitions>
                 <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left" x:Uid="ScalingFactor"/>
 
-                <ComboBox Grid.Row="2" SelectionChanged="ComboBox_SelectionChanged" HorizontalAlignment="Center" Margin="0,10,0,0">
-                    <ComboBoxItem>Auto</ComboBoxItem>
-                    <ComboBoxItem>1</ComboBoxItem>
-                    <ComboBoxItem>2</ComboBoxItem>
-                    <ComboBoxItem>4</ComboBoxItem>
-                    <ComboBoxItem>8</ComboBoxItem>
-                    <ComboBoxItem>16</ComboBoxItem>
-                    <ComboBoxItem>32</ComboBoxItem>
+                <ComboBox x:Name="ScaleComboBox" Grid.Row="2" SelectionChanged="PreviewFactor_SelectionChanged" HorizontalAlignment="Center" Margin="0,10,0,0">
+            
                 </ComboBox>
             </Grid>
-          
+
+            <Grid Margin="10,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left" x:Uid="Demos"/>
+                <TextBlock TextWrapping="WrapWholeWords" FontSize="12" HorizontalAlignment="Left" x:Uid="DemosWarningText" Margin="10,20" MaxWidth="360"/>
+                <ComboBox Grid.Row="2" SelectionChanged="Algo_SelectionChanged" HorizontalAlignment="Center" Margin="0,10,0,0"
+                          x:Name="DemosComboBox">
+                   
+                </ComboBox>
+            </Grid>
+            <Button Tapped="Reset_Tapped" >Reset</Button>
             <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="About" Margin="5,0,0,0" />
             <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Issue" Margin="10,0,0,0" />
 
@@ -81,7 +89,7 @@
             <TextBlock FontSize="30" TextWrapping="WrapWholeWords" x:Uid="Legal" Margin="5,10,0,0" />
             <HyperlinkButton Content="Icon from flaticon.com" NavigateUri="https://www.flaticon.com/" Margin="10,10,0,0"/>
             <Button x:Uid="Privacy"  HorizontalAlignment="Left" Tapped="Button_Tapped" Margin="10,20,0,0"></Button>
-         
+
         </StackPanel>
         <Popup IsOpen="False" x:Name="PopUp" IsLightDismissEnabled="True">
             <Popup.ChildTransitions>
@@ -90,7 +98,7 @@
                     <PaneThemeTransition Edge="Bottom"/>
                 </TransitionCollection>
             </Popup.ChildTransitions>
-            <Grid Background="Black">                
+            <Grid Background="Black">
                 <ScrollViewer x:Name="scroll"  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="Black" Margin="2,2,2,0" ZoomMode="Enabled">
                     <ItemsControl x:Name="pop"  Padding="1,1,1,1">
                         <ItemsControl.ItemTemplate>
@@ -100,9 +108,9 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <Button Tapped="Button_Tapped_1"  HorizontalAlignment="Right" VerticalAlignment="Top" FocusVisualPrimaryBrush="#FFC90000" Foreground="#FFC70000" Background="#00000000" Margin="2,0,20,0" 
+                <Button Tapped="PolicyButton_Tapped"  HorizontalAlignment="Right" VerticalAlignment="Top" FocusVisualPrimaryBrush="#FFC90000" Foreground="#FFC70000" Background="#00000000" Margin="2,0,20,0" 
                         FontFamily="Segoe MDL2 Assets" Content="&#xE711;" FontSize="20"/>
             </Grid>
         </Popup>
-    </Grid>    
+    </Grid>
 </Page>

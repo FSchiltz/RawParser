@@ -73,6 +73,15 @@ namespace RawNet
         }
     };
 
+    public enum FactorValue
+    {
+        Auto,
+        O1,
+        O2,
+        O4,
+        O16
+    }
+
     public class RawImage
     {
         public byte[] thumbnail;
@@ -435,6 +444,23 @@ namespace RawNet
                 for (int i = 0; i < 4; i++)
                     blackLevelSeparate[i] = (total + 2) >> 2;
             }
+        }
+
+        public void CreatePreview(int previewFactor)
+        {
+            previewDim = new iPoint2D(dim.x / previewFactor, dim.y / previewFactor);
+            previewData = new ushort[previewDim.y * previewDim.x * cpp];
+            Parallel.For(0, previewDim.y, y =>
+            {
+                int realY = (mOffset.y + y * previewFactor) * previewDim.x;
+                for (int x = 0; x < previewDim.x; x++)
+                {
+                    int realPix = (int)(((x + realY) * previewFactor + mOffset.x) * cpp);
+                    previewData[((y * previewDim.x) + x) * cpp] = rawData[realPix];
+                    previewData[(((y * previewDim.x) + x) * cpp) + 1] = rawData[realPix + 1];
+                    previewData[(((y * previewDim.x) + x) * cpp) + 2] = rawData[realPix + 2];
+                }
+            });
         }
 
 
