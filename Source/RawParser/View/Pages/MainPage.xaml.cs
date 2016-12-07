@@ -82,7 +82,7 @@ namespace RawEditor
                     ExceptionDisplay.display(e.Message);
                 }
             }
-            SettingStorage.Init();
+           
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
@@ -273,7 +273,7 @@ namespace RawEditor
                         }
                         Demosaic.demos(ref raw, algo);
                     }
-                    createPreview();
+                    CreatePreview();
                     updatePreview();
 
                     //activate the editing control
@@ -296,7 +296,7 @@ namespace RawEditor
             });
         }
 
-        private void createPreview()
+        private void CreatePreview()
         {
             //create a small image from raw to display
             FactorValue factor = SettingStorage.PreviewFactor;

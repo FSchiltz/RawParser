@@ -201,6 +201,9 @@
   <data name="Temperature.Text" xml:space="preserve">
     <value>Temperature</value>
   </data>
+  <data name="Theme.Text" xml:space="preserve">
+    <value>Application theme</value>
+  </data>
   <data name="Tools.Header" xml:space="preserve">
     <value>Tools</value>
   </data>

@@ -1,9 +1,12 @@
 ﻿using RawNet;
 using System;
 using Windows.Storage;
+using Windows.UI.Xaml;
 
 namespace RawEditor
 {
+    public enum ThemeEnum { Dark, Light, System }
+
     static class SettingStorage
     {
         static private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
@@ -41,6 +44,19 @@ namespace RawEditor
             set { localSettings.Values["demosAlgo"] = value.ToString(); }
         }
 
+        public static ThemeEnum SelectedTheme
+        {
+            get
+            {
+                Enum.TryParse(GetStringSetting("Theme"), out ThemeEnum res);
+                return res;
+            }
+            set
+            {
+                localSettings.Values["Theme"] = value.ToString();
+            }
+        }
+
         public static void Init()
         {
             localSettings.Values["imageBoxBorder" + def] = 0.05;
@@ -48,9 +64,11 @@ namespace RawEditor
             localSettings.Values["saveFormat" + def] = ".jpg";
             localSettings.Values["autoPreviewFormat" + def] = false;
             localSettings.Values["demosAlgo" + def] = DemosAlgorithm.NearNeighbour.ToString();
+            localSettings.Values["Theme" + def] = ThemeEnum.System.ToString();
             if (localSettings.Values["version"] == null || (uint)localSettings.Values["version"] < version)
                 Reset();
             localSettings.Values["version"] = version;
+
         }
 
         //ToDO replace by getonread member
@@ -113,6 +131,7 @@ namespace RawEditor
             localSettings.Values["saveFormat"] = localSettings.Values["saveFormat" + def];
             localSettings.Values["autoPreviewFormat"] = localSettings.Values["autoPreviewFormat" + def];
             localSettings.Values["demosAlgo"] = localSettings.Values["demosAlgo" + def];
+            localSettings.Values["Theme"] = localSettings.Values["Theme" + def];
         }
     }
 }

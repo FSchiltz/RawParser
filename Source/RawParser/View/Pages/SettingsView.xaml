@@ -34,7 +34,6 @@
         </VisualStateManager.VisualStateGroups>
         <StackPanel x:Name="listView" Padding="0" Margin="10,0">
             <TextBlock TextWrapping="WrapWholeWords" FontSize="48" x:Uid="Settings"/>
-            <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="Display" Margin="5,0,0,0"/>
             <!--Display border-->
             <!-- <Grid HorizontalAlignment="Left" Margin="10,0,0,0" >
                 <Grid.ColumnDefinitions>
@@ -51,45 +50,24 @@
                 <Slider ValueChanged="Slider_ValueChanged" Grid.Row="2" Width="100" HorizontalAlignment="Center" Margin="0,10" IsEnabled="False"/>
          
             </Grid>   -->
-            <Grid Margin="10,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left" x:Uid="ScalingFactor"/>
 
-                <ComboBox x:Name="ScaleComboBox" Grid.Row="2" SelectionChanged="PreviewFactor_SelectionChanged" HorizontalAlignment="Center" Margin="0,10,0,0">
-            
-                </ComboBox>
-            </Grid>
+            <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="Display" Margin="5,0,0,0"/>
+            <TextBlock  TextWrapping="Wrap" FontSize="18"  x:Uid="ScalingFactor"/>
+            <ComboBox x:Name="ScaleComboBox" Grid.Row="2" SelectionChanged="PreviewFactor_SelectionChanged" Margin="0,10,0,0"></ComboBox>
+            <TextBlock  TextWrapping="Wrap" FontSize="18"  x:Uid="Demos"/>
+            <TextBlock TextWrapping="WrapWholeWords" FontSize="12"  x:Uid="DemosWarningText" Margin="10,20" MaxWidth="360"/>
+            <ComboBox Grid.Row="2" SelectionChanged="Algo_SelectionChanged"  Margin="0,10,0,0" x:Name="DemosComboBox"></ComboBox>
+            <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left" x:Uid="Theme"/>
+            <ComboBox Grid.Row="2"  HorizontalAlignment="Center" Margin="0,10,0,0" x:Name="ThemeComboBox" SelectionChanged="ThemeComboBox_SelectionChanged"></ComboBox>
 
-            <Grid Margin="10,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBlock  TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left" x:Uid="Demos"/>
-                <TextBlock TextWrapping="WrapWholeWords" FontSize="12" HorizontalAlignment="Left" x:Uid="DemosWarningText" Margin="10,20" MaxWidth="360"/>
-                <ComboBox Grid.Row="2" SelectionChanged="Algo_SelectionChanged" HorizontalAlignment="Center" Margin="0,10,0,0"
-                          x:Name="DemosComboBox">
-                   
-                </ComboBox>
-            </Grid>
             <Button Tapped="Reset_Tapped" >Reset</Button>
             <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="About" Margin="5,0,0,0" />
             <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Issue" Margin="10,0,0,0" />
 
-            <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+            <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" Margin="10,10,0,0"/>
             <TextBlock FontSize="30" TextWrapping="WrapWholeWords" x:Uid="Legal" Margin="5,10,0,0" />
             <HyperlinkButton Content="Icon from flaticon.com" NavigateUri="https://www.flaticon.com/" Margin="10,10,0,0"/>
-            <Button x:Uid="Privacy"  HorizontalAlignment="Left" Tapped="Button_Tapped" Margin="10,20,0,0"></Button>
-
+            <Button x:Uid="Privacy"  Tapped="Button_Tapped" Margin="10,20,0,0"></Button>
         </StackPanel>
         <Popup IsOpen="False" x:Name="PopUp" IsLightDismissEnabled="True">
             <Popup.ChildTransitions>

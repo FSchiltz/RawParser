@@ -20,6 +20,16 @@ namespace RawEditor
         {
             InitializeComponent();
             Suspending += OnSuspending;
+            SettingStorage.Init();
+            var theme = SettingStorage.SelectedTheme;
+            if (theme == ThemeEnum.Dark)
+            {
+                RequestedTheme = ApplicationTheme.Dark;
+            }
+            else if (theme == ThemeEnum.Light)
+            {
+                RequestedTheme = ApplicationTheme.Light;
+            }
         }
 
         /// <summary>
@@ -54,7 +64,7 @@ namespace RawEditor
                 // Placez le frame dans la fenêtre active
                 Window.Current.Content = rootFrame;
             }
-            
+
             if (!e.PrelaunchActivated)
             {
                 if (rootFrame.Content == null)
