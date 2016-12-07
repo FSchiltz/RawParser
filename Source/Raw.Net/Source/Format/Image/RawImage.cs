@@ -447,7 +447,7 @@ namespace RawNet
         {
             previewDim = new iPoint2D(dim.x / previewFactor, dim.y / previewFactor);
             previewData = new ushort[previewDim.y * previewDim.x * cpp];
-            ushort doubleFactor = (ushort)(previewFactor * previewFactor);
+            int doubleFactor = previewFactor * previewFactor;
             ushort maxValue = (ushort)(1 << colorDepth);
             //loop over each block
             Parallel.For(0, previewDim.y, y =>
@@ -468,9 +468,9 @@ namespace RawNet
                             b += rawData[realX + 2];
                         }
                     }
-                    r /= doubleFactor;
-                    g /= doubleFactor;
-                    b /= doubleFactor;
+                    r =(ushort) (r / doubleFactor);
+                    g = (ushort)(g / doubleFactor);
+                    b = (ushort)(b / doubleFactor);
                     if (r < 0) r = 0; else if (r > maxValue) r = maxValue;
                     if (g < 0) g = 0; else if (g > maxValue) g = maxValue;
                     if (b < 0) b = 0; else if (b > maxValue) b = maxValue;

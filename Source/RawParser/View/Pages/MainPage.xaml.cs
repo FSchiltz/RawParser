@@ -73,13 +73,13 @@ namespace RawEditor
                     SuggestedStartLocation = PickerLocationId.ComputerFolder
                 };
                 filePicker.FileTypeFilter.Add(".nef");
-                // filePicker.FileTypeFilter.Add(".tiff");
-                // filePicker.FileTypeFilter.Add(".tif");
+                filePicker.FileTypeFilter.Add(".tiff");
+                filePicker.FileTypeFilter.Add(".tif");
                 filePicker.FileTypeFilter.Add(".dng");
                 // filePicker.FileTypeFilter.Add(".cr2");
                 filePicker.FileTypeFilter.Add(".jpg");
                 //filePicker.FileTypeFilter.Add(".jpeg");
-                //filePicker.FileTypeFilter.Add(".png");
+                filePicker.FileTypeFilter.Add(".png");
                 StorageFile file = await filePicker.PickSingleFileAsync();
                 if (file != null)
                 {
@@ -451,6 +451,25 @@ namespace RawEditor
                             {
                                 //Do some UI-code that must be run on the UI thread.
                                 encoder.SetSoftwareBitmap(bitmap);
+                            });
+                            await encoder.FlushAsync();
+                            encoder = null;
+                            bitmap.Dispose();
+                        }
+                    }
+
+                    else if (file.FileType == ".tiff")
+                    {
+                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
+                        {
+                            int[] t = new int[3];
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.TiffEncoderId, filestream);
+
+                            //Needs to run in the UI thread because fuck performance
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                            {
+                            //Do some UI-code that must be run on the UI thread.
+                            encoder.SetSoftwareBitmap(bitmap);
                             });
                             await encoder.FlushAsync();
                             encoder = null;

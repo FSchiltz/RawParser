@@ -200,7 +200,7 @@ namespace RawNet
             }
 
 
-            //default as astandard tiff
+            //default as as tandard tiff
             rootIFD = null;
             return new TiffDecoder(root, ref reader);
             //TODO add detection of Tiff

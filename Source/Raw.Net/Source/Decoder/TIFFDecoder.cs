@@ -29,12 +29,14 @@ namespace RawNet
                 if (!ifd.tags.TryGetValue((TagType)0x0115, out var samplesPerPixel)) throw new FormatException("File not correct");
                 uint height = Convert.ToUInt32(imageHeightTag.data[0]);
                 uint width = Convert.ToUInt32(imageWidthTag.data[0]);
+                mRaw.dim = new iPoint2D((int)width, (int)height);
                 //suppose that image are always 8,8,8 or 16,16,16
                 ushort colorDepth = (ushort)bitPerSampleTag.data[0];
                 ushort[] image = new ushort[width * height * 3];
-                long strips = height / (ushort)rowPerStripTag.data[0], lastStrip = height % (ushort)rowPerStripTag.data[0];
+                long strips = height / Convert.ToInt64(rowPerStripTag.data[0]), lastStrip = height % Convert.ToInt64(rowPerStripTag.data[0]);
                 long rowperstrip = Convert.ToInt64(rowPerStripTag.data[0]);
-                if ((ushort)imageCompressedTag.data[0] == 1)
+                uint compression = imageCompressedTag.getUInt();
+                if (compression == 1)
                 {
                     //not compressed
                     for (int i = 0; i < strips + ((lastStrip == 0) ? 0 : 1); i++)
@@ -62,7 +64,7 @@ namespace RawNet
                         }
                     }
                 }
-                else if ((ushort)imageCompressedTag.data[0] == 32773)
+                else if (compression == 32773)
                 {
                     //compressed
                     /*Loop until you get the number of unpacked bytes you are expecting:
@@ -126,6 +128,9 @@ namespace RawNet
                     }
                 }
                 else throw new FormatException("Compression mode " + imageCompressedTag.dataAsString + " not supported yet");
+                mRaw.cpp = 3;
+                mRaw.colorDepth = colorDepth;
+                mRaw.bpp = colorDepth;
                 mRaw.rawData = image;
                 return mRaw;
             }
@@ -134,12 +139,13 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal(CameraMetaData meta)
         {
-            throw new NotImplementedException();
+            //fill useless metadata
+            mRaw.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
         }
 
         protected override void checkSupportInternal(CameraMetaData meta)
         {
-            throw new NotImplementedException();
+            //TODO add more check
         }
     }
 }
