@@ -135,7 +135,7 @@ namespace RawNet
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var a = (row * dim.x) + col;
+                var a = (row * uncroppedDim.x) + col;
                 if (row < 0 || row >= dim.y || col < 0 || col >= dim.x)
                 {
                     return 0;
@@ -146,7 +146,7 @@ namespace RawNet
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                rawData[(row * dim.x) + col] = value;
+                rawData[(row * uncroppedDim.x) + col] = value;
             }
         }
 
@@ -317,14 +317,6 @@ namespace RawNet
             return (reste == 0) ? (byte)(value >> 8) : (byte)value;
         }
 
-        public void CorrectWB()
-        {
-            float i = metadata.wbCoeffs[2];
-            float k = metadata.wbCoeffs[0];
-            metadata.wbCoeffs[0] = i;
-            metadata.wbCoeffs[2] = k;
-        }
-
         public void scaleBlackWhite()
         {
             const int skipBorder = 250;
@@ -446,19 +438,45 @@ namespace RawNet
             }
         }
 
+        /**
+         * Create a preview of the raw image using the scaling factor
+         * The X and Y dimension will be both divided by the image
+         * 
+         */
         public void CreatePreview(int previewFactor)
         {
             previewDim = new iPoint2D(dim.x / previewFactor, dim.y / previewFactor);
             previewData = new ushort[previewDim.y * previewDim.x * cpp];
+            ushort doubleFactor = (ushort)(previewFactor * previewFactor);
+            ushort maxValue = (ushort)(1 << colorDepth);
+            //loop over each block
             Parallel.For(0, previewDim.y, y =>
             {
-                int realY = (mOffset.y + y * previewFactor) * previewDim.x;
                 for (int x = 0; x < previewDim.x; x++)
                 {
-                    int realPix = (int)(((x + realY) * previewFactor + mOffset.x) * cpp);
-                    previewData[((y * previewDim.x) + x) * cpp] = rawData[realPix];
-                    previewData[(((y * previewDim.x) + x) * cpp) + 1] = rawData[realPix + 1];
-                    previewData[(((y * previewDim.x) + x) * cpp) + 2] = rawData[realPix + 2];
+                    //find the mean of each block
+                    ushort r = 0, g = 0, b = 0;
+
+                    for (int i = 0; i < previewFactor; i++)
+                    {
+                        int realY = dim.x * ((y * previewFactor) + i);
+                        for (int k = 0; k < previewFactor; k++)
+                        {
+                            long realX = (realY + (x * previewFactor + k)) * cpp;
+                            r += rawData[realX];
+                            g += rawData[realX + 1];
+                            b += rawData[realX + 2];
+                        }
+                    }
+                    r /= doubleFactor;
+                    g /= doubleFactor;
+                    b /= doubleFactor;
+                    if (r < 0) r = 0; else if (r > maxValue) r = maxValue;
+                    if (g < 0) g = 0; else if (g > maxValue) g = maxValue;
+                    if (b < 0) b = 0; else if (b > maxValue) b = maxValue;
+                    previewData[((y * previewDim.x) + x) * cpp] = r;
+                    previewData[(((y * previewDim.x) + x) * cpp) + 1] = g;
+                    previewData[(((y * previewDim.x) + x) * cpp) + 2] = b;
                 }
             });
         }
