@@ -85,10 +85,10 @@ namespace RawEditor
             SettingStorage.Init();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
-            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));  
+            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
         }
 
-        private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
+        private async void AppBarImageChooseClick(object sender, RoutedEventArgs e)
         {
             if (!imageSelected)
             {
@@ -127,7 +127,7 @@ namespace RawEditor
         }
 
         //Always call in the UI thread
-        private async void emptyImage()
+        private async void EmptyImage()
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher
                     .RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -140,13 +140,47 @@ namespace RawEditor
                         //empty the exif data
                         exifDisplay.ItemsSource = null;
                         //empty the histogram
-                        enableEditingControl(false);
+                        EnableEditingControl(false);
                         //free the histogram
                         histogramCanvas.Children.Clear();
+                        //set back editing control to default value
+
+                        exposureSlider.Value = 0;
+
+                        //ShadowSlider.IsEnabled = v;
+                        //HighLightSlider.IsEnabled = v;
+                        //gammaSlider.IsEnabled = v;
+                        contrastSlider.Value = 10;
+                        //brightnessSlider.IsEnabled = v;
+                        saturationSlider.Value = 0;
+
+                        //set white balance if any
                     });
         }
 
-        private async void enableEditingControl(bool v)
+        private async void SetWB()
+        {
+            int rValue = 255, bValue = 255;
+            if (raw != null && raw.metadata != null)
+            {
+                //calculate the coeff
+                double r = raw.metadata.wbCoeffs[0] / raw.metadata.wbCoeffs[1], b = raw.metadata.wbCoeffs[2] / raw.metadata.wbCoeffs[1]; ;
+                rValue = (int)(r * 255);
+                bValue = (int)(b * 255);
+                if (rValue > 510) rValue = 510;
+                else if (rValue < 0) rValue = 0;
+                if (bValue > 510) bValue = 510;
+                else if (bValue < 0) bValue = 0;
+
+            }
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                colorTempSlider.Value = rValue;
+                colorTintSlider.Value = bValue;
+            });
+        }
+
+        private async void EnableEditingControl(bool v)
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
@@ -178,7 +212,7 @@ namespace RawEditor
         {
             //Add a loading screen
             DisplayLoad();
-            emptyImage();
+            EmptyImage();
             Task t = Task.Run(async () =>
             {
                 try
@@ -243,7 +277,8 @@ namespace RawEditor
                     updatePreview();
 
                     //activate the editing control
-                    enableEditingControl(true);
+                    SetWB();
+                    EnableEditingControl(true);
                     //dispose
                     file = null;
                     parser = null;
@@ -600,8 +635,8 @@ namespace RawEditor
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     effect.exposure = exposureSlider.Value;
-                    effect.temperature = colorTempSlider.Value - 1;
-                    effect.tint = colorTintSlider.Value - 1;
+                    effect.temperature = colorTempSlider.Value;
+                    effect.tint = colorTintSlider.Value ;
 
                     effect.contrast = contrastSlider.Value / 10;
                     /*effect.gamma = gammaSlider.Value;
@@ -666,13 +701,8 @@ namespace RawEditor
             cameraWB = true;
             cameraWBCheck.IsEnabled = false;
             //TODO move slider to the camera WB
-            MoveWB();
+            SetWB();
             updatePreview();
-        }
-
-        private void MoveWB()
-        {
-
         }
         #endregion
 

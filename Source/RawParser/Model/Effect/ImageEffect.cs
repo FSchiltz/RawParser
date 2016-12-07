@@ -30,8 +30,8 @@ namespace RawEditor
             {
                 mul = new float[4];
                 //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
-                mul[0] = (float)(255 / temperature);
-                mul[1] = (float)(255 / tint);
+                mul[0] = (float)(temperature / 255);
+                mul[1] = (float)(tint / 255);
                 mul[2] = 1;
             }
 
@@ -133,8 +133,8 @@ namespace RawEditor
                     {
                         mul = new float[4];
                         //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
-                        mul[2] = (float)(255 / temperature);
-                        mul[0] = (float)(255.0 / tint);
+                        mul[2] = (float)(temperature/255);
+                        mul[0] = (float)(tint/255);
                         mul[1] = 1;
                     }
 
@@ -174,55 +174,55 @@ namespace RawEditor
                        {
                            int realPix = realY + (3 * x);
                            int bufferPix = bufferY + (4 * x);
-                            //get the RGB value
-                            double red = image[realPix],
-                           green = image[realPix + 1],
-                           blue = image[realPix + 2];
+                           //get the RGB value
+                           double red = image[realPix],
+                          green = image[realPix + 1],
+                          blue = image[realPix + 2];
 
-                            //convert to linear rgb (not needed, the raw should be in linear already)
-                            /*Balance.sRGBToRGB(ref red, maxValue - 1);
-                            Balance.sRGBToRGB(ref green, maxValue - 1);
-                            Balance.sRGBToRGB(ref blue, maxValue - 1);*/
+                           //convert to linear rgb (not needed, the raw should be in linear already)
+                           /*Balance.sRGBToRGB(ref red, maxValue - 1);
+                           Balance.sRGBToRGB(ref green, maxValue - 1);
+                           Balance.sRGBToRGB(ref blue, maxValue - 1);*/
 
-                            //scale according to the white balance
-                            red *= mul[0];
+                           //scale according to the white balance
+                           red *= mul[0];
                            green *= mul[1];
                            blue *= mul[2];
-                            //clip
-                            Luminance.Clip(ref red, ref green, ref blue, maxValue);
+                           //clip
+                           Luminance.Clip(ref red, ref green, ref blue, maxValue);
                            double h = 0, s = 0, l = 0;
-                            //transform to HSL value
-                            Color.rgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
-                            //change brightness from curve
-                            //add saturation
-                            l = contrastCurve[(uint)(l * maxValue)] / maxValue;
+                           //transform to HSL value
+                           Color.rgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
+                           //change brightness from curve
+                           //add saturation
+                           l = contrastCurve[(uint)(l * maxValue)] / maxValue;
                            s *= saturation;
                            s += vibrance;
                            l *= exposure;
                            l += brightness / 100;
-                            //change back to RGB
-                            Color.hslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+                           //change back to RGB
+                           Color.hslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
 
-                            //Luminance.Exposure(ref red, ref green, ref blue, exposure);
-                            //Luminance.Brightness(ref red, ref green, ref blue, brightness);
-                            //Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);               
-                            Luminance.Contraste(ref red, ref green, ref blue, maxValue, contrast);
+                           //Luminance.Exposure(ref red, ref green, ref blue, exposure);
+                           //Luminance.Brightness(ref red, ref green, ref blue, brightness);
+                           //Balance.scaleGamma(ref red, ref green, ref blue, gamma, maxValue);               
+                           Luminance.Contraste(ref red, ref green, ref blue, maxValue, contrast);
 
-                            //clip
-                            Luminance.Clip(ref red, ref green, ref blue, maxValue);
+                           //clip
+                           Luminance.Clip(ref red, ref green, ref blue, maxValue);
 
                            temp[bufferPix] = (byte)((int)blue >> shift);
                            temp[bufferPix + 1] = (byte)((int)green >> shift);
                            temp[bufferPix + 2] = (byte)((int)red >> shift);
 
                            Interlocked.Increment(ref value[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
-                            //set transparency to 255 else image will be blank
-                            temp[bufferPix + 3] = 255;
-                            //change gamma from curve 
-                            /*
-                            image[i * 3] = (ushort)gammaCurve[(int)red];
-                            image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
-                            image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];*/
+                           //set transparency to 255 else image will be blank
+                           temp[bufferPix + 3] = 255;
+                           //change gamma from curve 
+                           /*
+                           image[i * 3] = (ushort)gammaCurve[(int)red];
+                           image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
+                           image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];*/
                        }
                    });
                 }

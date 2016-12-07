@@ -27,7 +27,7 @@
             <AppBarButton x:Name="ImageChooseButton" 
                           Icon="BrowsePhotos"
                           x:Uid="OpenImage" 
-                          Click="appBarImageChooseClick"
+                          Click="AppBarImageChooseClick"
                           VerticalAlignment="Top" FontSize="12" Width="40"/>
             <AppBarButton x:Name="saveButton" 
                           Icon="SaveLocal"
@@ -161,8 +161,8 @@
 
                                 <TextBlock Foreground="Black" FontSize="16" x:Uid="ColorBalance"/>
                                 <TextBlock FontSize="12" x:Uid="Temperature"/>
-                                <Slider x:Name="colorTempSlider"   PointerCaptureLost="WBSlider_DragStop"  Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
-                                <Slider x:Name="colorTintSlider"    PointerCaptureLost="WBSlider_DragStop"  Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
+                                <Slider x:Name="colorTempSlider"   PointerCaptureLost="WBSlider_DragStop"  Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="False"/>
+                                <Slider x:Name="colorTintSlider"    PointerCaptureLost="WBSlider_DragStop"  Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="False"/>
 
                                 <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" 
                                         x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton"/>
