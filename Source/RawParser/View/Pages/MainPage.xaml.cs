@@ -271,11 +271,11 @@ namespace RawEditor
             {
                 if (raw.dim.y > raw.dim.x)
                 {
-                    previewFactor = (int)(raw.dim.y / 720);
+                    previewFactor = (raw.dim.y / 1080);
                 }
                 else
                 {
-                    previewFactor = (int)(raw.dim.x / 1080);
+                    previewFactor = (raw.dim.x / 1920);
                 }
                 int start = 1;
                 for (; previewFactor > (start << 1); start <<= 1) ;
