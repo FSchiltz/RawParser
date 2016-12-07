@@ -121,7 +121,7 @@
                           RelativePanel.AlignLeftWithPanel="True"  
                           HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                 <ScrollViewer.Background>
-                    <SolidColorBrush Color="{ThemeResource SystemAltLowColor}"/>
+                    <SolidColorBrush Color="#19FFFFFF"/>
                 </ScrollViewer.Background>
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
