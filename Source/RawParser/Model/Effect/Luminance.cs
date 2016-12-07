@@ -35,14 +35,22 @@
             b *= maxValue;
         }
 
-        public static void Clip(ref double red, ref double green, ref double blue,uint maxValue)
+        public static void Clip(ref double red, ref double green, ref double blue, uint maxValue)
         {
-            if (red > maxValue) red = maxValue;
-            if (green > maxValue) green = maxValue;
-            if (blue > maxValue) blue = maxValue;
-            if (red < 0) red = 0;
-            if (green < 0) green = 0;
-            if (blue < 0) blue = 0;
+            if (red > maxValue)
+                red = maxValue;
+            else if (red < 0)
+                red = 0;
+
+            if (green > maxValue)
+                green = maxValue;
+            if (green < 0)
+                green = 0;
+
+            if (blue > maxValue)
+                blue = maxValue;
+            else if (blue < 0)
+                blue = 0;
         }
 
         internal static void Brightness(ref double red, ref double green, ref double blue, double brightness)
