@@ -126,13 +126,10 @@
                   RelativePanel.AlignRightWithPanel="True" 
                   RelativePanel.AlignBottomWithPanel="True" >
                 <ProgressBar x:Name="progressDisplay"  
-                      VerticalAlignment="Center" 
-                      Background="{x:Null}" 
-                      IsIndeterminate="True"
-                      Foreground="#FF00589C" Margin="0"
+                      VerticalAlignment="Top" 
+                      IsIndeterminate="True" Margin="0"
                      RenderTransformOrigin="0.5,0.5"
-                     Visibility="Collapsed" Canvas.ZIndex="99" >
-                </ProgressBar>
+                     Visibility="Collapsed" Canvas.ZIndex="99" Height="10" />
                 <Pivot x:Name="ControlPivot">
                     <PivotItem x:Uid="ExposureHeader">
                         <ScrollViewer VerticalContentAlignment="Stretch">
