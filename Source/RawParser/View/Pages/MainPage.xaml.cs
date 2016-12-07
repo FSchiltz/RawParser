@@ -20,6 +20,7 @@ using Windows.UI.ViewManagement;
 using Windows.Foundation;
 using RawNet;
 using System.Diagnostics;
+using Windows.Foundation.Metadata;
 
 namespace RawEditor
 {
@@ -84,7 +85,7 @@ namespace RawEditor
             SettingStorage.Init();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
-            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
+            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));  
         }
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)

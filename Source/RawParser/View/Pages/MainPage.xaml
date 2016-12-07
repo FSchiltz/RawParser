@@ -43,14 +43,14 @@
             <AppBarButton x:Name="settingsButton"  
                           Icon="Setting" x:Uid="Setting" 
                           Click="appbarSettingClick"/>
-
+            <!--
             <CommandBar.SecondaryCommands>
                 <AppBarButton x:Name="settingsButton2" 
                               Icon="Setting" x:Uid="Setting" 
                               Click="appbarSettingClick"/>
                 <AppBarButton x:Name="shareButton2" Icon="Link" 
                               x:Uid="Share" VerticalAlignment="Top"/>
-            </CommandBar.SecondaryCommands>
+            </CommandBar.SecondaryCommands> -->
         </CommandBar>
     </Page.BottomAppBar>
 
@@ -64,11 +64,11 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
-                        <Setter Target="shareButton.Visibility" Value="Visible" />
+                        <!-- <Setter Target="shareButton.Visibility" Value="Visible" />
                         <Setter Target="settingsButton.Visibility" Value="Visible" />
                         <Setter Target="shareButton2.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
-
+-->
                         <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto"/>
                         <Setter Target="MainGrid.ColumnDefinitions[0].Width" Value="2*"/>
                         <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*"/>
@@ -86,11 +86,11 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
-                        <Setter Target="shareButton.Visibility" Value="Collapsed" />
+                        <!--<Setter Target="shareButton.Visibility" Value="Collapsed" />
                         <Setter Target="settingsButton.Visibility" Value="Collapsed" />
                         <Setter Target="shareButton2.Visibility" Value="Visible" />
                         <Setter Target="settingsButton2.Visibility" Value="Visible" />
-
+-->
                         <Setter Target="ImageDisplay.Margin" Value="0 0 0 1"/>
                         <Setter Target="PivotGrid.Margin" Value="0 1 0 0"/>
                         <Setter Target="MainGrid.RowDefinitions[0].Height" Value="2*"/>
@@ -120,6 +120,9 @@
                           RelativePanel.AlignTopWithPanel="True" 
                           RelativePanel.AlignLeftWithPanel="True"  
                           HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                <ScrollViewer.Background>
+                    <SolidColorBrush Color="{ThemeResource SystemAltLowColor}"/>
+                </ScrollViewer.Background>
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
             <Grid x:Name="PivotGrid" 
