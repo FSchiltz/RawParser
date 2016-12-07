@@ -37,7 +37,31 @@ namespace RawEditor
         bool cameraWB = true;
         CameraMetaData metadata = null;
         public Thumbnail thumbnail;
+        private uint displayMutex = 0;
 
+        public async void DisplayLoad()
+        {
+            displayMutex++;
+            if (displayMutex > 0)
+            {
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    progressDisplay.Visibility = Visibility.Visible;
+                });
+            }
+        }
+
+        public async void StopLoadDisplay()
+        {
+            displayMutex--;
+            if (displayMutex <= 0)
+            {
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    progressDisplay.Visibility = Visibility.Collapsed;
+                });
+            }
+        }
         public MainPage()
         {
             InitializeComponent();
@@ -152,7 +176,7 @@ namespace RawEditor
         private void OpenFile(StorageFile file)
         {
             //Add a loading screen
-            progressDisplay.Visibility = Visibility.Visible;
+            DisplayLoad();
             emptyImage();
             Task t = Task.Run(async () =>
             {
@@ -231,11 +255,7 @@ namespace RawEditor
                     ExceptionDisplay.display(str);
                 }
 
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                                            {
-                                                //Hide the loading screen
-                                                progressDisplay.Visibility = Visibility.Collapsed;
-                                            });
+                StopLoadDisplay();
                 imageSelected = false;
             });
         }
@@ -392,7 +412,7 @@ namespace RawEditor
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
 
-                progressDisplay.Visibility = Visibility.Visible;
+                DisplayLoad();
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
@@ -519,13 +539,7 @@ namespace RawEditor
                     {
                         ExceptionDisplay.display("File could not be saved");
                     }
-                    await CoreApplication.MainView.CoreWindow.Dispatcher
-                    .RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        //Do some UI-code that must be run on the UI thread.
-                        //Hide the loading screen
-                        progressDisplay.Visibility = Visibility.Collapsed;
-                    });
+                    StopLoadDisplay();
                 });
             }
         }
