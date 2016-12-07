@@ -1,7 +1,7 @@
 # RawParser
 =========
 
-# the app is now live on the store (https://www.microsoft.com/store/apps/9pfwlj4lxftf) (I recommend uninstalling the preview and using the one in the store. The future releases will be available in the store one or 2 days after being here).
+## the app is now live on the store (https://www.microsoft.com/store/apps/9pfwlj4lxftf) (I recommend uninstalling the preview and using the one in the store. The future releases will be available in the store one or 2 days after being here).
 
 ## About
 This is a Windows universal application that allows editing of raw files and other image format.
