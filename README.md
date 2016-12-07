@@ -2,7 +2,8 @@
 =========
 [![Join the chat at https://gitter.im/RawParser/Lobby](https://badges.gitter.im/RawParser/Lobby.svg)](https://gitter.im/RawParser/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## the app is now live on the store (https://www.microsoft.com/store/apps/9pfwlj4lxftf) (I recommend uninstalling the preview and using the one in the store. The future releases will be available in the store one or 2 days after being here).
+## the app is now live on the store (https://www.microsoft.com/store/apps/9pfwlj4lxftf) 
+###(I recommend uninstalling the preview and using the one in the store. The future releases will be available in the store one or 2 days after being here).
 
 ## About
 This is a Windows universal application that allows editing of raw files and other image format.
