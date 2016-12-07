@@ -30,6 +30,7 @@ namespace RawNet
                 uint height = Convert.ToUInt32(imageHeightTag.data[0]);
                 uint width = Convert.ToUInt32(imageWidthTag.data[0]);
                 mRaw.dim = new iPoint2D((int)width, (int)height);
+                mRaw.uncroppedDim = mRaw.dim;
                 //suppose that image are always 8,8,8 or 16,16,16
                 ushort colorDepth = (ushort)bitPerSampleTag.data[0];
                 ushort[] image = new ushort[width * height * 3];
@@ -139,8 +140,32 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal(CameraMetaData meta)
         {
-            //fill useless metadata
-            mRaw.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
+            var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            if (t != null) mRaw.metadata.isoSpeed = t.getInt();
+
+            // Set the make and model
+            t = ifd.getEntryRecursive(TagType.MAKE);
+            var t2 = ifd.getEntryRecursive(TagType.MODEL);
+            if (t != null && t != null)
+            {
+                string make = t.dataAsString;
+                string model = t2.dataAsString;
+                make = make.Trim();
+                model = model.Trim();
+                mRaw.metadata.make = make;
+                mRaw.metadata.model = model;
+                mRaw.metadata.canonical_make = make;
+                mRaw.metadata.canonical_model = mRaw.metadata.canonical_alias = model;
+                t = ifd.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
+                if (t != null)
+                {
+                    mRaw.metadata.canonical_id = t.dataAsString;
+                }
+                else
+                {
+                    mRaw.metadata.canonical_id = make + " " + model;
+                }
+            }
         }
 
         protected override void checkSupportInternal(CameraMetaData meta)

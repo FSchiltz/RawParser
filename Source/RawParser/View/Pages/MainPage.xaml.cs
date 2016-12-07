@@ -191,7 +191,8 @@ namespace RawEditor
 
                     raw = decoder.decodeRaw();
                     decoder.decodeMetaData(metadata);
-                    raw.fileName = file.DisplayName;
+                    raw.metadata.fileName = file.DisplayName;
+                    raw.metadata.fileNameComplete = file.Name;
                     //read the exifs
                     displayExif();
                     //scale the value
@@ -340,14 +341,19 @@ namespace RawEditor
                 //create a list from the metadata object
 
                 Dictionary<string, string> exif = new Dictionary<string, string>();
+                exif.Add("File", raw.metadata.fileNameComplete);
                 //iso
-                exif.Add("ISO", "" + raw.metadata.isoSpeed);
+                if (raw.metadata.isoSpeed > 0)
+                    exif.Add("ISO", "" + raw.metadata.isoSpeed);
                 //maker
-                exif.Add("Maker", raw.metadata.make);
+                if (raw.metadata.make != null && raw.metadata.make.Trim() != "")
+                    exif.Add("Maker", raw.metadata.make);
                 //model
-                exif.Add("Model", raw.metadata.model);
+                if (raw.metadata.model != null && raw.metadata.model.Trim() != "")
+                    exif.Add("Model", raw.metadata.model);
                 //mode
-                exif.Add("Image mode", raw.metadata.mode);
+                if (raw.metadata.mode != null && raw.metadata.mode.Trim() != "")
+                    exif.Add("Image mode", raw.metadata.mode);
                 //dimension
                 exif.Add("Width", "" + raw.dim.x);
                 exif.Add("Height", "" + raw.dim.y);
@@ -375,7 +381,7 @@ namespace RawEditor
                 var savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                    SuggestedFileName = raw.fileName
+                    SuggestedFileName = raw.metadata.fileName
                 };
                 // Dropdown of file types the user can save the file as
                 savePicker.FileTypeChoices.Add("Jpeg image file", new List<string>() { ".jpg" });
@@ -463,13 +469,19 @@ namespace RawEditor
                         using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                         {
                             int[] t = new int[3];
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.TiffEncoderId, filestream);
+                            var propertySet = new BitmapPropertySet();
+                            var compressionValue = new BitmapTypedValue(
+                                TiffCompressionMode.None, // no compression
+                                PropertyType.UInt8
+                                );
+                            propertySet.Add("TiffCompressionMethod", compressionValue);
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.TiffEncoderId, filestream, propertySet);
 
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
-                            //Do some UI-code that must be run on the UI thread.
-                            encoder.SetSoftwareBitmap(bitmap);
+                                //Do some UI-code that must be run on the UI thread.
+                                encoder.SetSoftwareBitmap(bitmap);
                             });
                             await encoder.FlushAsync();
                             encoder = null;
