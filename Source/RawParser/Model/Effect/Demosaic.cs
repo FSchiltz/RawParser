@@ -32,6 +32,8 @@ namespace RawEditor
                     Demosaic.Deflate(image);
                     break;
             }
+            //set correct dim
+            image.mOffset = new iPoint2D();
         }
 
         private static void Deflate(RawImage image)
@@ -62,7 +64,7 @@ namespace RawEditor
                   int realRow = row + image.mOffset.y;
                   for (int col = 0; col < image.dim.x; col++)
                   {
-                      int realCol = col + image.mOffset.x;
+                      int realCol = col + image.mOffset.x ;
                       CFAColor pixeltype = image.cfa.cfa[((row % 2) * 2) + col % 2];
                       if (pixeltype == CFAColor.GREEN)
                       {

@@ -65,35 +65,41 @@ namespace RawEditor
 
         private async void appBarImageChooseClick(object sender, RoutedEventArgs e)
         {
-            FileOpenPicker filePicker = new FileOpenPicker()
+            if (!imageSelected)
             {
-                ViewMode = PickerViewMode.Thumbnail,
-                SuggestedStartLocation = PickerLocationId.ComputerFolder
-            };
-            filePicker.FileTypeFilter.Add(".nef");
-            // filePicker.FileTypeFilter.Add(".tiff");
-            // filePicker.FileTypeFilter.Add(".tif");
-            filePicker.FileTypeFilter.Add(".dng");
-            // filePicker.FileTypeFilter.Add(".cr2");
-            filePicker.FileTypeFilter.Add(".jpg");
-            //filePicker.FileTypeFilter.Add(".jpeg");
-            //filePicker.FileTypeFilter.Add(".png");
-            StorageFile file = await filePicker.PickSingleFileAsync();
-            if (file != null)
-            {
-                // Application now has read/write access to the picked file
-                try
+                FileOpenPicker filePicker = new FileOpenPicker()
                 {
-                    OpenFile(file);
-                }
-                catch (Exception ex)
+                    ViewMode = PickerViewMode.Thumbnail,
+                    SuggestedStartLocation = PickerLocationId.ComputerFolder
+                };
+                filePicker.FileTypeFilter.Add(".nef");
+                // filePicker.FileTypeFilter.Add(".tiff");
+                // filePicker.FileTypeFilter.Add(".tif");
+                filePicker.FileTypeFilter.Add(".dng");
+                // filePicker.FileTypeFilter.Add(".cr2");
+                filePicker.FileTypeFilter.Add(".jpg");
+                //filePicker.FileTypeFilter.Add(".jpeg");
+                //filePicker.FileTypeFilter.Add(".png");
+                StorageFile file = await filePicker.PickSingleFileAsync();
+                if (file != null)
                 {
-                    ExceptionDisplay.display(ex.Message + ex.StackTrace);
+                    // Application now has read/write access to the picked file
+                    try
+                    {
+                        imageSelected = true;
+                        OpenFile(file);
+                    }
+                    catch (Exception ex)
+                    {
+                        ExceptionDisplay.display(ex.Message + ex.StackTrace);
+                        imageSelected = false;
+                    }
+
                 }
-            }
-            else
-            {
-                //TODO
+                else
+                {
+                    ExceptionDisplay.display("File could not be opened");
+                }
             }
         }
 
@@ -113,7 +119,7 @@ namespace RawEditor
                         //empty the histogram
                         enableEditingControl(false);
                         //free the histogram
-
+                        histogramCanvas.Children.Clear();
                     });
         }
 
@@ -149,7 +155,6 @@ namespace RawEditor
         {
             //Add a loading screen
             progressDisplay.Visibility = Visibility.Visible;
-            histoLoadingBar.Visibility = Visibility.Visible;
             emptyImage();
             Task t = Task.Run(async () =>
             {
@@ -188,9 +193,6 @@ namespace RawEditor
                     //scale the value
                     //raw.scaleValues();
 
-                    //correctWB
-                    //raw.CorrectWB();
-
                     //demos
                     if (raw.cfa != null && raw.cpp == 1)
                     {
@@ -228,6 +230,7 @@ namespace RawEditor
                                                 //Hide the loading screen
                                                 progressDisplay.Visibility = Visibility.Collapsed;
                                             });
+                imageSelected = false;
             });
         }
 
@@ -393,7 +396,7 @@ namespace RawEditor
                     {
                         bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.x, raw.dim.y);
                     });
-                    applyUserModif(ref raw.rawData, raw.dim, raw.mOffset, raw.colorDepth, ref bitmap);
+                    applyUserModif(ref raw.rawData, raw.dim, raw.colorDepth, ref bitmap);
                     // write to file
                     if (file.FileType == ".jpg")
                     {
@@ -525,23 +528,19 @@ namespace RawEditor
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    histoLoadingBar.Visibility = Visibility.Visible;
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
                 });
-                int[] value = applyUserModif(ref raw.previewData, raw.previewDim, new iPoint2D(), raw.colorDepth, ref bitmap);
+                int[] value = applyUserModif(ref raw.previewData, raw.previewDim, raw.colorDepth, ref bitmap);
                 displayImage(bitmap);
                 Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    histoLoadingBar.Visibility = Visibility.Collapsed;
-                });
+
             });
         }
 
         /**
          * Apply the change over the image preview
          */
-        private int[] applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth, ref SoftwareBitmap bitmap)
+        private int[] applyUserModif(ref ushort[] image, iPoint2D dim, ushort colorDepth, ref SoftwareBitmap bitmap)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -568,10 +567,10 @@ namespace RawEditor
             effect.camCurve = raw.curve;
 
             //get the softwarebitmap buffer
-            return effect.applyModification(image, dim, offset, colorDepth, ref bitmap);
+            return effect.applyModification(image, dim, colorDepth, ref bitmap);
         }
 
-        private void applyUserModif(ref ushort[] image, iPoint2D dim, iPoint2D offset, ushort colorDepth)
+        private void applyUserModif(ref ushort[] image, iPoint2D dim, ushort colorDepth)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -597,7 +596,7 @@ namespace RawEditor
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
-            effect.applyModification(image, dim, offset, colorDepth);
+            effect.applyModification(image, dim, colorDepth);
         }
 
         #region WBSlider
