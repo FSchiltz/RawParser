@@ -44,7 +44,7 @@ namespace RawEditor
         public static void Init()
         {
             localSettings.Values["imageBoxBorder" + def] = 0.05;
-            localSettings.Values["previewFactor" + def] = "O2";
+            localSettings.Values["previewFactor" + def] = FactorValue.Auto.ToString();
             localSettings.Values["saveFormat" + def] = ".jpg";
             localSettings.Values["autoPreviewFormat" + def] = false;
             localSettings.Values["demosAlgo" + def] = DemosAlgorithm.NearNeighbour.ToString();
