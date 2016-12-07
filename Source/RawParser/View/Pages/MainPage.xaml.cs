@@ -94,11 +94,9 @@ namespace RawEditor
                         ExceptionDisplay.display(ex.Message + ex.StackTrace);
                         imageSelected = false;
                     }
-
                 }
                 else
                 {
-                    ExceptionDisplay.display("File could not be opened");
                 }
             }
         }
@@ -166,21 +164,27 @@ namespace RawEditor
                     decoder.failOnUnknown = false;
                     decoder.checkSupport(metadata);
 
-
                     thumbnail = decoder.decodeThumb();
                     if (thumbnail != null)
                     {
                         //read the thumbnail
                         Task.Run(() =>
                         {
-                            if (thumbnail.type == ThumbnailType.JPEG)
+                            try
                             {
-                                displayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data));
+                                if (thumbnail.type == ThumbnailType.JPEG)
+                                {
+                                    displayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data));
+                                }
+                                else if (thumbnail.type == ThumbnailType.RAW)
+                                {
+                                    //this is a raw image in an array
+                                    JpegHelper.getThumbnailAsSoftwareBitmap(thumbnail);
+                                }
                             }
-                            else if (thumbnail.type == ThumbnailType.RAW)
+                            catch (Exception e)
                             {
-                                //this is a raw image in an array
-                                JpegHelper.getThumbnailAsSoftwareBitmap(thumbnail);
+                                Debug.WriteLine("Error in thumb " + e.Message);
                             }
                         });
                     }
@@ -222,6 +226,7 @@ namespace RawEditor
                 {
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     var str = loader.GetString("ExceptionText");
+                    Debug.WriteLine(e.Message);
                     ExceptionDisplay.display(str);
                 }
 
