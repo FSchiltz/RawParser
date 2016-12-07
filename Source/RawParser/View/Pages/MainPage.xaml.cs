@@ -19,6 +19,7 @@ using RawEditor.Model.Encoder;
 using Windows.UI.ViewManagement;
 using Windows.Foundation;
 using RawNet;
+using System.Diagnostics;
 
 namespace RawEditor
 {
@@ -56,7 +57,7 @@ namespace RawEditor
                     ExceptionDisplay.display(e.Message);
                 }
             }
-            SettingStorage.init();
+            SettingStorage.Init();
             NavigationCacheMode = NavigationCacheMode.Enabled;
             imageSelected = false;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
@@ -111,6 +112,8 @@ namespace RawEditor
                         exifDisplay.ItemsSource = null;
                         //empty the histogram
                         enableEditingControl(false);
+                        //free the histogram
+
                     });
         }
 
@@ -188,10 +191,21 @@ namespace RawEditor
                     //correctWB
                     //raw.CorrectWB();
 
-                    //demos   
+                    //demos
                     if (raw.cfa != null && raw.cpp == 1)
                     {
-                        Demosaic.demos(ref raw, demosAlgorithm.NearNeighbour);
+                        //get th ealgo from the settings
+                        DemosAlgorithm algo;
+                        try
+                        {
+                            algo = SettingStorage.DemosAlgo;
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine(e.Message);
+                            algo = DemosAlgorithm.Deflate;
+                        }
+                        Demosaic.demos(ref raw, algo);
                     }
                     createPreview();
                     updatePreview();
@@ -220,9 +234,11 @@ namespace RawEditor
         private void createPreview()
         {
             //create a small image from raw to display
-            bool autoFactor = SettingStorage.autoPreviewFactor;
+            FactorValue factor = SettingStorage.PreviewFactor;
+
+            //image will be size of windows
             int previewFactor = 0;
-            if (autoFactor)
+            if (factor == FactorValue.Auto)
             {
                 if (raw.dim.y > raw.dim.x)
                 {
@@ -239,21 +255,9 @@ namespace RawEditor
             }
             else
             {
-                previewFactor = SettingStorage.previewFactor;
+                previewFactor = (int)factor;
             }
-            raw.previewDim = new iPoint2D(raw.dim.x / previewFactor, raw.dim.y / previewFactor);
-            raw.previewData = new ushort[raw.previewDim.y * raw.previewDim.x * raw.cpp];
-            Parallel.For(0, raw.previewDim.y, y =>
-            {
-                int realY = (raw.mOffset.y + y * previewFactor) * raw.previewDim.x;
-                for (int x = 0; x < raw.previewDim.x; x++)
-                {
-                    int realPix = (int)(((x + realY) * previewFactor + raw.mOffset.x) * raw.cpp);
-                    raw.previewData[((y * raw.previewDim.x) + x) * raw.cpp] = raw.rawData[realPix];
-                    raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 1] = raw.rawData[realPix + 1];
-                    raw.previewData[(((y * raw.previewDim.x) + x) * raw.cpp) + 2] = raw.rawData[realPix + 2];
-                }
-            });
+            raw.CreatePreview(previewFactor);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -286,7 +290,7 @@ namespace RawEditor
 
         private void appbarSettingClick(object sender, RoutedEventArgs e)
         {
-            Frame.Navigate(typeof(SettingsView),null);
+            Frame.Navigate(typeof(SettingsView), null);
         }
 
         private void setScrollProperty()
@@ -294,7 +298,7 @@ namespace RawEditor
             if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
             {
                 float x = 0;
-                double relativeBorder = SettingStorage.imageBoxBorder;
+                double relativeBorder = SettingStorage.ImageBoxBorder;
                 if ((currentImageDisplayedWidth / currentImageDisplayedHeight) < (ImageDisplay.ActualWidth / ImageDisplay.ActualHeight))
                 {
                     x = (float)(ImageDisplay.ViewportWidth /
@@ -368,7 +372,7 @@ namespace RawEditor
                 // Dropdown of file types the user can save the file as
                 savePicker.FileTypeChoices.Add("Jpeg image file", new List<string>() { ".jpg" });
                 savePicker.FileTypeChoices.Add("PNG image file", new List<string>() { ".png" });
-                //savePicker.FileTypeChoices.Add("PPM image file", new List<string>() { ".ppm" });
+                savePicker.FileTypeChoices.Add("PPM image file", new List<string>() { ".ppm" });
                 savePicker.FileTypeChoices.Add("TIFF image file", new List<string>() { ".tiff" });
                 savePicker.FileTypeChoices.Add("BitMap image file", new List<string>() { ".bmp" });
                 StorageFile file = await savePicker.PickSaveFileAsync();
@@ -445,12 +449,26 @@ namespace RawEditor
                             bitmap.Dispose();
                         }
                     }
-                    /*
+
                     else if (file.FileType == ".ppm")
                     {
                         Stream str = await file.OpenStreamForWriteAsync();
+                        //create a copy
+                        ushort[] copyOfimage = new ushort[raw.rawData.Length];
+                        Parallel.For(raw.mOffset.y, raw.dim.y, y =>
+                        {
+                            int realY = y * raw.dim.x * 3;
+                            for (int x = raw.mOffset.x; x < raw.dim.x; x++)
+                            {
+                                int realPix = realY + (3 * x);
+                                copyOfimage[realPix] = (ushort)(raw.rawData[realPix] * raw.metadata.wbCoeffs[0]);
+                                copyOfimage[realPix + 1] = (ushort)(raw.rawData[realPix + 1] * raw.metadata.wbCoeffs[1]);
+                                copyOfimage[realPix + 2] = (ushort)(raw.rawData[realPix + 2] * raw.metadata.wbCoeffs[2]);
+                            }
+                        });
+                        //apply white balance
                         PpmEncoder.WriteToFile(str, ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth);
-                    }*/
+                    }
                     else throw new FormatException("Format not supported: " + file.FileType);
                     // Let Windows know that we're finished changing the file so
                     // the other app can update the remote version of the file.

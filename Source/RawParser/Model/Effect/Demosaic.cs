@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using System;
 
-namespace RawEditor.Effect
+namespace RawEditor
 {
-    enum demosAlgorithm
+    public enum DemosAlgorithm
     {
         NearNeighbour,
         Bicubic,
@@ -13,22 +13,22 @@ namespace RawEditor.Effect
         Deflate
     }
 
-    class Demosaic
+    public class Demosaic
     {
-        public static void demos(ref RawImage image, demosAlgorithm algo)
+        public static void demos(ref RawImage image, DemosAlgorithm algo)
         {
             switch (algo)
             {
-                case demosAlgorithm.Bilinear:
-                    break;
-                case demosAlgorithm.Bicubic:
-                    break;
-                case demosAlgorithm.Spline:
-                    break;
-                case demosAlgorithm.NearNeighbour:
+                case DemosAlgorithm.Bilinear:
+                    //break;
+                case DemosAlgorithm.Bicubic:
+                    //break;
+                case DemosAlgorithm.Spline:
+                    //break;
+                case DemosAlgorithm.NearNeighbour:
                     Demosaic.NearNeighbour(image);
                     break;
-                case demosAlgorithm.Deflate:
+                case DemosAlgorithm.Deflate:
                     Demosaic.Deflate(image);
                     break;
             }

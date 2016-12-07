@@ -1,6 +1,8 @@
-﻿using System;
+﻿using RawNet;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Windows.Data.Pdf;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -23,6 +25,13 @@ namespace RawEditor
         public SettingsView()
         {
             InitializeComponent();
+            var _enumval = Enum.GetValues(typeof(DemosAlgorithm)).Cast<DemosAlgorithm>();
+            DemosComboBox.ItemsSource = _enumval.ToList();
+
+            var _enumval2 = Enum.GetValues(typeof(FactorValue)).Cast<FactorValue>();
+            ScaleComboBox.ItemsSource = _enumval2.ToList();
+
+            UpdateView();
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
             SystemNavigationManager.GetForCurrentView().BackRequested += (s, a) =>
             {
@@ -34,23 +43,28 @@ namespace RawEditor
             };
         }
 
-        private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        private void UpdateView()
         {
-            SettingStorage.imageBoxBorder = e.NewValue / 100;
+            //set value of allcombox to current choosen settings
+            //for scale
+            ScaleComboBox.SelectedItem = SettingStorage.PreviewFactor;
+            //for demos
+            DemosComboBox.SelectedItem = SettingStorage.DemosAlgo;
         }
 
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
-            var t = ((ComboBoxItem)e.AddedItems[0]).Content.ToString();
-            if (t == "Auto")
-            {
-                SettingStorage.autoPreviewFactor = true;
-            }
-            else
-            {
-                SettingStorage.autoPreviewFactor = false;
-                SettingStorage.previewFactor = int.Parse(t);
-            }
+            SettingStorage.ImageBoxBorder = e.NewValue / 100;
+        }
+
+        private void PreviewFactor_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SettingStorage.PreviewFactor = (FactorValue)e.AddedItems[0];
+        }
+
+        private void Algo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SettingStorage.DemosAlgo = ((DemosAlgorithm)e.AddedItems[0]);
         }
 
         private async void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -86,9 +100,17 @@ namespace RawEditor
             PopUp.IsOpen = true;
         }
 
-        private void Button_Tapped_1(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private void PolicyButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             PopUp.IsOpen = false;
+        }
+
+        private void Reset_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            //reset settings
+            SettingStorage.Reset();
+            //update view
+            UpdateView();
         }
     }
 }
