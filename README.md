@@ -51,6 +51,6 @@ The app is available at [this address]
 If you hav ealready insatlledot from the appx directly,please uninstall before insatlling from the store.
 
 ### Sideloading
-You need to activate the developper mode and download the .appxbundle file and open it from the file explorer on your device.(on phone the installation will be done in the background).
- You canget release from the github release (those are the build pushed on the store) or on appveyor build (more advanced but not tested).
+You need to activate the developper mode and download the .appxbundle file and open it from the file explorer on your device (on phone the installation will be done in the background).
+ You can get release from the github release (those are the build pushed on the store) or on appveyor build (more advanced but not tested).
 
