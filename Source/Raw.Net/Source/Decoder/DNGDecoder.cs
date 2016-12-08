@@ -402,14 +402,14 @@ namespace RawNet
 
                             offY += yPerSlice;
 
-                            if (mFile.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                            if (file.isValid(slice.offset, slice.count)) // Only decode if size is valid
                                 slices.Add(slice);
                         }
 
                         for (int i = 0; i < slices.Count; i++)
                         {
                             DngStrip slice = slices[i];
-                            TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, (uint)mFile.BaseStream.Length);
+                            TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, slice.offset, (uint)file.BaseStream.Length);
                             Point2D size = new Point2D((int)width, (int)slice.h);
                             Point2D pos = new Point2D(0, (int)slice.offsetY);
 
@@ -447,7 +447,7 @@ namespace RawNet
                         if (sample_format != 1)
                             throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported for compressed data.");
 
-                        DngDecoderSlices slices = new DngDecoderSlices(mFile, mRaw, compression);
+                        DngDecoderSlices slices = new DngDecoderSlices(file, mRaw, compression);
                         if (raw.hasEntry(TagType.TILEOFFSETS))
                         {
                             UInt32 tilew = raw.getEntry(TagType.TILEWIDTH).getUInt();
@@ -498,7 +498,7 @@ namespace RawNet
                                 e.mUseBigtable = yPerSlice * mRaw.dim.y > 1024 * 1024;
                                 offY += yPerSlice;
 
-                                if (mFile.isValid(e.byteOffset, e.byteCount)) // Only decode if size is valid
+                                if (file.isValid(e.byteOffset, e.byteCount)) // Only decode if size is valid
                                     slices.addSlice(e);
                             }
                         }
@@ -789,14 +789,14 @@ namespace RawNet
 
                                 offY += yPerSlice;
 
-                                if (mFile.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                                if (file.isValid(slice.offset, slice.count)) // Only decode if size is valid
                                     slices.Add(slice);
                             }
 
                             for (int i = 0; i < slices.Count; i++)
                             {
                                 DngStrip slice = slices[i];
-                                TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, (uint)mFile.BaseStream.Length);
+                                TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, slice.offset, (uint)file.BaseStream.Length);
                                 Point2D size = new Point2D((int)width, (int)slice.h);
                                 Point2D pos = new Point2D(0, (int)slice.offsetY);
 

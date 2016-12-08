@@ -43,7 +43,7 @@ namespace RawNet
         }
 
         /* The Raw input file to be decoded */
-        protected TIFFBinaryReader mFile;
+        protected TIFFBinaryReader file;
 
         /* Decoder version - defaults to 0, but can be overridden by decoders */
         /* This can be used to avoid newer version of an xml file to indicate that a file */
@@ -63,7 +63,7 @@ namespace RawNet
         public RawDecoder(ref TIFFBinaryReader file, CameraMetaData metaData)
         {
             mRaw = new RawImage();
-            mFile = file;
+            this.file = file;
             decoderVersion = 0;
             interpolateBadPixels = false;
             applyStage1DngOpcodes = true;
@@ -156,7 +156,7 @@ namespace RawNet
 
                 offY += yPerSlice;
 
-                if (mFile.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                if (file.isValid(slice.offset, slice.count)) // Only decode if size is valid
                     slices.Add(slice);
             }
 
@@ -171,10 +171,10 @@ namespace RawNet
             for (int i = 0; i < slices.Count; i++)
             {
                 RawSlice slice = slices[i];
-                var stream = mFile.BaseStream;
+                var stream = file.BaseStream;
                 TIFFBinaryReader input;
-                if (mFile is TIFFBinaryReaderRE) input = new TIFFBinaryReaderRE(mFile.BaseStream, slice.offset, slice.count);
-                else input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, slice.count);
+                if (file is TIFFBinaryReaderRE) input = new TIFFBinaryReaderRE(file.BaseStream, slice.offset, slice.count);
+                else input = new TIFFBinaryReader(file.BaseStream, slice.offset, slice.count);
                 Point2D size = new Point2D(width, (int)slice.h);
                 Point2D pos = new Point2D(0, (int)offY);
                 bitPerPixel = (int)(slice.count * 8u / (slice.h * width));
