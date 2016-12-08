@@ -173,10 +173,10 @@
                                 <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False" StepFrequency="5"/>
                                 -->
                                 <TextBlock FontSize="12"> Highlight</TextBlock>
-                                <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
+                                <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="-100" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
                                 <TextBlock FontSize="12">Shadow
                                 </TextBlock>
-                                <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
+                                <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="-100" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
                                 <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
 
                                 <TextBlock Foreground="Black" FontSize="16" x:Uid="ColorBalance"/>
@@ -215,7 +215,7 @@
                         <GridView Background="White" ></GridView>
                     </PivotItem> -->
                     <PivotItem x:Uid="Exifs">
-                        <StackPanel Margin="0,0,0,49">
+                        <StackPanel>
                             <TextBlock x:Uid="ExifsData"/>
                             <ListView ScrollViewer.VerticalScrollBarVisibility="Visible" x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
                                 <ListView.ItemTemplate>
@@ -225,14 +225,9 @@
                                                 <ColumnDefinition />
 
                                                 <ColumnDefinition />
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.Resources>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Margin" Value="5,0" />
-                                                </Style>
-                                            </Grid.Resources>
-                                            <TextBlock Grid.Column="0" Text="{Binding Key}" TextWrapping="WrapWholeWords" />
-                                            <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="WrapWholeWords" />
+                                            </Grid.ColumnDefinitions>                                          
+                                            <TextBlock Grid.Column="0" Text="{Binding Key}" TextWrapping="Wrap" Margin="0,0,5,0" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
