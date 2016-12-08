@@ -53,14 +53,33 @@
             </CommandBar.SecondaryCommands> -->
         </CommandBar>
     </Page.BottomAppBar>
-
     <Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="VisualStateGroupeMainUI">
                 <!-- Landscape -->
                 <VisualState x:Name="wideState">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="700" />
+                        <AdaptiveTrigger MinWindowWidth="1080" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <!-- To make the panel hidable when not enough screen size -->
+                        <!-- <Setter Target="shareButton.Visibility" Value="Visible" />
+                        <Setter Target="settingsButton.Visibility" Value="Visible" />
+                        <Setter Target="shareButton2.Visibility" Value="Collapsed" />
+                        <Setter Target="settingsButton2.Visibility" Value="Collapsed" />
+-->
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[0].Width" Value="3*"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*"/>
+                        <Setter Target="ImageDisplay.Margin" Value="0 0 1 0"/>
+                        <Setter Target="PivotGrid.Margin" Value="1 0 0 0"/>
+                        <Setter Target="PivotGrid.(Grid.Column)" Value="1"/>
+                        <Setter Target="PivotGrid.(Grid.Row)" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="normalState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="640" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!-- To make the panel hidable when not enough screen size -->
@@ -93,8 +112,8 @@
 -->
                         <Setter Target="ImageDisplay.Margin" Value="0 0 0 1"/>
                         <Setter Target="PivotGrid.Margin" Value="0 1 0 0"/>
-                        <Setter Target="MainGrid.RowDefinitions[0].Height" Value="2*"/>
-                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="3*"/>
+                        <Setter Target="MainGrid.RowDefinitions[0].Height" Value="4*"/>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="10*"/>
                         <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="auto"/>
                         <Setter Target="PivotGrid.(Grid.Column)" Value="0"/>
                         <Setter Target="PivotGrid.(Grid.Row)" Value="1"/>
@@ -134,9 +153,9 @@
                      RenderTransformOrigin="0.5,0.5"
                      Visibility="Collapsed" Canvas.ZIndex="99" Height="10" />
                 <Pivot x:Name="ControlPivot">
-                    <PivotItem x:Uid="ExposureHeader">
+                    <PivotItem x:Uid="ProcessingHeader">
                         <ScrollViewer VerticalContentAlignment="Stretch">
-                            <StackPanel Margin="0,0,16,0" >
+                            <StackPanel Margin="0,0,36,0" >
                                 <!--The histogram-->
                                 <TextBlock Foreground="Black" 
                                            IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left"
@@ -146,26 +165,31 @@
                                         <RectangleGeometry Rect="0 0 256 100"/>
                                     </Canvas.Clip>
                                 </Canvas>
-                                <TextBlock Foreground="Black" FontSize="16" x:Uid="ExplosureSettings" />
+                                <Button x:Name="ResetButton" Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="ResetButton_Tapped" Padding="8,2" >Reset</Button>
+                                <TextBlock FontSize="16" x:Uid="ExplosureSettings" />
                                 <TextBlock FontSize="12" x:Uid="Exposure"/>
                                 <Slider x:Name="exposureSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3"/>
                                 <!-- <TextBlock FontSize="12">Brightness</TextBlock>
                                 <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False" StepFrequency="5"/>
+                                -->
                                 <TextBlock FontSize="12"> Highlight</TextBlock>
                                 <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
                                 <TextBlock FontSize="12">Shadow
                                 </TextBlock>
                                 <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="100" Minimum="0" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
--->
                                 <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
 
                                 <TextBlock Foreground="Black" FontSize="16" x:Uid="ColorBalance"/>
-                                <TextBlock FontSize="12" x:Uid="Temperature"/>
+                                <!--<TextBlock FontSize="12" x:Uid="Temperature"/>-->
+                                <TextBlock FontSize="12">Red</TextBlock> 
                                 <Slider x:Name="colorTempSlider"   PointerCaptureLost="WBSlider_DragStop"  Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="False"/>
+                                <TextBlock FontSize="12" >Green</TextBlock>
                                 <Slider x:Name="colorTintSlider"    PointerCaptureLost="WBSlider_DragStop"  Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="False"/>
+                                <TextBlock FontSize="12">Blue</TextBlock>
+                                <Slider x:Name="colorTintBlueSlider"    PointerCaptureLost="WBSlider_DragStop"  Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="False"/>
 
                                 <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" 
-                                        x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton"/>
+                                        x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton" Margin="0,0,0,10"/>
                                 <TextBlock FontSize="12" x:Uid="Saturation"/>
                                 <Slider x:Name="saturationSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False"/>
                                 <!-- <TextBlock FontSize="12">Vibrance</TextBlock>
@@ -199,6 +223,7 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition />
+
                                                 <ColumnDefinition />
                                             </Grid.ColumnDefinitions>
                                             <Grid.Resources>
@@ -206,8 +231,8 @@
                                                     <Setter Property="Margin" Value="5,0" />
                                                 </Style>
                                             </Grid.Resources>
-                                            <TextBlock Grid.Column="0" Text="{Binding Key}" />
-                                            <TextBlock Grid.Column="1" Text="{Binding Value}" />
+                                            <TextBlock Grid.Column="0" Text="{Binding Key}" TextWrapping="WrapWholeWords" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="WrapWholeWords" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>

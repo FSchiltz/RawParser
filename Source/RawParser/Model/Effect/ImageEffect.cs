@@ -9,8 +9,8 @@ namespace RawEditor
     class ImageEffect
     {
         public double exposure = 0;
-        public double temperature = 1;
-        public double tint = 1;
+        //public double temperature = 1;
+        //public double tint = 1;
         public double gamma = 0;
         public double contrast = 0;
         public double brightness = 0;
@@ -22,6 +22,9 @@ namespace RawEditor
         public double saturation = 1;
         public double vibrance = 0;
         public double[] camCurve;
+        public double rMul;
+        public double gMul;
+        public double bMul;
 
         public void applyModification(ushort[] image, Point2D dim, int colorDepth)
         {
@@ -30,9 +33,9 @@ namespace RawEditor
             {
                 mul = new float[4];
                 //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
-                mul[0] = (float)(temperature / 255);
-                mul[1] = (float)(tint / 255);
-                mul[2] = 1;
+                mul[0] = (float)(rMul / 255);
+                mul[1] = (float)(gMul / 255);
+                mul[2] = (float)(bMul / 255); 
             }
 
             //generate the curve            
@@ -133,9 +136,9 @@ namespace RawEditor
                     {
                         mul = new float[4];
                         //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
-                        mul[2] = (float)(temperature/255);
-                        mul[0] = (float)(tint/255);
-                        mul[1] = 1;
+                        mul[0] = (float)(rMul / 255);
+                        mul[1] = (float)(gMul / 255);
+                        mul[2] = (float)(bMul / 255);
                     }
 
                     //generate the curve            

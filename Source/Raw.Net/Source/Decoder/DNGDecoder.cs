@@ -300,7 +300,7 @@ namespace RawNet
 
             //init the raw image
             mRaw.Init();
-            mRaw.colorDepth = (ushort)bps;
+            mRaw.ColorDepth = (ushort)bps;
             int compression = -1;
 
             try
@@ -656,7 +656,7 @@ namespace RawNet
             //convert to linear value
             //*
             //TODO optimize (super slow)
-            double maxVal = Math.Pow(2, mRaw.colorDepth);
+            double maxVal = Math.Pow(2, mRaw.ColorDepth);
             double coeff = maxVal / (mRaw.whitePoint - mRaw.blackLevelSeparate[0]);
             Parallel.For(mRaw.mOffset.y, mRaw.dim.y + mRaw.mOffset.y, y =>
             //for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)

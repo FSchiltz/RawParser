@@ -40,6 +40,31 @@ namespace RawEditor
         public Thumbnail thumbnail;
         private uint displayMutex = 0;
 
+        public MainPage()
+        {
+            InitializeComponent();
+            if (null == metadata)
+            {
+                try
+                {
+                    StorageFolder installationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+                    var f = StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/Data/cameras.xml")).AsTask();
+                    f.Wait();
+                    var t = f.Result.OpenStreamForReadAsync();
+                    t.Wait();
+                    metadata = new CameraMetaData(t.Result);
+                }
+                catch (CameraMetadataException e)
+                {
+                    ExceptionDisplay.display(e.Message);
+                }
+            }
+
+            NavigationCacheMode = NavigationCacheMode.Enabled;
+            imageSelected = false;
+            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
+        }
+
         public async void DisplayLoad()
         {
             displayMutex++;
@@ -62,30 +87,6 @@ namespace RawEditor
                     progressDisplay.Visibility = Visibility.Collapsed;
                 });
             }
-        }
-        public MainPage()
-        {
-            InitializeComponent();
-            if (null == metadata)
-            {
-                try
-                {
-                    StorageFolder installationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
-                    var f = StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/Data/cameras.xml")).AsTask();
-                    f.Wait();
-                    var t = f.Result.OpenStreamForReadAsync();
-                    t.Wait();
-                    metadata = new CameraMetaData(t.Result);
-                }
-                catch (CameraMetadataException e)
-                {
-                    ExceptionDisplay.display(e.Message);
-                }
-            }
-           
-            NavigationCacheMode = NavigationCacheMode.Enabled;
-            imageSelected = false;
-            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
         }
 
         private async void AppBarImageChooseClick(object sender, RoutedEventArgs e)
@@ -144,39 +145,51 @@ namespace RawEditor
                         //free the histogram
                         histogramCanvas.Children.Clear();
                         //set back editing control to default value
-
-                        exposureSlider.Value = 0;
-
-                        //ShadowSlider.IsEnabled = v;
-                        //HighLightSlider.IsEnabled = v;
-                        //gammaSlider.IsEnabled = v;
-                        contrastSlider.Value = 10;
-                        //brightnessSlider.IsEnabled = v;
-                        saturationSlider.Value = 0;
-
-                        //set white balance if any
+                        ResetControls();
                     });
+        }
+
+        private async void ResetControls()
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher
+                   .RunAsync(CoreDispatcherPriority.Normal, () =>
+                   {
+                       exposureSlider.Value = 0;
+                       ShadowSlider.Value = 0;
+                       HighLightSlider.Value = 0;
+                       //gammaSlider.IsEnabled = v;
+                       contrastSlider.Value = 10;
+                       //brightnessSlider.IsEnabled = v;
+                       saturationSlider.Value = 0;
+
+                       //set white balance if any
+                       SetWB();
+                   });
         }
 
         private async void SetWB()
         {
-            int rValue = 255, bValue = 255;
+            int rValue = 255, bValue = 255, gValue = 255;
             if (raw != null && raw.metadata != null)
             {
                 //calculate the coeff
-                double r = raw.metadata.wbCoeffs[0] / raw.metadata.wbCoeffs[1], b = raw.metadata.wbCoeffs[2] / raw.metadata.wbCoeffs[1]; ;
+                double r = raw.metadata.wbCoeffs[0], b = raw.metadata.wbCoeffs[2], g = raw.metadata.wbCoeffs[1];
                 rValue = (int)(r * 255);
                 bValue = (int)(b * 255);
+                gValue = (int)(g * 255);
                 if (rValue > 510) rValue = 510;
                 else if (rValue < 0) rValue = 0;
                 if (bValue > 510) bValue = 510;
                 else if (bValue < 0) bValue = 0;
+                if (gValue > 510) gValue = 510;
+                else if (gValue < 0) gValue = 0;
 
             }
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 colorTempSlider.Value = rValue;
-                colorTintSlider.Value = bValue;
+                colorTintSlider.Value = gValue;
+                colorTintBlueSlider.Value = bValue;
             });
         }
 
@@ -186,10 +199,11 @@ namespace RawEditor
                  {
                      colorTempSlider.IsEnabled = v;
                      colorTintSlider.IsEnabled = v;
+                     colorTintBlueSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
-
-                     //ShadowSlider.IsEnabled = v;
-                     //HighLightSlider.IsEnabled = v;
+                     ResetButton.IsEnabled = v;
+                     ShadowSlider.IsEnabled = v;
+                     HighLightSlider.IsEnabled = v;
                      //gammaSlider.IsEnabled = v;
                      contrastSlider.IsEnabled = v;
                      //brightnessSlider.IsEnabled = v;
@@ -461,7 +475,7 @@ namespace RawEditor
                     {
                         bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.x, raw.dim.y);
                     });
-                    applyUserModif(ref raw.rawData, raw.dim, raw.colorDepth, ref bitmap);
+                    applyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
                     // write to file
                     if (file.FileType == ".jpg")
                     {
@@ -560,7 +574,7 @@ namespace RawEditor
                             }
                         });
                         //apply white balance
-                        PpmEncoder.WriteToFile(str, ref copyOfimage, raw.dim.y, raw.dim.x, raw.colorDepth);
+                        PpmEncoder.WriteToFile(str, ref copyOfimage, raw.dim.y, raw.dim.x, raw.ColorDepth);
                     }
                     else throw new FormatException("Format not supported: " + file.FileType);
                     // Let Windows know that we're finished changing the file so
@@ -614,10 +628,9 @@ namespace RawEditor
                 {
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
                 });
-                int[] value = applyUserModif(ref raw.previewData, raw.previewDim, raw.colorDepth, ref bitmap);
+                int[] value = applyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
                 displayImage(bitmap);
-                Histogram.Create(value, raw.colorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
-
+                Histogram.Create(value, raw.ColorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
             });
         }
 
@@ -633,14 +646,14 @@ namespace RawEditor
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     effect.exposure = exposureSlider.Value;
-                    effect.temperature = colorTempSlider.Value;
-                    effect.tint = colorTintSlider.Value ;
-
+                    effect.rMul = colorTempSlider.Value;
+                    effect.gMul = colorTintSlider.Value;
+                    effect.bMul = colorTintBlueSlider.Value;
                     effect.contrast = contrastSlider.Value / 10;
-                    /*effect.gamma = gammaSlider.Value;
+                    //effect.gamma = gammaSlider.Value;
                     //effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
-                    //effect.shadow = ShadowSlider.Value;
-                    //effect.hightlight = HighLightSlider.Value;*/
+                    effect.shadow = ShadowSlider.Value;
+                    effect.hightlight = HighLightSlider.Value;
                     effect.saturation = 1 + saturationSlider.Value / 100;
                 });
             });
@@ -663,15 +676,15 @@ namespace RawEditor
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     effect.exposure = exposureSlider.Value;
-                    effect.temperature = colorTempSlider.Value - 1;
-                    effect.tint = colorTintSlider.Value - 1;
-
+                    effect.rMul = colorTempSlider.Value;
+                    effect.gMul = colorTintSlider.Value;
+                    effect.bMul = colorTintBlueSlider.Value;
                     effect.contrast = contrastSlider.Value / 10;
                     /*
                     effect.gamma = gammaSlider.Value;
-                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
+                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);*/
                     effect.shadow = ShadowSlider.Value;
-                    effect.hightlight = HighLightSlider.Value;*/
+                    effect.hightlight = HighLightSlider.Value;
                     effect.saturation = 1 + saturationSlider.Value / 100;
                 });
             });
@@ -710,6 +723,12 @@ namespace RawEditor
             {
                 updatePreview();
             }
+        }
+
+        private void ResetButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            ResetControls();
+            updatePreview();
         }
     }
 }

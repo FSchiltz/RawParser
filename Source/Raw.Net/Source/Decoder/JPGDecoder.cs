@@ -42,7 +42,7 @@ namespace RawNet
 
         protected override RawImage decodeRawInternal()
         {
-            mRaw.colorDepth = 8;
+            mRaw.ColorDepth = 8;
             mRaw.cpp = 3;
             mRaw.bpp = 8;
             var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, file.BaseStream.AsRandomAccessStream()).AsTask();

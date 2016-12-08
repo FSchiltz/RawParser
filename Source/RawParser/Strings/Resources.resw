@@ -150,9 +150,6 @@
   <data name="Exposure.Text" xml:space="preserve">
     <value>Exposure</value>
   </data>
-  <data name="ExposureHeader.Header" xml:space="preserve">
-    <value>Exposure</value>
-  </data>
   <data name="ExposureSettings.Text" xml:space="preserve">
     <value>Exposure settings</value>
   </data>
@@ -173,6 +170,9 @@
   </data>
   <data name="Privacy.Content" xml:space="preserve">
     <value>Privacy policy:</value>
+  </data>
+  <data name="ProcessingHeader.Header" xml:space="preserve">
+    <value>Processing</value>
   </data>
   <data name="RotateLeft.Label" xml:space="preserve">
     <value>Rotate left</value>

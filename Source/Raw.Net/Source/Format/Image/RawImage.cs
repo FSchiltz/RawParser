@@ -7,92 +7,19 @@ using System.Threading.Tasks;
 
 namespace RawNet
 {
-    internal class TableLookUp
-    {
-
-        static int TABLE_SIZE = 65536 * 2;
-        protected int ntables;
-        public UInt16[] tables;
-        public bool dither { get; set; }
-
-        // Creates n numre of tables.
-        public TableLookUp(int _ntables, bool _dither)
-        {
-            ntables = (_ntables);
-            dither = (_dither);
-            tables = null;
-            if (ntables < 1)
-            {
-                throw new RawDecoderException("Cannot construct 0 tables");
-            }
-            tables = new ushort[ntables * TABLE_SIZE];
-            //Common.memset<ushort>(tables, 0, sizeof(ushort) * ntables * TABLE_SIZE);
-        }
-
-
-        public void setTable(int ntable, ushort[] table, int nfilled)
-        {
-            if (ntable > ntables)
-            {
-                throw new RawDecoderException("Table lookup with number greater than number of tables.");
-            }
-            if (!dither)
-            {
-                for (int i = 0; i < 65536; i++)
-                {
-                    tables[i + (ntable * TABLE_SIZE)] = (i < nfilled) ? table[i] : table[nfilled - 1];
-                }
-                return;
-            }
-            for (int i = 0; i < nfilled; i++)
-            {
-                int center = table[i];
-                int lower = i > 0 ? table[i - 1] : center;
-                int upper = i < (nfilled - 1) ? table[i + 1] : center;
-                int delta = upper - lower;
-                tables[(i * 2) + (ntable * TABLE_SIZE)] = (ushort)(center - ((upper - lower + 2) / 4));
-                tables[(i * 2) + 1 + (ntable * TABLE_SIZE)] = (ushort)delta;
-            }
-
-            for (int i = nfilled; i < 65536; i++)
-            {
-                tables[(i * 2) + (ntable * TABLE_SIZE)] = table[nfilled - 1];
-                tables[(i * 2) + 1 + (ntable * TABLE_SIZE)] = 0;
-            }
-            tables[0] = tables[1];
-            tables[TABLE_SIZE - 1] = tables[TABLE_SIZE - 2];
-        }
-
-        protected ushort[] getTable(int n)
-        {
-            if (n > ntables)
-            {
-                throw new RawDecoderException("Table lookup with number greater than number of tables.");
-            }
-            return tables.Skip(n * TABLE_SIZE).ToArray();
-        }
-    };
-
-    public enum FactorValue
-    {
-        Auto,
-        O1,
-        O2,
-        O4,
-        O16
-    }
-
     public class RawImage
     {
-        public byte[] thumbnail { get; set; }
+        public byte[] Thumbnail { get; set; }
         public ushort[] previewData, rawData;
-        public ushort colorDepth;
+
         public Point2D dim, mOffset = new Point2D(), previewDim, previewOffset = new Point2D(), uncroppedDim;
         public ColorFilterArray cfa = new ColorFilterArray();
         public double[] camMul, black, curve;
         public int rotation = 0, blackLevel, saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
         public bool mDitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
+        public ushort ColorDepth { get; set; }
+
         public ImageMetaData metadata = new ImageMetaData();
         public uint pitch, cpp, bpp, whitePoint;
         public int[] blackLevelSeparate = new int[4];
@@ -176,13 +103,13 @@ namespace RawNet
         /*
          * For testing
          */
-        internal ushort[] getImageAsByteArray()
+        internal ushort[] GetImageAsByteArray()
         {
             ushort[] tempByteArray = new ushort[dim.x * dim.y];
             for (int i = 0; i < tempByteArray.Length; i++)
             {
                 //get the pixel
-                ushort temp = rawData[(i * colorDepth)];
+                ushort temp = rawData[(i * ColorDepth)];
                 /*
             for (int k = 0; k < 8; k++)
             {
@@ -300,7 +227,7 @@ namespace RawNet
                 }
 
             });
-            colorDepth = 16;
+            ColorDepth = 16;
             bpp = 2;
         }
 
@@ -447,7 +374,7 @@ namespace RawNet
             previewDim = new Point2D(dim.x / previewFactor, dim.y / previewFactor);
             previewData = new ushort[previewDim.y * previewDim.x * cpp];
             int doubleFactor = previewFactor * previewFactor;
-            ushort maxValue = (ushort)(1 << colorDepth);
+            ushort maxValue = (ushort)((1 << ColorDepth)-1);
             //loop over each block
             Parallel.For(0, previewDim.y, y =>
             {
