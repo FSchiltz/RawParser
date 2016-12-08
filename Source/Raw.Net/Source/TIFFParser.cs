@@ -51,6 +51,7 @@ namespace RawNet
             nextIFD = reader.ReadUInt32();
             rootIFD = new IFD(reader, nextIFD, endian, 0);
             nextIFD = rootIFD.nextOffset;
+            
             while (nextIFD != 0)
             {
                 rootIFD.subIFD.Add(new IFD(reader, nextIFD, endian, 0));
@@ -123,11 +124,11 @@ namespace RawNet
                     }
                     switch (make)
                     {
-                        /*
+                        
                         case "Canon":
                             rootIFD = null;
-                            return new Cr2Decoder(root, reader);
-                        case "FUJIFILM":
+                            return new Cr2Decoder(root, reader,metaData);
+                        /*case "FUJIFILM":
                             rootIFD = null;
                             return new RafDecoder(root, reader);*/
                         case "NIKON CORPORATION":

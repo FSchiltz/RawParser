@@ -12,7 +12,7 @@ namespace RawNet
         public ushort tagNumber;
         public Dictionary<TagType, Tag> tags;
         public List<IFD> subIFD = new List<IFD>();
-        public ushort nextOffset { get; set; }
+        public uint nextOffset { get; set; }
         public Endianness endian;
         public int depth;
 
@@ -227,7 +227,7 @@ namespace RawNet
                     Debug.WriteLine("tags already exist");
                 }
             }
-            nextOffset = fileStream.ReadUInt16();
+            nextOffset = fileStream.ReadUInt32();
         }
 
         internal bool hasEntry(TagType t)

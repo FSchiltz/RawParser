@@ -128,6 +128,7 @@
     <Compile Include="Source\Base\Common.cs" />
     <Compile Include="Source\Base\Point2D.cs" />
     <Compile Include="Source\Base\Rectangle2D.cs" />
+    <Compile Include="Source\Decoder\Cr2Decoder.cs" />
     <Compile Include="Source\Decoder\Decompressor\Reader\BinaryReaderBE.cs" />
     <Compile Include="Source\Decoder\Decoder.cs" />
     <Compile Include="Source\Decoder\Decompressor\BitPumpJPEG.cs" />

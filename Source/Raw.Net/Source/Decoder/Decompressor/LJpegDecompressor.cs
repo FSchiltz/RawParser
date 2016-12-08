@@ -237,7 +237,7 @@ namespace RawNet
             mCanonDoubleHeight = false;
         }
 
-        public void getSOF(SOFInfo sof, UInt32 offset, UInt32 size)
+        public void getSOF(ref SOFInfo sof, UInt32 offset, UInt32 size)
         {
             if (!input.isValid(offset, size))
                 throw new Exception("getSOF: Start offset plus size is longer than file. Truncated file.");
@@ -258,7 +258,7 @@ namespace RawNet
                     JpegMarker m = getNextMarker(true);
                     if (JpegMarker.M_SOF3 == m)
                     {
-                        parseSOF(sof);
+                        parseSOF(ref sof);
                         return;
                     }
                     if (JpegMarker.M_EOI == m)
@@ -331,7 +331,7 @@ namespace RawNet
 
                         case JpegMarker.M_SOF3:
                             //          _RPT0(0,"Found SOF 3 marker:\n");
-                            parseSOF(frame);
+                            parseSOF(ref frame);
                             break;
 
                         default:  // Just let it skip to next marker
@@ -347,7 +347,7 @@ namespace RawNet
             }
         }
 
-        public void parseSOF(SOFInfo sof)
+        public void parseSOF(ref SOFInfo sof)
         {
             UInt32 headerLength = (uint)input.ReadInt16();
             sof.prec = input.ReadByte();

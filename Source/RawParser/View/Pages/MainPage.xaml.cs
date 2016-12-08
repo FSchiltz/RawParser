@@ -102,7 +102,7 @@ namespace RawEditor
                 filePicker.FileTypeFilter.Add(".tiff");
                 filePicker.FileTypeFilter.Add(".tif");
                 filePicker.FileTypeFilter.Add(".dng");
-                // filePicker.FileTypeFilter.Add(".cr2");
+                filePicker.FileTypeFilter.Add(".cr2");
                 filePicker.FileTypeFilter.Add(".jpg");
                 //filePicker.FileTypeFilter.Add(".jpeg");
                 filePicker.FileTypeFilter.Add(".png");
