@@ -2,11 +2,10 @@ using System;
 
 namespace RawNet
 {
-    public class NikonDecompressor : LJpegDecompressor
+    internal class NikonDecompressor : LJpegDecompressor
     {
-        public bool uncorrectedRawValues;
         private UInt16[] curve = new UInt16[65536];
-        public byte[][] nikon_tree =
+        protected byte[][] nikon_tree =
             {
                     new byte[32]{ 0,1,5,1,1,1,1,1,1,2,0,0,0,0,0,0,	/* 12-bit lossy */
                       5,4,3,6,2,7,1,0,8,9,11,10,12,0,0,0 },
@@ -98,13 +97,11 @@ namespace RawNet
 
             mRaw.whitePoint = curve[_max - 1];
             mRaw.blackLevel = curve[0];
-            if (!uncorrectedRawValues)
-            {
-                mRaw.setTable(curve, _max, true);
-            }
+            mRaw.setTable(curve, _max, true);
+
 
             UInt32 x, y;
-            BitPumpMSB bits = new BitPumpMSB(ref input, offset, size);           
+            BitPumpMSB bits = new BitPumpMSB(ref input, offset, size);
             UInt32 pitch = w;
 
             int pLeft1 = 0;
@@ -134,15 +131,7 @@ namespace RawNet
                     mRaw.setWithLookUp((ushort)Common.clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
                 }
             }
-
-            if (uncorrectedRawValues)
-            {
-                mRaw.setTable(curve, _max, false);
-            }
-            else
-            {
-                mRaw.table = (null);
-            }
+            mRaw.setTable(curve, _max, false);
         }
 
         /*
@@ -161,7 +150,7 @@ namespace RawNet
         *
         *--------------------------------------------------------------
         */
-        public int HuffDecodeNikon(BitPumpMSB bits)
+        protected int HuffDecodeNikon(BitPumpMSB bits)
         {
             int rv;
             int l, temp;

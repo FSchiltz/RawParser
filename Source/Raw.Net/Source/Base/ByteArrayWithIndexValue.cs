@@ -1,15 +1,15 @@
 ﻿namespace RawNet
 {
-    public class UShortArrayWithIndexAsDefaultValue
+    internal class UShortArrayWithIndexAsDefaultValue
     {
             ushort?[] arr;
 
-            public UShortArrayWithIndexAsDefaultValue(ushort size)
+            protected UShortArrayWithIndexAsDefaultValue(ushort size)
             {
                 arr = new ushort?[size];
             }
 
-            public ushort this[int index]
+            protected ushort this[int index]
             {
                 get
                 {

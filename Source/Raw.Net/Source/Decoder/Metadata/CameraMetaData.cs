@@ -7,12 +7,10 @@ using Windows.Storage;
 
 namespace RawNet
 {
-
     public class CameraMetaData
     {
         Dictionary<string, Camera> cameras = new Dictionary<string, Camera>();
         Dictionary<UInt32, Camera> chdkCameras = new Dictionary<uint, Camera>();
-
 
         public CameraMetaData(Stream docFile)
         {
@@ -38,8 +36,7 @@ namespace RawNet
             }
         }
 
-
-        public Camera getCamera(string make, string model, string mode)
+        internal Camera getCamera(string make, string model, string mode)
         {
             string id = "" + make.Trim() + model.Trim() + mode.Trim();
             cameras.TryGetValue(id, out var value);
@@ -48,7 +45,7 @@ namespace RawNet
             return cameras[id];
         }
 
-        public bool hasCamera(string make, string model, string mode)
+        internal bool hasCamera(string make, string model, string mode)
         {
             string id = "" + make.Trim() + model.Trim() + mode.Trim();
             cameras.TryGetValue(id, out var value);
@@ -57,7 +54,7 @@ namespace RawNet
             return true;
         }
 
-        public Camera getChdkCamera(UInt32 filesize)
+        internal Camera getChdkCamera(UInt32 filesize)
         {
             chdkCameras.TryGetValue(filesize, out var value);
             if (null == value)
@@ -65,13 +62,13 @@ namespace RawNet
             return chdkCameras[filesize];
         }
 
-        public bool hasChdkCamera(UInt32 filesize)
+        internal bool hasChdkCamera(UInt32 filesize)
         {
             chdkCameras.TryGetValue(filesize, out var value);
             return null != value;
         }
 
-        public bool addCamera(Camera cam)
+        internal bool addCamera(Camera cam)
         {
             string id = "" + cam.make.Trim() + cam.model.Trim() + cam.mode.Trim();
             cameras.TryGetValue(id, out Camera tmp);

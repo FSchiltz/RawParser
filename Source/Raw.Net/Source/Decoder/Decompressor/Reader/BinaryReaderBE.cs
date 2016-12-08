@@ -75,7 +75,7 @@ namespace RawNet
                     }
                     break;
                 default:
-                    throw new Exception();                  
+                    throw new Exception();
             }
 
             Stream stream = new MemoryStream(temp)

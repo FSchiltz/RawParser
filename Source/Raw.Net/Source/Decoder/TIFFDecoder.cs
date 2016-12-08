@@ -2,11 +2,11 @@
 
 namespace RawNet
 {
-    class TiffDecoder : RawDecoder
+    internal class TiffDecoder : RawDecoder
     {
         protected IFD ifd;
 
-        public TiffDecoder(IFD rootifd, ref TIFFBinaryReader file) : base(ref file)
+        public TiffDecoder(IFD rootifd, ref TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
         {
             decoderVersion = 1;
             ifd = rootifd;
@@ -29,7 +29,7 @@ namespace RawNet
                 if (!ifd.tags.TryGetValue((TagType)0x0115, out var samplesPerPixel)) throw new FormatException("File not correct");
                 uint height = Convert.ToUInt32(imageHeightTag.data[0]);
                 uint width = Convert.ToUInt32(imageWidthTag.data[0]);
-                mRaw.dim = new iPoint2D((int)width, (int)height);
+                mRaw.dim = new Point2D((int)width, (int)height);
                 mRaw.uncroppedDim = mRaw.dim;
                 //suppose that image are always 8,8,8 or 16,16,16
                 ushort colorDepth = (ushort)bitPerSampleTag.data[0];
@@ -138,7 +138,7 @@ namespace RawNet
             else throw new FormatException("Photometric interpretation " + photoMetricTag.dataAsString + " not supported yet");
         }
 
-        protected override void decodeMetaDataInternal(CameraMetaData meta)
+        protected override void decodeMetaDataInternal()
         {
             var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (t != null) mRaw.metadata.isoSpeed = t.getInt();
@@ -168,7 +168,7 @@ namespace RawNet
             }
         }
 
-        protected override void checkSupportInternal(CameraMetaData meta)
+        protected override void checkSupportInternal()
         {
             //TODO add more check
         }

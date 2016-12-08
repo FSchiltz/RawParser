@@ -8,7 +8,7 @@ namespace RawNet
     //TODO fix comment from original
     public abstract class RawDecoder
     {
-        public class RawSlice
+        internal class RawSlice
         {
             public RawSlice() { }
             public UInt32 h = 0;
@@ -20,32 +20,19 @@ namespace RawNet
         /* Remember this is automatically refcounted, so a reference is retained until this class is destroyed */
         public RawImage mRaw;
 
-        /* You can set this if you do not want Rawspeed to attempt to decode images, */
-        /* where it does not have reliable information about CFA, cropping, black and white point */
-        /* It is pretty safe to leave this disabled (default behaviour), but if you do not want to */
-        /* support unknown cameras, you can enable this */
-        /* DNGs are always attempted to be decoded, so this variable has no effect on DNGs */
-        public bool failOnUnknown;
-
         /* Set how to handle bad pixels. */
         /* If you disable this parameter, no bad pixel interpolation will be done */
-        public bool interpolateBadPixels;
+        protected bool interpolateBadPixels { get; set; }
 
         /* Apply stage 1 DNG opcodes. */
         /* This usually maps out bad pixels, etc */
-        public bool applyStage1DngOpcodes;
+        protected bool applyStage1DngOpcodes { get; set; }
 
         /* Apply crop - if false uncropped image is delivered */
-        public bool applyCrop;
-
-        /* This will skip all corrections, and deliver the raw data */
-        /* This will skip any compression curves or other things that */
-        /* is needed to get the correct values */
-        /* Only enable if you are sure that is what you want */
-        public bool uncorrectedRawValues;
+        protected bool applyCrop { get; set; }
 
         /* Should Fuji images be rotated? */
-        public bool fujiRotate;
+        protected bool fujiRotate { get; set; }
 
 
         /* Retrieve the main RAW chunk */
@@ -56,33 +43,33 @@ namespace RawNet
         }
 
         /* The Raw input file to be decoded */
-        public TIFFBinaryReader mFile;
+        protected TIFFBinaryReader mFile;
 
         /* Decoder version - defaults to 0, but can be overridden by decoders */
         /* This can be used to avoid newer version of an xml file to indicate that a file */
         /* can be decoded, when a specific version of the code is needed */
         /* Higher number in camera xml file: Files for this camera will not be decoded */
         /* Higher number in code than xml: Image will be decoded. */
-        public int decoderVersion;
+        protected int decoderVersion;
 
         /* Hints set for the camera after checkCameraSupported has been called from the implementation*/
-        public Dictionary<string, string> hints = new Dictionary<string, string>();
+        protected Dictionary<string, string> hints = new Dictionary<string, string>();
 
+        protected CameraMetaData metaData;
 
         /* Construct decoder instance - FileMap is a filemap of the file to be decoded */
         /* The FileMap is not owned by this class, will not be deleted, and must remain */
         /* valid while this object exists */
-        public RawDecoder(ref TIFFBinaryReader file)
+        public RawDecoder(ref TIFFBinaryReader file, CameraMetaData metaData)
         {
             mRaw = new RawImage();
             mFile = file;
             decoderVersion = 0;
-            failOnUnknown = false;
             interpolateBadPixels = false;
             applyStage1DngOpcodes = true;
             applyCrop = true;
-            uncorrectedRawValues = false;
             fujiRotate = true;
+            this.metaData = metaData;
         }
 
         public RawImage decodeRaw()
@@ -98,7 +85,7 @@ namespace RawNet
                 //if (!uncorrectedRawValues) mRaw.scaleValues();
                 /*
                 if (interpolateBadPixels)
-                    raw-fixBadPixels();*/                    
+                    raw-fixBadPixels();*/
                 return raw;
             }
             catch (TiffParserException e)
@@ -122,7 +109,7 @@ namespace RawNet
         {
             try
             {
-                return decodeThumbInternal();               
+                return decodeThumbInternal();
             }
             catch (TiffParserException e)
             {
@@ -142,7 +129,7 @@ namespace RawNet
         /* A RawDecoderException will be thrown if the camera isn't supported */
         /* Unknown cameras does NOT generate any specific feedback */
         /* This function must be overridden by actual decoders */
-        public void decodeUncompressed(ref IFD rawIFD, BitOrder order)
+        internal void decodeUncompressed(ref IFD rawIFD, BitOrder order)
         {
             UInt32 nslices = rawIFD.getEntry(TagType.STRIPOFFSETS).dataCount;
             Tag offsets = rawIFD.getEntry(TagType.STRIPOFFSETS);
@@ -188,14 +175,14 @@ namespace RawNet
                 TIFFBinaryReader input;
                 if (mFile is TIFFBinaryReaderRE) input = new TIFFBinaryReaderRE(mFile.BaseStream, slice.offset, slice.count);
                 else input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, slice.count);
-                iPoint2D size = new iPoint2D(width, (int)slice.h);
-                iPoint2D pos = new iPoint2D(0, (int)offY);
+                Point2D size = new Point2D(width, (int)slice.h);
+                Point2D pos = new Point2D(0, (int)offY);
                 bitPerPixel = (int)(slice.count * 8u / (slice.h * width));
                 try
                 {
                     readUncompressedRaw(ref input, size, pos, width * bitPerPixel / 8, bitPerPixel, order);
                 }
-                catch (RawDecoderException )
+                catch (RawDecoderException)
                 {
                     if (i > 0)
                     {
@@ -221,7 +208,7 @@ namespace RawNet
 
         /* Attempt to decode the image */
         /* A RawDecoderException will be thrown if the image cannot be decoded
-        public void readUncompressedRaw(ref TIFFBinaryReader input, iPoint2D size, iPoint2D offset, int inputPitch, int bitPerPixel, BitOrder order)
+        protected void readUncompressedRaw(ref TIFFBinaryReader input, iPoint2D size, iPoint2D offset, int inputPitch, int bitPerPixel, BitOrder order)
         {
             UInt32 outPitch = mRaw.pitch;
             uint w = (uint)size.x;
@@ -337,7 +324,7 @@ namespace RawNet
         }
         */
 
-        public unsafe void readUncompressedRaw(ref TIFFBinaryReader input, iPoint2D size, iPoint2D offset, int inputPitch, int bitPerPixel, BitOrder order)
+        protected unsafe void readUncompressedRaw(ref TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch, int bitPerPixel, BitOrder order)
         {
             fixed (ushort* d = mRaw.rawData)
             {
@@ -456,7 +443,7 @@ namespace RawNet
             }
         }
 
-        public void Decode8BitRaw(ref TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode8BitRaw(ref TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             ushort[] data = mRaw.rawData;
             UInt32 pitch = mRaw.pitch;
@@ -476,18 +463,13 @@ namespace RawNet
             {
                 for (UInt32 x = 0; x < w; x += 1)
                 {
-                    if (uncorrectedRawValues)
-                        mRaw.rawData[(y * pitch) + x] = input.ReadByte();
-                    else
-                    {
-                        mRaw.setWithLookUp(input.ReadByte(), ref mRaw.rawData, x, ref random);
-                        input.Position++;
-                    }
+                    mRaw.setWithLookUp(input.ReadByte(), ref mRaw.rawData, x, ref random);
+                    input.Position++;
                 }
             }
         }
 
-        public void Decode12BitRaw(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode12BitRaw(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
             UInt32 pitch = mRaw.pitch;
@@ -515,7 +497,7 @@ namespace RawNet
             }
         }
 
-        public void Decode12BitRawWithControl(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode12BitRawWithControl(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
@@ -555,7 +537,7 @@ namespace RawNet
             }
         }
 
-        public void Decode12BitRawBEWithControl(ref TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode12BitRawBEWithControl(ref TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
@@ -595,7 +577,7 @@ namespace RawNet
             }
         }
 
-        public void Decode12BitRawBE(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode12BitRawBE(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
@@ -623,7 +605,7 @@ namespace RawNet
             }
         }
 
-        public void Decode12BitRawBEInterlaced(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode12BitRawBEInterlaced(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
@@ -663,7 +645,7 @@ namespace RawNet
             }
         }
 
-        public void Decode12BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode12BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             UInt32 pitch = mRaw.pitch;
             if (input.getRemainSize() < w * h * 2)
@@ -687,7 +669,7 @@ namespace RawNet
             }
         }
 
-        public void Decode12BitRawBEunpackedLeftAligned(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode12BitRawBEunpackedLeftAligned(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             UInt32 pitch = mRaw.pitch;
             if (input.getRemainSize() < w * h * 2)
@@ -711,7 +693,7 @@ namespace RawNet
             }
         }
 
-        public void Decode14BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode14BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             UInt32 pitch = mRaw.pitch;
             if (input.getRemainSize() < w * h * 2)
@@ -735,7 +717,7 @@ namespace RawNet
             }
         }
 
-        public void Decode16BitRawUnpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode16BitRawUnpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             UInt32 pitch = mRaw.pitch;
             if (input.getRemainSize() < w * h * 2)
@@ -759,7 +741,7 @@ namespace RawNet
             }
         }
 
-        public void Decode16BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode16BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             UInt32 pitch = mRaw.pitch;
             if (input.getRemainSize() < w * h * 2)
@@ -783,7 +765,7 @@ namespace RawNet
             }
         }
 
-        public void Decode12BitRawUnpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        protected void Decode12BitRawUnpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             UInt32 pitch = mRaw.pitch;
             if (input.getRemainSize() < w * h * 2)
@@ -807,7 +789,7 @@ namespace RawNet
             }
         }
 
-        public bool checkCameraSupported(CameraMetaData meta, string make, string model, string mode)
+        protected bool checkCameraSupported(CameraMetaData meta, string make, string model, string mode)
         {
             make = make.Trim();
             model = model.Trim();
@@ -819,8 +801,7 @@ namespace RawNet
                 if (mode.Length == 0)
                     Debug.WriteLine("Unable to find camera in database: " + make + " " + model + " " + mode);
 
-                if (failOnUnknown)
-                    throw new RawDecoderException("Camera " + make + " " + model + ", mode " + mode + " not supported, and not allowed to guess. Sorry.");
+                Debug.WriteLine("Camera " + make + " " + model + ", mode " + mode + " not supported, and not allowed to guess. Sorry.");
 
                 // Assume the camera can be decoded, but return false, so decoders can see that we are unsure.
                 return false;
@@ -836,7 +817,7 @@ namespace RawNet
             return true;
         }
 
-        public void setMetaData(CameraMetaData meta, string make, string model, string mode, int iso_speed)
+        protected void setMetaData(CameraMetaData meta, string make, string model, string mode, int iso_speed)
         {
             mRaw.metadata.isoSpeed = iso_speed;
             make = make.Trim();
@@ -860,7 +841,7 @@ namespace RawNet
 
             if (applyCrop)
             {
-                iPoint2D new_size = cam.cropSize;
+                Point2D new_size = cam.cropSize;
 
                 // If crop size is negative, use relative cropping
                 if (new_size.x <= 0)
@@ -869,9 +850,9 @@ namespace RawNet
                 if (new_size.y <= 0)
                     new_size.y = mRaw.dim.y - cam.cropPos.y + new_size.y;
 
-                mRaw.subFrame(new iRectangle2D(cam.cropPos, new_size));
+                mRaw.subFrame(new Rectangle2D(cam.cropPos, new_size));
 
-                
+
                 // Shift CFA to match crop
                 mRaw.UncroppedCfa = new ColorFilterArray(mRaw.cfa);
                 if ((cam.cropPos.x & 1) != 0)
@@ -925,13 +906,11 @@ namespace RawNet
             }
         }
 
-
-
-        public void decodeMetaData(CameraMetaData meta)
+        public void decodeMetaData()
         {
             try
             {
-                decodeMetaDataInternal(meta);
+                decodeMetaDataInternal();
             }
             catch (TiffParserException e)
             {
@@ -947,11 +926,11 @@ namespace RawNet
             }
         }
 
-        public void checkSupport(CameraMetaData meta)
+        public void checkSupport()
         {
             try
             {
-                checkSupportInternal(meta);
+                checkSupportInternal();
             }
             catch (TiffParserException e)
             {
@@ -972,7 +951,7 @@ namespace RawNet
         /* This function must be overridden by actual decoders. */
         protected abstract RawImage decodeRawInternal();
         protected virtual Thumbnail decodeThumbInternal() { return null; }
-        protected abstract void decodeMetaDataInternal(CameraMetaData meta);
-        protected abstract void checkSupportInternal(CameraMetaData meta);
+        protected abstract void decodeMetaDataInternal();
+        protected abstract void checkSupportInternal();
     }
 }

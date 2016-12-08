@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace RawNet
 {
-    public class Camera
+    internal class Camera
     {
         public string make;
         public string model;
@@ -15,13 +15,13 @@ namespace RawNet
         public string canonical_id;
         public List<string> aliases = new List<string>();
         public List<string> canonical_aliases = new List<string>();
-        public ColorFilterArray cfa = new ColorFilterArray(new iPoint2D(0, 0));
-        public bool supported;
-        public iPoint2D cropSize = new iPoint2D();
-        public iPoint2D cropPos = new iPoint2D();
+        public ColorFilterArray cfa = new ColorFilterArray(new Point2D(0, 0));
+        public bool supported { get; set; }
+        public Point2D cropSize = new Point2D();
+        public Point2D cropPos = new Point2D();
         public List<BlackArea> blackAreas = new List<BlackArea>();
         public List<CameraSensorInfo> sensorInfo = new List<CameraSensorInfo>();
-        public int decoderVersion;
+        public int decoderVersion { private set; get; }
         public Dictionary<string, string> hints = new Dictionary<string, string>();
 
         public Camera(XElement camera)
@@ -105,7 +105,6 @@ namespace RawNet
             }
         }
 
-
         void parseCameraChild(XElement cur)
         {
             if (cur.Name == "CFA")
@@ -116,7 +115,7 @@ namespace RawNet
                 }
                 else
                 {
-                    cfa.setSize(new iPoint2D(2, 2));
+                    cfa.setSize(new Point2D(2, 2));
                     var c = cur.Elements("Color");
                     foreach (XElement x in c)
                     {
@@ -128,7 +127,7 @@ namespace RawNet
 
             if (cur.Name == "CFA2")
             {
-                cfa.setSize(new iPoint2D(Int32.Parse(cur.Attribute("width").Value), Int32.Parse(cur.Attribute("height").Value)));
+                cfa.setSize(new Point2D(Int32.Parse(cur.Attribute("width").Value), Int32.Parse(cur.Attribute("height").Value)));
                 var c = cur.Elements("Color");
                 foreach (var x in c)
                 {
@@ -219,19 +218,19 @@ namespace RawNet
                     //not efficient, TODO move the tolower
                     char v = key.ToLower()[x];
                     if (v == 'g')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.GREEN);
+                        cfa.setColorAt(new Point2D(x, y), CFAColor.GREEN);
                     else if (v == 'r')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.RED);
+                        cfa.setColorAt(new Point2D(x, y), CFAColor.RED);
                     else if (v == 'b')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.BLUE);
+                        cfa.setColorAt(new Point2D(x, y), CFAColor.BLUE);
                     else if (v == 'f')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.FUJI_GREEN);
+                        cfa.setColorAt(new Point2D(x, y), CFAColor.FUJI_GREEN);
                     else if (v == 'c')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.CYAN);
+                        cfa.setColorAt(new Point2D(x, y), CFAColor.CYAN);
                     else if (v == 'm')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.MAGENTA);
+                        cfa.setColorAt(new Point2D(x, y), CFAColor.MAGENTA);
                     else if (v == 'y')
-                        cfa.setColorAt(new iPoint2D(x, y), CFAColor.YELLOW);
+                        cfa.setColorAt(new Point2D(x, y), CFAColor.YELLOW);
                     else
                         supported = false;
                 }
@@ -252,19 +251,19 @@ namespace RawNet
 
                 string key = cur.Value;
                 if (key == "GREEN")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.GREEN);
+                    cfa.setColorAt(new Point2D(x, y), CFAColor.GREEN);
                 else if (key == "RED")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.RED);
+                    cfa.setColorAt(new Point2D(x, y), CFAColor.RED);
                 else if (key == "BLUE")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.BLUE);
+                    cfa.setColorAt(new Point2D(x, y), CFAColor.BLUE);
                 else if (key == "FUJIGREEN")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.FUJI_GREEN);
+                    cfa.setColorAt(new Point2D(x, y), CFAColor.FUJI_GREEN);
                 else if (key == "CYAN")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.CYAN);
+                    cfa.setColorAt(new Point2D(x, y), CFAColor.CYAN);
                 else if (key == "MAGENTA")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.MAGENTA);
+                    cfa.setColorAt(new Point2D(x, y), CFAColor.MAGENTA);
                 else if (key == "YELLOW")
-                    cfa.setColorAt(new iPoint2D(x, y), CFAColor.YELLOW);
+                    cfa.setColorAt(new Point2D(x, y), CFAColor.YELLOW);
             }
         }
 
@@ -390,7 +389,7 @@ namespace RawNet
             }
         }
 
-        public void parseSensorInfo(XElement cur)
+        protected void parseSensorInfo(XElement cur)
         {
 
             int min_iso = (cur.Attribute("iso_min") == null) ? 0 : Int32.Parse(cur.Attribute("iso_min").Value);//.as_int(0);

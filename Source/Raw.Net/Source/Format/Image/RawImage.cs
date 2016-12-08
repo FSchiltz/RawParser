@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace RawNet
 {
-    public class TableLookUp
+    internal class TableLookUp
     {
 
         static int TABLE_SIZE = 65536 * 2;
-        public int ntables;
+        protected int ntables;
         public UInt16[] tables;
-        public bool dither;
+        public bool dither { get; set; }
 
         // Creates n numre of tables.
         public TableLookUp(int _ntables, bool _dither)
@@ -63,7 +63,7 @@ namespace RawNet
             tables[TABLE_SIZE - 1] = tables[TABLE_SIZE - 2];
         }
 
-        public ushort[] getTable(int n)
+        protected ushort[] getTable(int n)
         {
             if (n > ntables)
             {
@@ -84,21 +84,21 @@ namespace RawNet
 
     public class RawImage
     {
-        public byte[] thumbnail;
-        public ushort[] previewData, rawData;    
+        public byte[] thumbnail { get; set; }
+        public ushort[] previewData, rawData;
         public ushort colorDepth;
-        public iPoint2D dim, mOffset = new iPoint2D(), previewDim, previewOffset = new iPoint2D(), uncroppedDim;
+        public Point2D dim, mOffset = new Point2D(), previewDim, previewOffset = new Point2D(), uncroppedDim;
         public ColorFilterArray cfa = new ColorFilterArray();
         public double[] camMul, black, curve;
         public int rotation = 0, blackLevel, saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
-        public bool mDitherScale;           // Should upscaling be done with dither to mimize banding?
+        public bool mDitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
         public ImageMetaData metadata = new ImageMetaData();
         public uint pitch, cpp, bpp, whitePoint;
         public int[] blackLevelSeparate = new int[4];
         public List<String> errors;
         internal bool isCFA;
-        public TableLookUp table;
+        internal TableLookUp table;
         public ColorFilterArray UncroppedCfa;
 
         public RawImage()
@@ -156,7 +156,7 @@ namespace RawNet
             this.table = (t);
         }
 
-        public void subFrame(iRectangle2D crop)
+        public void subFrame(Rectangle2D crop)
         {
             if (!crop.dim.isThisInside(dim - crop.pos))
             {
@@ -444,7 +444,7 @@ namespace RawNet
          */
         public void CreatePreview(int previewFactor)
         {
-            previewDim = new iPoint2D(dim.x / previewFactor, dim.y / previewFactor);
+            previewDim = new Point2D(dim.x / previewFactor, dim.y / previewFactor);
             previewData = new ushort[previewDim.y * previewDim.x * cpp];
             int doubleFactor = previewFactor * previewFactor;
             ushort maxValue = (ushort)(1 << colorDepth);
@@ -467,7 +467,7 @@ namespace RawNet
                             b += rawData[realX + 2];
                         }
                     }
-                    r =(ushort) (r / doubleFactor);
+                    r = (ushort)(r / doubleFactor);
                     g = (ushort)(g / doubleFactor);
                     b = (ushort)(b / doubleFactor);
                     if (r < 0) r = 0; else if (r > maxValue) r = maxValue;
@@ -481,7 +481,7 @@ namespace RawNet
         }
 
 
-        /*public void doLookup(int start_y, int end_y)
+        /*protected void doLookup(int start_y, int end_y)
         {
             if (table.ntables == 1)
             {

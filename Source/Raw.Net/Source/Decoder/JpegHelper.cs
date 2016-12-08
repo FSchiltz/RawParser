@@ -5,9 +5,9 @@ using Windows.Graphics.Imaging;
 
 namespace RawNet
 {
-    public class JpegHelper
+    internal class JpegHelper
     {
-        public static SoftwareBitmap getJpegInArray(byte[] im)
+        protected static SoftwareBitmap getJpegInArray(byte[] im)
         {
             if (im == null) return null;
             Task t;

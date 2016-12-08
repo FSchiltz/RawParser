@@ -7,7 +7,6 @@ namespace RawNet
     {
         private Stream stream;
         public RawDecoder decoder;
-        private CameraMetaData metaData;
         /*
         bool failOnUnknown = false;
         bool interpolateBadPixels = true;
@@ -17,18 +16,18 @@ namespace RawNet
         bool fujiRotate = true;
         int decoderVersion = 0;*/
 
-        public RawParser(ref Stream s)
+        public RawParser(ref Stream s, CameraMetaData metaData)
         {
             stream = s;
             //read camera Metadata from xml
 
             //get the correct parser
-            decoder = getDecoder(metaData);
+            decoder = GetDecoder(metaData);
             //init the correct parser
             // Init();
         }
 
-        public RawDecoder getDecoder(CameraMetaData meta)
+        public RawDecoder GetDecoder(CameraMetaData meta)
         {
             // We need some data.
             // For now it is 104 bytes for RAF images.
@@ -147,7 +146,7 @@ namespace RawNet
             // Ordinary TIFF images
             try
             {
-                TiffParser p = new TiffParser(stream);
+                TiffParser p = new TiffParser(stream, meta);
                 p.parseData();
                 return p.getDecoder();
             }
@@ -195,7 +194,7 @@ namespace RawNet
             //try jpeg file
             try
             {
-                return new JPGParser(new TIFFBinaryReader(stream));
+                return new JPGParser(new TIFFBinaryReader(stream), meta);
             }
             catch (TiffParserException)
             {

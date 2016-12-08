@@ -5,14 +5,17 @@ using System.IO;
 namespace RawNet
 {
 
-    public class TiffParser
+    internal class TiffParser
     {
         TIFFBinaryReader reader;
-        public IFD rootIFD;
+        protected IFD rootIFD;
         Stream stream;
-        public TiffParser(Stream stream)
+        CameraMetaData metaData;
+
+        public TiffParser(Stream stream, CameraMetaData meta)
         {
             this.stream = stream;
+            metaData = meta;
         }
 
         public void parseData()
@@ -59,7 +62,7 @@ namespace RawNet
             }
         }
 
-        public void mergeIFD(TiffParser other_tiff)
+        protected void mergeIFD(TiffParser other_tiff)
         {
             if (other_tiff?.rootIFD?.subIFD.Count == 0)
                 return;
@@ -97,7 +100,7 @@ namespace RawNet
                 if (Convert.ToInt32(c[0]) > 1)
                     throw new TiffParserException("DNG version too new.");
                 rootIFD = null;
-                return new DngDecoder(root, ref reader);
+                return new DngDecoder(root, ref reader, metaData);
             }
 
             potentials = rootIFD.getIFDsWithTag(TagType.MAKE);
@@ -130,7 +133,7 @@ namespace RawNet
                         case "NIKON CORPORATION":
                         case "NIKON":
                             rootIFD = null;
-                            return new NefDecoder(ref root, reader);
+                            return new NefDecoder(ref root, reader, metaData);
                             /*
                         case "OLYMPUS IMAGING CORP.":
                         case "OLYMPUS CORPORATION":
@@ -202,7 +205,7 @@ namespace RawNet
 
             //default as as tandard tiff
             rootIFD = null;
-            return new TiffDecoder(root, ref reader);
+            return new TiffDecoder(root, ref reader, metaData);
             //TODO add detection of Tiff
             throw new TiffParserException("No decoder found. Sorry.");
         }

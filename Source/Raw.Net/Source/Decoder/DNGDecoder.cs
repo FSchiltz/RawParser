@@ -17,12 +17,12 @@ namespace RawNet
         public UInt32 offsetY;
     };
 
-    public class DngDecoder : RawDecoder
+    internal class DngDecoder : RawDecoder
     {
         IFD mRootIFD;
         bool mFixLjpeg;
 
-        public DngDecoder(IFD rootIFD, ref TIFFBinaryReader file) : base(ref file)
+        internal DngDecoder(IFD rootIFD, ref TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
         {
             mRootIFD = (rootIFD);
             List<IFD> data = mRootIFD.getIFDsWithTag(TagType.DNGVERSION);
@@ -39,7 +39,7 @@ namespace RawNet
                 mFixLjpeg = false;
         }
 
-        protected override void decodeMetaDataInternal(CameraMetaData meta)
+        protected override void decodeMetaDataInternal()
         {
             var t = mRootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (t != null) mRaw.metadata.isoSpeed = t.getInt();
@@ -56,9 +56,9 @@ namespace RawNet
                 mRaw.metadata.make = make;
                 mRaw.metadata.model = model;
 
-                Camera cam = meta.getCamera(make, model, "dng");
+                Camera cam = metaData.getCamera(make, model, "dng");
                 if (cam == null) //Also look for non-DNG cameras in case it's a converted file
-                    cam = meta.getCamera(make, model, "");
+                    cam = metaData.getCamera(make, model, "");
                 if (cam != null)
                 {
                     mRaw.metadata.canonical_make = cam.canonical_make;
@@ -84,10 +84,8 @@ namespace RawNet
         }
 
         /* DNG Images are assumed to be decodable unless explicitly set so */
-        protected override void checkSupportInternal(CameraMetaData meta)
+        protected override void checkSupportInternal()
         {
-            // We set this, since DNG's are not explicitly added.
-            failOnUnknown = false;
             var t = mRootIFD.getEntryRecursive(TagType.MAKE);
             var t2 = mRootIFD.getEntryRecursive(TagType.MODEL);
             if (!(t != null && t2 != null))
@@ -97,7 +95,7 @@ namespace RawNet
                 if (t3 != null)
                 {
                     string unique = t3.dataAsString;
-                    this.checkCameraSupported(meta, unique, unique, "dng");
+                    this.checkCameraSupported(metaData, unique, unique, "dng");
                     return;
                 }
                 else
@@ -110,7 +108,7 @@ namespace RawNet
             List<IFD> data = mRootIFD.getIFDsWithTag(TagType.MODEL);
             string make = data[0].getEntry(TagType.MAKE).dataAsString;
             string model = data[0].getEntry(TagType.MODEL).dataAsString;
-            this.checkCameraSupported(meta, make, model, "dng");
+            this.checkCameraSupported(metaData, make, model, "dng");
         }
 
         /* Decodes DNG masked areas into blackareas in the image */
@@ -129,12 +127,12 @@ namespace RawNet
 
             masked.getIntArray(out Int32[] rects, nrects * 4);
 
-            iPoint2D top = mRaw.mOffset;
+            Point2D top = mRaw.mOffset;
 
             for (UInt32 i = 0; i < nrects; i++)
             {
-                iPoint2D topleft = new iPoint2D(rects[i * 4 + 1], rects[i * 4]);
-                iPoint2D bottomright = new iPoint2D(rects[i * 4 + 3], rects[i * 4 + 2]);
+                Point2D topleft = new Point2D(rects[i * 4 + 1], rects[i * 4]);
+                Point2D bottomright = new Point2D(rects[i * 4 + 3], rects[i * 4 + 2]);
                 // Is this a horizontal box, only add it if it covers the active width of the image
                 if (topleft.x <= top.x && bottomright.x >= (mRaw.dim.x + top.x))
                     mRaw.blackAreas.Add(new BlackArea(topleft.y, bottomright.y - topleft.y, false));
@@ -149,14 +147,14 @@ namespace RawNet
 
         bool decodeBlackLevels(IFD raw)
         {
-            iPoint2D blackdim = new iPoint2D(1, 1);
+            Point2D blackdim = new Point2D(1, 1);
 
             Tag bleveldim = raw.getEntry(TagType.BLACKLEVELREPEATDIM);
             if (bleveldim != null)
             {
                 if (bleveldim.dataCount != 2)
                     return false;
-                blackdim = new iPoint2D(bleveldim.getInt(0), bleveldim.getInt(1));
+                blackdim = new Point2D(bleveldim.getInt(0), bleveldim.getInt(1));
             }
 
             if (blackdim.x == 0 || blackdim.y == 0)
@@ -291,7 +289,7 @@ namespace RawNet
 
             try
             {
-                mRaw.dim = new iPoint2D();
+                mRaw.dim = new Point2D();
                 mRaw.dim.x = raw.getEntry(TagType.IMAGEWIDTH).getInt();
                 mRaw.dim.y = raw.getEntry(TagType.IMAGELENGTH).getInt();
             }
@@ -332,7 +330,7 @@ namespace RawNet
                                                                                               printf("\n");
                                                                                             }
                                                                                       */
-                    iPoint2D cfaSize = new iPoint2D(pDim.getInt(1), pDim.getInt(0));
+                    Point2D cfaSize = new Point2D(pDim.getInt(1), pDim.getInt(0));
                     mRaw.cfa.setSize(cfaSize);
                     if (cfaSize.area() != raw.getEntry(TagType.CFAPATTERN).dataCount)
                         throw new RawDecoderException("DNG Decoder: CFA pattern dimension and pattern count does not match: " + raw.getEntry(TagType.CFAPATTERN).dataCount);
@@ -363,7 +361,7 @@ namespace RawNet
                                     c2 = CFAColor.UNKNOWN;
                                     throw new RawDecoderException("DNG Decoder: Unsupported CFA Color.");
                             }
-                            mRaw.cfa.setColorAt(new iPoint2D(x, y), c2);
+                            mRaw.cfa.setColorAt(new Point2D(x, y), c2);
                         }
                     }
                 }
@@ -412,8 +410,8 @@ namespace RawNet
                         {
                             DngStrip slice = slices[i];
                             TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, (uint)mFile.BaseStream.Length);
-                            iPoint2D size = new iPoint2D((int)width, (int)slice.h);
-                            iPoint2D pos = new iPoint2D(0, (int)slice.offsetY);
+                            Point2D size = new Point2D((int)width, (int)slice.h);
+                            Point2D pos = new Point2D(0, (int)slice.offsetY);
 
                             bool big_endian = (raw.endian == Endianness.big);
                             // DNG spec says that if not 8 or 16 bit/sample, always use big endian
@@ -560,16 +558,16 @@ namespace RawNet
             Tag active_area = raw.getEntry(TagType.ACTIVEAREA);
             if (active_area != null)
             {
-                iPoint2D new_size = new iPoint2D(mRaw.dim.x, mRaw.dim.y);
+                Point2D new_size = new Point2D(mRaw.dim.x, mRaw.dim.y);
                 if (active_area.dataCount != 4)
                     throw new RawDecoderException("DNG: active area has " + active_area.dataCount + " values instead of 4");
 
                 active_area.getIntArray(out int[] corners, 4);
-                if (new iPoint2D(corners[1], corners[0]).isThisInside(mRaw.dim))
+                if (new Point2D(corners[1], corners[0]).isThisInside(mRaw.dim))
                 {
-                    if (new iPoint2D(corners[3], corners[2]).isThisInside(mRaw.dim))
+                    if (new Point2D(corners[3], corners[2]).isThisInside(mRaw.dim))
                     {
-                        iRectangle2D crop = new iRectangle2D(corners[1], corners[0], corners[3] - corners[1], corners[2] - corners[0]);
+                        Rectangle2D crop = new Rectangle2D(corners[1], corners[0], corners[3] - corners[1], corners[2] - corners[0]);
                         mRaw.subFrame(crop);
                     }
                 }
@@ -581,17 +579,17 @@ namespace RawNet
             Tag size_entry = raw.getEntry(TagType.DEFAULTCROPSIZE);
             if (origin_entry != null && size_entry != null)
             {
-                iRectangle2D cropped = new iRectangle2D(0, 0, mRaw.dim.x, mRaw.dim.y);
+                Rectangle2D cropped = new Rectangle2D(0, 0, mRaw.dim.x, mRaw.dim.y);
                 /* Read crop position (sometimes is rational so use float) */
                 origin_entry.getFloatArray(out float[] tl, 2);
-                if (new iPoint2D((int)tl[0], (int)tl[1]).isThisInside(mRaw.dim))
-                    cropped = new iRectangle2D((int)tl[0], (int)tl[1], 0, 0);
+                if (new Point2D((int)tl[0], (int)tl[1]).isThisInside(mRaw.dim))
+                    cropped = new Rectangle2D((int)tl[0], (int)tl[1], 0, 0);
 
                 cropped.dim = mRaw.dim - cropped.pos;
                 /* Read size (sometimes is rational so use float) */
 
                 size_entry.getFloatArray(out float[] sz, 2);
-                iPoint2D size = new iPoint2D((int)sz[0], (int)sz[1]);
+                Point2D size = new Point2D((int)sz[0], (int)sz[1]);
                 if ((size + cropped.pos).isThisInside(mRaw.dim))
                     cropped.dim = size;
 
@@ -633,13 +631,12 @@ namespace RawNet
             {
                 UInt32 len = lintable.dataCount;
                 lintable.getShortArray(out ushort[] table, (int)len);
-                mRaw.setTable(table, (int)len, !uncorrectedRawValues);
-                if (!uncorrectedRawValues)
-                {
-                    //TODO Fix
-                    //mRaw.sixteenBitLookup();
-                    //mRaw.table = (null);
-                }
+                mRaw.setTable(table, (int)len, true);
+
+                //TODO Fix
+                //mRaw.sixteenBitLookup();
+                //mRaw.table = (null);
+
             }
 
             // Default white level is (2 ** BitsPerSample) - 1
@@ -690,7 +687,7 @@ namespace RawNet
             });
             //*/
             // Apply opcodes to lossy DNG 
-            if (compression == 0x884c && !uncorrectedRawValues)
+            if (compression == 0x884c)
             {
                 /*
                 if (raw.hasEntry(TagType.OPCODELIST2))
@@ -740,12 +737,12 @@ namespace RawNet
                         //there is a thumbnail
                         UInt32 sample_format = 1;
                         UInt32 bps = thumbIFD.getEntry(TagType.BITSPERSAMPLE).getUInt();
-                        iPoint2D dim;
+                        Point2D dim;
                         if (thumbIFD.hasEntry(TagType.SAMPLEFORMAT))
                             sample_format = thumbIFD.getEntry(TagType.SAMPLEFORMAT).getUInt();
                         try
                         {
-                            dim = new iPoint2D()
+                            dim = new Point2D()
                             {
                                 x = thumbIFD.getEntry(TagType.IMAGEWIDTH).getInt(),
                                 y = thumbIFD.getEntry(TagType.IMAGELENGTH).getInt()
@@ -764,7 +761,7 @@ namespace RawNet
                             UInt32 cpp = thumbIFD.getEntry(TagType.SAMPLESPERPIXEL).getUInt();
                             if (cpp > 4)
                                 throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
-                            
+
 
                             Tag offsets = thumbIFD.getEntry(TagType.STRIPOFFSETS);
                             Tag counts = thumbIFD.getEntry(TagType.STRIPBYTECOUNTS);
@@ -800,8 +797,8 @@ namespace RawNet
                             {
                                 DngStrip slice = slices[i];
                                 TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, (uint)mFile.BaseStream.Length);
-                                iPoint2D size = new iPoint2D((int)width, (int)slice.h);
-                                iPoint2D pos = new iPoint2D(0, (int)slice.offsetY);
+                                Point2D size = new Point2D((int)width, (int)slice.h);
+                                Point2D pos = new Point2D(0, (int)slice.offsetY);
 
                                 bool big_endian = (thumbIFD.endian == Endianness.big);
                                 // DNG spec says that if not 8 or 16 bit/sample, always use big endian
@@ -809,12 +806,12 @@ namespace RawNet
                                     big_endian = true;
                                 try
                                 {
-                                   // readUncompressedRaw(ref input, size, pos, (int)(mRaw.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
+                                    // readUncompressedRaw(ref input, size, pos, (int)(mRaw.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
                                 }
                                 catch (IOException ex)
                                 {
-                                    
-                                        throw new RawDecoderException("DNG decoder: IO error occurred in first slice, unable to decode more. Error is: " + ex.Message);
+
+                                    throw new RawDecoderException("DNG decoder: IO error occurred in first slice, unable to decode more. Error is: " + ex.Message);
                                 }
                             }
                         }
@@ -889,9 +886,9 @@ namespace RawNet
 
                             slices.decodeSlice();
                             */
-                        }                     
+                        }
                     }
-                }                
+                }
             }
             catch (Exception)
             {

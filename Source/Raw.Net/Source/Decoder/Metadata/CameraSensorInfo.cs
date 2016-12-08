@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace RawNet
 {
-    public class CameraSensorInfo
+    internal class CameraSensorInfo
     {
         public int blackLevel;
         public int whiteLevel;

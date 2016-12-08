@@ -18,7 +18,7 @@ namespace RawNet
         // corners are when the image is rotated 45 degrees in Fuji rotated sensors.
         public UInt32 fujiRotationPos;
 
-        public iPoint2D subsampling = new iPoint2D();
+        public Point2D subsampling = new Point2D();
         public string make;
         public string model;
         public string mode;

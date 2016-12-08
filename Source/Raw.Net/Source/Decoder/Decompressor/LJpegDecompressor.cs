@@ -101,7 +101,7 @@ namespace RawNet
     * may be some extra fields for encoding that aren't used in the decoding
     * and vice-versa.
     */
-    public class HuffmanTable
+    internal class HuffmanTable
     {
         /*
         * These two fields directly represent the contents of a JPEG DHT
@@ -120,8 +120,8 @@ namespace RawNet
         public int[] maxcode = new int[18];
         public short[] valptr = new short[17];
         public UInt32[] numbits = new UInt32[256];
-        public int[] bigTable;
-        public bool initialized;
+        public int[] bigTable { get; set; }
+        public bool initialized { get; set; }
 
         public HuffmanTable()
         {
@@ -135,17 +135,17 @@ namespace RawNet
         }
     };
 
-    public class SOFInfo
+    internal class SOFInfo
     {
-        public UInt32 w;    // Width
-        public UInt32 h;    // Height
-        public UInt32 cps;  // Components
-        public UInt32 prec; // Precision
-        public JpegComponentInfo[] compInfo = new JpegComponentInfo[4];
-        public bool initialized;
+        public UInt32 w { get; set; }   // Width
+        public UInt32 h { get; set; }     // Height
+        public UInt32 cps { get; set; }  // Components
+        public UInt32 prec { get; set; }  // Precision
+        public JpegComponentInfo[] compInfo { get; set; } = new JpegComponentInfo[4];
+        public bool initialized { get; set; }
     };
 
-    public class LJpegDecompressor
+    internal class LJpegDecompressor
     {
         public bool mDNGCompatible;  // DNG v1.0.x compatibility
         public bool mUseBigtable;    // Use only for large images
@@ -319,7 +319,7 @@ namespace RawNet
                             break;
 
                         case JpegMarker.M_DQT:
-                            throw new Exception("LJpegDecompressor: Not a valid RAW file.");                       
+                            throw new Exception("LJpegDecompressor: Not a valid RAW file.");
 
                         case JpegMarker.M_DRI:
                             //          _RPT0(0,"Found DRI marker\n");

@@ -19,22 +19,22 @@ namespace RawNet
      * This will decode all image supportedby the windows parser 
      * Should be a last resort parser
      */
-    public class JPGParser : RawDecoder
+    internal class JPGParser : RawDecoder
     {
         IRandomAccessStream stream;
 
-        public JPGParser(TIFFBinaryReader file) : base(ref file)
+        public JPGParser(TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
         {
 
         }
 
-        protected override void checkSupportInternal(CameraMetaData meta)
+        protected override void checkSupportInternal()
         {
             stream = mFile.BaseStream.AsRandomAccessStream();
 
         }
 
-        protected override void decodeMetaDataInternal(CameraMetaData meta)
+        protected override void decodeMetaDataInternal()
         {
             //fill useless metadata
             mRaw.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
@@ -57,7 +57,7 @@ namespace RawNet
                 using (var reference = buffer.CreateReference())
                 {
                     BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-                    mRaw.dim = new iPoint2D(bufferLayout.Width, bufferLayout.Height);
+                    mRaw.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);
                     mRaw.Init();
                     unsafe
                     {

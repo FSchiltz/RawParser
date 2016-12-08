@@ -6,7 +6,7 @@ namespace RawNet
 
     // Note: Allocated buffer MUST be at least size+sizeof(UInt32) large.
 
-    public class BitPumpMSB
+    internal class BitPumpMSB
     {
 
         int BITS_PER_LONG = (8 * sizeof(UInt32));

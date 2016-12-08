@@ -9,7 +9,7 @@ namespace RawNet
             //_RPT1(0, "TIFF Exception: %s\n", _msg.c_str());
         }
 
-        public static void ThrowTPE(string fmt)
+        protected static void ThrowTPE(string fmt)
         {
             /*va_list val;
             va_start(val, fmt);

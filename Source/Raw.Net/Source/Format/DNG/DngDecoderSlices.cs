@@ -5,7 +5,7 @@ using System.IO;
 namespace RawNet
 {
 
-    public class DngSliceElement
+    internal class DngSliceElement
     {
         public DngSliceElement(UInt32 off, UInt32 count, UInt32 offsetX, UInt32 offsetY)
         {
@@ -23,7 +23,7 @@ namespace RawNet
         public bool mUseBigtable;
     };
 
-    class DngDecoderSlices
+    internal class DngDecoderSlices
     {
         public Queue<DngSliceElement> slices = new Queue<DngSliceElement>();
         TIFFBinaryReader mFile;

@@ -33,7 +33,7 @@ namespace RawEditor
                     break;
             }
             //set correct dim
-            image.mOffset = new iPoint2D();
+            image.mOffset = new Point2D();
         }
 
         private static void Deflate(RawImage image)
