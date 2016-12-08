@@ -4,6 +4,8 @@
 
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/arimhan/RawParser.svg)](http://isitmaintained.com/project/arimhan/RawParser "Percentage of issues still open")
 
+[![Build status](https://ci.appveyor.com/api/projects/status/sdvkbleoqohq9rmb/branch/master?svg=true)](https://ci.appveyor.com/project/arimhan/rawparser/branch/master)
+
 ## the app is now live on the store (https://www.microsoft.com/store/apps/9pfwlj4lxftf) 
 ###(I recommend uninstalling the preview and using the one in the store. The future releases will be available in the store one or 2 days after being here).
 
@@ -48,6 +50,7 @@ The app is available at [this address]
 (https://www.microsoft.com/store/apps/9pfwlj4lxftf)
 If you hav ealready insatlledot from the appx directly,please uninstall before insatlling from the store.
 
-### From the github
-You need to activate the developper mode and then dowloading the package from the latest release and opening it from the file explorer on your device.
-(on phone the installation will be done in the background).
+### Sideloading
+You need to activate the developper mode and download the .appxbundle file and open it from the file explorer on your device.(on phone the installation will be done in the background).
+ You canget release from the github release (those are the build pushed on the store) or on appveyor build (more advanced but not tested).
+
