@@ -130,7 +130,7 @@ namespace RawNet
                 }
                 else throw new FormatException("Compression mode " + imageCompressedTag.dataAsString + " not supported yet");
                 mRaw.cpp = 3;
-                mRaw.colorDepth = colorDepth;
+                mRaw.ColorDepth = colorDepth;
                 mRaw.bpp = colorDepth;
                 mRaw.rawData = image;
                 return mRaw;
