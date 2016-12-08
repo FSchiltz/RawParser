@@ -3,7 +3,7 @@ using System;
 
 namespace RawNet
 {
-    static public class Data
+    static internal class Data
     {
         public static uint[] datasizes = { 0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8, 4 };
         // 0-1-2-3-4-5-6-7-8-9-10-11-12-13
@@ -33,7 +33,7 @@ namespace RawNet
         OFFSET = 13, /* 32-bit unsigned offset used in ORF at least */
     };
 
-    public class Tag
+    internal class Tag
     {
         public TagType tagId { get; set; }
         public TiffDataType dataType;
@@ -207,7 +207,7 @@ namespace RawNet
             {
                 return Convert.ToUInt32(data[0]);
             }
-            catch (Exception )
+            catch (Exception)
             {
                 return v;
             }
@@ -219,7 +219,7 @@ namespace RawNet
             {
                 return (float)Convert.ToDouble(data[0]);
             }
-            catch (Exception )
+            catch (Exception)
             {
                 return v;
             }
@@ -237,7 +237,7 @@ namespace RawNet
             {
                 return Convert.ToInt16(data[0]);
             }
-            catch (Exception )
+            catch (Exception)
             {
                 return v;
             }

@@ -6,14 +6,16 @@ using System.Threading.Tasks;
 
 namespace RawNet
 {
-    public enum ThumbnailType {
+    public enum ThumbnailType
+    {
         JPEG,
         RAW
     }
+
     public class Thumbnail
     {
         public byte[] data;
-        public iPoint2D dim;
-        public ThumbnailType type;
+        public Point2D dim { get; set; }
+        public ThumbnailType type { get; set; }
     }
 }

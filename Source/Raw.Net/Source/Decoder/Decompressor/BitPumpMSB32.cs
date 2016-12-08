@@ -4,7 +4,7 @@ using System.IO;
 namespace RawNet
 {
     // Note: Allocated buffer MUST be at least size+sizeof(UInt32) large.
-    public class BitPumpMSB32
+    internal class BitPumpMSB32
     {
         int BITS_PER_LONG_LONG = (8 * sizeof(UInt64));
         int MIN_GET_BITS;   /* max value for long getBuffer */

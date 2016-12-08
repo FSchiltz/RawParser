@@ -7,7 +7,7 @@ using System.Text;
 
 namespace RawNet
 {
-    public class IFD
+    internal class IFD
     {
         public ushort tagNumber;
         public Dictionary<TagType, Tag> tags;

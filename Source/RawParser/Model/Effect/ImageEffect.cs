@@ -23,7 +23,7 @@ namespace RawEditor
         public double vibrance = 0;
         public double[] camCurve;
 
-        public void applyModification(ushort[] image, iPoint2D dim, int colorDepth)
+        public void applyModification(ushort[] image, Point2D dim, int colorDepth)
         {
             maxValue = (uint)(1 << colorDepth);
             if (!cameraWB)
@@ -118,7 +118,7 @@ namespace RawEditor
             });
         }
 
-        public unsafe int[] applyModification(ushort[] image, iPoint2D dim, int colorDepth, ref SoftwareBitmap bitmap)
+        public unsafe int[] applyModification(ushort[] image, Point2D dim, int colorDepth, ref SoftwareBitmap bitmap)
         {
             int[] value = new int[256];
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))

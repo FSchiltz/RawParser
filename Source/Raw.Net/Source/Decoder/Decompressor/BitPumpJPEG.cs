@@ -4,7 +4,7 @@ using System.IO;
 namespace RawNet
 {
     // Note: Allocated buffer MUST be at least size+sizeof(UInt32) large.
-    public class BitPumpJPEG
+    internal class BitPumpJPEG
     {
         int BITS_PER_LONG = (8 * sizeof(UInt32));
         int MIN_GET_BITS;   /* max value for long getBuffer */

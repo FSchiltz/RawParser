@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace RawNet
 {
-    public class NefSlice
+    internal class NefSlice
     {
         public NefSlice() { h = offset = count = 0; }
         public UInt32 h;
@@ -14,12 +14,12 @@ namespace RawNet
     };
 
 
-    public class NefDecoder : RawDecoder
+    internal class NefDecoder : RawDecoder
     {
-        public IFD rootIFD;
+        protected IFD rootIFD;
         private TIFFBinaryReader reader;
 
-        public NefDecoder(ref IFD rootIFD, TIFFBinaryReader file) : base(ref file)
+        public NefDecoder(ref IFD rootIFD, TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
         {
             this.rootIFD = (rootIFD);
             decoderVersion = 5;
@@ -50,7 +50,7 @@ namespace RawNet
             {
                 data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
                 type = ThumbnailType.JPEG,
-                dim = new iPoint2D()
+                dim = new Point2D()
             };
             return temp;
         }
@@ -115,7 +115,7 @@ namespace RawNet
             UInt32 height = raw.getEntry(TagType.IMAGELENGTH).getUInt();
             UInt32 bitPerPixel = raw.getEntry(TagType.BITSPERSAMPLE).getUInt();
             mRaw.colorDepth = (ushort)bitPerPixel;
-            mRaw.dim = new iPoint2D((int)width, (int)height);
+            mRaw.dim = new Point2D((int)width, (int)height);
 
             data = rootIFD.getIFDsWithTag((TagType)0x8c);
 
@@ -135,9 +135,7 @@ namespace RawNet
             mRaw.Init();
             try
             {
-
-                NikonDecompressor decompressor = new NikonDecompressor(mFile, mRaw);
-                decompressor.uncorrectedRawValues = uncorrectedRawValues;
+                NikonDecompressor decompressor = new NikonDecompressor(mFile, mRaw);       
                 TIFFBinaryReader metastream;
                 if (data[0].endian == Endianness.little)
                     metastream = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(meta.data, (TiffDataType)meta.dataType));
@@ -249,7 +247,7 @@ namespace RawNet
             if (0 == slices.Count)
                 throw new RawDecoderException("NEF Decoder: No valid slices found. File probably truncated.");
 
-            mRaw.dim = new iPoint2D((int)width, (int)offY);
+            mRaw.dim = new Point2D((int)width, (int)offY);
             if (bitPerPixel == 14 && width * slices[0].h * 2 == slices[0].count)
                 bitPerPixel = 16; // D3 & D810
             hints.TryGetValue("real_bpp", out string v);
@@ -270,8 +268,8 @@ namespace RawNet
             {
                 NefSlice slice = slices[i];
                 TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, slice.count);
-                iPoint2D size = new iPoint2D((int)width, (int)slice.h);
-                iPoint2D pos = new iPoint2D(0, (int)offY);
+                Point2D size = new Point2D((int)width, (int)slice.h);
+                Point2D pos = new Point2D(0, (int)offY);
                 try
                 {
                     hints.TryGetValue("coolpixmangled", out string mangled);
@@ -302,7 +300,7 @@ namespace RawNet
         }
 
 
-        void readCoolpixMangledRaw(ref TIFFBinaryReader input, iPoint2D size, iPoint2D offset, int inputPitch)
+        void readCoolpixMangledRaw(ref TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
             UInt32 outPitch = mRaw.pitch;
             UInt32 w = (uint)size.x;
@@ -335,7 +333,7 @@ namespace RawNet
             }
         }
 
-        void readCoolpixSplitRaw(ref TIFFBinaryReader input, iPoint2D size, iPoint2D offset, int inputPitch)
+        void readCoolpixSplitRaw(ref TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
             UInt32 outPitch = mRaw.pitch;
             UInt32 w = (uint)size.x;
@@ -389,7 +387,7 @@ namespace RawNet
             uint w = 3040;
             uint h = 2024;
 
-            mRaw.dim = new iPoint2D((int)w, (int)h);
+            mRaw.dim = new Point2D((int)w, (int)h);
             TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, offset, (uint)mFile.BaseStream.Length);
 
             Decode12BitRawBEWithControl(ref input, w, h);
@@ -403,7 +401,7 @@ namespace RawNet
             UInt32 w = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
             UInt32 h = raw.getEntry(TagType.IMAGELENGTH).getUInt();
 
-            mRaw.dim = new iPoint2D((int)w, (int)h);
+            mRaw.dim = new Point2D((int)w, (int)h);
             mRaw.cpp = (3);
             mRaw.isCFA = false;
 
@@ -412,7 +410,7 @@ namespace RawNet
             DecodeNikonSNef(ref input, w, h);
         }
 
-        protected override void checkSupportInternal(CameraMetaData meta)
+        protected override void checkSupportInternal()
         {
             List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
@@ -423,9 +421,9 @@ namespace RawNet
             string mode = getMode();
             string extended_mode = getExtendedMode(mode);
 
-            if (meta.hasCamera(make, model, extended_mode))
-                this.checkCameraSupported(meta, make, model, extended_mode);
-            else this.checkCameraSupported(meta, make, model, mode);
+            if (metaData.hasCamera(make, model, extended_mode))
+                this.checkCameraSupported(metaData, make, model, extended_mode);
+            else this.checkCameraSupported(metaData, make, model, mode);
         }
 
         string getMode()
@@ -463,10 +461,10 @@ namespace RawNet
             return extended_mode;
         }
 
-        override protected void decodeMetaDataInternal(CameraMetaData meta)
+        override protected void decodeMetaDataInternal()
         {
             int iso = 0;
-            mRaw.cfa.setCFA(new iPoint2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            mRaw.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
 
             List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
 
@@ -657,17 +655,17 @@ namespace RawNet
 
             string mode = getMode();
             string extended_mode = getExtendedMode(mode);
-            if (meta.hasCamera(make, model, extended_mode))
+            if (metaData.hasCamera(make, model, extended_mode))
             {
-                setMetaData(meta, make, model, extended_mode, iso);
+                setMetaData(metaData, make, model, extended_mode, iso);
             }
-            else if (meta.hasCamera(make, model, mode))
+            else if (metaData.hasCamera(make, model, mode))
             {
-                setMetaData(meta, make, model, mode, iso);
+                setMetaData(metaData, make, model, mode, iso);
             }
             else
             {
-                setMetaData(meta, make, model, "", iso);
+                setMetaData(metaData, make, model, "", iso);
             }
 
             if (white != 65536)
@@ -1154,7 +1152,7 @@ namespace RawNet
                 // }
 
                 // This code added to correctly implement the disposable pattern.
-                public void Dispose()
+                protected void Dispose()
                 {
                     // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
                     Dispose(true);

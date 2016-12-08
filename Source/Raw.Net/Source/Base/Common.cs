@@ -2,7 +2,7 @@
 
 namespace RawNet
 {
-    public class Common
+    internal class Common
     {
         static public void memset<T>(T[] array, T value, int count)
         {
@@ -28,17 +28,17 @@ namespace RawNet
             return temp;
         }
 
-        static public void memcopy<T>(ref T[] dest, ref T[] src)
+        static public void memcopy<T>(T[] dest, T[] src)
         {
-            memcopy<T>(ref dest, ref src, (uint)dest.Length);
+            memcopy<T>(dest, src, (uint)dest.Length);
         }
 
-        internal static void memcopy<T>(ref T[] dest, ref T[] src, uint count)
+        internal static void memcopy<T>(T[] dest, T[] src, uint count)
         {
-            memcopy<T>(ref dest, ref src, count, 0, 0);
+            memcopy<T>(dest, src, count, 0, 0);
         }
 
-        internal static void memcopy<T>(ref T[] dest, ref T[] src, uint count, int destOffset, int srcOffset)
+        internal static void memcopy<T>(T[] dest, T[] src, uint count, int destOffset, int srcOffset)
         {
             for (int i = 0; i < count; i++) dest[i + destOffset] = src[i + srcOffset];
         }

@@ -7,8 +7,7 @@ namespace RawNet
      * Decompresses Lossless non subsampled JPEGs, with 2-4 components
      *****************/
 
-    public unsafe class LJpegPlain :
-      LJpegDecompressor
+    internal unsafe class LJpegPlain : LJpegDecompressor
     {
         public LJpegPlain(TIFFBinaryReader file, RawImage img) : base(file, img)
         {
@@ -854,7 +853,7 @@ namespace RawNet
             if (mCanonDoubleHeight)
             {
                 frame.h *= 2;
-                mRaw.dim = new iPoint2D((int)frame.w * 2, (int)frame.h);
+                mRaw.dim = new Point2D((int)frame.w * 2, (int)frame.h);
             }
             fixed (ushort* d = mRaw.rawData)
             {

@@ -218,11 +218,9 @@ namespace RawEditor
                 try
                 {
                     Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
-                    RawParser parser = new RawParser(ref stream);
+                    RawParser parser = new RawParser(ref stream, metadata);
                     RawDecoder decoder = parser.decoder;
-                    decoder.failOnUnknown = false;
-                    decoder.checkSupport(metadata);
-
+                    decoder.checkSupport();
                     thumbnail = decoder.decodeThumb();
                     if (thumbnail != null)
                     {
@@ -249,7 +247,7 @@ namespace RawEditor
                     }
 
                     raw = decoder.decodeRaw();
-                    decoder.decodeMetaData(metadata);
+                    decoder.decodeMetaData();
                     raw.metadata.fileName = file.DisplayName;
                     raw.metadata.fileNameComplete = file.Name;
                     //read the exifs
@@ -626,7 +624,7 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
-        private int[] applyUserModif(ref ushort[] image, iPoint2D dim, ushort colorDepth, ref SoftwareBitmap bitmap)
+        private int[] applyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth, ref SoftwareBitmap bitmap)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -656,7 +654,7 @@ namespace RawEditor
             return effect.applyModification(image, dim, colorDepth, ref bitmap);
         }
 
-        private void applyUserModif(ref ushort[] image, iPoint2D dim, ushort colorDepth)
+        private void applyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
