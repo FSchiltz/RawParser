@@ -43,6 +43,7 @@
               <uap:FileType ContentType="image/dng">.dng</uap:FileType>
               <uap:FileType ContentType="image/tiff">.tiff</uap:FileType>
               <uap:FileType ContentType="image/png">.png</uap:FileType>
+              <uap:FileType ContentType="image/cr2">.cr2</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>

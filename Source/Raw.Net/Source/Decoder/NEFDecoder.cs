@@ -17,13 +17,11 @@ namespace RawNet
     internal class NefDecoder : RawDecoder
     {
         protected IFD rootIFD;
-        private TIFFBinaryReader reader;
 
         public NefDecoder(ref IFD rootIFD, TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
         {
             this.rootIFD = (rootIFD);
             decoderVersion = 5;
-            reader = file;
         }
 
         protected override Thumbnail decodeThumbInternal()
@@ -45,10 +43,10 @@ namespace RawNet
 
             Tag makerNoteOffsetTag = exifs[0].getEntryRecursive((TagType)0x927C);
             if (makerNoteOffsetTag == null) return null;
-            reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
+            file.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
             Thumbnail temp = new Thumbnail()
             {
-                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                data = file.ReadBytes(Convert.ToInt32(size.data[0])),
                 type = ThumbnailType.JPEG,
                 dim = new Point2D()
             };
