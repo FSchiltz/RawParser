@@ -44,22 +44,22 @@ namespace RawNet
                     {
                         //for each complete strip
                         //move to the offset
-                        mFile.Position = Convert.ToInt64(imageOffsetTag.data[i]);
+                        file.Position = Convert.ToInt64(imageOffsetTag.data[i]);
                         for (int y = 0; y < rowperstrip && !(i == strips && y <= lastStrip); y++)
                         {
                             for (int x = 0; x < width; x++)
                             {
                                 //get the pixel
                                 //red
-                                image[(y + i * rowperstrip) * width * 3 + x * 3] = mFile.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3] = file.ReadByte();
                                 //green
-                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = mFile.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = file.ReadByte();
                                 //blue 
-                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = mFile.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = file.ReadByte();
                                 for (int z = 0; z < (Convert.ToInt32(samplesPerPixel.data[0]) - 3); z++)
                                 {
                                     //pass the other pixel if more light
-                                    mFile.ReadByte();
+                                    file.ReadByte();
                                 }
                             }
                         }
@@ -81,7 +81,7 @@ namespace RawNet
                     {
                         //for each complete strip
                         //move to the offset
-                        mFile.Position = Convert.ToInt64(imageOffsetTag.data[i]);
+                        file.Position = Convert.ToInt64(imageOffsetTag.data[i]);
                         for (int y = 0; y < rowperstrip && !(i == strips && y < lastStrip); y++)
                         {
                             //uncompress line by line of pixel
@@ -90,19 +90,19 @@ namespace RawNet
                             int count = 0;
                             for (int x = 0; x < width * 3;)
                             {
-                                buffer = mFile.ReadByte();
+                                buffer = file.ReadByte();
                                 count = 0;
                                 if (buffer >= 0)
                                 {
                                     for (int k = 0; k < count; ++k, ++x)
                                     {
-                                        temp[x] = mFile.ReadByte();
+                                        temp[x] = file.ReadByte();
                                     }
                                 }
                                 else
                                 {
                                     count = -buffer;
-                                    buffer = mFile.ReadByte();
+                                    buffer = file.ReadByte();
                                     for (int k = 0; k < count; ++k, ++x)
                                     {
                                         temp[x] = (ushort)buffer;
@@ -122,7 +122,7 @@ namespace RawNet
                                 for (int z = 0; z < ((int)samplesPerPixel.data[0] - 3); z++)
                                 {
                                     //pass the other pixel if more light
-                                    mFile.ReadByte();
+                                    file.ReadByte();
                                 }
                             }
                         }

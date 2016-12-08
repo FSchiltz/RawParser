@@ -30,7 +30,7 @@ namespace RawNet
 
         protected override void checkSupportInternal()
         {
-            stream = mFile.BaseStream.AsRandomAccessStream();
+            stream = file.BaseStream.AsRandomAccessStream();
 
         }
 
@@ -45,7 +45,7 @@ namespace RawNet
             mRaw.colorDepth = 8;
             mRaw.cpp = 3;
             mRaw.bpp = 8;
-            var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, mFile.BaseStream.AsRandomAccessStream()).AsTask();
+            var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, file.BaseStream.AsRandomAccessStream()).AsTask();
 
             decoder.Wait();
 

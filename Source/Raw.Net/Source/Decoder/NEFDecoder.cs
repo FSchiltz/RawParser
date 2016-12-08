@@ -75,7 +75,7 @@ namespace RawNet
 
             if (data[0].getEntry(TagType.MODEL).dataAsString == "NIKON D100 ")
             {  /**Sigh**/
-                if (!mFile.isValid(offsets.getUInt()))
+                if (!file.isValid(offsets.getUInt()))
                     throw new RawDecoderException("NEF Decoder: Image data outside of file.");
                 if (!D100IsCompressed(offsets.getUInt()))
                 {
@@ -104,7 +104,7 @@ namespace RawNet
             {
                 throw new RawDecoderException("NEF Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
             }
-            if (!mFile.isValid(offsets.getUInt(), counts.getUInt()))
+            if (!file.isValid(offsets.getUInt(), counts.getUInt()))
                 throw new RawDecoderException("NEF Decoder: Invalid strip byte count. File probably truncated.");
 
 
@@ -135,7 +135,7 @@ namespace RawNet
             mRaw.Init();
             try
             {
-                NikonDecompressor decompressor = new NikonDecompressor(mFile, mRaw);       
+                NikonDecompressor decompressor = new NikonDecompressor(file, mRaw);       
                 TIFFBinaryReader metastream;
                 if (data[0].endian == Endianness.little)
                     metastream = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(meta.data, (TiffDataType)meta.dataType));
@@ -165,9 +165,9 @@ namespace RawNet
         bool D100IsCompressed(UInt32 offset)
         {
             int i;
-            mFile.Position = offset;
+            file.Position = offset;
             for (i = 15; i < 256; i += 16)
-                if (mFile.ReadByte() != 0) return true;
+                if (file.ReadByte() != 0) return true;
             return false;
         }
 
@@ -240,7 +240,7 @@ namespace RawNet
 
                 offY = Math.Min(height, offY + yPerSlice);
 
-                if (mFile.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                if (file.isValid(slice.offset, slice.count)) // Only decode if size is valid
                     slices.Add(slice);
             }
 
@@ -267,7 +267,7 @@ namespace RawNet
             for (Int32 i = 0; i < slices.Count; i++)
             {
                 NefSlice slice = slices[i];
-                TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, slice.offset, slice.count);
+                TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, slice.offset, slice.count);
                 Point2D size = new Point2D((int)width, (int)slice.h);
                 Point2D pos = new Point2D(0, (int)offY);
                 try
@@ -388,7 +388,7 @@ namespace RawNet
             uint h = 2024;
 
             mRaw.dim = new Point2D((int)w, (int)h);
-            TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, offset, (uint)mFile.BaseStream.Length);
+            TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, offset, (uint)file.BaseStream.Length);
 
             Decode12BitRawBEWithControl(ref input, w, h);
         }
@@ -405,7 +405,7 @@ namespace RawNet
             mRaw.cpp = (3);
             mRaw.isCFA = false;
 
-            TIFFBinaryReader input = new TIFFBinaryReader(mFile.BaseStream, offset, (uint)mFile.BaseStream.Length);
+            TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, offset, (uint)file.BaseStream.Length);
 
             DecodeNikonSNef(ref input, w, h);
         }
