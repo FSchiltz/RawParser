@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Windows.Graphics.Imaging;
@@ -22,6 +23,7 @@ namespace RawNet
     internal class JPGParser : RawDecoder
     {
         IRandomAccessStream stream;
+        BitmapPropertiesView meta;
 
         public JPGParser(TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
         {
@@ -38,6 +40,15 @@ namespace RawNet
         {
             //fill useless metadata
             mRaw.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
+            List<string> list = new List<string>();
+            list.Add("/app1/ifd/{ushort=271}");
+            var metaList = meta.GetPropertiesAsync(list);
+            metaList.AsTask().Wait();
+            if (metaList.GetResults() != null)
+            {
+                metaList.GetResults().TryGetValue("",out var make );
+                mRaw.metadata.make = make.Value?.ToString();
+            }
         }
 
         protected override RawImage decodeRawInternal()
@@ -50,6 +61,7 @@ namespace RawNet
             decoder.Wait();
 
             var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
+            meta = decoder.Result.BitmapProperties;
             bitmapasync.Wait();
             var image = bitmapasync.Result;
             using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))
@@ -71,7 +83,7 @@ namespace RawNet
                             {
                                 int realPix = realY + (3 * x);
                                 int bufferPix = bufferY + (4 * x);
-                                mRaw.rawData[realPix] = temp[bufferPix +2];
+                                mRaw.rawData[realPix] = temp[bufferPix + 2];
                                 mRaw.rawData[realPix + 1] = temp[bufferPix + 1];
                                 mRaw.rawData[realPix + 2] = temp[bufferPix];
                             }
