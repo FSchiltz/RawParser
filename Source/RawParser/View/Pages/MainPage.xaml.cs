@@ -208,6 +208,7 @@ namespace RawEditor
                      contrastSlider.IsEnabled = v;
                      //brightnessSlider.IsEnabled = v;
                      saturationSlider.IsEnabled = v;
+                     saveButton.IsEnabled = v;
                  });
         }
 
