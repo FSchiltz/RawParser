@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -14,9 +15,9 @@ namespace RawNet
         private uint offset;
         private uint count;
 
-        public TIFFBinaryReader(Stream s) : base(s) { }
+        public TIFFBinaryReader(Stream s) : base(s, Encoding.ASCII) { }
         public TIFFBinaryReader(Stream s, Encoding e) : base(s, e) { }
-        public TIFFBinaryReader(Stream s, uint offset, uint count) : base(s)
+        public TIFFBinaryReader(Stream s, uint offset, uint count) : base(s, Encoding.ASCII)
         {
             this.offset = offset;
             s.Position = offset;
@@ -93,11 +94,24 @@ namespace RawNet
 
         public void skipToMarker()
         {
-            while (!(this.ReadByte() == 0xFF && this.PeekChar() != 0 && this.PeekChar() != 0xFF))
+            byte[] buffer = ReadBytes(2);
+
+            Debug.WriteLine(buffer[0] + " " + buffer[1]);
+            this.BaseStream.Position -= 1;
+            int c = 0;
+            while (!(buffer[0] == 0xFF && buffer[1] != 0 && buffer[1] != 0xFF))
             {
+                buffer = ReadBytes(2);
+                this.BaseStream.Position -= 1;
+
+                Debug.WriteLine(buffer[0] + " " + buffer[1]);
+                c++;
+
                 if (this.Position >= this.BaseStream.Length)
                     throw new IOException("No marker found inside rest of buffer");
             }
+            this.BaseStream.Position -= 1;
+            Debug.WriteLine(0, "Skipped " + c + " bytes.");
         }
 
         public int getRemainSize() { return (int)(this.BaseStream.Length - this.Position); }

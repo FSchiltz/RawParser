@@ -114,28 +114,12 @@ namespace RawNet
             }
         }
 
-        public int getInt()
-        {
-            return Convert.ToInt32(data[0]);
-        }
-
-        public uint getUInt()
-        {
-            return Convert.ToUInt32(data[0]);
-        }
-
-        public double getDouble()
-        {
-            return Convert.ToDouble(data[0]);
-
-        }
         public Tag()
         {
             data = new object[1];
             dataCount = 1;
             dataType = TiffDataType.UNDEFINED;
             displayName = "";
-
         }
 
         public int getTypeSize(TiffDataType id)
@@ -189,68 +173,60 @@ namespace RawNet
                 array[i] = Convert.ToSingle(data[i]);
         }
 
-        public int getInt(int v)
+        internal int getInt(int v)
         {
-            try
-            {
-                return Convert.ToInt32(data[0]);
-            }
-            catch (Exception)
-            {
-                return v;
-            }
+            return Convert.ToInt32(data[v]);
         }
 
-        public uint getUInt(uint v)
+        internal int getInt()
         {
-            try
-            {
-                return Convert.ToUInt32(data[0]);
-            }
-            catch (Exception)
-            {
-                return v;
-            }
+            return Convert.ToInt32(data[0]);
         }
 
-        public float getFloat(float v)
+        internal uint getUInt()
         {
-            try
-            {
-                return (float)Convert.ToDouble(data[0]);
-            }
-            catch (Exception)
-            {
-                return v;
-            }
+            return Convert.ToUInt32(data[0]);
+        }
+
+        internal double getDouble()
+        {
+            return Convert.ToDouble(data[0]);
+        }
+
+        internal uint getUInt(uint v)
+        {
+            return Convert.ToUInt32(data[v]);
+        }
+
+        internal float getFloat(int v)
+        {
+            return Convert.ToSingle(data[v]);
         }
 
 
         internal float getFloat()
         {
-            return (float)Convert.ToDouble(data[0]);
+            return Convert.ToSingle(data[0]);
         }
 
-        public short getShort(short v)
+        internal short getShort(int v)
         {
-            try
-            {
-                return Convert.ToInt16(data[0]);
-            }
-            catch (Exception)
-            {
-                return v;
-            }
+            return Convert.ToInt16(data[v]);
         }
 
-        internal ushort getUShort()
+        internal ushort getUShort(int v)
         {
-            return Convert.ToUInt16(data[0]);
+            return Convert.ToUInt16(data[v]);
         }
 
         internal short getShort()
         {
             return Convert.ToInt16(data[0]);
+        }
+
+        internal ushort getUShort()
+        {
+            return Convert.ToUInt16(data[0]);
         }
 
 

@@ -8,7 +8,115 @@ namespace RawNet
     {
         int BITS_PER_LONG = (8 * sizeof(UInt32));
         int MIN_GET_BITS;   /* max value for long getBuffer */
-        public UInt32 getOffset() { return (uint)(off - (mLeft >> 3) + stuffed); }
+        byte[] buffer;
+        byte[] current_buffer = new byte[24];
+        UInt32 size = 0;            // This if the end of buffer.
+        int mLeft = 0;
+        UInt32 off;                  // Offset in bytes
+        int stuffed = 0;              // How many bytes has been stuffed?
+
+        /*** Used for entropy encoded sections ***/
+        public BitPumpJPEG(ref TIFFBinaryReader s) : this(ref s, (uint)s.Position, (uint)s.BaseStream.Length) { }
+
+        /*** Used for entropy encoded sections ***/
+        public BitPumpJPEG(ref TIFFBinaryReader s, uint offset, uint count)
+        {
+            MIN_GET_BITS = (BITS_PER_LONG - 7);
+            size = (uint)(s.getRemainSize() + sizeof(UInt32));
+            buffer = new byte[size];
+            s.BaseStream.Position = offset;
+            s.Read(buffer, 0, s.getRemainSize());
+            init();
+        }
+
+        public BitPumpJPEG(byte[] _buffer, UInt32 _size)
+        {
+            buffer = _buffer;
+            size = _size + sizeof(UInt32);
+            init();
+        }
+
+        public void init()
+        {
+            //Common.memset<byte>(current_buffer, 0, 16);
+            fill();
+        }
+
+        public void _fill()
+        {
+            // Fill in 96 bits
+            //int[] b = Common.convertByteToInt(current_buffer);
+            if ((off + 12) >= size)
+            {
+                while (mLeft <= 64 && off < size)
+                {
+                    for (int i = (mLeft >> 3); i >= 0; i--)
+                        current_buffer[i + 1] = current_buffer[i];
+                    byte val = buffer[off++];
+                    if (val == 0xff)
+                    {
+                        if (buffer[off] == 0)
+                            off++;
+                        else
+                        {
+                            // We hit another marker - don't forward bitpump anymore
+                            val = 0;
+                            off--;
+                            stuffed++;
+                        }
+                    }
+                    current_buffer[0] = val;
+                    mLeft += 8;
+                }
+                while (mLeft < 64)
+                {
+                    current_buffer[11] = current_buffer[7];
+                    current_buffer[10] = current_buffer[6];
+                    current_buffer[9] = current_buffer[5];
+                    current_buffer[8] = current_buffer[4];
+
+                    current_buffer[7] = current_buffer[3];
+                    current_buffer[6] = current_buffer[2];
+                    current_buffer[5] = current_buffer[1];
+                    current_buffer[4] = current_buffer[0];
+
+                    current_buffer[3] = 0;
+                    current_buffer[2] = 0;
+                    current_buffer[1] = 0;
+                    current_buffer[0] = 0;
+                    mLeft += 32;
+                    stuffed += 4;  //We are adding to mLeft without incrementing offset
+                }
+                return;
+            }
+            current_buffer[15] = current_buffer[3];
+            current_buffer[14] = current_buffer[2];
+            current_buffer[13] = current_buffer[1];
+            current_buffer[12] = current_buffer[0];
+
+            for (int i = 0; i < 12; i++)
+            {
+                byte val = buffer[off++];
+                if (val == 0xff)
+                {
+                    if (buffer[off] == 0)
+                        off++;
+                    else
+                    {
+                        val = 0;
+                        off--;
+                        stuffed++;
+                    }
+                }
+                current_buffer[11 - i] = val;
+            }
+            mLeft += 96;
+        }
+
+        public UInt32 getOffset()
+        {
+            return (uint)(off - (mLeft >> 3) + stuffed);
+        }
 
         public void checkPos()
         {
@@ -27,7 +135,7 @@ namespace RawNet
         public UInt32 peekBitsNoFill(UInt32 nbits)
         {
             int shift = (int)(mLeft - nbits);
-            UInt32 ret = current_buffer[shift >> 3];
+            UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
             ret >>= shift & 7;
             return (uint)(ret & ((1 << (int)nbits) - 1));
         }
@@ -69,7 +177,7 @@ namespace RawNet
         public UInt32 peekByteNoFill()
         {
             int shift = mLeft - 8;
-            UInt32 ret = current_buffer[shift >> 3];
+            UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
             ret >>= shift & 7;
             return ret & 0xff;
         }
@@ -116,92 +224,6 @@ namespace RawNet
             UInt32 ret = current_buffer[shift >> 3];
             ret >>= shift & 7;
             return (byte)(ret & 0xff);
-        }
-
-        byte[] buffer;
-        byte[] current_buffer = new byte[16];
-        UInt32 size = 0;            // This if the end of buffer.
-        int mLeft = 0;
-        UInt32 off;                  // Offset in bytes
-        int stuffed = 0;              // How many bytes has been stuffed?
-
-        /*** Used for entropy encoded sections ***/
-        public BitPumpJPEG(TIFFBinaryReader s)
-        {
-            MIN_GET_BITS = (BITS_PER_LONG - 7);
-            s.Read(buffer, (int)s.Position, (int)s.BaseStream.Length);
-            size = (uint)(s.getRemainSize() + sizeof(UInt32));
-            init();
-        }
-
-        public BitPumpJPEG(byte[] _buffer, UInt32 _size)
-        {
-            MIN_GET_BITS = (BITS_PER_LONG - 7);
-            buffer = _buffer;
-            size = _size + sizeof(UInt32);
-            init();
-        }
-
-        public void init()
-        {
-            //Common.memset<byte>(current_buffer, 0, 16);
-            fill();
-        }
-
-        public void _fill()
-        {
-            // Fill in 96 bits
-            int[] b = Common.convertByteToInt(current_buffer);
-            if ((off + 12) >= size)
-            {
-                while (mLeft <= 64 && off < size)
-                {
-                    for (int i = (mLeft >> 3); i >= 0; i--)
-                        current_buffer[i + 1] = current_buffer[i];
-                    byte val = buffer[off++];
-                    if (val == 0xff)
-                    {
-                        if (buffer[off] == 0)
-                            off++;
-                        else
-                        {
-                            // We hit another marker - don't forward bitpump anymore
-                            val = 0;
-                            off--;
-                            stuffed++;
-                        }
-                    }
-                    current_buffer[0] = val;
-                    mLeft += 8;
-                }
-                while (mLeft < 64)
-                {
-                    b[2] = b[1];
-                    b[1] = b[0];
-                    b[0] = 0;
-                    mLeft += 32;
-                    stuffed += 4;  //We are adding to mLeft without incrementing offset
-                }
-                return;
-            }
-            b[3] = b[0];
-            for (int i = 0; i < 12; i++)
-            {
-                byte val = buffer[off++];
-                if (val == 0xff)
-                {
-                    if (buffer[off] == 0)
-                        off++;
-                    else
-                    {
-                        val = 0;
-                        off--;
-                        stuffed++;
-                    }
-                }
-                current_buffer[11 - i] = val;
-            }
-            mLeft += 96;
         }
 
         public UInt32 getBitSafe()

@@ -28,7 +28,7 @@ namespace RawNet
          */
         protected override Thumbnail decodeThumbInternal()
         {
-            //find the preview ifd (ifd2 for thumb)
+            //find the preview ifd (ifd1 for thumb)(IFD0 is better, bigger preview buut too big and slow for now)
             IFD preview = rootIFD.getIFDsWithTag((TagType)0x0201)[0];
             //no thumbnail
             if (preview == null) return null;
@@ -157,7 +157,7 @@ namespace RawNet
             List<Cr2Slice> slices = new List<Cr2Slice>();
             int completeH = 0;
             bool doubleHeight = false;
-
+            mRaw.ColorDepth = 14;
             try
             {
                 Tag offsets = raw.getEntry(TagType.STRIPOFFSETS);
@@ -205,6 +205,7 @@ namespace RawNet
             // Fix for Canon 6D mRaw, which has flipped width & height for some part of the image
             // In that case, we swap width and height, since this is the correct dimension
             bool flipDims = false;
+            bool wrappedCr2Slices = false;
             if (raw.hasEntry((TagType)0xc6c5))
             {
                 UInt16 ss = raw.getEntry((TagType)0xc6c5).getUShort();
@@ -214,6 +215,21 @@ namespace RawNet
                     mRaw.dim.x /= 3;
                     mRaw.cpp = (3);
                     mRaw.isCFA = false;
+                    // Fix for Canon 80D mraw format.
+                    // In that format, the frame (as read by getSOF()) is 4032x3402, while the
+                    // real image should be 4536x3024 (where the full vertical slices in
+                    // the frame "wrap around" the image.
+                    if (hints.ContainsKey("wrapped_cr2_slices") && raw.hasEntry(TagType.IMAGEWIDTH) && raw.hasEntry(TagType.IMAGELENGTH))
+                    {
+                        wrappedCr2Slices = true;
+                        int w = raw.getEntry(TagType.IMAGEWIDTH).getInt();
+                        int h = raw.getEntry(TagType.IMAGELENGTH).getInt();
+                        if (w * h != mRaw.dim.x * mRaw.dim.y)
+                        {
+                            throw new RawDecoderException("CR2 Decoder: Wrapped slices don't match image size");
+                        }
+                        mRaw.dim = new Point2D(w, h);
+                    }
                 }
                 flipDims = mRaw.dim.x < mRaw.dim.y;
                 if (flipDims)
@@ -255,6 +271,7 @@ namespace RawNet
                     l.mUseBigtable = true;
                     l.mCanonFlipDim = flipDims;
                     l.mCanonDoubleHeight = doubleHeight;
+                    l.mWrappedCr2Slices = wrappedCr2Slices;
                     l.startDecoder(slice.offset, slice.count, 0, offY);
                 }
                 catch (RawDecoderException e)
@@ -349,9 +366,9 @@ namespace RawNet
                     }
 
                     offset /= 2;
-                    mRaw.metadata.wbCoeffs[0] = (float)wb.data[offset + 0];
-                    mRaw.metadata.wbCoeffs[1] = (float)wb.data[offset + 1];
-                    mRaw.metadata.wbCoeffs[2] = (float)wb.data[offset + 3];
+                    mRaw.metadata.wbCoeffs[0] = Convert.ToSingle(wb.data[offset + 0]);
+                    mRaw.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[offset + 1]);
+                    mRaw.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[offset + 3]);
                 }
                 else
                 {
@@ -384,7 +401,7 @@ namespace RawNet
                                 mRaw.metadata.wbCoeffs[2] = wb.getFloat(2);
                             }
                         }
-                    }
+                    }                  
                 }
             }
             catch (Exception e)
@@ -393,6 +410,10 @@ namespace RawNet
                 // We caught an exception reading WB, just ignore it
             }
             setMetaData(metaData, make, model, mode, iso);
+
+            mRaw.metadata.wbCoeffs[0] = mRaw.metadata.wbCoeffs[0] / mRaw.metadata.wbCoeffs[1];
+            mRaw.metadata.wbCoeffs[1] = mRaw.metadata.wbCoeffs[1] / mRaw.metadata.wbCoeffs[1];
+            mRaw.metadata.wbCoeffs[2] = mRaw.metadata.wbCoeffs[2] / mRaw.metadata.wbCoeffs[1];
         }
 
         int getHue()
