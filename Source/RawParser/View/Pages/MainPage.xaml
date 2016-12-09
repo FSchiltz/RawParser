@@ -33,7 +33,8 @@
                           Icon="SaveLocal"
                           x:Uid="Save" 
                           Click="saveButton_Click"
-                          VerticalAlignment="Top"/>
+                          VerticalAlignment="Top"
+                          IsEnabled="False"/>
             <AppBarButton IsEnabled="False" 
                           x:Name="shareButton" 
                           Icon="Link"
@@ -181,7 +182,7 @@
 
                                 <TextBlock Foreground="Black" FontSize="16" x:Uid="ColorBalance"/>
                                 <!--<TextBlock FontSize="12" x:Uid="Temperature"/>-->
-                                <TextBlock FontSize="12">Red</TextBlock> 
+                                <TextBlock FontSize="12">Red</TextBlock>
                                 <Slider x:Name="colorTempSlider"   PointerCaptureLost="WBSlider_DragStop"  Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="False"/>
                                 <TextBlock FontSize="12" >Green</TextBlock>
                                 <Slider x:Name="colorTintSlider"    PointerCaptureLost="WBSlider_DragStop"  Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="False"/>
@@ -225,7 +226,7 @@
                                                 <ColumnDefinition />
 
                                                 <ColumnDefinition />
-                                            </Grid.ColumnDefinitions>                                          
+                                            </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="{Binding Key}" TextWrapping="Wrap" Margin="0,0,5,0" />
                                             <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
                                         </Grid>
