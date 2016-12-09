@@ -128,7 +128,7 @@ namespace RawNet
         // You must supply the destination where the value should be written, and a pointer to
         // a value that will be used to store a random counter that can be reused between calls.
         // this needs to be inline to speed up tight decompressor loops
-        public void setWithLookUp(UInt16 value, ref ushort[] dst, uint offset, ref uint random)
+        internal void setWithLookUp(UInt16 value, ref ushort[] dst, uint offset, ref uint random)
         {
             if (table == null)
             {
@@ -151,6 +151,33 @@ namespace RawNet
                 return;
             }
             dst[offset] = table.tables[value];
+        }
+
+        // setWithLookUp will set a single pixel by using the lookup table if supplied,
+        // You must supply the destination where the value should be written, and a pointer to
+        // a value that will be used to store a random counter that can be reused between calls.
+        // this needs to be inline to speed up tight decompressor loops
+        internal unsafe void setWithLookUp(ushort value, byte* dst, ref uint random)
+        {
+            ushort* dest = (ushort*)dst;
+            if (table == null)
+            {
+                *dest = value;
+                return;
+            }
+            if (table.dither)
+            {
+
+                int basevalue = table.tables[value * 2];
+                uint delta = table.tables[value * 2 + 1];
+
+                uint r = random;
+                uint pix = (uint)basevalue + ((delta * (r & 2047) + 1024) >> 12);
+                random = 15700 * (r & 65535) + (r >> 16);
+                *dest = (ushort)pix;
+                return;
+            }
+            *dest = table.tables[value];
         }
 
         public void scaleValues()
@@ -374,7 +401,7 @@ namespace RawNet
             previewDim = new Point2D(dim.x / previewFactor, dim.y / previewFactor);
             previewData = new ushort[previewDim.y * previewDim.x * cpp];
             int doubleFactor = previewFactor * previewFactor;
-            ushort maxValue = (ushort)((1 << ColorDepth)-1);
+            ushort maxValue = (ushort)((1 << ColorDepth) - 1);
             //loop over each block
             Parallel.For(0, previewDim.y, y =>
             {

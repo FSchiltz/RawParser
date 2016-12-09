@@ -16,11 +16,18 @@ namespace RawNet
         int BITS_PER_LONG = (8 * sizeof(UInt32));
         int MIN_GET_BITS;// = (BITS_PER_LONG - 7);  /* max value for long getBuffer */
 
-        public BitPumpPlain(ref TIFFBinaryReader s)
+        /*** Used for entropy encoded sections ***/
+        public BitPumpPlain(ref TIFFBinaryReader s) : this(ref s, (uint)s.Position, (uint)s.BaseStream.Length) { }
+
+
+        /*** Used for entropy encoded sections ***/
+        public BitPumpPlain(ref TIFFBinaryReader s, uint offset, uint count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
-            s.Read(buffer, (int)s.Position, (int)s.BaseStream.Length);
-            size = (uint)(8 * s.getRemainSize());
+            size = count + sizeof(UInt32);
+            buffer = new byte[size];
+            s.BaseStream.Position = offset;
+            s.BaseStream.Read(buffer, 0, (int)count);         
         }
 
         public BitPumpPlain(byte[] _buffer, UInt32 _size)

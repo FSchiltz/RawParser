@@ -39,11 +39,13 @@
             <uap:InfoTip>Photo</uap:InfoTip>
             <uap:SupportedFileTypes>
               <uap:FileType ContentType="image/jpeg">.jpg</uap:FileType>
-              <uap:FileType ContentType="image/raw">.nef</uap:FileType>
+              <uap:FileType ContentType="image/nikon">.nef</uap:FileType>
               <uap:FileType ContentType="image/dng">.dng</uap:FileType>
               <uap:FileType ContentType="image/tiff">.tiff</uap:FileType>
               <uap:FileType ContentType="image/png">.png</uap:FileType>
-              <uap:FileType ContentType="image/cr2">.cr2</uap:FileType>
+              <uap:FileType ContentType="image/canon">.cr2</uap:FileType>
+              <uap:FileType ContentType="image/pentax">.pef</uap:FileType>
+              <uap:FileType ContentType="image/sony">.arw</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>

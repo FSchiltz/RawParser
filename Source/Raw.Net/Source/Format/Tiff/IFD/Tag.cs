@@ -173,6 +173,14 @@ namespace RawNet
                 array[i] = Convert.ToSingle(data[i]);
         }
 
+        internal byte[] getByteArray()
+        {
+            byte[] array = new byte[dataCount];
+            for (int i = 0; i < dataCount; i++)
+                array[i] = Convert.ToByte(data[i]);
+            return array;
+        }
+
         internal int getInt(int v)
         {
             return Convert.ToInt32(data[v]);
@@ -272,6 +280,6 @@ namespace RawNet
 (((UInt64)(data)[pos + 5]) << 16) |
 (((UInt64)(data)[pos + 6]) << 8) |
 ((UInt64)(data)[pos + 7]));
-        }
+        }       
     }
 }

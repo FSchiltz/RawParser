@@ -128,7 +128,9 @@
     <Compile Include="Source\Base\Common.cs" />
     <Compile Include="Source\Base\Point2D.cs" />
     <Compile Include="Source\Base\Rectangle2D.cs" />
+    <Compile Include="Source\Decoder\ArwDecoder.cs" />
     <Compile Include="Source\Decoder\Cr2Decoder.cs" />
+    <Compile Include="Source\Decoder\Decompressor\PentaxDecompressor.cs" />
     <Compile Include="Source\Decoder\Decompressor\Reader\BinaryReaderBE.cs" />
     <Compile Include="Source\Decoder\Decoder.cs" />
     <Compile Include="Source\Decoder\Decompressor\BitPumpJPEG.cs" />
@@ -145,6 +147,7 @@
     <Compile Include="Source\Decoder\Metadata\CameraMetaData.cs" />
     <Compile Include="Source\Decoder\Metadata\CameraSensorInfo.cs" />
     <Compile Include="Source\Decoder\NEFDecoder.cs" />
+    <Compile Include="Source\Decoder\PefDecoder.cs" />
     <Compile Include="Source\Decoder\RawDecoder.cs" />
     <Compile Include="Source\Decoder\TIFFDecoder.cs" />
     <Compile Include="Source\Exception\CameraMetadataException.cs" />

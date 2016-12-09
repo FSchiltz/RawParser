@@ -51,7 +51,7 @@ namespace RawNet
             nextIFD = reader.ReadUInt32();
             rootIFD = new IFD(reader, nextIFD, endian, 0);
             nextIFD = rootIFD.nextOffset;
-            
+
             while (nextIFD != 0)
             {
                 rootIFD.subIFD.Add(new IFD(reader, nextIFD, endian, 0));
@@ -124,10 +124,10 @@ namespace RawNet
                     }
                     switch (make)
                     {
-                        
+
                         case "Canon":
                             rootIFD = null;
-                            return new Cr2Decoder(root, reader,metaData);
+                            return new Cr2Decoder(root, reader, metaData);
                         /*case "FUJIFILM":
                             rootIFD = null;
                             return new RafDecoder(root, reader);*/
@@ -135,20 +135,22 @@ namespace RawNet
                         case "NIKON":
                             rootIFD = null;
                             return new NefDecoder(ref root, reader, metaData);
-                            /*
-                        case "OLYMPUS IMAGING CORP.":
-                        case "OLYMPUS CORPORATION":
-                        case "OLYMPUS OPTICAL CO.,LTD":
-                            rootIFD = null;
-                            return new OrfDecoder(root, reader);
+                        /*
+                    case "OLYMPUS IMAGING CORP.":
+                    case "OLYMPUS CORPORATION":
+                    case "OLYMPUS OPTICAL CO.,LTD":
+                        rootIFD = null;
+                        return new OrfDecoder(root, reader);
+                    */
                         case "SONY":
                             rootIFD = null;
-                            return new ArwDecoder(root, reader);
+                            return new ArwDecoder(root, reader, metaData);
                         case "PENTAX Corporation":
                         case "RICOH IMAGING COMPANY, LTD.":
                         case "PENTAX":
                             rootIFD = null;
-                            return new PefDecoder(root, reader);
+                            return new PefDecoder(root, reader, metaData);
+                            /*
                         case "Panasonic":
                         case "LEICA":
                             rootIFD = null;
