@@ -47,7 +47,7 @@ namespace RawNet
             if (metaList.GetResults() != null)
             {
                 metaList.GetResults().TryGetValue("",out var make );
-                mRaw.metadata.make = make.Value?.ToString();
+                mRaw.metadata.make = make?.Value.ToString();
             }
         }
 
