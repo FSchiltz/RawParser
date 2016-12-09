@@ -98,14 +98,18 @@ namespace RawEditor
                     ViewMode = PickerViewMode.Thumbnail,
                     SuggestedStartLocation = PickerLocationId.ComputerFolder
                 };
-                filePicker.FileTypeFilter.Add(".nef");
                 filePicker.FileTypeFilter.Add(".tiff");
                 filePicker.FileTypeFilter.Add(".tif");
+                filePicker.FileTypeFilter.Add(".jpg");
+                filePicker.FileTypeFilter.Add(".jpeg");
+                filePicker.FileTypeFilter.Add(".png");
+
+                //raw
+                filePicker.FileTypeFilter.Add(".nef");
                 filePicker.FileTypeFilter.Add(".dng");
                 filePicker.FileTypeFilter.Add(".cr2");
-                filePicker.FileTypeFilter.Add(".jpg");
-                //filePicker.FileTypeFilter.Add(".jpeg");
-                filePicker.FileTypeFilter.Add(".png");
+                filePicker.FileTypeFilter.Add(".pef");
+                filePicker.FileTypeFilter.Add(".arw");
                 StorageFile file = await filePicker.PickSingleFileAsync();
                 if (file != null)
                 {
