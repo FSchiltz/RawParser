@@ -5,130 +5,11 @@ namespace RawNet
 {
 
     // Note: Allocated buffer MUST be at least size+sizeof(UInt32) large.
-
     internal class BitPumpMSB
     {
 
         int BITS_PER_LONG = (8 * sizeof(UInt32));
         int MIN_GET_BITS; /* max value for long getBuffer */
-
-        public UInt32 getOffset()
-        {
-            return (uint)(off - (mLeft >> 3));
-        }
-
-        public void checkPos()
-        {
-            if (mStuffed > 8)
-                throw new FileIOException("Out of buffer read");
-        }        // Check if we have a valid position
-
-        // Fill the buffer with at least 24 bits
-        public void fill()
-        {
-            if (mLeft < 25) _fill();
-        }
-
-        //get the nbits as an int32
-        public UInt32 peekBitsNoFill(UInt32 nbits)
-        {
-            int shift = (int)(mLeft - nbits);
-            UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
-            ret >>= shift & 7;
-            /*
-            for (int i = 0; i < shift >> 3; i++)
-            {
-                ret <<= 3;
-                ret += current_buffer[i];
-            }
-            ret >>= shift & 7;
-            */
-            return (uint)(ret & ((1 << (int)nbits) - 1));
-        }
-
-        public UInt32 getBit()
-        {
-            if (mLeft == 0) _fill();
-            mLeft--;
-            UInt32 _byte = (uint)(mLeft >> 3);
-            return (uint)(current_buffer[_byte] >> (mLeft & 0x7)) & 1;
-        }
-
-        public UInt32 getBitsNoFill(UInt32 nbits)
-        {
-            UInt32 ret = peekBitsNoFill(nbits);
-            mLeft -= (byte)nbits;
-            return ret;
-        }
-        public UInt32 getBits(UInt32 nbits)
-        {
-            fill();
-            return getBitsNoFill(nbits);
-        }
-
-        public UInt32 peekBit()
-        {
-            if (mLeft == 0) _fill();
-            return (uint)(current_buffer[(mLeft - 1) >> 3] >> ((mLeft - 1) & 0x7)) & 1;
-        }
-        public UInt32 getBitNoFill()
-        {
-            mLeft--;
-            UInt32 ret = (uint)(current_buffer[mLeft >> 3] >> (mLeft & 0x7)) & 1;
-            return ret;
-        }
-
-        public UInt32 peekByteNoFill()
-        {
-            int shift = mLeft - 8;
-            UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
-            ret >>= shift & 7;
-            return ret & 0xff;
-        }
-
-        public UInt32 peekBits(UInt32 nbits)
-        {
-            fill();
-            return peekBitsNoFill(nbits);
-        }
-
-        public UInt32 peekByte()
-        {
-            fill();
-            if (off > size)
-                throw new IOException("Out of buffer read");
-
-            return peekByteNoFill();
-        }
-
-        public void skipBits(uint nbits)
-        {
-            int skipn = (int)nbits;
-            while (skipn != 0)
-            {
-                fill();
-                checkPos();
-                int n = Math.Min(skipn, mLeft);
-                mLeft -= (byte)n;
-                skipn -= n;
-            }
-        }
-
-        public void skipBitsNoFill(uint nbits)
-        {
-            mLeft -= (byte)nbits;
-        }
-
-        public byte getByte()
-        {
-            fill();
-            mLeft -= 8;
-            int shift = mLeft;
-            UInt32 ret = current_buffer[shift >> 3];
-            ret >>= shift & 7;
-            return (byte)(ret & 0xff);
-        }
-
         byte[] current_buffer;
         byte[] buffer;
         UInt32 size = 0;            // This if the end of buffer.
@@ -136,12 +17,8 @@ namespace RawNet
         UInt32 off;                  // Offset in bytes
         int mStuffed = 0;
 
-
         /*** Used for entropy encoded sections ***/
-        public BitPumpMSB(ref TIFFBinaryReader s) : this(ref s, (uint)s.Position, (uint)s.BaseStream.Length)
-        {
-
-        }
+        public BitPumpMSB(ref TIFFBinaryReader s) : this(ref s, (uint)s.Position, (uint)s.BaseStream.Length) { }
 
         /*** Used for entropy encoded sections ***/
         public BitPumpMSB(ref TIFFBinaryReader s, uint offset, uint count)
@@ -233,6 +110,116 @@ namespace RawNet
             mLeft += 96;
         }
 
+        public UInt32 getOffset()
+        {
+            return (uint)(off - (mLeft >> 3));
+        }
+
+        public void checkPos()
+        {
+            if (mStuffed > 8)
+                throw new FileIOException("Out of buffer read");
+        }        // Check if we have a valid position
+
+        // Fill the buffer with at least 24 bits
+        public void fill()
+        {
+            if (mLeft < 25) _fill();
+        }
+
+        //get the nbits as an int32
+        public UInt32 peekBitsNoFill(UInt32 nbits)
+        {
+            int shift = (int)(mLeft - nbits);
+            UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
+            ret >>= shift & 7;
+            return (uint)(ret & ((1 << (int)nbits) - 1));
+        }
+
+        public UInt32 getBit()
+        {
+            if (mLeft == 0) _fill();
+            mLeft--;
+            UInt32 _byte = (uint)(mLeft >> 3);
+            return (uint)(current_buffer[_byte] >> (mLeft & 0x7)) & 1;
+        }
+
+        public UInt32 getBitsNoFill(UInt32 nbits)
+        {
+            UInt32 ret = peekBitsNoFill(nbits);
+            mLeft -= (byte)nbits;
+            return ret;
+        }
+
+        public UInt32 getBits(UInt32 nbits)
+        {
+            fill();
+            return getBitsNoFill(nbits);
+        }
+
+        public UInt32 peekBit()
+        {
+            if (mLeft == 0) _fill();
+            return (uint)(current_buffer[(mLeft - 1) >> 3] >> ((mLeft - 1) & 0x7)) & 1;
+        }
+
+        public UInt32 getBitNoFill()
+        {
+            mLeft--;
+            UInt32 ret = (uint)(current_buffer[mLeft >> 3] >> (mLeft & 0x7)) & 1;
+            return ret;
+        }
+
+        public UInt32 peekByteNoFill()
+        {
+            int shift = mLeft - 8;
+            UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
+            ret >>= shift & 7;
+            return ret & 0xff;
+        }
+
+        public UInt32 peekBits(UInt32 nbits)
+        {
+            fill();
+            return peekBitsNoFill(nbits);
+        }
+
+        public UInt32 peekByte()
+        {
+            fill();
+            if (off > size)
+                throw new IOException("Out of buffer read");
+
+            return peekByteNoFill();
+        }
+
+        public void skipBits(uint nbits)
+        {
+            int skipn = (int)nbits;
+            while (skipn != 0)
+            {
+                fill();
+                checkPos();
+                int n = Math.Min(skipn, mLeft);
+                mLeft -= (byte)n;
+                skipn -= n;
+            }
+        }
+
+        public void skipBitsNoFill(uint nbits)
+        {
+            mLeft -= (byte)nbits;
+        }
+
+        public byte getByte()
+        {
+            fill();
+            mLeft -= 8;
+            int shift = mLeft;
+            UInt32 ret = current_buffer[shift >> 3];
+            ret >>= shift & 7;
+            return (byte)(ret & 0xff);
+        }
 
         public UInt32 getBitSafe()
         {
@@ -251,7 +238,6 @@ namespace RawNet
             checkPos();
             return getBitsNoFill(nbits);
         }
-
 
         public byte getByteSafe()
         {

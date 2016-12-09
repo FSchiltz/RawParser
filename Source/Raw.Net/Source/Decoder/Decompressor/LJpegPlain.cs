@@ -43,7 +43,7 @@ namespace RawNet
             if (slicesW.Count == 1)
                 slicesW[0] = (int)(frame.w * frame.cps);
 
-            if (slicesW.Count != 0)
+            if (slicesW.Count == 0)
                 slicesW.Add((int)(frame.w * frame.cps));
 
             if (0 == frame.h || 0 == frame.w)
@@ -621,7 +621,6 @@ namespace RawNet
 
         void decodeScanLeft2Comps()
         {
-
             int COMPS = 2;
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
             //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
@@ -635,7 +634,7 @@ namespace RawNet
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
-                uint* offset = stackalloc UInt32[(slices + 1)];
+                uint[] offset = new UInt32[(slices + 1)];
 
                 UInt32 t_y = 0;
                 UInt32 t_x = 0;
@@ -660,7 +659,7 @@ namespace RawNet
                 }
                 offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-                int* slice_width = stackalloc int[slices];
+                int[] slice_width = new int[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)

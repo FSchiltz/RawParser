@@ -400,7 +400,7 @@ namespace RawNet
             UInt32 h = raw.getEntry(TagType.IMAGELENGTH).getUInt();
 
             mRaw.dim = new Point2D((int)w, (int)h);
-            mRaw.cpp = (3);
+            mRaw.cpp = 3;
             mRaw.isCFA = false;
 
             TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, offset, (uint)file.BaseStream.Length);

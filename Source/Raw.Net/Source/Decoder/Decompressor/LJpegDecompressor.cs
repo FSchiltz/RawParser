@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -151,6 +152,7 @@ namespace RawNet
         public bool mUseBigtable;    // Use only for large images
         public bool mCanonFlipDim;   // Fix Canon 6D mRaw where width/height is flipped
         public bool mCanonDoubleHeight; // Fix Canon double height on 4 components (EOS 5DS R)
+        public bool mWrappedCr2Slices; // Fix Canon 80D mRaw where the slices are wrapped
         public void addSlices(List<int> slices) { slicesW = slices; }  // CR2 slices.
 
         public virtual void decodeScan() { throw new Exception("LJpegDecompressor: No Scan decoder found"); }
@@ -425,9 +427,11 @@ namespace RawNet
             UInt32 cheadersize = 3 + frame.cps * 2 + 3;
             //_ASSERTE(cheadersize == headerLength);
 
-            bits = new BitPumpJPEG(input);
+            bits = new BitPumpJPEG(ref input);
+            //long pos = input.BaseStream.Position;
             decodeScan();
-            input.ReadBytes((int)bits.getOffset());
+
+            input.Position = bits.getOffset();
 
         }
 
@@ -494,7 +498,7 @@ namespace RawNet
             input.skipToMarker();
             byte id = input.ReadByte();
             //TODO change
-            //_ASSERTE(0xff == id);
+            Debug.Assert(0xff == id);
             JpegMarker mark = (JpegMarker)input.ReadByte();
             return mark;
         }
