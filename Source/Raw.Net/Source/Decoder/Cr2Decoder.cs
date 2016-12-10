@@ -29,12 +29,12 @@ namespace RawNet
         protected override Thumbnail decodeThumbInternal()
         {
             //find the preview ifd (ifd1 for thumb)(IFD0 is better, bigger preview buut too big and slow for now)
-            IFD preview = rootIFD.getIFDsWithTag((TagType)0x0201)[0];
+            IFD preview = rootIFD.getIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)[0];
             //no thumbnail
             if (preview == null) return null;
 
-            var thumb = preview.getEntry((TagType)0x0201);
-            var size = preview.getEntry((TagType)0x0202);
+            var thumb = preview.getEntry(TagType.JPEGINTERCHANGEFORMAT);
+            var size = preview.getEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
             if (size == null || thumb == null) return null;
 
 

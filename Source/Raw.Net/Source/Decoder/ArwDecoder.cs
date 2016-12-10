@@ -8,31 +8,56 @@ namespace RawNet
 {
     class ArwDecoder : RawDecoder
     {
-        IFD mRootIFD;
-        int mShiftDownScale;
+        IFD rootIFD;
+        int shiftDownScale;
 
         internal ArwDecoder(IFD rootIFD, TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
         {
-            mRootIFD = (rootIFD);
-            mShiftDownScale = 0;
+            this.rootIFD = (rootIFD);
+            shiftDownScale = 0;
             decoderVersion = 1;
+        }
+
+        /**
+       * Taken from nikon decoder
+       */
+        protected override Thumbnail decodeThumbInternal()
+        {
+            //find the preview ifd Preview is in the rootIFD (smaller preview in subiFD use those)
+            List<IFD> possible = rootIFD.getIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT);
+            //no thumbnail
+            if (possible == null || possible.Count == 0) return null;
+            IFD preview = possible[possible.Count - 1];
+
+            var thumb = preview.getEntry(TagType.JPEGINTERCHANGEFORMAT);
+            var size = preview.getEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
+            if (size == null || thumb == null) return null;
+
+            file.Position = (uint)(thumb.data[0]);
+            Thumbnail temp = new Thumbnail()
+            {
+                data = file.ReadBytes(Convert.ToInt32(size.data[0])),
+                type = ThumbnailType.JPEG,
+                dim = new Point2D()
+            };
+            return temp;
         }
 
         protected override RawImage decodeRawInternal()
         {
             IFD raw = null;
-            List<IFD> data = mRootIFD.getIFDsWithTag(TagType.STRIPOFFSETS);
+            List<IFD> data = rootIFD.getIFDsWithTag(TagType.STRIPOFFSETS);
 
             if (data.Count == 0)
             {
-                Tag model = mRootIFD.getEntryRecursive(TagType.MODEL);
+                Tag model = rootIFD.getEntryRecursive(TagType.MODEL);
 
                 if (model != null && model.dataAsString == "DSLR-A100")
                 {
                     // We've caught the elusive A100 in the wild, a transitional format
                     // between the simple sanity of the MRW custom format and the wordly
                     // wonderfullness of the Tiff-based ARW format, let's shoot from the hip
-                    data = mRootIFD.getIFDsWithTag(TagType.SUBIFDS);
+                    data = rootIFD.getIFDsWithTag(TagType.SUBIFDS);
                     if (data.Count == 0)
                         throw new RawDecoderException("ARW: A100 format, couldn't find offset");
                     raw = data[0];
@@ -59,7 +84,7 @@ namespace RawNet
                 else if (hints.ContainsKey("srf_format"))
                 {
 
-                    data = mRootIFD.getIFDsWithTag(TagType.IMAGEWIDTH);
+                    data = rootIFD.getIFDsWithTag(TagType.IMAGEWIDTH);
                     if (data.Count == 0)
                         throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
                     raw = data[0];
@@ -145,7 +170,7 @@ namespace RawNet
             // this makes the compression detect it as a ARW v1.
             // This camera has however another MAKER entry, so we MAY be able
             // to detect it this way in the future.
-            data = mRootIFD.getIFDsWithTag(TagType.MAKE);
+            data = rootIFD.getIFDsWithTag(TagType.MAKE);
             if (data.Count > 1)
             {
                 for (Int32 i = 0; i < data.Count; i++)
@@ -269,7 +294,7 @@ namespace RawNet
                 BitPumpPlain bits = new BitPumpPlain(ref file);
                 //todo add parralel (parrallel.For not working because onlyone bits so not thread safe;
                 //set one bits pump per row (may be slower)
-                for(UInt32 y = 0; y < mRaw.dim.y; y++)
+                for (UInt32 y = 0; y < mRaw.dim.y; y++)
                 {
                     // Realign
                     bits.setAbsoluteOffset((uint)(mRaw.dim.x * 8 * y) >> 3);
@@ -341,7 +366,7 @@ namespace RawNet
                     }
                 }
                 // Shift scales, since black and white are the same as compressed precision
-                mShiftDownScale = 2;
+                shiftDownScale = 2;
             }
             else
                 throw new RawDecoderException("Unsupported bit depth");
@@ -349,7 +374,7 @@ namespace RawNet
 
         protected override void checkSupportInternal()
         {
-            List<IFD> data = mRootIFD.getIFDsWithTag(TagType.MODEL);
+            List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("ARW Support check: Model name found");
             string make = data[0].getEntry(TagType.MAKE).dataAsString;
@@ -363,7 +388,7 @@ namespace RawNet
             int iso = 0;
 
             mRaw.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
-            List<IFD> data = mRootIFD.getIFDsWithTag(TagType.MODEL);
+            List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
                 throw new RawDecoderException("ARW Meta Decoder: Model name found");
@@ -373,19 +398,19 @@ namespace RawNet
             string make = data[0].getEntry(TagType.MAKE).dataAsString;
             string model = data[0].getEntry(TagType.MODEL).dataAsString;
 
-            Tag isoTag = mRootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            Tag isoTag = rootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
                 iso = isoTag.getInt();
 
             setMetaData(metaData, make, model, "", iso);
-            mRaw.whitePoint >>= mShiftDownScale;
-            mRaw.blackLevel >>= mShiftDownScale;
+            mRaw.whitePoint >>= shiftDownScale;
+            mRaw.blackLevel >>= shiftDownScale;
 
             // Set the whitebalance
             if (model == "DSLR-A100")
             { // Handle the MRW style WB of the A100
 
-                Tag priv = mRootIFD.getEntryRecursive(TagType.DNGPRIVATEDATA);
+                Tag priv = rootIFD.getEntryRecursive(TagType.DNGPRIVATEDATA);
                 if (priv != null)
                 {
                     byte[] offdata = priv.getByteArray();
@@ -468,13 +493,13 @@ namespace RawNet
         unsafe void GetWB()
         {
             // Set the whitebalance for all the modern ARW formats (everything after A100)
-            Tag priv = mRootIFD.getEntryRecursive(TagType.DNGPRIVATEDATA);
+            Tag priv = rootIFD.getEntryRecursive(TagType.DNGPRIVATEDATA);
             if (priv != null)
             {
                 byte[] data = priv.getByteArray();
                 UInt32 off = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | ((uint)(data)[0]));
                 IFD sony_private;
-                sony_private = new IFD(file, off, mRootIFD.endian);
+                sony_private = new IFD(file, off, rootIFD.endian);
 
                 Tag sony_offset = sony_private.getEntryRecursive(TagType.SONY_OFFSET);
                 Tag sony_length = sony_private.getEntryRecursive(TagType.SONY_LENGTH);
@@ -492,7 +517,7 @@ namespace RawNet
 
                 SonyDecrypt(ifp_data, len / 4, key);
 
-                sony_private = new IFD(new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(ifp_data)), 0, mRootIFD.endian, 0, (int)off);
+                sony_private = new IFD(new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(ifp_data)), 0, rootIFD.endian, 0, (int)off);
 
                 if (sony_private.hasEntry(TagType.SONYGRBGLEVELS))
                 {
