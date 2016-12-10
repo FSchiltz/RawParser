@@ -45,10 +45,10 @@ namespace RawEditor
             yCurve[2] = maxValue / 2;
             //shadow
             xCurve[0] = 0;
-            yCurve[0] = shadow * (maxValue / (400));
+            yCurve[0] = shadow * (maxValue / (200));
             //hightlight
             xCurve[4] = maxValue;
-            yCurve[4] = maxValue - (hightlight * (maxValue / 400));
+            yCurve[4] = maxValue + (hightlight * (maxValue / 200));
             //contrast
             xCurve[1] = maxValue / 4;
             yCurve[1] = ((yCurve[0] + yCurve[2]) / 2) - (maxValue / 200);
@@ -148,10 +148,10 @@ namespace RawEditor
                     yCurve[2] = maxValue / 2;
                     //shadow
                     xCurve[0] = 0;
-                    yCurve[0] = shadow * (maxValue / (400));
+                    yCurve[0] = shadow * (maxValue / (200));
                     //hightlight
                     xCurve[4] = maxValue;
-                    yCurve[4] = maxValue - (hightlight * (maxValue / 400));
+                    yCurve[4] = maxValue + (hightlight * (maxValue / 200));
                     //contrast
                     xCurve[1] = maxValue / 4;
                     yCurve[1] = ((yCurve[0] + yCurve[2]) / 2) - (maxValue / 200);
