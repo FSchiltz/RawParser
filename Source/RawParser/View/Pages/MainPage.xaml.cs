@@ -399,10 +399,7 @@ namespace RawEditor
                 else if (x > 1) x = 1;
                 ImageDisplay.MinZoomFactor = 0.1f;
                 ImageDisplay.MaxZoomFactor = x + 10;
-                //ImageDisplay.ZoomToFactor(x);
-                ImageDisplay.InvalidateMeasure();
-                ImageDisplay.InvalidateArrange();
-                ImageDisplay.InvalidateScrollInfo();
+                ImageDisplay.ChangeView(null,null,x);
             }
         }
 
