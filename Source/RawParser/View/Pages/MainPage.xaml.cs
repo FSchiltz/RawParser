@@ -39,6 +39,7 @@ namespace RawEditor
         CameraMetaData metadata = null;
         public Thumbnail thumbnail;
         private uint displayMutex = 0;
+        private bool userAppliedModif = false;
 
         public MainPage()
         {
@@ -165,7 +166,8 @@ namespace RawEditor
                        contrastSlider.Value = 10;
                        //brightnessSlider.IsEnabled = v;
                        saturationSlider.Value = 0;
-
+                       ResetButton.IsEnabled = false;
+                       userAppliedModif = false;
                        //set white balance if any
                        SetWB();
                    });
@@ -205,7 +207,6 @@ namespace RawEditor
                      colorTintSlider.IsEnabled = v;
                      colorTintBlueSlider.IsEnabled = v;
                      exposureSlider.IsEnabled = v;
-                     ResetButton.IsEnabled = v;
                      ShadowSlider.IsEnabled = v;
                      HighLightSlider.IsEnabled = v;
                      //gammaSlider.IsEnabled = v;
@@ -399,7 +400,7 @@ namespace RawEditor
                 else if (x > 1) x = 1;
                 ImageDisplay.MinZoomFactor = 0.1f;
                 ImageDisplay.MaxZoomFactor = x + 10;
-                ImageDisplay.ChangeView(null,null,x);
+                ImageDisplay.ChangeView(null, null, x);
             }
         }
 
@@ -477,7 +478,7 @@ namespace RawEditor
                     {
                         bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.x, raw.dim.y);
                     });
-                    applyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
+                    ApplyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
                     // write to file
                     if (file.FileType == ".jpg")
                     {
@@ -630,7 +631,7 @@ namespace RawEditor
                 {
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
                 });
-                int[] value = applyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
+                int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
                 displayImage(bitmap);
                 Histogram.Create(value, raw.ColorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
             });
@@ -639,7 +640,7 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
-        private int[] applyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth, ref SoftwareBitmap bitmap)
+        private int[] ApplyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth, ref SoftwareBitmap bitmap)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -669,7 +670,7 @@ namespace RawEditor
             return effect.applyModification(image, dim, colorDepth, ref bitmap);
         }
 
-        private void applyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth)
+        private void ApplyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -705,7 +706,20 @@ namespace RawEditor
             {
                 cameraWB = false;
                 cameraWBCheck.IsEnabled = true;
+                EnableReset();
                 updatePreview();
+            }
+        }
+
+        private async void EnableReset()
+        {
+            if (!userAppliedModif)
+            {
+                userAppliedModif = true;
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    ResetButton.IsEnabled = true;
+                });
             }
         }
 
@@ -723,6 +737,7 @@ namespace RawEditor
         {
             if (raw?.previewData != null)
             {
+                EnableReset();
                 updatePreview();
             }
         }
