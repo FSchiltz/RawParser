@@ -26,18 +26,8 @@ namespace RawEditor
         public double gMul;
         public double bMul;
 
-        public void applyModification(ushort[] image, Point2D dim, int colorDepth)
+        internal double[] CreateCurve()
         {
-            maxValue = (uint)(1 << colorDepth);
-            if (!cameraWB)
-            {
-                mul = new float[4];
-                //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
-                mul[0] = (float)(rMul / 255);
-                mul[1] = (float)(gMul / 255);
-                mul[2] = (float)(bMul / 255); 
-            }
-
             //generate the curve            
             double[] xCurve = new double[5], yCurve = new double[5];
             //mid point
@@ -58,7 +48,21 @@ namespace RawEditor
 
             //interpolate with spline
             //double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
-            double[] contrastCurve = Curve.cubicSpline(xCurve, yCurve);
+            return Curve.cubicSpline(xCurve, yCurve);
+        }
+
+        public void applyModification(ushort[] image, Point2D dim, int colorDepth)
+        {
+            maxValue = (uint)(1 << colorDepth);
+            if (!cameraWB)
+            {
+                mul = new float[4];
+                //Balance.calculateRGB((int)temperature, out mul[0], out mul[1], out mul[2]);
+                mul[0] = (float)(rMul / 255);
+                mul[1] = (float)(gMul / 255);
+                mul[2] = (float)(bMul / 255);
+            }
+            double[] contrastCurve = CreateCurve();
 
             //Change the gamma/No more gammaneeded here, the raw should be transformed to neutral gamma before demos
             //double[] gammaCurve = Balance.gamma_curve(0.45, 4.5, 2, 8192 << 3);
@@ -141,27 +145,11 @@ namespace RawEditor
                         mul[2] = (float)(bMul / 255);
                     }
 
-                    //generate the curve            
-                    double[] xCurve = new double[5], yCurve = new double[5];
-                    //mid point
-                    xCurve[2] = maxValue / 2;
-                    yCurve[2] = maxValue / 2;
-                    //shadow
-                    xCurve[0] = 0;
-                    yCurve[0] = shadow * (maxValue / (200));
-                    //hightlight
-                    xCurve[4] = maxValue;
-                    yCurve[4] = maxValue + (hightlight * (maxValue / 200));
-                    //contrast
-                    xCurve[1] = maxValue / 4;
-                    yCurve[1] = ((yCurve[0] + yCurve[2]) / 2) - (maxValue / 200);
-                    xCurve[3] = maxValue * 3 / 4;
-                    yCurve[3] = ((yCurve[2] + yCurve[4]) / 2) + (maxValue / 200);
-                    maxValue--;
+
 
                     //interpolate with spline
                     //double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
-                    double[] contrastCurve = Curve.cubicSpline(xCurve, yCurve);
+                    double[] contrastCurve = CreateCurve();
 
                     //Change the gamma/No more gammaneeded here, the raw should be transformed to neutral gamma before demos
                     //double[] gammaCurve = Balance.gamma_curve(0.45, 4.5, 2, 8192 << 3);
