@@ -44,6 +44,7 @@ namespace RawEditor
         public MainPage()
         {
             InitializeComponent();
+            this.NavigationCacheMode = NavigationCacheMode.Required;
             if (null == metadata)
             {
                 try
