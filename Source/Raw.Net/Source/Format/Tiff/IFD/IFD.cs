@@ -276,21 +276,21 @@ namespace RawNet
             }
             else if (Common.memcmp(ref nikon_v3_signature, ref data))
             {
-                //offset = 10;
                 offset = 10;
+                //nikon makernote contains a 10byte so we skip it.
                 // Read endianness
                 if (data[0 + offset] == 0x49 && data[1 + offset] == 0x49)
                 {
                     parent_end = Endianness.little;
                     mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
-                    offset = 8;
                 }
                 else if (data[0 + offset] == 0x4D && data[1 + offset] == 0x4D)
                 {
                     parent_end = Endianness.big;
                     mFile = new TIFFBinaryReaderRE(reader.BaseStream, offset + off, (uint)data.Length);
-                    offset = 8;
                 }
+                //go after the tiff ifd
+                offset = 8;
             }
 
             // Panasonic has the word Exif at byte 6, a complete Tiff header starts at byte 12
