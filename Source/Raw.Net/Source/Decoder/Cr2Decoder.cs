@@ -37,8 +37,8 @@ namespace RawNet
             var size = preview.getEntry((TagType)0x0202);
             if (size == null || thumb == null) return null;
 
-            
-            file.Position = (uint)(thumb.data[0]) ;
+
+            file.Position = (uint)(thumb.data[0]);
             Thumbnail temp = new Thumbnail()
             {
                 data = file.ReadBytes(Convert.ToInt32(size.data[0])),
@@ -47,7 +47,6 @@ namespace RawNet
             };
             return temp;
         }
-
 
         protected override RawImage decodeRawInternal()
         {
@@ -401,7 +400,7 @@ namespace RawNet
                                 mRaw.metadata.wbCoeffs[2] = wb.getFloat(2);
                             }
                         }
-                    }                  
+                    }
                 }
             }
             catch (Exception e)
@@ -411,9 +410,9 @@ namespace RawNet
             }
             setMetaData(metaData, make, model, mode, iso);
 
-            mRaw.metadata.wbCoeffs[0] = mRaw.metadata.wbCoeffs[0] / mRaw.metadata.wbCoeffs[1];
-            mRaw.metadata.wbCoeffs[1] = mRaw.metadata.wbCoeffs[1] / mRaw.metadata.wbCoeffs[1];
-            mRaw.metadata.wbCoeffs[2] = mRaw.metadata.wbCoeffs[2] / mRaw.metadata.wbCoeffs[1];
+            mRaw.metadata.wbCoeffs[0] = 1;//mRaw.metadata.wbCoeffs[0] / mRaw.metadata.wbCoeffs[1];
+            mRaw.metadata.wbCoeffs[1] = 1;// mRaw.metadata.wbCoeffs[1] / mRaw.metadata.wbCoeffs[1];
+            mRaw.metadata.wbCoeffs[2] = 1;// mRaw.metadata.wbCoeffs[2] / mRaw.metadata.wbCoeffs[1];
         }
 
         int getHue()
