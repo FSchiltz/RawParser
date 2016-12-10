@@ -23,7 +23,7 @@ namespace RawNet
         public ImageMetaData metadata = new ImageMetaData();
         public uint pitch, cpp, bpp, whitePoint;
         public int[] blackLevelSeparate = new int[4];
-        public List<String> errors;
+        public List<String> errors = new List<string>();
         internal bool isCFA;
         internal TableLookUp table;
         public ColorFilterArray UncroppedCfa;
@@ -157,9 +157,8 @@ namespace RawNet
         // You must supply the destination where the value should be written, and a pointer to
         // a value that will be used to store a random counter that can be reused between calls.
         // this needs to be inline to speed up tight decompressor loops
-        internal unsafe void setWithLookUp(ushort value, byte* dst, ref uint random)
+        internal unsafe void setWithLookUp(ushort value, ushort* dest, ref uint random)
         {
-            ushort* dest = (ushort*)dst;
             if (table == null)
             {
                 *dest = value;
@@ -167,7 +166,6 @@ namespace RawNet
             }
             if (table.dither)
             {
-
                 int basevalue = table.tables[value * 2];
                 uint delta = table.tables[value * 2 + 1];
 
