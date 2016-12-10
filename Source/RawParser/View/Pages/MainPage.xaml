@@ -32,7 +32,7 @@
             <AppBarButton x:Name="saveButton" 
                           Icon="SaveLocal"
                           x:Uid="Save" 
-                          Click="saveButton_Click"
+                          Click="SaveButton_Click"
                           VerticalAlignment="Top"
                           IsEnabled="False"/>
             <AppBarButton IsEnabled="False" 
@@ -43,7 +43,7 @@
 
             <AppBarButton x:Name="settingsButton"  
                           Icon="Setting" x:Uid="Setting" 
-                          Click="appbarSettingClick"/>
+                          Click="AppbarSettingClick"/>
             <!--
             <CommandBar.SecondaryCommands>
                 <AppBarButton x:Name="settingsButton2" 

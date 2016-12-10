@@ -41,7 +41,7 @@ namespace RawNet
             fileStream.Position = offset;
             tagNumber = fileStream.ReadUInt16();
             tags = new Dictionary<TagType, Tag>();
-
+            this.depth = depth;
             for (int i = 0; i < tagNumber; i++)
             {
                 Tag temp = new Tag();
