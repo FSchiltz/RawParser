@@ -31,8 +31,11 @@ namespace RawNet
                 return Endianness.big;
             return Endianness.unknown;
         }
+        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian) : this(fileStream, offset, endian, 0, 0) { }
 
-        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian)
+        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(fileStream, offset, endian, depth, 0) { }
+
+        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset)
         {
             this.endian = endian;
             fileStream.Position = offset;
@@ -55,7 +58,7 @@ namespace RawNet
                 temp.dataOffset = 0;
                 if (((temp.dataCount * temp.getTypeSize(temp.dataType) > 4)))
                 {
-                    temp.dataOffset = fileStream.ReadUInt32();
+                    temp.dataOffset = (uint)(fileStream.ReadUInt32() - relativeOffset);
                 }
 
                 //Get the tag data
@@ -128,8 +131,10 @@ namespace RawNet
                             {
                                 IFD maker_ifd = parseDngPrivateData(temp);
                                 if (maker_ifd != null)
+                                {
                                     subIFD.Add(maker_ifd);
-                                temp.data = null;
+                                    temp.data = null;
+                                }
                             }
                             catch (TiffParserException)
                             { // Unparsable private data are added as entries
@@ -235,12 +240,7 @@ namespace RawNet
             return tags.ContainsKey(t);
         }
 
-        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) :
-                this(fileStream, offset, endian)
-        {
 
-            this.depth = depth;
-        }
 
         /* This will attempt to parse makernotes and return it as an IFD */
         IFD parseMakerNote(TIFFBinaryReader reader, uint off, Endianness parent_end)

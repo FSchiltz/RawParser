@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace RawNet
 {
@@ -57,50 +58,47 @@ namespace RawNet
                 }
                 else if (hints.ContainsKey("srf_format"))
                 {
-                    unsafe
-                    {
-                        data = mRootIFD.getIFDsWithTag(TagType.IMAGEWIDTH);
-                        if (data.Count == 0)
-                            throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
-                        raw = data[0];
 
-                        UInt32 w = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
-                        UInt32 h = raw.getEntry(TagType.IMAGELENGTH).getUInt();
-                        UInt32 len = w * h * 2;
+                    data = mRootIFD.getIFDsWithTag(TagType.IMAGEWIDTH);
+                    if (data.Count == 0)
+                        throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
+                    raw = data[0];
 
-                        // Constants taken from dcraw
-                        UInt32 offtemp = 862144;
-                        UInt32 key_off = 200896;
-                        UInt32 head_off = 164600;
+                    UInt32 w = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
+                    UInt32 h = raw.getEntry(TagType.IMAGELENGTH).getUInt();
+                    UInt32 len = w * h * 2;
 
-                        // Replicate the dcraw contortions to get the "decryption" key
-                        file.Position = key_off; ;
-                        UInt32 offset = (uint)file.ReadByte() * 4;
-                        file.Position = key_off + offset;
-                        byte[] d = file.ReadBytes(4);
-                        UInt32 key = (((uint)(d[0]) << 24) | ((uint)(d[1]) << 16) | ((uint)(d[2]) << 8) | (uint)(d[3]));
-                        file.Position = head_off;
-                        byte[] head = file.ReadBytes(40);
-                        fixed (byte* temp = head)
-                        {
-                            SonyDecrypt((UInt32*)temp, 10, key);
-                        }
-                        for (int i = 26; i-- > 22;)
-                            key = key << 8 | head[i];
+                    // Constants taken from dcraw
+                    UInt32 offtemp = 862144;
+                    UInt32 key_off = 200896;
+                    UInt32 head_off = 164600;
 
-                        // "Decrypt" the whole image buffer in place
-                        file.Position = offtemp;
-                        byte[] image_data = file.ReadBytes((int)len);
-                        fixed (byte* temp = image_data)
-                        {
-                            SonyDecrypt((UInt32*)temp, len / 4, key);
-                        }
-                        // And now decode as a normal 16bit raw
-                        mRaw.dim = new Point2D((int)w, (int)h);
-                        mRaw.Init();
-                        TIFFBinaryReader reader = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(image_data), len, (uint)image_data.Length);
-                        Decode16BitRawBEunpacked(reader, w, h);
-                    }
+                    // Replicate the dcraw contortions to get the "decryption" key
+                    file.Position = key_off; ;
+                    UInt32 offset = (uint)file.ReadByte() * 4;
+                    file.Position = key_off + offset;
+                    byte[] d = file.ReadBytes(4);
+                    UInt32 key = (((uint)(d[0]) << 24) | ((uint)(d[1]) << 16) | ((uint)(d[2]) << 8) | (uint)(d[3]));
+                    file.Position = head_off;
+                    byte[] head = file.ReadBytes(40);
+
+                    SonyDecrypt(head, 10, key);
+
+                    for (int i = 26; i-- > 22;)
+                        key = key << 8 | head[i];
+
+                    // "Decrypt" the whole image buffer in place
+                    file.Position = offtemp;
+                    byte[] image_data = file.ReadBytes((int)len);
+
+                    SonyDecrypt(image_data, len / 4, key);
+
+                    // And now decode as a normal 16bit raw
+                    mRaw.dim = new Point2D((int)w, (int)h);
+                    mRaw.Init();
+                    TIFFBinaryReader reader = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(image_data), len, (uint)image_data.Length);
+                    Decode16BitRawBEunpacked(reader, w, h);
+
                     return mRaw;
                 }
                 else
@@ -142,7 +140,7 @@ namespace RawNet
             UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
             UInt32 height = raw.getEntry(TagType.IMAGELENGTH).getUInt();
             UInt32 bitPerPixel = raw.getEntry(TagType.BITSPERSAMPLE).getUInt();
-
+            mRaw.ColorDepth = (ushort)bitPerPixel;
             // Sony E-550 marks compressed 8bpp ARW with 12 bit per pixel
             // this makes the compression detect it as a ARW v1.
             // This camera has however another MAKER entry, so we MAY be able
@@ -261,85 +259,84 @@ namespace RawNet
             }
         }
 
-        unsafe void DecodeARW2(ref TIFFBinaryReader input, UInt32 w, UInt32 h, UInt32 bpp)
+        void DecodeARW2(ref TIFFBinaryReader input, UInt32 w, UInt32 h, UInt32 bpp)
         {
             input.Position = 0;
             if (bpp == 8)
             {
                 /* Since ARW2 compressed images have predictable offsets, we decode them threaded */
-                // throw new RawDecoderException("8 bits image are not yet supported");
-                fixed (ushort* temp = mRaw.rawData)
+                // throw new RawDecoderException("8 bits image are not yet supported");       
+                BitPumpPlain bits = new BitPumpPlain(ref file);
+                //todo add parralel (parrallel.For not working because onlyone bits so not thread safe;
+                //set one bits pump per row (may be slower)
+                for(UInt32 y = 0; y < mRaw.dim.y; y++)
                 {
-                    byte* data = (byte*)temp;
-                    UInt32 pitch = mRaw.pitch;
+                    // Realign
+                    bits.setAbsoluteOffset((uint)(mRaw.dim.x * 8 * y) >> 3);
+                    UInt32 random = bits.peekBits(24);
 
-                    BitPumpPlain bits = new BitPumpPlain(ref file);
-                    for (UInt32 y = 0; y < mRaw.dim.y; y++)
+                    // Process 32 pixels (16x2) per loop.
+                    for (Int32 x = 0; x < mRaw.dim.x - 30;)
                     {
-                        byte* destByte = &data[y * pitch];
-                        ushort* dest = (ushort*)destByte;
-                        // Realign
-                        bits.setAbsoluteOffset((uint)(mRaw.dim.x * 8 * y) >> 3);
-                        UInt32 random = bits.peekBits(24);
-
-                        // Process 32 pixels (16x2) per loop.
-                        for (Int32 x = 0; x < mRaw.dim.x - 30;)
+                        bits.checkPos();
+                        int _max = (int)bits.getBits(11);
+                        int _min = (int)bits.getBits(11);
+                        int _imax = (int)bits.getBits(4);
+                        int _imin = (int)bits.getBits(4);
+                        int sh;
+                        for (sh = 0; sh < 4 && 0x80 << sh <= _max - _min; sh++) ;
+                        for (int i = 0; i < 16; i++)
                         {
-                            bits.checkPos();
-                            int _max = (int)bits.getBits(11);
-                            int _min = (int)bits.getBits(11);
-                            int _imax = (int)bits.getBits(4);
-                            int _imin = (int)bits.getBits(4);
-                            int sh;
-                            for (sh = 0; sh < 4 && 0x80 << sh <= _max - _min; sh++) ;
-                            for (int i = 0; i < 16; i++)
+                            int p;
+                            if (i == _imax) p = _max;
+                            else if (i == _imin) p = _min;
+                            else
                             {
-                                int p;
-                                if (i == _imax) p = _max;
-                                else if (i == _imin) p = _min;
-                                else
-                                {
-                                    p = (int)(bits.getBits(7) << sh) + _min;
-                                    if (p > 0x7ff)
-                                        p = 0x7ff;
-                                }
-                                mRaw.setWithLookUp((ushort)(p << 1), (byte*)&dest[x + i * 2], ref random);
+                                p = (int)(bits.getBits(7) << sh) + _min;
+                                if (p > 0x7ff)
+                                    p = 0x7ff;
                             }
-                            x += (x & 1) != 0 ? 31 : 1;  // Skip to next 32 pixels
+                            mRaw.setWithLookUp((ushort)(p << 1), ref mRaw.rawData, (uint)((y * mRaw.dim.x) + x + i * 2), ref random);
+
                         }
+                        x += (x & 1) != 0 ? 31 : 1;  // Skip to next 32 pixels
                     }
                 }
+
             }
             else if (bpp == 12)
             {
-                fixed (ushort* dataShort = mRaw.rawData)
+                unsafe
                 {
-                    byte* data = ((byte*)dataShort);
-                    UInt32 pitch = mRaw.pitch;
-                    byte[] inputTempArray = input.ReadBytes((int)input.BaseStream.Length);
-                    fixed (byte* inputTemp = inputTempArray)
+                    fixed (ushort* dataShort = mRaw.rawData)
                     {
-                        byte* t2 = inputTemp;
-                        if (input.getRemainSize() < (w * 3 / 2))
-                            throw new RawDecoderException("Sony Decoder: Image data section too small, file probably truncated");
-
-                        if (input.getRemainSize() < (w * h * 3 / 2))
-                            h = (uint)input.getRemainSize() / (w * 3 / 2) - 1;
-
-                        for (UInt32 y = 0; y < h; y++)
+                        byte* data = ((byte*)dataShort);
+                        UInt32 pitch = mRaw.pitch;
+                        byte[] inputTempArray = input.ReadBytes((int)input.BaseStream.Length);
+                        fixed (byte* inputTemp = inputTempArray)
                         {
-                            byte* temp = &data[y * pitch];
+                            byte* t2 = inputTemp;
+                            if (input.getRemainSize() < (w * 3 / 2))
+                                throw new RawDecoderException("Sony Decoder: Image data section too small, file probably truncated");
 
-                            UInt16* dest = (UInt16*)temp;
-                            for (UInt32 x = 0; x < w; x += 2)
+                            if (input.getRemainSize() < (w * h * 3 / 2))
+                                h = (uint)input.getRemainSize() / (w * 3 / 2) - 1;
+
+                            for (UInt32 y = 0; y < h; y++)
                             {
-                                UInt32 g1 = *(t2++);
-                                UInt32 g2 = *(t2++);
-                                dest[x] = (ushort)(g1 | ((g2 & 0xf) << 8));
-                                UInt32 g3 = *(t2++);
-                                dest[x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
-                            }
+                                byte* temp = &data[y * pitch];
 
+                                UInt16* dest = (UInt16*)temp;
+                                for (UInt32 x = 0; x < w; x += 2)
+                                {
+                                    UInt32 g1 = *(t2++);
+                                    UInt32 g2 = *(t2++);
+                                    dest[x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                                    UInt32 g3 = *(t2++);
+                                    dest[x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                                }
+
+                            }
                         }
                     }
                 }
@@ -434,33 +431,37 @@ namespace RawNet
             }
         }
 
-        unsafe void SonyDecrypt(UInt32* buffer, UInt32 len, UInt32 key)
+        unsafe void SonyDecrypt(byte[] ifpData, UInt32 len, UInt32 key)
         {
-            UInt32* pad = stackalloc UInt32[128];
+            fixed (byte* temp = ifpData)
+            {
+                UInt32* buffer = (UInt32*)temp;
+                UInt32* pad = stackalloc UInt32[128];
 
-            // Initialize the decryption pad from the key
-            for (int p = 0; p < 4; p++)
-            {
-                pad[p] = key = key * 48828125 + 1;
-            }
-            pad[3] = pad[3] << 1 | (pad[0] ^ pad[2]) >> 31;
+                // Initialize the decryption pad from the key
+                for (int p = 0; p < 4; p++)
+                {
+                    pad[p] = key = key * 48828125 + 1;
+                }
+                pad[3] = pad[3] << 1 | (pad[0] ^ pad[2]) >> 31;
 
-            for (int p = 4; p < 127; p++)
-            {
-                pad[p] = (pad[p - 4] ^ pad[p - 2]) << 1 | (pad[p - 3] ^ pad[p - 1]) >> 31;
-            }
-            for (int p = 0; p < 127; p++)
-            {
-                pad[p] = ((((uint)((byte*)&pad[p])[0]) << 24) | (((uint)((byte*)&pad[p])[1]) << 16) |
-                    (((uint)((byte*)&pad[p])[2]) << 8) | ((uint)((byte*)&pad[p])[3]));
-            }
-            int p2 = 127;
-            // Decrypt the buffer in place using the pad
-            while ((len--) != 0)
-            {
-                pad[p2 & 127] = pad[(p2 + 1) & 127] ^ pad[(p2 + 1 + 64) & 127];
-                *buffer++ ^= pad[p2 & 127];
-                p2++;
+                for (int p = 4; p < 127; p++)
+                {
+                    pad[p] = (pad[p - 4] ^ pad[p - 2]) << 1 | (pad[p - 3] ^ pad[p - 1]) >> 31;
+                }
+                for (int p = 0; p < 127; p++)
+                {
+                    pad[p] = ((((uint)((byte*)&pad[p])[0]) << 24) | (((uint)((byte*)&pad[p])[1]) << 16) |
+                        (((uint)((byte*)&pad[p])[2]) << 8) | ((uint)((byte*)&pad[p])[3]));
+                }
+                int p2 = 127;
+                // Decrypt the buffer in place using the pad
+                while ((len--) != 0)
+                {
+                    pad[p2 & 127] = pad[(p2 + 1) & 127] ^ pad[(p2 + 1 + 64) & 127];
+                    *buffer++ ^= pad[p2 & 127];
+                    p2++;
+                }
             }
         }
 
@@ -486,32 +487,31 @@ namespace RawNet
                 data = sony_key.getByteArray();
                 UInt32 key = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | ((uint)(data)[0]));
                 file.BaseStream.Position = off;
-                fixed (byte* temp = file.ReadBytes((int)len))
-                {
-                    UInt32* ifp_data = (UInt32*)temp;
+                byte[] ifp_data = file.ReadBytes((int)len);
 
-                    SonyDecrypt(ifp_data, len / 4, key);
-                }
-                sony_private = new IFD(file, off, mRootIFD.endian);
 
+                SonyDecrypt(ifp_data, len / 4, key);
+
+                sony_private = new IFD(new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(ifp_data)), 0, mRootIFD.endian, 0, (int)off);
 
                 if (sony_private.hasEntry(TagType.SONYGRBGLEVELS))
                 {
                     Tag wb = sony_private.getEntry(TagType.SONYGRBGLEVELS);
                     if (wb.dataCount != 4)
                         throw new RawDecoderException("ARW: WB has " + wb.dataCount + " entries instead of 4");
-                    mRaw.metadata.wbCoeffs[0] = wb.getFloat(1);
-                    mRaw.metadata.wbCoeffs[1] = wb.getFloat(0);
-                    mRaw.metadata.wbCoeffs[2] = wb.getFloat(2);
+                    mRaw.metadata.wbCoeffs[0] = wb.getFloat(1) / wb.getFloat(0);
+                    mRaw.metadata.wbCoeffs[1] = wb.getFloat(0) / wb.getFloat(0);
+                    mRaw.metadata.wbCoeffs[2] = wb.getFloat(2) / wb.getFloat(0);
                 }
                 else if (sony_private.hasEntry(TagType.SONYRGGBLEVELS))
                 {
                     Tag wb = sony_private.getEntry(TagType.SONYRGGBLEVELS);
                     if (wb.dataCount != 4)
                         throw new RawDecoderException("ARW: WB has " + wb.dataCount + " entries instead of 4");
-                    mRaw.metadata.wbCoeffs[0] = wb.getFloat(0);
-                    mRaw.metadata.wbCoeffs[1] = wb.getFloat(1);
-                    mRaw.metadata.wbCoeffs[2] = wb.getFloat(3);
+                    mRaw.metadata.wbCoeffs[0] = wb.getFloat(0) / wb.getFloat(1);
+                    mRaw.metadata.wbCoeffs[1] = wb.getFloat(1) / wb.getFloat(1);
+                    mRaw.metadata.wbCoeffs[2] = wb.getFloat(3) / wb.getFloat(1);
+
                 }
             }
         }
