@@ -132,14 +132,13 @@
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <ScrollViewer x:Name="ImageDisplay" ZoomMode="Enabled"
-                          MinZoomFactor="1" 
-                          MaxZoomFactor="10"                             
+            <ScrollViewer x:Name="ImageDisplay" ZoomMode="Enabled"                                                 
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto" 
                           RelativePanel.AlignTopWithPanel="True" 
                           RelativePanel.AlignLeftWithPanel="True"  
-                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                          HorizontalContentAlignment="Center" 
+                          VerticalContentAlignment="Center">
                 <ScrollViewer.Background>
                     <SolidColorBrush Color="#19FFFFFF"/>
                 </ScrollViewer.Background>
