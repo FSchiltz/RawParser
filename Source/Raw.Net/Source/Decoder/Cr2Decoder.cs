@@ -104,8 +104,10 @@ namespace RawNet
                     // We now have a double width half height image we need to convert to the
                     // normal format
                     var final_size = new Point2D((int)width, (int)height);
-                    RawImage procRaw = new RawImage();
-                    procRaw.dim = final_size;
+                    RawImage procRaw = new RawImage()
+                    {
+                        dim = final_size
+                    };
                     procRaw.Init();
                     procRaw.metadata = mRaw.metadata;
                     //procRaw.copyErrorsFrom(mRaw);

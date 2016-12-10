@@ -224,7 +224,7 @@ namespace RawEditor
         {
             pageWidth = e.NewSize.Width;
             pageHeight = e.NewSize.Height;
-            setScrollProperty();
+            SetScrollProperty();
         }
 
         private void OpenFile(StorageFile file)
@@ -270,7 +270,7 @@ namespace RawEditor
                     raw.metadata.fileName = file.DisplayName;
                     raw.metadata.fileNameComplete = file.Name;
                     //read the exifs
-                    displayExif();
+                    DisplayExif();
                     //scale the value
                     //raw.scaleValues();
 
@@ -370,12 +370,12 @@ namespace RawEditor
             }
         }
 
-        private void appbarSettingClick(object sender, RoutedEventArgs e)
+        private void AppbarSettingClick(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(SettingsView), null);
         }
 
-        private void setScrollProperty()
+        private void SetScrollProperty()
         {
             if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
             {
@@ -403,7 +403,7 @@ namespace RawEditor
             }
         }
 
-        public async void displayExif()
+        public async void DisplayExif()
         {
             //TODO add localized exifs name
             if (raw != null && raw.metadata != null)
@@ -442,7 +442,7 @@ namespace RawEditor
             }
         }
 
-        private async void saveButton_Click(object sender, RoutedEventArgs e)
+        private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             //TODO reimplement correclty
             //Just for testing purpose for now
@@ -612,7 +612,7 @@ namespace RawEditor
                                     ImageBox.Source = bitmap;
                                     currentImageDisplayedHeight = bitmap.PixelHeight;
                                     currentImageDisplayedWidth = bitmap.PixelWidth;
-                                    setScrollProperty();
+                                    SetScrollProperty();
                                 });
                     }
                 });
