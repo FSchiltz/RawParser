@@ -406,18 +406,25 @@ namespace RawNet
                 for (int x = 0; x < previewDim.x; x++)
                 {
                     //find the mean of each block
-                    ushort r = 0, g = 0, b = 0;
-
+                    long r = 0, g = 0, b = 0;
+                    int xk = 0, yk = 0;
                     for (int i = 0; i < previewFactor; i++)
                     {
                         int realY = dim.x * ((y * previewFactor) + i);
+                        yk++;
                         for (int k = 0; k < previewFactor; k++)
                         {
+                            xk++;
                             long realX = (realY + (x * previewFactor + k)) * cpp;
                             r += rawData[realX];
                             g += rawData[realX + 1];
                             b += rawData[realX + 2];
                         }
+                    }
+
+                    if (xk != doubleFactor || yk != previewFactor)
+                    {
+                        Debug.WriteLine("yk :" + yk + " xk: " + xk + " doubleFactor:" + doubleFactor);
                     }
                     r = (ushort)(r / doubleFactor);
                     g = (ushort)(g / doubleFactor);
@@ -425,9 +432,9 @@ namespace RawNet
                     if (r < 0) r = 0; else if (r > maxValue) r = maxValue;
                     if (g < 0) g = 0; else if (g > maxValue) g = maxValue;
                     if (b < 0) b = 0; else if (b > maxValue) b = maxValue;
-                    previewData[((y * previewDim.x) + x) * cpp] = r;
-                    previewData[(((y * previewDim.x) + x) * cpp) + 1] = g;
-                    previewData[(((y * previewDim.x) + x) * cpp) + 2] = b;
+                    previewData[((y * previewDim.x) + x) * cpp] = (ushort)r;
+                    previewData[(((y * previewDim.x) + x) * cpp) + 1] = (ushort)g;
+                    previewData[(((y * previewDim.x) + x) * cpp) + 2] = (ushort)b;
                 }
             });
         }
