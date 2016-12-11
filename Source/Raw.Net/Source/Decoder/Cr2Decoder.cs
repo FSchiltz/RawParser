@@ -114,12 +114,8 @@ namespace RawNet
 
                     for (UInt32 y = 0; y < height; y++)
                     {
-                        throw new NotImplementedException();
-                        /*
-                        UInt16* dst = (UInt16*)procRaw.getData(0, y);
-                        UInt16* src = (UInt16*)mRaw.getData(y % 2 == 0 ? 0 : width, y / 2);
                         for (UInt32 x = 0; x < width; x++)
-                            dst[x] = src[x];*/
+                            procRaw.rawData[x] = mRaw.rawData[((y % 2 == 0) ? 0 : width) + x];
                     }
                     mRaw = procRaw;
                 }
@@ -153,8 +149,11 @@ namespace RawNet
 
 
             IFD raw = data[0];
-            mRaw = new RawImage();
-            mRaw.isCFA = true;
+            mRaw = new RawImage()
+            {
+                isCFA = true
+            };
+
             List<Cr2Slice> slices = new List<Cr2Slice>();
             int completeH = 0;
             bool doubleHeight = false;
@@ -166,9 +165,11 @@ namespace RawNet
                 // Iterate through all slices
                 for (UInt32 s = 0; s < offsets.dataCount; s++)
                 {
-                    Cr2Slice slice = new Cr2Slice();
-                    slice.offset = Convert.ToUInt32(offsets.data[s]);
-                    slice.count = Convert.ToUInt32(counts.data[s]);
+                    Cr2Slice slice = new Cr2Slice()
+                    {
+                        offset = Convert.ToUInt32(offsets.data[s]),
+                        count = Convert.ToUInt32(counts.data[s])
+                    };
                     SOFInfo sof = new SOFInfo();
                     LJpegPlain l = new LJpegPlain(file, mRaw);
                     l.getSOF(ref sof, slice.offset, slice.count);
@@ -417,7 +418,7 @@ namespace RawNet
             mRaw.metadata.wbCoeffs[2] = 1;// mRaw.metadata.wbCoeffs[2] / mRaw.metadata.wbCoeffs[1];
         }
 
-        int getHue()
+        int GetHue()
         {
             if (hints.ContainsKey("old_sraw_hue"))
                 return (mRaw.metadata.subsampling.y * mRaw.metadata.subsampling.x);

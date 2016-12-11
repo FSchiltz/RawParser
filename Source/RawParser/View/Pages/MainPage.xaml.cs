@@ -30,7 +30,7 @@ namespace RawEditor
     public sealed partial class MainPage : Page
     {
         public RawImage raw;
-        public bool imageSelected { set; get; }
+        public bool ImageSelected { set; get; }
         public double pageWidth;
         public double pageHeight;
         private int currentImageDisplayedHeight;
@@ -63,7 +63,7 @@ namespace RawEditor
             }
 
             NavigationCacheMode = NavigationCacheMode.Enabled;
-            imageSelected = false;
+            ImageSelected = false;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
         }
 
@@ -93,7 +93,7 @@ namespace RawEditor
 
         private async void AppBarImageChooseClick(object sender, RoutedEventArgs e)
         {
-            if (!imageSelected)
+            if (!ImageSelected)
             {
                 FileOpenPicker filePicker = new FileOpenPicker()
                 {
@@ -118,13 +118,13 @@ namespace RawEditor
                     // Application now has read/write access to the picked file
                     try
                     {
-                        imageSelected = true;
+                        ImageSelected = true;
                         OpenFile(file);
                     }
                     catch (Exception ex)
                     {
                         ExceptionDisplay.display(ex.Message + ex.StackTrace);
-                        imageSelected = false;
+                        ImageSelected = false;
                     }
                 }
                 else
@@ -252,7 +252,7 @@ namespace RawEditor
                             {
                                 if (thumbnail.type == ThumbnailType.JPEG)
                                 {
-                                    displayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data));
+                                    DisplayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data));
                                 }
                                 else if (thumbnail.type == ThumbnailType.RAW)
                                 {
@@ -293,7 +293,7 @@ namespace RawEditor
                         Demosaic.demos(ref raw, algo);
                     }
                     CreatePreview();
-                    updatePreview();
+                    UpdatePreview();
 
                     //activate the editing control
                     SetWB();
@@ -311,7 +311,7 @@ namespace RawEditor
                 }
 
                 StopLoadDisplay();
-                imageSelected = false;
+                ImageSelected = false;
             });
         }
 
@@ -596,7 +596,7 @@ namespace RawEditor
             }
         }
 
-        private void displayImage(SoftwareBitmap image)
+        private void DisplayImage(SoftwareBitmap image)
         {
             if (image != null)
             {
@@ -621,7 +621,7 @@ namespace RawEditor
             }
         }
 
-        private void updatePreview()
+        private void UpdatePreview()
         {
             //display the histogram                    
             Task histoTask = Task.Run(async () =>
@@ -633,7 +633,7 @@ namespace RawEditor
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
                 });
                 int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
-                displayImage(bitmap);
+                DisplayImage(bitmap);
                 Histogram.Create(value, raw.ColorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
             });
         }
@@ -708,7 +708,7 @@ namespace RawEditor
                 cameraWB = false;
                 cameraWBCheck.IsEnabled = true;
                 EnableReset();
-                updatePreview();
+                UpdatePreview();
             }
         }
 
@@ -730,7 +730,7 @@ namespace RawEditor
             cameraWBCheck.IsEnabled = false;
             //TODO move slider to the camera WB
             SetWB();
-            updatePreview();
+            UpdatePreview();
         }
         #endregion
 
@@ -739,14 +739,14 @@ namespace RawEditor
             if (raw?.previewData != null)
             {
                 EnableReset();
-                updatePreview();
+                UpdatePreview();
             }
         }
 
         private void ResetButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             ResetControls();
-            updatePreview();
+            UpdatePreview();
         }
     }
 }
