@@ -258,7 +258,7 @@ namespace RawNet
             }
 
             // Pentax also has "PENTAX" at the start, makernote starts at 8
-            if (data[0 + offset] == 0x50 && data[1 + offset] == 0x45
+            if (data[offset] == 0x50 && data[1 + offset] == 0x45
                 && data[2 + offset] == 0x4e && data[3 + offset] == 0x54 && data[4 + offset] == 0x41 && data[5 + offset] == 0x58)
             {
                 mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
@@ -295,7 +295,7 @@ namespace RawNet
 
             // Panasonic has the word Exif at byte 6, a complete Tiff header starts at byte 12
             // This TIFF is 0 offset based
-            if (data[6] == 0x45 && data[7] == 0x78 && data[8] == 0x69 && data[9] == 0x66)
+            if (data[6 + offset] == 0x45 && data[7 + offset] == 0x78 && data[8 + offset] == 0x69 && data[9 + offset] == 0x66)
             {
                 parent_end = getTiffEndianness(data.Skip(12).ToArray());
                 if (parent_end == Endianness.unknown)
@@ -304,12 +304,12 @@ namespace RawNet
             }
 
             // Some have MM or II to indicate endianness - read that
-            if (data[0] == 0x49 && data[1] == 0x49)
+            if (data[offset] == 0x49 && data[1 + offset] == 0x49)
             {
                 offset += 2;
                 parent_end = Endianness.little;
             }
-            else if (data[0] == 0x4D && data[1] == 0x4D)
+            else if (data[offset] == 0x4D && data[offset + 1] == 0x4D)
             {
                 parent_end = Endianness.big;
                 offset += 2;
@@ -338,11 +338,11 @@ namespace RawNet
                 {
                     if (parent_end == Endianness.little)
                     {
-                        mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
+                        mFile = new TIFFBinaryReader(reader.BaseStream, offset, (uint)data.Length);
                     }
                     else if (parent_end == Endianness.big)
                     {
-                        mFile = new TIFFBinaryReaderRE(reader.BaseStream, offset + off, (uint)data.Length);
+                        mFile = new TIFFBinaryReaderRE(reader.BaseStream, offset, (uint)data.Length);
                     }
                 }
                 /* if (parent_end == getHostEndianness())
