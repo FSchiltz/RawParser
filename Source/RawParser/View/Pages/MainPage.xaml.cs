@@ -267,7 +267,7 @@ namespace RawEditor
                         });
                     }
 
-                    raw = decoder.decodeRaw();
+                    raw = decoder.DecodeRaw();
                     decoder.decodeMetaData();
                     raw.metadata.fileName = file.DisplayName;
                     raw.metadata.fileNameComplete = file.Name;

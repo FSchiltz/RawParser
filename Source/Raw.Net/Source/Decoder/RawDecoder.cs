@@ -72,7 +72,7 @@ namespace RawNet
             this.metaData = metaData;
         }
 
-        public RawImage decodeRaw()
+        public RawImage DecodeRaw()
         {
             try
             {
