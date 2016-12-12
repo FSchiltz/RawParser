@@ -656,8 +656,8 @@ namespace RawEditor
                     effect.contrast = contrastSlider.Value / 10;
                     //effect.gamma = gammaSlider.Value;
                     //effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
-                    effect.shadow = ShadowSlider.Value;
-                    effect.hightlight = HighLightSlider.Value;
+                    effect.shadow = ShadowSlider.Value * 2;
+                    effect.hightlight = HighLightSlider.Value *3;
                     effect.saturation = 1 + saturationSlider.Value / 100;
                 });
             });
