@@ -217,7 +217,7 @@
                     <PivotItem x:Uid="Exifs">
                         <StackPanel>
                             <TextBlock x:Uid="ExifsData"/>
-                            <ListView ScrollViewer.VerticalScrollBarVisibility="Visible" x:Name="exifDisplay" IsEnabled="False" IsHitTestVisible="False" IsTabStop="False">
+                            <ListView ScrollViewer.VerticalScrollBarVisibility="Auto" x:Name="exifDisplay">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid>
