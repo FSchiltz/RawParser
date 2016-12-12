@@ -10,11 +10,11 @@ namespace RawNet
     internal class IFD
     {
         public ushort tagNumber;
-        public Dictionary<TagType, Tag> tags;
+        public Dictionary<TagType, Tag> tags = new Dictionary<TagType, Tag>();
         public List<IFD> subIFD = new List<IFD>();
         public uint nextOffset { get; set; }
-        public Endianness endian;
-        public int depth;
+        public Endianness endian = Endianness.unknown;
+        public int depth, relativeOffset;
 
         char[] fuji_signature = {
   'F', 'U', 'J', 'I', 'F', 'I', 'L', 'M', (char)0x0c,(char) 0x00,(char) 0x00,(char) 0x00
@@ -31,6 +31,9 @@ namespace RawNet
                 return Endianness.big;
             return Endianness.unknown;
         }
+
+        public IFD() { }
+
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian) : this(fileStream, offset, endian, 0, 0) { }
 
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(fileStream, offset, endian, depth, 0) { }
@@ -39,9 +42,21 @@ namespace RawNet
         {
             this.endian = endian;
             fileStream.Position = offset;
-            tagNumber = fileStream.ReadUInt16();
-            tags = new Dictionary<TagType, Tag>();
             this.depth = depth;
+            this.relativeOffset = relativeOffset;
+
+            Parse(fileStream);
+            nextOffset = fileStream.ReadUInt32();
+        }
+
+        internal bool hasEntry(TagType t)
+        {
+            return tags.ContainsKey(t);
+        }
+
+        protected void Parse(TIFFBinaryReader fileStream)
+        {
+            tagNumber = fileStream.ReadUInt16();
             for (int i = 0; i < tagNumber; i++)
             {
                 Tag temp = new Tag();
@@ -70,59 +85,57 @@ namespace RawNet
                     //todo check if correct
                 }
 
-                if (temp.tagId != TagType.MAKERNOTE && temp.tagId != TagType.MAKERNOTE_ALT)
+                for (int j = 0; j < temp.dataCount; j++)
                 {
-                    for (int j = 0; j < temp.dataCount; j++)
+                    switch (temp.dataType)
                     {
-                        switch (temp.dataType)
-                        {
-                            case TiffDataType.BYTE:
-                            case TiffDataType.UNDEFINED:
-                            case TiffDataType.ASCII:
-                            case TiffDataType.OFFSET:
-                                temp.data[j] = fileStream.ReadByte();
-                                break;
-                            case TiffDataType.SHORT:
-                                temp.data[j] = fileStream.ReadUInt16();
-                                break;
-                            case TiffDataType.LONG:
-                                temp.data[j] = fileStream.ReadUInt32();
-                                break;
-                            case TiffDataType.RATIONAL:
+                        case TiffDataType.BYTE:
+                        case TiffDataType.UNDEFINED:
+                        case TiffDataType.ASCII:
+                        case TiffDataType.OFFSET:
+                            temp.data[j] = fileStream.ReadByte();
+                            break;
+                        case TiffDataType.SHORT:
+                            temp.data[j] = fileStream.ReadUInt16();
+                            break;
+                        case TiffDataType.LONG:
+                            temp.data[j] = fileStream.ReadUInt32();
+                            break;
+                        case TiffDataType.RATIONAL:
+                            temp.data[j] = fileStream.ReadDouble();
+                            break;
+                        case TiffDataType.SBYTE:
+                            temp.data[j] = fileStream.ReadSByte();
+                            break;
+                        case TiffDataType.SSHORT:
+                            temp.data[j] = fileStream.ReadInt16();
+                            //if (temp.dataOffset == 0 && temp.dataCount == 1) fileStream.ReadInt16();
+                            break;
+                        case TiffDataType.SLONG:
+                            temp.data[j] = fileStream.ReadInt32();
+                            break;
+                        case TiffDataType.SRATIONAL:
+                            //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.
+                            //TODO remove this Fix
+                            if (temp.dataOffset == 0)
+                            {
+                                temp.data[j] = .0;
+                            }
+                            else
+                            {
                                 temp.data[j] = fileStream.ReadDouble();
-                                break;
-                            case TiffDataType.SBYTE:
-                                temp.data[j] = fileStream.ReadSByte();
-                                break;
-                            case TiffDataType.SSHORT:
-                                temp.data[j] = fileStream.ReadInt16();
-                                //if (temp.dataOffset == 0 && temp.dataCount == 1) fileStream.ReadInt16();
-                                break;
-                            case TiffDataType.SLONG:
-                                temp.data[j] = fileStream.ReadInt32();
-                                break;
-                            case TiffDataType.SRATIONAL:
-                                //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.
-                                //TODO remove this Fix
-                                if (temp.dataOffset == 0)
-                                {
-                                    temp.data[j] = .0;
-                                }
-                                else
-                                {
-                                    temp.data[j] = fileStream.ReadDouble();
-                                }
-                                break;
-                            case TiffDataType.FLOAT:
-                                temp.data[j] = fileStream.ReadSingle();
-                                break;
-                            case TiffDataType.DOUBLE:
-                                temp.data[j] = fileStream.ReadDouble();
-                                break;
-                        }
+                            }
+                            break;
+                        case TiffDataType.FLOAT:
+                            temp.data[j] = fileStream.ReadSingle();
+                            break;
+                        case TiffDataType.DOUBLE:
+                            temp.data[j] = fileStream.ReadDouble();
+                            break;
                     }
+                }
 
-                }//Special tag
+                //Special tag
                 switch (temp.tagId)
                 {
                     case TagType.DNGPRIVATEDATA:
@@ -153,7 +166,8 @@ namespace RawNet
                             {
                                 //save current position
                                 long pos = fileStream.Position;
-                                IFD makernote = parseMakerNote(fileStream, temp.dataOffset, endian);
+                                Common.ConvertArray(ref temp.data, out byte[] dest);
+                                IFD makernote = parseMakerNote(dest, endian);
                                 if (makernote != null) subIFD.Add(makernote);
 
                                 //correct here
@@ -232,75 +246,59 @@ namespace RawNet
                     Debug.WriteLine("tags already exist");
                 }
             }
-            nextOffset = fileStream.ReadUInt32();
+
         }
-
-        internal bool hasEntry(TagType t)
-        {
-            return tags.ContainsKey(t);
-        }
-
-
 
         /* This will attempt to parse makernotes and return it as an IFD */
-        IFD parseMakerNote(TIFFBinaryReader reader, uint off, Endianness parent_end)
+        //makernote should be selfcontained
+        Makernote parseMakerNote(byte[] data, Endianness parent_end)
         {
-            IFD maker_ifd = null;
             uint offset = 0;
-            TIFFBinaryReader mFile = null;
-            reader.Position = off;
-            byte[] data = reader.ReadBytes(100);
+            //reader.Position = off;
+            //byte[] data = reader.ReadBytes(100);
+
             // Pentax makernote starts with AOC\0 - If it's there, skip it
             if (data[0] == 0x41 && data[1] == 0x4f && data[2] == 0x43 && data[3] == 0)
             {
-                //data = data.Skip(4).ToArray();
-                offset += 4;
+                data = data.Skip(4).ToArray();
+                //offset += 4;
             }
 
             // Pentax also has "PENTAX" at the start, makernote starts at 8
-            if (data[offset] == 0x50 && data[1 + offset] == 0x45
-                && data[2 + offset] == 0x4e && data[3 + offset] == 0x54 && data[4 + offset] == 0x41 && data[5 + offset] == 0x58)
+            if (data[0] == 0x50 && data[1] == 0x45
+                && data[2] == 0x4e && data[3] == 0x54 && data[4] == 0x41 && data[5] == 0x58)
             {
+                return new PentaxMakernote(data.Skip(8).ToArray());
+                /*
                 mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
                 parent_end = getTiffEndianness(data.Skip(8).ToArray());
                 if (parent_end == Endianness.unknown)
                     throw new TiffParserException("Cannot determine Pentax makernote endianness");
                 //data = data.Skip(10).ToArray();
-                offset += 10;
-                // Check for fuji signature in else block so we don't accidentally leak FileMap
+                offset += 10;*/
+
             }
             else if (Common.memcmp(ref fuji_signature, ref data))
             {
-                offset = 12;
-                mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
+                return new FujiMakerNote(data);
+                //offset = 12;
+                //mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
             }
             else if (Common.memcmp(ref nikon_v3_signature, ref data))
             {
-                offset = 10;
-                //nikon makernote contains a 10byte so we skip it.
-                // Read endianness
-                if (data[0 + offset] == 0x49 && data[1 + offset] == 0x49)
-                {
-                    parent_end = Endianness.little;
-                    mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
-                }
-                else if (data[0 + offset] == 0x4D && data[1 + offset] == 0x4D)
-                {
-                    parent_end = Endianness.big;
-                    mFile = new TIFFBinaryReaderRE(reader.BaseStream, offset + off, (uint)data.Length);
-                }
-                //go after the tiff ifd
-                offset = 8;
+                return new NikonMakerNote(data);
             }
 
             // Panasonic has the word Exif at byte 6, a complete Tiff header starts at byte 12
             // This TIFF is 0 offset based
             if (data[6 + offset] == 0x45 && data[7 + offset] == 0x78 && data[8 + offset] == 0x69 && data[9 + offset] == 0x66)
             {
+                return new PanasonicMakernote(data.Skip(12).ToArray());
+                /*
                 parent_end = getTiffEndianness(data.Skip(12).ToArray());
                 if (parent_end == Endianness.unknown)
                     throw new TiffParserException("Cannot determine Panasonic makernote endianness");
-                offset = 20;
+                offset = 20;*/
             }
 
             // Some have MM or II to indicate endianness - read that
@@ -334,22 +332,11 @@ namespace RawNet
             // Attempt to parse the rest as an IFD
             try
             {
-                if (mFile == null)
-                {
-                    if (parent_end == Endianness.little)
-                    {
-                        mFile = new TIFFBinaryReader(reader.BaseStream, offset, (uint)data.Length);
-                    }
-                    else if (parent_end == Endianness.big)
-                    {
-                        mFile = new TIFFBinaryReaderRE(reader.BaseStream, offset, (uint)data.Length);
-                    }
-                }
                 /* if (parent_end == getHostEndianness())
                      maker_ifd = new IFD(mFile, offset, depth);
                  else
                      maker_ifd = new IFDBE(mFile, offset, depth);*/
-                maker_ifd = new IFD(mFile, offset, endian, depth);
+                return new Makernote(data, parent_end, depth);
 
             }
             catch (Exception e)
@@ -357,12 +344,10 @@ namespace RawNet
                 Debug.WriteLine(e.Message);
                 return null;
             }
-            // If the structure cannot be read, a TiffParserException will be thrown.
-
-            return maker_ifd;
+            // If the structure cannot be read, a TiffParserException will be thrown.            
         }
 
-        IFD parseDngPrivateData(Tag t)
+        Makernote parseDngPrivateData(Tag t)
         {
             /*
             1. Six bytes containing the zero-terminated string "Adobe". (The DNG specification calls for the DNGPrivateData tag to start with an ASCII string identifying the creator/format).
@@ -424,13 +409,11 @@ namespace RawNet
             }
             /* Create fake tiff with original offsets */
             //byte[] maker_data = new byte[count];
-            // Common.memcopy(ref maker_data, ref data, count, 0, 0);
-            TIFFBinaryReader maker_map = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(data));
-
-            IFD maker_ifd;
+            // Common.memcopy(ref maker_data, ref data, count, 0, 0);            
+            Makernote maker_ifd;
             try
             {
-                maker_ifd = parseMakerNote(maker_map, 0, makernote_endian);
+                maker_ifd = parseMakerNote(data, makernote_endian);
             }
             catch (TiffParserException e)
             {

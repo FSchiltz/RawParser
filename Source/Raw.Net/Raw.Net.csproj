@@ -169,6 +169,11 @@
     <Compile Include="Source\Format\Tiff\IFD\IFD.cs" />
     <Compile Include="Source\Format\Tiff\IFD\Tag.cs" />
     <Compile Include="Source\Format\Tiff\IFD\TagType.cs" />
+    <Compile Include="Source\Format\Tiff\Makernote\FujiMakerNote.cs" />
+    <Compile Include="Source\Format\Tiff\Makernote\Makernote.cs" />
+    <Compile Include="Source\Format\Tiff\Makernote\NikonMakerNote.cs" />
+    <Compile Include="Source\Format\Tiff\Makernote\PanasonicMakernote.cs" />
+    <Compile Include="Source\Format\Tiff\Makernote\PentaxMakernote.cs" />
     <Compile Include="Source\RawParser.cs" />
     <Compile Include="Source\TIFFParser.cs" />
     <EmbeddedResource Include="Properties\Raw.Net.rd.xml" />
