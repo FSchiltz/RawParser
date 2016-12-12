@@ -10,7 +10,7 @@ namespace RawNet
     {
         public Makernote() { }
 
-        public Makernote(byte[] data, Endianness endian, int depth)
+        public Makernote(byte[] data,uint offset, Endianness endian, int depth, uint parentOffset)
         {
             TIFFBinaryReader file;
 
@@ -26,8 +26,8 @@ namespace RawNet
             {
                 throw new RawDecoderException("Endianess not correct " + endian);
             }
-            file.BaseStream.Position = 0;
-
+            file.BaseStream.Position = offset;
+            this.relativeOffset = (int)parentOffset;
             Parse(file);
         }
     }

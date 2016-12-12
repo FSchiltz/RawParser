@@ -28,7 +28,8 @@ namespace RawNet
             ushort TIFFMagic = buffer.ReadUInt16();
             uint TIFFoffset = buffer.ReadUInt32();
             buffer.BaseStream.Position = TIFFoffset;
-            Parse(buffer);
+            //offset are from the start of the tag
+            Parse(buffer,true);
         }
     }
 }
