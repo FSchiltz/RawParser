@@ -413,9 +413,9 @@ namespace RawNet
             }
             setMetaData(metaData, make, model, mode, iso);
 
-            mRaw.metadata.wbCoeffs[0] = 1;//mRaw.metadata.wbCoeffs[0] / mRaw.metadata.wbCoeffs[1];
-            mRaw.metadata.wbCoeffs[1] = 1;// mRaw.metadata.wbCoeffs[1] / mRaw.metadata.wbCoeffs[1];
-            mRaw.metadata.wbCoeffs[2] = 1;// mRaw.metadata.wbCoeffs[2] / mRaw.metadata.wbCoeffs[1];
+            mRaw.metadata.wbCoeffs[0] = mRaw.metadata.wbCoeffs[0] / mRaw.metadata.wbCoeffs[1];
+            mRaw.metadata.wbCoeffs[1] =  mRaw.metadata.wbCoeffs[1] / mRaw.metadata.wbCoeffs[1];
+            mRaw.metadata.wbCoeffs[2] =  mRaw.metadata.wbCoeffs[2] / mRaw.metadata.wbCoeffs[1];
         }
 
         int GetHue()
