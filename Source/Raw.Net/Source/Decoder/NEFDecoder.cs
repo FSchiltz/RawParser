@@ -135,10 +135,10 @@ namespace RawNet
             {
                 NikonDecompressor decompressor = new NikonDecompressor(file, mRaw);       
                 TIFFBinaryReader metastream;
-                if (data[0].endian == Endianness.little)
-                    metastream = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(meta.data, (TiffDataType)meta.dataType));
+                if (data[0].endian == Endianness.big)
+                    metastream = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(meta.data, meta.dataType));
                 else
-                    metastream = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(meta.data, (TiffDataType)meta.dataType));
+                    metastream = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(meta.data, meta.dataType));
 
                 //create a Linearisation to check
                 //decompressor.table = new LinearisationTable((ushort)compression, (int)mRaw.bpp, offsets.getUInt(), 0, metastream, reader);
