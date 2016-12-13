@@ -128,14 +128,14 @@ namespace RawNet
                         }
                     }
                 }
-                else throw new FormatException("Compression mode " + imageCompressedTag.dataAsString + " not supported yet");
+                else throw new FormatException("Compression mode " + imageCompressedTag.DataAsString + " not supported yet");
                 mRaw.cpp = 3;
                 mRaw.ColorDepth = colorDepth;
                 mRaw.bpp = colorDepth;
                 mRaw.rawData = image;
                 return mRaw;
             }
-            else throw new FormatException("Photometric interpretation " + photoMetricTag.dataAsString + " not supported yet");
+            else throw new FormatException("Photometric interpretation " + photoMetricTag.DataAsString + " not supported yet");
         }
 
         protected override void decodeMetaDataInternal()
@@ -148,8 +148,8 @@ namespace RawNet
             var t2 = ifd.getEntryRecursive(TagType.MODEL);
             if (t != null && t != null)
             {
-                string make = t.dataAsString;
-                string model = t2.dataAsString;
+                string make = t.DataAsString;
+                string model = t2.DataAsString;
                 make = make.Trim();
                 model = model.Trim();
                 mRaw.metadata.make = make;
@@ -159,7 +159,7 @@ namespace RawNet
                 t = ifd.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
                 if (t != null)
                 {
-                    mRaw.metadata.canonical_id = t.dataAsString;
+                    mRaw.metadata.canonical_id = t.DataAsString;
                 }
                 else
                 {

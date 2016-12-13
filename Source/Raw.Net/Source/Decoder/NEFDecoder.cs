@@ -71,7 +71,7 @@ namespace RawNet
             Tag offsets = raw.getEntry(TagType.STRIPOFFSETS);
             Tag counts = raw.getEntry(TagType.STRIPBYTECOUNTS);
 
-            if (data[0].getEntry(TagType.MODEL).dataAsString == "NIKON D100 ")
+            if (data[0].getEntry(TagType.MODEL).DataAsString == "NIKON D100 ")
             {  /**Sigh**/
                 if (!file.isValid(offsets.getUInt()))
                     throw new RawDecoderException("NEF Decoder: Image data outside of file.");
@@ -413,8 +413,8 @@ namespace RawNet
             List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Support check: Model name not found");
-            string make = data[0].getEntry(TagType.MAKE).dataAsString;
-            string model = data[0].getEntry(TagType.MODEL).dataAsString;
+            string make = data[0].getEntry(TagType.MAKE).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
 
             string mode = getMode();
             string extended_mode = getExtendedMode(mode);
@@ -474,8 +474,8 @@ namespace RawNet
             uint white = mRaw.whitePoint;
             int black = mRaw.blackLevel;
 
-            string make = data[0].getEntry(TagType.MAKE).dataAsString;
-            string model = data[0].getEntry(TagType.MODEL).dataAsString;
+            string make = data[0].getEntry(TagType.MAKE).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
 
             var t = rootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (t != null) iso = t.getInt();
@@ -615,10 +615,10 @@ namespace RawNet
                             mRaw.metadata.wbCoeffs[1] = 1.0f;
                             mRaw.metadata.wbCoeffs[2] = blue / 256.0f;
                         }
-                        else if (wb.dataAsString.StartsWith("NRW "))
+                        else if (wb.DataAsString.StartsWith("NRW "))
                         {
                             UInt32 offset = 0;
-                            if (((string)(wb.dataAsString.Skip(4)) == "0100") && wb.dataCount > 72)
+                            if (((string)(wb.DataAsString.Skip(4)) == "0100") && wb.dataCount > 72)
                                 offset = 56;
                             else if (wb.dataCount > 1572)
                                 offset = 1556;

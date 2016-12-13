@@ -111,7 +111,7 @@ namespace RawNet
                 foreach (IFD i in potentials)
                 {
                     i.tags.TryGetValue(TagType.MAKE, out Tag tag);
-                    string make = tag.dataAsString;
+                    string make = tag.DataAsString;
                     make = make.Trim();
                     //remove trailing \0 if any
 
@@ -119,7 +119,7 @@ namespace RawNet
                     i.tags.TryGetValue(TagType.MODEL, out Tag tagModel);
                     if (tagModel != null)
                     {
-                        model = tagModel.dataAsString;
+                        model = tagModel.DataAsString;
                         model = make.Trim();
                     }
                     switch (make)
