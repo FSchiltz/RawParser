@@ -192,7 +192,7 @@ namespace RawNet
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine("Error " + e.Message + " while reading IFD tag: " + dataType.ToString());
+                    Debug.WriteLine("Error " + e.Message + " while reading IFD tag: " + TagId.ToString());
                 }
             }
             if (dataOffset > 1)
