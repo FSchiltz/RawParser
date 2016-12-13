@@ -21,6 +21,7 @@ using Windows.Foundation;
 using RawNet;
 using System.Diagnostics;
 using Windows.Foundation.Metadata;
+using Windows.Graphics.Display;
 
 namespace RawEditor
 {
@@ -31,10 +32,7 @@ namespace RawEditor
     {
         public RawImage raw;
         public bool ImageSelected { set; get; }
-        public double pageWidth;
-        public double pageHeight;
-        private int currentImageDisplayedHeight;
-        private int currentImageDisplayedWidth;
+        public Size dim;//for auto preview
         bool cameraWB = true;
         CameraMetaData metadata = null;
         public Thumbnail thumbnail;
@@ -43,7 +41,9 @@ namespace RawEditor
 
         public MainPage()
         {
-            InitializeComponent();
+            InitializeComponent(); var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+            var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel * 1.2;
+            dim = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
             this.NavigationCacheMode = NavigationCacheMode.Required;
             if (null == metadata)
             {
@@ -222,12 +222,13 @@ namespace RawEditor
          * For the zoom of the image
          * 
          */
+        /*
         private void PageSizeChanged(object sender, SizeChangedEventArgs e)
         {
             pageWidth = e.NewSize.Width;
             pageHeight = e.NewSize.Height;
             SetScrollProperty();
-        }
+        }*/
 
         private void OpenFile(StorageFile file)
         {
@@ -342,11 +343,11 @@ namespace RawEditor
             {
                 if (raw.dim.y > raw.dim.x)
                 {
-                    previewFactor = (raw.dim.y / 1080);
+                    previewFactor = (int)(raw.dim.y / dim.Width);
                 }
                 else
                 {
-                    previewFactor = (raw.dim.x / 1920);
+                    previewFactor = (int)(raw.dim.x / dim.Height);
                 }
                 int start = 1;
                 for (; previewFactor > (start << 1); start <<= 1) ;
@@ -393,8 +394,8 @@ namespace RawEditor
             Frame.Navigate(typeof(SettingsView), null);
         }
 
-        private void SetScrollProperty()
-        {
+        /*private void SetScrollProperty()
+        {                       
             if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
             {
                 float x = 0;
@@ -418,8 +419,8 @@ namespace RawEditor
                 ImageDisplay.MinZoomFactor = 0.1f;
                 ImageDisplay.MaxZoomFactor = x + 10;
                 ImageDisplay.ChangeView(null, null, x);
-            }
         }
+        }*/
 
         public async void DisplayExif()
         {
@@ -492,9 +493,9 @@ namespace RawEditor
                     SoftwareBitmap bitmap = null;
                     //Needs to run in UI thread
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.x, raw.dim.y);
-                    });
+                {
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.x, raw.dim.y);
+                });
                     ApplyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
                     // write to file
                     if (file.FileType == ".jpg")
@@ -507,9 +508,9 @@ namespace RawEditor
 
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                encoder.SetSoftwareBitmap(bitmap);
-                            });
+                        {
+                            encoder.SetSoftwareBitmap(bitmap);
+                        });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -524,10 +525,10 @@ namespace RawEditor
 
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                encoder.SetSoftwareBitmap(bitmap);
-                            });
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            encoder.SetSoftwareBitmap(bitmap);
+                        });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -542,10 +543,10 @@ namespace RawEditor
 
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                encoder.SetSoftwareBitmap(bitmap);
-                            });
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            encoder.SetSoftwareBitmap(bitmap);
+                        });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -567,10 +568,10 @@ namespace RawEditor
 
                             //Needs to run in the UI thread because fuck performance
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                //Do some UI-code that must be run on the UI thread.
-                                encoder.SetSoftwareBitmap(bitmap);
-                            });
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            encoder.SetSoftwareBitmap(bitmap);
+                        });
                             await encoder.FlushAsync();
                             encoder = null;
                             bitmap.Dispose();
@@ -601,7 +602,7 @@ namespace RawEditor
                     // the other app can update the remote version of the file.
                     // Completing updates may require Windows to ask for user input.
                     FileUpdateStatus status =
-                    await CachedFileManager.CompleteUpdatesAsync(file);
+                await CachedFileManager.CompleteUpdatesAsync(file);
 
                     if (status != FileUpdateStatus.Complete)
                     {
@@ -628,9 +629,9 @@ namespace RawEditor
                                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                                     image.CopyToBuffer(bitmap.PixelBuffer);
                                     ImageBox.Source = bitmap;
-                                    currentImageDisplayedHeight = bitmap.PixelHeight;
-                                    currentImageDisplayedWidth = bitmap.PixelWidth;
-                                    SetScrollProperty();
+                                    //currentImageDisplayedHeight = bitmap.PixelHeight;
+                                    //currentImageDisplayedWidth = bitmap.PixelWidth;
+                                    //SetScrollProperty();
                                 });
                     }
                 });
@@ -645,9 +646,9 @@ namespace RawEditor
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
-                });
+            {
+                bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
+            });
                 int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
                 DisplayImage(bitmap);
                 Histogram.Create(value, raw.ColorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
