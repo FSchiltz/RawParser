@@ -517,7 +517,7 @@ namespace RawNet
 
                 SonyDecrypt(ifp_data, len / 4, key);
 
-                sony_private = new IFD(new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(ifp_data)), 0, rootIFD.endian, 0, (int)off);
+                sony_private = new IFD(new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(ifp_data)), 0, rootIFD.endian, 0, -(int)off);
 
                 if (sony_private.hasEntry(TagType.SONYGRBGLEVELS))
                 {
