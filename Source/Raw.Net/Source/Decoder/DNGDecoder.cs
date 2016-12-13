@@ -64,6 +64,7 @@ namespace RawNet
                 rawImage.metadata.make = make;
                 rawImage.metadata.model = model;
 
+                /*
                 Camera cam = metaData.getCamera(make, model, "dng");
                 if (cam == null) //Also look for non-DNG cameras in case it's a converted file
                     cam = metaData.getCamera(make, model, "");
@@ -87,7 +88,7 @@ namespace RawNet
                     {
                         rawImage.metadata.canonical_id = make + " " + model;
                     }
-                }
+                }*/
 
                 //get cfa
                 var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
@@ -106,6 +107,7 @@ namespace RawNet
         /* DNG Images are assumed to be decodable unless explicitly set so */
         protected override void checkSupportInternal()
         {
+            /*
             var t = ifd.getEntryRecursive(TagType.MAKE);
             var t2 = ifd.getEntryRecursive(TagType.MODEL);
             if (!(t != null && t2 != null))
@@ -128,7 +130,7 @@ namespace RawNet
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
             string model = data[0].getEntry(TagType.MODEL).DataAsString;
-            this.checkCameraSupported(metaData, make, model, "dng");
+            this.checkCameraSupported(metaData, make, model, "dng");*/
         }
 
         /* Decodes DNG masked areas into blackareas in the image */
