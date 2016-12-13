@@ -48,10 +48,11 @@ namespace RawNet
         public string model;
         public string mode;
 
+        /*
         public string canonical_make;
         public string canonical_model;
         public string canonical_alias;
-        public string canonical_id;
+        public string canonical_id;*/
 
         public int isoSpeed;
         public double exposure;

@@ -196,6 +196,7 @@ namespace RawNet
                 model = model.Trim();
                 rawImage.metadata.make = make;
                 rawImage.metadata.model = model;
+                /*
                 rawImage.metadata.canonical_make = make;
                 rawImage.metadata.canonical_model = rawImage.metadata.canonical_alias = model;
                 t = ifd.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
@@ -206,7 +207,7 @@ namespace RawNet
                 else
                 {
                     rawImage.metadata.canonical_id = make + " " + model;
-                }
+                }*/
             }
         }
 

@@ -812,10 +812,6 @@ namespace RawNet
             }
 
             rawImage.cfa = cam.cfa;
-            rawImage.metadata.canonical_make = cam.canonical_make;
-            rawImage.metadata.canonical_model = cam.canonical_model;
-            rawImage.metadata.canonical_alias = cam.canonical_alias;
-            rawImage.metadata.canonical_id = cam.canonical_id;
 
             Point2D new_size = cam.cropSize;
 
