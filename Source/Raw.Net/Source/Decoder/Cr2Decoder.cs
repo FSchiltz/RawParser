@@ -17,7 +17,7 @@ namespace RawNet
     {
         int[] sraw_coeffs = new int[3];
 
-        public Cr2Decoder(ref Stream file, CameraMetaData meta) : base(ref file, meta)
+        public Cr2Decoder(ref Stream file) : base(ref file, null)
         {
             decoderVersion = 6;
         }
@@ -297,7 +297,7 @@ namespace RawNet
 
         protected override void checkSupportInternal()
         {
-            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
+            /*List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Support check: Model name not found");
             if (!data[0].tags.ContainsKey(TagType.MAKE))
@@ -315,12 +315,12 @@ namespace RawNet
                     UInt16 ss = raw.getEntry((TagType)0xc6c5).getUShort();
                     if (ss == 4)
                     {
-                        this.checkCameraSupported(metaData, make, model, "sRaw1");
+                        //this.checkCameraSupported(metaData, make, model, "sRaw1");
                         return;
                     }
                 }
             }
-            this.checkCameraSupported(metaData, make, model, "");
+            //this.checkCameraSupported(metaData, make, model, "");*/
         }
 
         protected override void decodeMetaDataInternal()
@@ -339,9 +339,26 @@ namespace RawNet
 
             if (rawImage.metadata.subsampling.y == 1 && rawImage.metadata.subsampling.x == 2)
                 mode = "sRaw2";
+
+            rawImage.metadata.make = make;
+            rawImage.metadata.model = model;
+            rawImage.metadata.mode = mode;
+
+            //more exifs
             var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
                 rawImage.metadata.isoSpeed = isoTag.getInt();
+            var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
+            var fn = ifd.getEntryRecursive(TagType.FNUMBER);
+            var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            if (t != null) rawImage.metadata.isoSpeed = t.getInt();
+            if (exposure != null) rawImage.metadata.exposure = exposure.getFloat();
+            if (fn != null) rawImage.metadata.aperture = fn.getFloat();
+
+            var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
+            var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
+            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
+            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
 
             // Fetch the white balance
             try
@@ -406,8 +423,9 @@ namespace RawNet
                 rawImage.errors.Add(e.Message);
                 // We caught an exception reading WB, just ignore it
             }
-            setMetaData(metaData, make, model, mode);
+            //setMetaData(metaData, make, model, mode);
 
+            SetMetaData(model);
             //get cfa
             var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)
@@ -423,6 +441,111 @@ namespace RawNet
             rawImage.metadata.wbCoeffs[0] = rawImage.metadata.wbCoeffs[0] / rawImage.metadata.wbCoeffs[1];
             rawImage.metadata.wbCoeffs[2] = rawImage.metadata.wbCoeffs[2] / rawImage.metadata.wbCoeffs[1];
             rawImage.metadata.wbCoeffs[1] = rawImage.metadata.wbCoeffs[1] / rawImage.metadata.wbCoeffs[1];
+        }
+
+        override protected void SetMetaData(string model)
+        {
+            for (int i = 0; i < canon.GetLength(0); i++)
+            {
+                if (rawImage.dim.x == canon[i][0] && rawImage.dim.y == canon[i][1])
+                {
+                    rawImage.mOffset.x = canon[i][2];
+                    rawImage.mOffset.y = canon[i][3];
+                    rawImage.dim.x -= (canon[i][2]);
+                    rawImage.dim.y -= (canon[i][3]);
+                    //rawImage.dim.x -= canon[i][4];
+                    //rawImage.dim.y -= canon[i][5];
+                    /* mask[0][1] = canon[i][6];
+                     mask[0][3] = -canon[i][7];
+                     mask[1][1] = canon[i][8];
+                     mask[1][3] = -canon[i][9];*/
+                    //if (canon[i][10]) filters = canon[i][10] * 0x01010101;
+                }
+                /*if ((unique_id | 0x20000) == 0x2720000)
+                {
+                    rawImage.mOffset.x = 8;
+                    rawImage.mOffset.y = 16;
+                }*/
+            }
+            if (rawImage.ColorDepth == 15)
+            {
+                switch (rawImage.dim.x)
+                {
+                    case 3344:
+                        rawImage.dim.x -= 66;
+                        break;
+                    case 3872:
+                        rawImage.dim.x -= 72;
+                        break;
+                }
+                if (rawImage.dim.y > rawImage.dim.x)
+                {
+                    //SWAP(height, width);
+                    //SWAP(raw_height, raw_width);
+                }
+                if (rawImage.dim.x == 7200 && rawImage.dim.y == 3888)
+                {
+                    rawImage.dim.x = 6480;
+                    rawImage.dim.y = 4320;
+                }
+                /*
+                filters = 0;
+                tiff_samples = colors = 3;
+                //load_raw = &CLASS canon_sraw_load_raw;*/
+            }
+            else
+                switch (model.Trim())
+                {
+                    case "PowerShot 600":
+                        rawImage.dim.y = 613;
+                        rawImage.dim.x = 854;
+                        //raw_width = 896;
+                        //colors = 4;
+                        //filters = 0xe1e4e1e4;
+                        //load_raw = &CLASS canon_600_load_raw;
+                        break;
+                    case "PowerShot A5":
+                    case "PowerShot A5 Zoom":
+                        rawImage.dim.y = 773;
+                        rawImage.dim.x = 960;
+                        //raw_width = 992;
+                        rawImage.metadata.pixelAspectRatio = 256 / 235.0;
+                        //filters = 0x1e4e1e4e;
+                        goto canon_a5;
+                        break;
+                    case "PowerShot A50":
+                        rawImage.dim.y = 968;
+                        rawImage.dim.x = 1290;
+                        //rawImage.dim.x = 1320;
+                        //filters = 0x1b4e4b1e;
+                        goto canon_a5;
+                        break;
+                    case "PowerShot Pro70":
+                        rawImage.dim.y = 1024;
+                        rawImage.dim.x = 1552;
+                        //filters = 0x1e4b4e1b;
+                        canon_a5:
+                        //colors = 4;
+                        rawImage.ColorDepth = 10;
+                        //load_raw = &CLASS packed_load_raw;
+                        //load_flags = 40;
+                        break;
+                    case "PowerShot Pro90 IS":
+                    case "PowerShot G1":
+                        //colors = 4;
+                        //filters = 0xb4b4b4b4;
+                        break;
+                    case "PowerShot A610":
+                        //if(canon_s2is()) strcpy(model + 10, "S2 IS");
+                        break;
+                    case "PowerShot SX220 HS":
+                        //mask[1][3] = -4;
+                        break;
+                    case "EOS D2000C":
+                        //filters = 0x61616161;
+                        rawImage.blackLevel = (int)rawImage.curve[200];
+                        break;
+                }
         }
 
         int GetHue()
@@ -876,5 +999,51 @@ r >>= 8; g >>= 8; b >>= 8;
             }
         }
     }*/
+        private ushort[][] canon = {
+      new ushort[]{ 1944, 1416,   0,  0, 48,  0 },
+      new ushort[]{ 2144, 1560,   4,  8, 52,  2, 0, 0, 0, 25 },
+      new ushort[]{ 2224, 1456,  48,  6,  0,  2 },
+      new ushort[]{ 2376, 1728,  12,  6, 52,  2 },
+      new ushort[]{ 2672, 1968,  12,  6, 44,  2 },
+      new ushort[]{ 3152, 2068,  64, 12,  0,  0, 16 },
+      new ushort[]{ 3160, 2344,  44, 12,  4,  4 },
+      new ushort[]{ 3344, 2484,   4,  6, 52,  6 },
+      new ushort[]{ 3516, 2328,  42, 14,  0,  0 },
+      new ushort[]{ 3596, 2360,  74, 12,  0,  0 },
+      new ushort[]{ 3744, 2784,  52, 12,  8, 12 },
+      new ushort[]{ 3944, 2622,  30, 18,  6,  2 },
+      new ushort[]{ 3948, 2622,  42, 18,  0,  2 },
+      new ushort[]{ 3984, 2622,  76, 20,  0,  2, 14 },
+      new ushort[]{ 4104, 3048,  48, 12, 24, 12 },
+      new ushort[]{ 4116, 2178,   4,  2,  0,  0 },
+      new ushort[]{ 4152, 2772, 192, 12,  0,  0 },
+      new ushort[]{ 4160, 3124, 104, 11,  8, 65 },
+      new ushort[]{ 4176, 3062,  96, 17,  8,  0, 0, 16, 0, 7, 0x49 },
+      new ushort[]{ 4192, 3062,  96, 17, 24,  0, 0, 16, 0, 0, 0x49 },
+      new ushort[]{ 4312, 2876,  22, 18,  0,  2 },
+      new ushort[]{ 4352, 2874,  62, 18,  0,  0 },
+      new ushort[]{ 4476, 2954,  90, 34,  0,  0 },
+      new ushort[]{ 4480, 3348,  12, 10, 36, 12, 0, 0, 0, 18, 0x49 },
+      new ushort[]{ 4480, 3366,  80, 50,  0,  0 },
+      new ushort[]{ 4496, 3366,  80, 50, 12,  0 },
+      new ushort[]{ 4768, 3516,  96, 16,  0,  0, 0, 16 },
+      new ushort[]{ 4832, 3204,  62, 26,  0,  0 },
+      new ushort[]{ 4832, 3228,  62, 51,  0,  0 },
+      new ushort[]{ 5108, 3349,  98, 13,  0,  0 },
+      new ushort[]{ 5120, 3318, 142, 45, 62,  0 },
+     new ushort[] { 5280, 3528,  72, 52,  0,  0 },
+      new ushort[]{ 5344, 3516, 142, 51,  0,  0 },
+      new ushort[]{ 5344, 3584, 126,100,  0,  2 },
+      new ushort[]{ 5360, 3516, 158, 51,  0,  0 },
+      new ushort[]{ 5568, 3708,  72, 38,  0,  0 },
+      new ushort[]{ 5632, 3710,  96, 17,  0,  0, 0, 16, 0, 0, 0x49 },
+      new ushort[]{ 5712, 3774,  62, 20, 10,  2 },
+      new ushort[]{ 5792, 3804, 158, 51,  0,  0 },
+      new ushort[]{ 5920, 3950, 122, 80,  2,  0 },
+      new ushort[]{ 6096, 4056,  72, 34,  0,  0 },
+      new ushort[]{ 6288, 4056, 264, 34,  0,  0 },
+      new ushort[]{ 8896, 5920, 160, 64,  0,  0 },
+    };
+
     }
 }
