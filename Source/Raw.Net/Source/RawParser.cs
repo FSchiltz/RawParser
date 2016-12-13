@@ -184,7 +184,7 @@ namespace RawNet
 
                 try
                 {
-                    return new NakedDecoder(Math.Math.Min((put, c);
+                    return new NakedDecoder(ref stream, c);
                 }
                 catch (RawDecoderException)
                 {
