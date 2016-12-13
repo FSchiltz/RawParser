@@ -216,11 +216,11 @@ namespace RawNet
                     return new Cr2Decoder(ref stream);
                 case ".TIFF":
                 case ".TIF":
-                    return new TiffDecoder(ref stream, metadata);
+                    return new TiffDecoder(ref stream);
                 case ".ARW":
-                    return new ArwDecoder(ref stream, metadata);
+                    return new ArwDecoder(ref stream);
                 case ".PEF":
-                    return new PefDecoder(ref stream, metadata);
+                    return new PefDecoder(ref stream);
                 case ".DNG":
                     return new DngDecoder(ref stream);                    
 

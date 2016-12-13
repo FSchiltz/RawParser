@@ -10,7 +10,7 @@ namespace RawNet
     {
         int shiftDownScale;
 
-        internal ArwDecoder(ref Stream file, CameraMetaData meta) : base(ref file, meta)
+        internal ArwDecoder(ref Stream file) : base(ref file)
         {
             shiftDownScale = 0;
             decoderVersion = 1;
@@ -368,13 +368,13 @@ namespace RawNet
         }
 
         protected override void checkSupportInternal()
-        {
+        {/*
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("ARW Support check: Model name found");
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
             string model = data[0].getEntry(TagType.MODEL).DataAsString;
-            this.checkCameraSupported(metaData, make, model, "");
+            this.checkCameraSupported(metaData, make, model, "");*/
         }
 
         protected override void decodeMetaDataInternal()
@@ -387,13 +387,9 @@ namespace RawNet
                 throw new RawDecoderException("ARW Decoder: Make name not found");
 
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
-            string model = data[0].getEntry(TagType.MODEL).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;            
 
-            Tag isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (isoTag != null)
-                rawImage.metadata.isoSpeed = isoTag.getInt();
-
-            setMetaData(metaData, make, model, "");
+            //setMetaData(metaData, make, model, "");
 
             //get cfa
             var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
@@ -458,6 +454,25 @@ namespace RawNet
                     // We caught an exception reading WB, just ignore it
                 }
             }
+            rawImage.metadata.make = make;
+            rawImage.metadata.model = model;
+            SetMetaData(model);
+
+            var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
+            var fn = ifd.getEntryRecursive(TagType.FNUMBER);
+            var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            if (t != null) rawImage.metadata.isoSpeed = t.getInt();
+            if (exposure != null) rawImage.metadata.exposure = exposure.getFloat();
+            if (fn != null) rawImage.metadata.aperture = fn.getFloat();
+
+            var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
+            var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
+            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
+            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
+        }
+
+        protected override void SetMetaData(string model) {
+            throw new NotImplementedException();
         }
 
         unsafe void SonyDecrypt(byte[] ifpData, UInt32 len, UInt32 key)

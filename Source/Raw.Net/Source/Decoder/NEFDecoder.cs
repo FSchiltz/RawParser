@@ -17,7 +17,7 @@ namespace RawNet
 
     internal class NefDecoder : TiffDecoder
     {
-        public NefDecoder(ref Stream file) : base(ref file, null)
+        public NefDecoder(ref Stream file) : base(ref file)
         {
             decoderVersion = 5;
         }
@@ -457,10 +457,8 @@ namespace RawNet
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Meta Decoder: Model name not found");
 
-
             uint white = rawImage.whitePoint;
             int black = rawImage.blackLevel;
-
 
             string model = data[0].getEntry(TagType.MODEL).DataAsString;
             if (model.Contains("NIKON")) model = model.Substring(6);

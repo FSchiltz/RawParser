@@ -45,7 +45,7 @@ namespace RawEditor
             var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel * 1.2;
             dim = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
             this.NavigationCacheMode = NavigationCacheMode.Required;
-            if (null == metadata)
+            /*if (null == metadata)
             {
                 try
                 {
@@ -60,7 +60,7 @@ namespace RawEditor
                 {
                     ExceptionDisplay.display(e.Message);
                 }
-            }
+            }*/
 
             NavigationCacheMode = NavigationCacheMode.Enabled;
             ImageSelected = false;

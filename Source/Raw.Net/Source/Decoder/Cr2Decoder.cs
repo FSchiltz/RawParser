@@ -17,7 +17,7 @@ namespace RawNet
     {
         int[] sraw_coeffs = new int[3];
 
-        public Cr2Decoder(ref Stream file) : base(ref file, null)
+        public Cr2Decoder(ref Stream file) : base(ref file)
         {
             decoderVersion = 6;
         }
