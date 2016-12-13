@@ -22,10 +22,9 @@ namespace RawNet
     {
         bool mFixLjpeg;
 
-        internal DngDecoder(ref Stream file) : base(ref file, null)
+        internal DngDecoder(ref Stream file) : base(ref file)
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.DNGVERSION);
-
             /*
             if (data.Count != 0)
             {  // We have a dng image entry
@@ -49,11 +48,8 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal()
         {
-            var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (t != null) rawImage.metadata.isoSpeed = t.getInt();
-
             // Set the make and model
-            t = ifd.getEntryRecursive(TagType.MAKE);
+            var t = ifd.getEntryRecursive(TagType.MAKE);
             var t2 = ifd.getEntryRecursive(TagType.MODEL);
             if (t != null && t != null)
             {

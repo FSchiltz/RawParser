@@ -7,7 +7,7 @@ namespace RawNet
     {
         protected IFD ifd;
 
-        public TiffDecoder(ref Stream stream, CameraMetaData meta) : base(meta)
+        public TiffDecoder(ref Stream stream) : base(null)
         {
             decoderVersion = 1;
             //parse the ifd
@@ -51,8 +51,7 @@ namespace RawNet
                     throw new TiffParserException("TIFF file has too many SubIFDs, probably broken");
                 }
                 nextIFD = (ifd.subIFD[ifd.subIFD.Count - 1]).nextOffset;
-            }
-            
+            }            
             //check if no 
         }
 
@@ -182,13 +181,21 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal()
         {
-            var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (t != null) rawImage.metadata.isoSpeed = t.getInt();
+            var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.getInt();
+            var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
+            var fn = ifd.getEntryRecursive(TagType.FNUMBER);
+            if (exposure != null) rawImage.metadata.exposure = exposure.getFloat();
+            if (fn != null) rawImage.metadata.aperture = fn.getFloat();
 
+            var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
+            var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
+            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
+            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
             // Set the make and model
-            t = ifd.getEntryRecursive(TagType.MAKE);
+            var t = ifd.getEntryRecursive(TagType.MAKE);
             var t2 = ifd.getEntryRecursive(TagType.MODEL);
-            if (t != null && t != null)
+            if (t != null && t2 != null)
             {
                 string make = t.DataAsString;
                 string model = t2.DataAsString;

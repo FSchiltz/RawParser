@@ -7,7 +7,7 @@ namespace RawNet
 {
     class PefDecoder : TiffDecoder
     {
-        public PefDecoder(ref Stream file, CameraMetaData meta) : base(ref file, meta)
+        public PefDecoder(ref Stream file) : base(ref file)
         {
             decoderVersion = 3;
         }
@@ -64,6 +64,7 @@ namespace RawNet
 
         protected override void checkSupportInternal()
         {
+            /*
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("PEF Support check: Model name found");
@@ -72,7 +73,7 @@ namespace RawNet
 
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
             string model = data[0].getEntry(TagType.MODEL).DataAsString;
-            this.checkCameraSupported(metaData, make, model, "");
+            this.checkCameraSupported(metaData, make, model, "");*/
         }
 
         protected override void decodeMetaDataInternal()
@@ -129,5 +130,9 @@ namespace RawNet
             }
         }
 
+        protected override void SetMetaData(string model)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
