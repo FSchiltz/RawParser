@@ -16,7 +16,7 @@ namespace RawNet
         bool fujiRotate = true;
         int decoderVersion = 0;*/
 
-        public RawParser(ref Stream s, CameraMetaData metaData)
+        public RawParser(ref Stream s, CameraMetaData metaData, string extension)
         {
             stream = s;
             //read camera Metadata from xml

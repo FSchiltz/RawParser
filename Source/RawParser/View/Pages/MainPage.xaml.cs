@@ -241,7 +241,16 @@ namespace RawEditor
                     var watch = System.Diagnostics.Stopwatch.StartNew();
 
                     Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
-                    RawParser parser = new RawParser(ref stream, metadata);
+
+                    //Does not improve speed
+                    /*
+                    byte[] data = new byte[stream.Length];
+                    stream.Read(data, 0, (int)stream.Length);
+                    stream = new MemoryStream(data);
+                    stream.Position = 0;*/
+
+                    RawParser parser = new RawParser(ref stream, metadata, file.FileType);
+                    //change decoder detection with file extension
                     RawDecoder decoder = parser.decoder;
                     decoder.checkSupport();
                     thumbnail = decoder.decodeThumb();
