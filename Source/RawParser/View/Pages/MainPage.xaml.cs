@@ -344,11 +344,11 @@ namespace RawEditor
             {
                 if (raw.dim.y > raw.dim.x)
                 {
-                    previewFactor = (int)(raw.dim.y / dim.Width);
+                    previewFactor = (int)(raw.dim.y / dim.Height);
                 }
                 else
                 {
-                    previewFactor = (int)(raw.dim.x / dim.Height);
+                    previewFactor = (int)(raw.dim.x / dim.Width);
                 }
                 int start = 1;
                 for (; previewFactor > (start << 1); start <<= 1) ;

@@ -22,7 +22,7 @@ namespace RawNet
     {
         bool mFixLjpeg;
 
-        internal DngDecoder(ref Stream file, CameraMetaData meta) : base(ref file, meta)
+        internal DngDecoder(ref Stream file) : base(ref file, null)
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.DNGVERSION);
 
@@ -101,6 +101,19 @@ namespace RawNet
                 {
                     rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.getInt(0), (CFAColor)cfa.getInt(1), (CFAColor)cfa.getInt(2), (CFAColor)cfa.getInt(3));
                 }
+
+                //more exifs
+                var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
+                var fn = ifd.getEntryRecursive(TagType.FNUMBER);
+                var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+                if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.getInt();
+                if (exposure != null) rawImage.metadata.exposure = exposure.getFloat();
+                if (fn != null) rawImage.metadata.aperture = fn.getFloat();
+
+                var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
+                var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
+                if (time != null) rawImage.metadata.timeTake = time.DataAsString;
+                if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
             }
         }
 

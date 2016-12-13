@@ -25,7 +25,7 @@ namespace RawNet
         IRandomAccessStream stream;
         BitmapPropertiesView meta;
 
-        public JPGDecoder(ref Stream file, CameraMetaData meta) : base(meta)
+        public JPGDecoder(ref Stream file) : base(null)
         {
             stream = file.AsRandomAccessStream();
         }

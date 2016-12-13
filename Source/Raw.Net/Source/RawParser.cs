@@ -195,7 +195,7 @@ namespace RawNet
             //try jpeg file
             try
             {
-                return new JPGDecoder(ref stream, meta);
+                return new JPGDecoder(ref stream);
             }
             catch (TiffParserException)
             {
@@ -222,14 +222,13 @@ namespace RawNet
                 case ".PEF":
                     return new PefDecoder(ref stream, metadata);
                 case ".DNG":
-                    return new DngDecoder(ref stream, metadata);
-                    break;
+                    return new DngDecoder(ref stream);                    
 
                 //other raw format
                 case ".JPG":
                 case ".JPEG":
                 case ".PNG":
-                    return new JPGDecoder(ref stream, metadata);
+                    return new JPGDecoder(ref stream);
                 default:
                     // Detect camera on filesize (CHDK).
                     if (metadata != null && metadata.hasChdkCamera((uint)stream.Length))

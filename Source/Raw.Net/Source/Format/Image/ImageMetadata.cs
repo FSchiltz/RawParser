@@ -78,7 +78,7 @@ namespace RawNet
 
         public string ExposureAsString()
         {
-            if (exposure > 0) return exposure + "s";
+            if (exposure >= 1) return exposure + "s";
             else return "1/"+(1 / exposure).ToString("D") + "s";
         }
     }
