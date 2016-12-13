@@ -7,19 +7,10 @@ namespace RawNet
 
     internal class TiffParser
     {
-        TIFFBinaryReader reader;
-        protected IFD rootIFD;
-        Stream stream;
-        CameraMetaData metaData;
-
-        public TiffParser(Stream stream, CameraMetaData meta)
+        public static RawDecoder GetDecoder(ref Stream stream, CameraMetaData metaData, string fileType)
         {
-            this.stream = stream;
-            metaData = meta;
-        }
-
-        public void parseData()
-        {
+            IFD rootIFD = null;
+            TIFFBinaryReader reader = null;
             if (stream.Length < 16)
                 throw new TiffParserException("Not a TIFF file (size too small)");
             Endianness endian = Endianness.little;
@@ -61,31 +52,6 @@ namespace RawNet
                 }
                 nextIFD = (rootIFD.subIFD[rootIFD.subIFD.Count - 1]).nextOffset;
             }
-        }
-
-        protected void mergeIFD(TiffParser other_tiff)
-        {
-            if (other_tiff?.rootIFD?.subIFD.Count == 0)
-                return;
-
-            IFD other_root = other_tiff.rootIFD;
-            foreach (IFD i in other_root.subIFD)
-            {
-                rootIFD.subIFD.Add(i);
-            }
-
-            foreach (KeyValuePair<TagType, Tag> i in other_root.tags)
-            {
-                rootIFD.tags.Add(i.Key, i.Value); ;
-            }
-            other_root.subIFD.Clear();
-            other_root.subIFD.Clear();
-        }
-
-        public RawDecoder getDecoder()
-        {
-            if (rootIFD == null)
-                parseData();
 
             List<IFD> potentials = new List<IFD>();
             potentials = rootIFD.getIFDsWithTag(TagType.DNGVERSION);
@@ -101,7 +67,7 @@ namespace RawNet
                 if (Convert.ToInt32(c[0]) > 1)
                     throw new TiffParserException("DNG version too new.");
                 rootIFD = null;
-                return new DngDecoder(root, ref reader, metaData);
+                return new DngDecoder( ref reader, metaData);
             }
 
             potentials = rootIFD.getIFDsWithTag(TagType.MAKE);
@@ -127,14 +93,14 @@ namespace RawNet
 
                         case "Canon":
                             rootIFD = null;
-                            return new Cr2Decoder(root, reader, metaData);
+                            return new Cr2Decoder(reader, metaData);
                         /*case "FUJIFILM":
                             rootIFD = null;
                             return new RafDecoder(root, reader);*/
                         case "NIKON CORPORATION":
                         case "NIKON":
                             rootIFD = null;
-                            return new NefDecoder(ref root, reader, metaData);
+                            return new NefDecoder(reader, metaData);
                         /*
                     case "OLYMPUS IMAGING CORP.":
                     case "OLYMPUS CORPORATION":
@@ -144,12 +110,12 @@ namespace RawNet
                     */
                         case "SONY":
                             rootIFD = null;
-                            return new ArwDecoder(root, reader, metaData);
+                            return new ArwDecoder(reader, metaData);
                         case "PENTAX Corporation":
                         case "RICOH IMAGING COMPANY, LTD.":
                         case "PENTAX":
                             rootIFD = null;
-                            return new PefDecoder(root, reader, metaData);
+                            return new PefDecoder(reader, metaData);
                             /*
                         case "Panasonic":
                         case "LEICA":
@@ -208,10 +174,11 @@ namespace RawNet
 
             //default as as tandard tiff
             rootIFD = null;
-            return new TiffDecoder(root, ref reader, metaData);
+            return new TiffDecoder( ref reader, metaData);
             //TODO add detection of Tiff
             throw new TiffParserException("No decoder found. Sorry.");
         }
+
     }
 }
 

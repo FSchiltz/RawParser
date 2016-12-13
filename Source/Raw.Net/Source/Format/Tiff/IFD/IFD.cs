@@ -345,6 +345,23 @@ namespace RawNet
             return matchingIFDs;
         }
 
+
+        protected void mergeIFD(IFD other_tiff)
+        {
+            if (other_tiff?.subIFD.Count == 0)
+                return;
+
+            foreach (IFD i in other_tiff.subIFD)
+            {
+                subIFD.Add(i);
+            }
+
+            foreach (KeyValuePair<TagType, Tag> i in other_tiff.tags)
+            {
+                tags.Add(i.Key, i.Value); ;
+            }
+        }
+
         public Tag getEntryRecursive(TagType t)
         {
             Tag tag = null;

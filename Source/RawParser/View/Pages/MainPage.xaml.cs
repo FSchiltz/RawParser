@@ -249,9 +249,8 @@ namespace RawEditor
                     stream = new MemoryStream(data);
                     stream.Position = 0;*/
 
-                    RawParser parser = new RawParser(ref stream, metadata, file.FileType);
                     //change decoder detection with file extension
-                    RawDecoder decoder = parser.decoder;
+                    RawDecoder decoder = RawParser.GetDecoder(ref stream, metadata, file.FileType);
                     decoder.checkSupport();
                     thumbnail = decoder.decodeThumb();
                     if (thumbnail != null)
@@ -282,6 +281,10 @@ namespace RawEditor
                     decoder.decodeMetaData();
                     raw.metadata.fileName = file.DisplayName;
                     raw.metadata.fileNameComplete = file.Name;
+
+                    stream.Dispose();
+                    decoder = null;
+
                     //read the exifs
                     DisplayExif();
                     //scale the value
@@ -311,7 +314,7 @@ namespace RawEditor
                     EnableEditingControl(true);
                     //dispose
                     file = null;
-                    parser = null;
+                    raw.Thumbnail = null;
                     watch.Stop();
                     Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
                 }
@@ -373,7 +376,7 @@ namespace RawEditor
                     {
                         OpenFile(file);
                     }
-                    catch (System.Exception ex)
+                    catch (Exception ex)
                     {
                         ExceptionDisplay.display(ex.Message + ex.StackTrace);
                     }

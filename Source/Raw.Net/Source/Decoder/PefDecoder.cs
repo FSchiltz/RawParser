@@ -4,19 +4,16 @@ using System.IO;
 
 namespace RawNet
 {
-    class PefDecoder : RawDecoder
+    class PefDecoder : TiffDecoder
     {
-        IFD mRootIFD;
-
-        public PefDecoder(IFD rootIFD, TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
+        public PefDecoder(ref Stream file, CameraMetaData meta) : base(ref file, meta)
         {
-            mRootIFD = (rootIFD);
             decoderVersion = 3;
         }
 
         protected override RawImage decodeRawInternal()
         {
-            List<IFD> data = mRootIFD.getIFDsWithTag(TagType.STRIPOFFSETS);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.STRIPOFFSETS);
             if (data.Count == 0)
                 throw new RawDecoderException("PEF Decoder: No image data found");
 
@@ -27,7 +24,7 @@ namespace RawNet
             if (1 == compression || compression == 32773)
             {
                 decodeUncompressed(ref raw, BitOrder.Jpeg);
-                return mRaw;
+                return rawImage;
             }
 
             if (65535 != compression)
@@ -44,31 +41,31 @@ namespace RawNet
             {
                 throw new RawDecoderException("PEF Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
             }
-            if (!file.isValid(offsets.getUInt(), counts.getUInt()))
+            if (!reader.isValid(offsets.getUInt(), counts.getUInt()))
                 throw new RawDecoderException("PEF Decoder: Truncated file.");
 
             Int32 width = raw.getEntry(TagType.IMAGEWIDTH).getInt();
             Int32 height = raw.getEntry(TagType.IMAGELENGTH).getInt();
 
-            mRaw.dim = new Point2D(width, height);
-            mRaw.Init();
+            rawImage.dim = new Point2D(width, height);
+            rawImage.Init();
             try
             {
-                PentaxDecompressor l = new PentaxDecompressor(file, mRaw);
-                l.decodePentax(mRootIFD, offsets.getUInt(), counts.getUInt());
+                PentaxDecompressor l = new PentaxDecompressor(reader, rawImage);
+                l.decodePentax(ifd, offsets.getUInt(), counts.getUInt());
             }
             catch (IOException e)
             {
-                mRaw.errors.Add(e.Message);
+                rawImage.errors.Add(e.Message);
                 // Let's ignore it, it may have delivered somewhat useful data.
             }
 
-            return mRaw;
+            return rawImage;
         }
 
         protected override void checkSupportInternal()
         {
-            List<IFD> data = mRootIFD.getIFDsWithTag(TagType.MODEL);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("PEF Support check: Model name found");
             if (!data[0].hasEntry(TagType.MAKE))
@@ -82,8 +79,8 @@ namespace RawNet
         protected override void decodeMetaDataInternal()
         {
             int iso = 0;
-            mRaw.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
-            List<IFD> data = mRootIFD.getIFDsWithTag(TagType.MODEL);
+            rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
                 throw new RawDecoderException("PEF Meta Decoder: Model name found");
@@ -93,7 +90,7 @@ namespace RawNet
             string make = raw.getEntry(TagType.MAKE).DataAsString;
             string model = raw.getEntry(TagType.MODEL).DataAsString;
 
-            Tag isoTag = mRootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            Tag isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
                 iso = isoTag.getInt();
 
@@ -101,26 +98,26 @@ namespace RawNet
 
             // Read black level
 
-            Tag black = mRootIFD.getEntryRecursive((TagType)0x200);
+            Tag black = ifd.getEntryRecursive((TagType)0x200);
             if (black != null)
             {
                 if (black.dataCount == 4)
                 {
                     for (int i = 0; i < 4; i++)
-                        mRaw.blackLevelSeparate[i] = black.getInt(i);
+                        rawImage.blackLevelSeparate[i] = black.getInt(i);
                 }
             }
 
             // Set the whitebalance
 
-            Tag wb = mRootIFD.getEntryRecursive((TagType)0x0201);
+            Tag wb = ifd.getEntryRecursive((TagType)0x0201);
             if (wb != null)
             {
                 if (wb.dataCount == 4)
                 {
-                    mRaw.metadata.wbCoeffs[0] = wb.getInt(0);
-                    mRaw.metadata.wbCoeffs[1] = wb.getInt(1);
-                    mRaw.metadata.wbCoeffs[2] = wb.getInt(3);
+                    rawImage.metadata.wbCoeffs[0] = wb.getInt(0);
+                    rawImage.metadata.wbCoeffs[1] = wb.getInt(1);
+                    rawImage.metadata.wbCoeffs[2] = wb.getInt(3);
                 }
             }
         }

@@ -146,6 +146,7 @@
     <Compile Include="Source\Decoder\Metadata\Camera.cs" />
     <Compile Include="Source\Decoder\Metadata\CameraMetaData.cs" />
     <Compile Include="Source\Decoder\Metadata\CameraSensorInfo.cs" />
+    <Compile Include="Source\Decoder\NakedDecoder.cs" />
     <Compile Include="Source\Decoder\NEFDecoder.cs" />
     <Compile Include="Source\Decoder\PefDecoder.cs" />
     <Compile Include="Source\Decoder\RawDecoder.cs" />
@@ -175,7 +176,6 @@
     <Compile Include="Source\Format\Tiff\Makernote\PanasonicMakernote.cs" />
     <Compile Include="Source\Format\Tiff\Makernote\PentaxMakernote.cs" />
     <Compile Include="Source\RawParser.cs" />
-    <Compile Include="Source\TIFFParser.cs" />
     <EmbeddedResource Include="Properties\Raw.Net.rd.xml" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">

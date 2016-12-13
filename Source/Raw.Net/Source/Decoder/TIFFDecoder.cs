@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace RawNet
 {
@@ -6,10 +7,52 @@ namespace RawNet
     {
         protected IFD ifd;
 
-        public TiffDecoder(IFD rootifd, ref TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
+        public TiffDecoder(ref Stream stream, CameraMetaData meta) : base(meta)
         {
             decoderVersion = 1;
-            ifd = rootifd;
+            //parse the ifd
+            if (stream.Length < 16)
+                throw new TiffParserException("Not a TIFF file (size too small)");
+            Endianness endian = Endianness.little;
+            byte[] data = new byte[5];
+            stream.Position = 0;
+            stream.Read(data, 0, 4);
+            if (data[0] == 0x4D || data[1] == 0x4D)
+            {
+                //open binaryreader
+                reader = new TIFFBinaryReaderRE(stream);
+                endian = Endianness.big;
+
+                if (data[3] != 42 && data[2] != 0x4f) // ORF sometimes has 0x4f, Lovely!
+                    throw new TiffParserException("Not a TIFF file (magic 42)");
+            }
+            else if (data[0] == 0x49 || data[1] == 0x49)
+            {
+                reader = new TIFFBinaryReader(stream);
+                if (data[2] != 42 && data[2] != 0x52 && data[2] != 0x55) // ORF has 0x52, RW2 0x55 - Brillant!
+                    throw new TiffParserException("Not a TIFF file (magic 42)");
+            }
+            else
+            {
+                throw new TiffParserException("Not a TIFF file (ID)");
+            }
+
+            UInt32 nextIFD;
+            reader.Position = 4;
+            nextIFD = reader.ReadUInt32();
+            ifd = new IFD(reader, nextIFD, endian, 0);
+            nextIFD = ifd.nextOffset;
+
+            while (nextIFD != 0)
+            {
+                ifd.subIFD.Add(new IFD(reader, nextIFD, endian, 0));
+                if (ifd.subIFD.Count > 100)
+                {
+                    throw new TiffParserException("TIFF file has too many SubIFDs, probably broken");
+                }
+                nextIFD = (ifd.subIFD[ifd.subIFD.Count - 1]).nextOffset;
+            }
+            
             //check if no 
         }
 
@@ -29,8 +72,8 @@ namespace RawNet
                 if (!ifd.tags.TryGetValue((TagType)0x0115, out var samplesPerPixel)) throw new FormatException("File not correct");
                 uint height = Convert.ToUInt32(imageHeightTag.data[0]);
                 uint width = Convert.ToUInt32(imageWidthTag.data[0]);
-                mRaw.dim = new Point2D((int)width, (int)height);
-                mRaw.uncroppedDim = mRaw.dim;
+                rawImage.dim = new Point2D((int)width, (int)height);
+                rawImage.uncroppedDim = rawImage.dim;
                 //suppose that image are always 8,8,8 or 16,16,16
                 ushort colorDepth = (ushort)bitPerSampleTag.data[0];
                 ushort[] image = new ushort[width * height * 3];
@@ -44,22 +87,22 @@ namespace RawNet
                     {
                         //for each complete strip
                         //move to the offset
-                        file.Position = Convert.ToInt64(imageOffsetTag.data[i]);
+                        reader.Position = Convert.ToInt64(imageOffsetTag.data[i]);
                         for (int y = 0; y < rowperstrip && !(i == strips && y <= lastStrip); y++)
                         {
                             for (int x = 0; x < width; x++)
                             {
                                 //get the pixel
                                 //red
-                                image[(y + i * rowperstrip) * width * 3 + x * 3] = file.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3] = reader.ReadByte();
                                 //green
-                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = file.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = reader.ReadByte();
                                 //blue 
-                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = file.ReadByte();
+                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = reader.ReadByte();
                                 for (int z = 0; z < (Convert.ToInt32(samplesPerPixel.data[0]) - 3); z++)
                                 {
                                     //pass the other pixel if more light
-                                    file.ReadByte();
+                                    reader.ReadByte();
                                 }
                             }
                         }
@@ -81,7 +124,7 @@ namespace RawNet
                     {
                         //for each complete strip
                         //move to the offset
-                        file.Position = Convert.ToInt64(imageOffsetTag.data[i]);
+                        reader.Position = Convert.ToInt64(imageOffsetTag.data[i]);
                         for (int y = 0; y < rowperstrip && !(i == strips && y < lastStrip); y++)
                         {
                             //uncompress line by line of pixel
@@ -90,19 +133,19 @@ namespace RawNet
                             int count = 0;
                             for (int x = 0; x < width * 3;)
                             {
-                                buffer = file.ReadByte();
+                                buffer = reader.ReadByte();
                                 count = 0;
                                 if (buffer >= 0)
                                 {
                                     for (int k = 0; k < count; ++k, ++x)
                                     {
-                                        temp[x] = file.ReadByte();
+                                        temp[x] = reader.ReadByte();
                                     }
                                 }
                                 else
                                 {
                                     count = -buffer;
-                                    buffer = file.ReadByte();
+                                    buffer = reader.ReadByte();
                                     for (int k = 0; k < count; ++k, ++x)
                                     {
                                         temp[x] = (ushort)buffer;
@@ -122,18 +165,18 @@ namespace RawNet
                                 for (int z = 0; z < ((int)samplesPerPixel.data[0] - 3); z++)
                                 {
                                     //pass the other pixel if more light
-                                    file.ReadByte();
+                                    reader.ReadByte();
                                 }
                             }
                         }
                     }
                 }
                 else throw new FormatException("Compression mode " + imageCompressedTag.DataAsString + " not supported yet");
-                mRaw.cpp = 3;
-                mRaw.ColorDepth = colorDepth;
-                mRaw.bpp = colorDepth;
-                mRaw.rawData = image;
-                return mRaw;
+                rawImage.cpp = 3;
+                rawImage.ColorDepth = colorDepth;
+                rawImage.bpp = colorDepth;
+                rawImage.rawData = image;
+                return rawImage;
             }
             else throw new FormatException("Photometric interpretation " + photoMetricTag.DataAsString + " not supported yet");
         }
@@ -141,7 +184,7 @@ namespace RawNet
         protected override void decodeMetaDataInternal()
         {
             var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (t != null) mRaw.metadata.isoSpeed = t.getInt();
+            if (t != null) rawImage.metadata.isoSpeed = t.getInt();
 
             // Set the make and model
             t = ifd.getEntryRecursive(TagType.MAKE);
@@ -152,18 +195,18 @@ namespace RawNet
                 string model = t2.DataAsString;
                 make = make.Trim();
                 model = model.Trim();
-                mRaw.metadata.make = make;
-                mRaw.metadata.model = model;
-                mRaw.metadata.canonical_make = make;
-                mRaw.metadata.canonical_model = mRaw.metadata.canonical_alias = model;
+                rawImage.metadata.make = make;
+                rawImage.metadata.model = model;
+                rawImage.metadata.canonical_make = make;
+                rawImage.metadata.canonical_model = rawImage.metadata.canonical_alias = model;
                 t = ifd.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
                 if (t != null)
                 {
-                    mRaw.metadata.canonical_id = t.DataAsString;
+                    rawImage.metadata.canonical_id = t.DataAsString;
                 }
                 else
                 {
-                    mRaw.metadata.canonical_id = make + " " + model;
+                    rawImage.metadata.canonical_id = make + " " + model;
                 }
             }
         }
