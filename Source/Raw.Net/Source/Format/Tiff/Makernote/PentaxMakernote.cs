@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace RawNet
@@ -29,7 +30,21 @@ namespace RawNet
             uint TIFFoffset = buffer.ReadUInt32();
             buffer.BaseStream.Position = TIFFoffset;
             //offset are from the start of the tag
-            Parse(buffer,true);
+            tagNumber = buffer.ReadUInt16();
+
+            for (int i = 0; i < tagNumber; i++)
+            {
+                long tagPos = buffer.BaseStream.Position;
+                Tag temp = new Tag(buffer, (int)tagPos + 6);
+                if (!tags.ContainsKey(temp.TagId))
+                {
+                    tags.Add(temp.TagId, temp);
+                }
+                else
+                {
+                    Debug.WriteLine("tags already exist");
+                }
+            }
         }
     }
 }
