@@ -96,7 +96,7 @@ namespace RawNet
         {
             byte[] buffer = ReadBytes(2);
 
-            Debug.WriteLine(buffer[0] + " " + buffer[1]);
+            //Debug.WriteLine(buffer[0] + " " + buffer[1]);
             this.BaseStream.Position -= 1;
             int c = 0;
             while (!(buffer[0] == 0xFF && buffer[1] != 0 && buffer[1] != 0xFF))
@@ -104,14 +104,14 @@ namespace RawNet
                 buffer = ReadBytes(2);
                 this.BaseStream.Position -= 1;
 
-                Debug.WriteLine(buffer[0] + " " + buffer[1]);
+                //Debug.WriteLine(buffer[0] + " " + buffer[1]);
                 c++;
 
                 if (this.Position >= this.BaseStream.Length)
                     throw new IOException("No marker found inside rest of buffer");
             }
             this.BaseStream.Position -= 1;
-            Debug.WriteLine(0, "Skipped " + c + " bytes.");
+            //Debug.WriteLine(0, "Skipped " + c + " bytes.");
         }
 
         public int getRemainSize() { return (int)(this.BaseStream.Length - this.Position); }

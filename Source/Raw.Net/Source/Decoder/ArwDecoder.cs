@@ -277,7 +277,7 @@ namespace RawNet
                         if (len != 0 && (diff & (1 << (int)(len - 1))) == 0)
                             diff -= (uint)(1 << (int)len) - 1;
                         sum += (int)diff;
-                        Debug.Assert((sum >> 12) == 0);
+                       // Debug.Assert((sum >> 12) == 0);
                         if (y < h) dest[x + y * pitch] = (ushort)sum;
                     }
                 }

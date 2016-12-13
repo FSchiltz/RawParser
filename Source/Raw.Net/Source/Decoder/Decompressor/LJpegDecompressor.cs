@@ -498,7 +498,7 @@ namespace RawNet
             input.skipToMarker();
             byte id = input.ReadByte();
             //TODO change
-            Debug.Assert(0xff == id);
+            //Debug.Assert(0xff == id);
             JpegMarker mark = (JpegMarker)input.ReadByte();
             return mark;
         }
