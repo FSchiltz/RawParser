@@ -5,8 +5,8 @@ namespace RawNet
 {
     public class RawParser
     {
-        private Stream stream;
-        public RawDecoder decoder;
+        //private Stream stream;
+        //public RawDecoder decoder;
         /*
         bool failOnUnknown = false;
         bool interpolateBadPixels = true;
@@ -15,7 +15,7 @@ namespace RawNet
         bool uncorrectedRawValues = false;
         bool fujiRotate = true;
         int decoderVersion = 0;*/
-
+        /*
         public RawParser(ref Stream s, CameraMetaData metaData, string extension)
         {
             stream = s;
@@ -25,9 +25,10 @@ namespace RawNet
             decoder = GetDecoder(metaData);
             //init the correct parser
             // Init();
-        }
+        }*/
 
-        public RawDecoder GetDecoder(CameraMetaData meta)
+
+        public RawDecoder GetDecoder(Stream stream, CameraMetaData meta)
         {
             // We need some data.
             // For now it is 104 bytes for RAF images.
@@ -142,11 +143,11 @@ namespace RawNet
                 throw new Exception("No decoder found. Sorry.");
             }
 
-            */
+
             // Ordinary TIFF images
             try
             {
-                TiffParser p = new TiffParser(stream, meta);
+                TiffParser p = new TiffParser(ref stream, meta);
                 p.parseData();
                 return p.getDecoder();
             }
@@ -177,30 +178,73 @@ namespace RawNet
             }
             */
 
-            /*
-            // Detect camera on filesize (CHDK).
-            if (meta != null && meta.hasChdkCamera(Math.Min((put.getSize())) {
-                Camera* c = meta.getChdkCamera(Math.Min((put.getSize());
 
+            // Detect camera on filesize (CHDK).
+            if (meta != null && meta.hasChdkCamera((uint)stream.Length))
+            {
+                Camera c = meta.getChdkCamera((uint)stream.Length);
                 try
                 {
-                    return new NakedDecoder(ref stream, c);
+                    return new NakedDecoder(ref stream, c, meta);
                 }
                 catch (RawDecoderException)
                 {
                 }
-            }*/
+            }
 
             //try jpeg file
             try
             {
-                return new JPGParser(new TIFFBinaryReader(stream), meta);
+                return new JPGDecoder(ref stream, meta);
             }
             catch (TiffParserException)
             {
             }
             // File could not be decoded, so no further options for now.
             throw new FormatException("No decoder found. Sorry.");
+        }
+
+
+        public static RawDecoder GetDecoder(ref Stream stream, CameraMetaData metadata, string fileType)
+        {
+            switch (fileType.ToUpper())
+            {
+                //TIFF based raw
+                case ".NEF":
+                    return new NefDecoder(ref stream, metadata);
+                case ".CR2":
+                    return new Cr2Decoder(ref stream, metadata);
+                case ".TIFF":
+                case ".TIF":
+                    return new TiffDecoder(ref stream, metadata);
+                case ".ARW":
+                    return new ArwDecoder(ref stream, metadata);
+                case ".PEF":
+                    return new PefDecoder(ref stream, metadata);
+                case ".DNG":
+                    return new DngDecoder(ref stream, metadata);
+                    break;
+
+                //other raw format
+                case ".JPG":
+                case ".JPEG":
+                case ".PNG":
+                    return new JPGDecoder(ref stream, metadata);
+                default:
+                    // Detect camera on filesize (CHDK).
+                    if (metadata != null && metadata.hasChdkCamera((uint)stream.Length))
+                    {
+                        Camera c = metadata.getChdkCamera((uint)stream.Length);
+                        try
+                        {
+                            return new NakedDecoder(ref stream, c, metadata);
+                        }
+                        catch (RawDecoderException)
+                        {
+                        }
+                    }
+                    throw new RawDecoderException("No decoder found sorry");
+            }
         }
 
         /* Parse FUJI information */

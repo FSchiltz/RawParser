@@ -20,43 +20,43 @@ namespace RawNet
      * This will decode all image supportedby the windows parser 
      * Should be a last resort parser
      */
-    internal class JPGParser : RawDecoder
+    internal class JPGDecoder : RawDecoder
     {
         IRandomAccessStream stream;
         BitmapPropertiesView meta;
 
-        public JPGParser(TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
+        public JPGDecoder(ref Stream file, CameraMetaData meta) : base(meta)
         {
-
+            stream = file.AsRandomAccessStream();
         }
 
         protected override void checkSupportInternal()
         {
-            stream = file.BaseStream.AsRandomAccessStream();
+            stream = reader.BaseStream.AsRandomAccessStream();
 
         }
 
         protected override void decodeMetaDataInternal()
         {
             //fill useless metadata
-            mRaw.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
+            rawImage.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
             List<string> list = new List<string>();
             list.Add("/app1/ifd/{ushort=271}");
             var metaList = meta.GetPropertiesAsync(list);
             metaList.AsTask().Wait();
             if (metaList.GetResults() != null)
             {
-                metaList.GetResults().TryGetValue("",out var make );
-                mRaw.metadata.make = make?.Value.ToString();
+                metaList.GetResults().TryGetValue("", out var make);
+                rawImage.metadata.make = make?.Value.ToString();
             }
         }
 
         protected override RawImage decodeRawInternal()
         {
-            mRaw.ColorDepth = 8;
-            mRaw.cpp = 3;
-            mRaw.bpp = 8;
-            var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, file.BaseStream.AsRandomAccessStream()).AsTask();
+            rawImage.ColorDepth = 8;
+            rawImage.cpp = 3;
+            rawImage.bpp = 8;
+            var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, reader.BaseStream.AsRandomAccessStream()).AsTask();
 
             decoder.Wait();
 
@@ -69,30 +69,30 @@ namespace RawNet
                 using (var reference = buffer.CreateReference())
                 {
                     BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-                    mRaw.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);
-                    mRaw.Init();
+                    rawImage.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);
+                    rawImage.Init();
                     unsafe
                     {
                         ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
 
-                        for (int y = 0; y < mRaw.dim.y; y++)
+                        for (int y = 0; y < rawImage.dim.y; y++)
                         {
-                            int realY = y * mRaw.dim.x * 3;
-                            int bufferY = y * mRaw.dim.x * 4 + +bufferLayout.StartIndex;
-                            for (int x = 0; x < mRaw.dim.x; x++)
+                            int realY = y * rawImage.dim.x * 3;
+                            int bufferY = y * rawImage.dim.x * 4 + +bufferLayout.StartIndex;
+                            for (int x = 0; x < rawImage.dim.x; x++)
                             {
                                 int realPix = realY + (3 * x);
                                 int bufferPix = bufferY + (4 * x);
-                                mRaw.rawData[realPix] = temp[bufferPix + 2];
-                                mRaw.rawData[realPix + 1] = temp[bufferPix + 1];
-                                mRaw.rawData[realPix + 2] = temp[bufferPix];
+                                rawImage.rawData[realPix] = temp[bufferPix + 2];
+                                rawImage.rawData[realPix + 1] = temp[bufferPix + 1];
+                                rawImage.rawData[realPix + 2] = temp[bufferPix];
                             }
 
                         }
                     }
                 }
             }
-            return mRaw;
+            return rawImage;
         }
     }
 }

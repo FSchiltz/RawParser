@@ -18,7 +18,7 @@ namespace RawNet
 
         /* The decoded image - undefined if image has not or could not be decoded. */
         /* Remember this is automatically refcounted, so a reference is retained until this class is destroyed */
-        public RawImage mRaw;
+        public RawImage rawImage;
 
         /* Set how to handle bad pixels. */
         /* If you disable this parameter, no bad pixel interpolation will be done */
@@ -43,7 +43,7 @@ namespace RawNet
         }
 
         /* The Raw input file to be decoded */
-        protected TIFFBinaryReader file;
+        protected TIFFBinaryReader reader;
 
         /* Decoder version - defaults to 0, but can be overridden by decoders */
         /* This can be used to avoid newer version of an xml file to indicate that a file */
@@ -60,10 +60,9 @@ namespace RawNet
         /* Construct decoder instance - FileMap is a filemap of the file to be decoded */
         /* The FileMap is not owned by this class, will not be deleted, and must remain */
         /* valid while this object exists */
-        public RawDecoder(ref TIFFBinaryReader file, CameraMetaData metaData)
+        public RawDecoder(CameraMetaData metaData)
         {
-            mRaw = new RawImage();
-            this.file = file;
+            rawImage = new RawImage();
             decoderVersion = 0;
             interpolateBadPixels = false;
             applyStage1DngOpcodes = true;
@@ -156,25 +155,25 @@ namespace RawNet
 
                 offY += yPerSlice;
 
-                if (file.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                if (reader.isValid(slice.offset, slice.count)) // Only decode if size is valid
                     slices.Add(slice);
             }
 
             if (0 == slices.Count)
                 throw new RawDecoderException("RAW Decoder: No valid slices found. File probably truncated.");
 
-            mRaw.dim.x = width;
-            mRaw.dim.y = (int)offY;
-            mRaw.whitePoint = (uint)(1 << bitPerPixel) - 1;
+            rawImage.dim.x = width;
+            rawImage.dim.y = (int)offY;
+            rawImage.whitePoint = (uint)(1 << bitPerPixel) - 1;
 
             offY = 0;
             for (int i = 0; i < slices.Count; i++)
             {
                 RawSlice slice = slices[i];
-                var stream = file.BaseStream;
+                var stream = reader.BaseStream;
                 TIFFBinaryReader input;
-                if (file is TIFFBinaryReaderRE) input = new TIFFBinaryReaderRE(file.BaseStream, slice.offset, slice.count);
-                else input = new TIFFBinaryReader(file.BaseStream, slice.offset, slice.count);
+                if (reader is TIFFBinaryReaderRE) input = new TIFFBinaryReaderRE(reader.BaseStream, slice.offset, slice.count);
+                else input = new TIFFBinaryReader(reader.BaseStream, slice.offset, slice.count);
                 Point2D size = new Point2D(width, (int)slice.h);
                 Point2D pos = new Point2D(0, (int)offY);
                 bitPerPixel = (int)(slice.count * 8u / (slice.h * width));
@@ -326,13 +325,13 @@ namespace RawNet
 
         protected unsafe void readUncompressedRaw(ref TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch, int bitPerPixel, BitOrder order)
         {
-            fixed (ushort* d = mRaw.rawData)
+            fixed (ushort* d = rawImage.rawData)
             {
                 byte* data = (byte*)d;
-                uint outPitch = mRaw.pitch;
+                uint outPitch = rawImage.pitch;
                 int w = size.x;
                 int h = size.y;
-                uint cpp = mRaw.cpp;
+                uint cpp = rawImage.cpp;
                 int ox = offset.x;
                 int oy = offset.y;
 
@@ -341,7 +340,7 @@ namespace RawNet
                     if ((int)input.getRemainSize() > inputPitch)
                     {
                         h = input.getRemainSize() / inputPitch - 1;
-                        mRaw.errors.Add("Image truncated (file is too short)");
+                        rawImage.errors.Add("Image truncated (file is too short)");
                     }
                     else
                         throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -350,13 +349,13 @@ namespace RawNet
                     throw new RawDecoderException("readUncompressedRaw: Unsupported bit depth");
 
                 uint skipBits = (uint)(inputPitch - w * cpp * bitPerPixel / 8);  // Skip per line
-                if (oy > mRaw.dim.y)
+                if (oy > rawImage.dim.y)
                     throw new RawDecoderException("readUncompressedRaw: Invalid y offset");
-                if (ox + size.x > mRaw.dim.x)
+                if (ox + size.x > rawImage.dim.x)
                     throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
 
                 int y = oy;
-                h = (int)Math.Min(h + oy, (uint)mRaw.dim.y);
+                h = (int)Math.Min(h + oy, (uint)rawImage.dim.y);
 
                 /*if (mRaw.getDataType() == TYPE_FLOAT32)
                 {
@@ -377,7 +376,7 @@ namespace RawNet
                         for (uint x = 0; x < w; x++)
                         {
                             uint b = bits.getBits((uint)bitPerPixel);
-                            mRaw.rawData[x + (offset.x * cpp + y * mRaw.dim.x * cpp)] = (ushort)b;
+                            rawImage.rawData[x + (offset.x * cpp + y * rawImage.dim.x * cpp)] = (ushort)b;
                         }
                         bits.skipBits(skipBits);
                     }
@@ -445,14 +444,14 @@ namespace RawNet
 
         protected void Decode8BitRaw(ref TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
-            ushort[] data = mRaw.rawData;
-            UInt32 pitch = mRaw.pitch;
+            ushort[] data = rawImage.rawData;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < w * h)
             {
                 if ((UInt32)input.getRemainSize() > w)
                 {
                     h = (uint)(input.getRemainSize() / w - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("Decode8BitRaw: Not enough data to decode a single line. Image file truncated.");
@@ -463,7 +462,7 @@ namespace RawNet
             {
                 for (UInt32 x = 0; x < w; x += 1)
                 {
-                    mRaw.setWithLookUp(input.ReadByte(), ref mRaw.rawData, x, ref random);
+                    rawImage.setWithLookUp(input.ReadByte(), ref rawImage.rawData, x, ref random);
                     input.Position++;
                 }
             }
@@ -472,14 +471,14 @@ namespace RawNet
         protected void Decode12BitRaw(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
 
             if (input.getRemainSize() < ((w * 12 / 8) * h))
             {
                 if ((UInt32)input.getRemainSize() > (w * 12 / 8))
                 {
                     h = (uint)(input.getRemainSize() / (w * 12 / 8) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -490,9 +489,9 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[(y * pitch) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                    rawImage.rawData[(y * pitch) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     UInt32 g3 = input.ReadByte();
-                    mRaw.rawData[(y * pitch) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                    rawImage.rawData[(y * pitch) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                 }
             }
         }
@@ -501,7 +500,7 @@ namespace RawNet
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
 
             // Calulate expected bytes per line.
             UInt32 perline = (w * 12 / 8);
@@ -514,7 +513,7 @@ namespace RawNet
                 if ((UInt32)input.getRemainSize() > perline)
                 {
                     h = (uint)(input.getRemainSize() / perline - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                 {
@@ -529,9 +528,9 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[(y * pitch) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                    rawImage.rawData[(y * pitch) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     UInt32 g3 = input.ReadByte();
-                    mRaw.rawData[(y * pitch) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                    rawImage.rawData[(y * pitch) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                     if ((x % 10) == 8) input.Position++;
                 }
             }
@@ -541,7 +540,7 @@ namespace RawNet
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
 
             // Calulate expected bytes per line.
             UInt32 perline = (w * 12 / 8);
@@ -554,7 +553,7 @@ namespace RawNet
                 if ((UInt32)input.getRemainSize() > perline)
                 {
                     h = (uint)(input.getRemainSize() / perline - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                 {
@@ -569,9 +568,9 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[(y * pitch) + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.rawData[(y * pitch) + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     UInt32 g3 = input.ReadByte();
-                    mRaw.rawData[(y * pitch) + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.rawData[(y * pitch) + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                     if ((x % 10) == 8) input.Position++;
                 }
             }
@@ -581,13 +580,13 @@ namespace RawNet
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < ((w * 12 / 8) * h))
             {
                 if ((UInt32)input.getRemainSize() > (w * 12 / 8))
                 {
                     h = (uint)(input.getRemainSize() / (w * 12 / 8) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -598,9 +597,9 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.rawData[y * pitch + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     UInt32 g3 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.rawData[y * pitch + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
@@ -609,13 +608,13 @@ namespace RawNet
         {
             if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < ((w * 12 / 8) * h))
             {
                 if ((UInt32)input.getRemainSize() > (w * 12 / 8))
                 {
                     h = (uint)(input.getRemainSize() / (w * 12 / 8) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -638,22 +637,22 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.rawData[y * pitch + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     UInt32 g3 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.rawData[y * pitch + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
 
         protected void Decode12BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < w * h * 2)
             {
                 if ((UInt32)input.getRemainSize() > w * 2)
                 {
                     h = (uint)(input.getRemainSize() / (w * 2) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -664,20 +663,20 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
+                    rawImage.rawData[y * pitch + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
                 }
             }
         }
 
         protected void Decode12BitRawBEunpackedLeftAligned(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < w * h * 2)
             {
                 if ((UInt32)input.getRemainSize() > w * 2)
                 {
                     h = (uint)(input.getRemainSize() / (w * 2) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -688,20 +687,20 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x] = (ushort)(((g1 << 8) | (g2 & 0xf0)) >> 4);
+                    rawImage.rawData[y * pitch + x] = (ushort)(((g1 << 8) | (g2 & 0xf0)) >> 4);
                 }
             }
         }
 
         protected void Decode14BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < w * h * 2)
             {
                 if ((UInt32)input.getRemainSize() > w * 2)
                 {
                     h = (uint)(input.getRemainSize() / (w * 2) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -712,20 +711,20 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x] = (ushort)(((g1 & 0x3f) << 8) | g2);
+                    rawImage.rawData[y * pitch + x] = (ushort)(((g1 & 0x3f) << 8) | g2);
                 }
             }
         }
 
         protected void Decode16BitRawUnpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < w * h * 2)
             {
                 if ((UInt32)input.getRemainSize() > w * 2)
                 {
                     h = (uint)(input.getRemainSize() / (w * 2) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -736,20 +735,20 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x] = (ushort)((g2 << 8) | g1);
+                    rawImage.rawData[y * pitch + x] = (ushort)((g2 << 8) | g1);
                 }
             }
         }
 
         protected void Decode16BitRawBEunpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < w * h * 2)
             {
                 if ((UInt32)input.getRemainSize() > w * 2)
                 {
                     h = (uint)(input.getRemainSize() / (w * 2) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -760,20 +759,20 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x] = (ushort)((g1 << 8) | g2);
+                    rawImage.rawData[y * pitch + x] = (ushort)((g1 << 8) | g2);
                 }
             }
         }
 
         protected void Decode12BitRawUnpacked(TIFFBinaryReader input, UInt32 w, UInt32 h)
         {
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < w * h * 2)
             {
                 if ((UInt32)input.getRemainSize() > w * 2)
                 {
                     h = (uint)(input.getRemainSize() / (w * 2) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
@@ -784,7 +783,7 @@ namespace RawNet
                 {
                     UInt32 g1 = input.ReadByte();
                     UInt32 g2 = input.ReadByte();
-                    mRaw.rawData[y * pitch + x] = (ushort)(((g2 << 8) | g1) >> 4);
+                    rawImage.rawData[y * pitch + x] = (ushort)(((g2 << 8) | g1) >> 4);
                 }
             }
         }
@@ -793,8 +792,8 @@ namespace RawNet
         {
             make = make.Trim();
             model = model.Trim();
-            mRaw.metadata.make = make;
-            mRaw.metadata.model = model;
+            rawImage.metadata.make = make;
+            rawImage.metadata.model = model;
             Camera cam = meta.getCamera(make, model, mode);
             if (cam == null)
             {
@@ -819,7 +818,7 @@ namespace RawNet
 
         protected void setMetaData(CameraMetaData meta, string make, string model, string mode, int iso_speed)
         {
-            mRaw.metadata.isoSpeed = iso_speed;
+            rawImage.metadata.isoSpeed = iso_speed;
             make = make.Trim();
             model = model.Trim();
             Camera cam = meta.getCamera(make, model, mode);
@@ -830,14 +829,14 @@ namespace RawNet
                 return;
             }
 
-            mRaw.cfa = cam.cfa;
-            mRaw.metadata.canonical_make = cam.canonical_make;
-            mRaw.metadata.canonical_model = cam.canonical_model;
-            mRaw.metadata.canonical_alias = cam.canonical_alias;
-            mRaw.metadata.canonical_id = cam.canonical_id;
-            mRaw.metadata.make = make;
-            mRaw.metadata.model = model;
-            mRaw.metadata.mode = mode;
+            rawImage.cfa = cam.cfa;
+            rawImage.metadata.canonical_make = cam.canonical_make;
+            rawImage.metadata.canonical_model = cam.canonical_model;
+            rawImage.metadata.canonical_alias = cam.canonical_alias;
+            rawImage.metadata.canonical_id = cam.canonical_id;
+            rawImage.metadata.make = make;
+            rawImage.metadata.model = model;
+            rawImage.metadata.mode = mode;
 
             if (applyCrop)
             {
@@ -845,40 +844,40 @@ namespace RawNet
 
                 // If crop size is negative, use relative cropping
                 if (new_size.x <= 0)
-                    new_size.x = mRaw.dim.x - cam.cropPos.x + new_size.x;
+                    new_size.x = rawImage.dim.x - cam.cropPos.x + new_size.x;
 
                 if (new_size.y <= 0)
-                    new_size.y = mRaw.dim.y - cam.cropPos.y + new_size.y;
+                    new_size.y = rawImage.dim.y - cam.cropPos.y + new_size.y;
 
-                mRaw.subFrame(new Rectangle2D(cam.cropPos, new_size));
+                rawImage.subFrame(new Rectangle2D(cam.cropPos, new_size));
 
 
                 // Shift CFA to match crop
-                mRaw.UncroppedCfa = new ColorFilterArray(mRaw.cfa);
+                rawImage.UncroppedCfa = new ColorFilterArray(rawImage.cfa);
                 if ((cam.cropPos.x & 1) != 0)
-                    mRaw.cfa.shiftLeft(0);
+                    rawImage.cfa.shiftLeft(0);
                 if ((cam.cropPos.y & 1) != 0)
-                    mRaw.cfa.shiftDown(0);
+                    rawImage.cfa.shiftDown(0);
             }
 
             CameraSensorInfo sensor = cam.getSensorInfo(iso_speed);
-            mRaw.blackLevel = sensor.blackLevel;
-            mRaw.whitePoint = (uint)sensor.whiteLevel;
-            mRaw.blackAreas = cam.blackAreas;
-            if (mRaw.blackAreas.Count == 0 && sensor.mBlackLevelSeparate.Count != 0)
+            rawImage.blackLevel = sensor.blackLevel;
+            rawImage.whitePoint = (uint)sensor.whiteLevel;
+            rawImage.blackAreas = cam.blackAreas;
+            if (rawImage.blackAreas.Count == 0 && sensor.mBlackLevelSeparate.Count != 0)
             {
-                if (mRaw.isCFA && mRaw.cfa.size.area() <= sensor.mBlackLevelSeparate.Count)
+                if (rawImage.isCFA && rawImage.cfa.size.area() <= sensor.mBlackLevelSeparate.Count)
                 {
-                    for (UInt32 i = 0; i < mRaw.cfa.size.area(); i++)
+                    for (UInt32 i = 0; i < rawImage.cfa.size.area(); i++)
                     {
-                        mRaw.blackLevelSeparate[i] = sensor.mBlackLevelSeparate[(int)i];
+                        rawImage.blackLevelSeparate[i] = sensor.mBlackLevelSeparate[(int)i];
                     }
                 }
-                else if (!mRaw.isCFA && mRaw.cpp <= sensor.mBlackLevelSeparate.Count)
+                else if (!rawImage.isCFA && rawImage.cpp <= sensor.mBlackLevelSeparate.Count)
                 {
-                    for (UInt32 i = 0; i < mRaw.cpp; i++)
+                    for (UInt32 i = 0; i < rawImage.cpp; i++)
                     {
-                        mRaw.blackLevelSeparate[i] = sensor.mBlackLevelSeparate[(int)i];
+                        rawImage.blackLevelSeparate[i] = sensor.mBlackLevelSeparate[(int)i];
                     }
                 }
             }
@@ -894,13 +893,13 @@ namespace RawNet
                 var v = rgb.Split(',');
                 if (v.Length != 4)
                 {
-                    mRaw.errors.Add("Expected 4 values '10,20,30,20' as values for override_cfa_black hint.");
+                    rawImage.errors.Add("Expected 4 values '10,20,30,20' as values for override_cfa_black hint.");
                 }
                 else
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        mRaw.blackLevelSeparate[i] = Int32.Parse(v[i]);
+                        rawImage.blackLevelSeparate[i] = Int32.Parse(v[i]);
                     }
                 }
             }

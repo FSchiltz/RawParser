@@ -8,10 +8,10 @@ namespace RawNet
     {
         Camera cam;
 
-        NakedDecoder(ref Stream file, Camera c, CameraMetaData meta) : base(meta)
+        public NakedDecoder(ref Stream file, Camera c, CameraMetaData meta) : base(meta)
         {
             cam = c;
-            this.file = new TIFFBinaryReader(file);
+            this.reader = new TIFFBinaryReader(file);
         }
 
 
@@ -72,13 +72,13 @@ namespace RawNet
                 }
             }
 
-            mRaw.dim = new Point2D((int)width, (int)height);
-            mRaw.Init();
-            file = new TIFFBinaryReader(file.BaseStream, offset, (uint)file.BaseStream.Length);
+            rawImage.dim = new Point2D((int)width, (int)height);
+            rawImage.Init();
+            reader = new TIFFBinaryReader(reader.BaseStream, offset, (uint)reader.BaseStream.Length);
             Point2D pos = new Point2D(0, 0);
-            readUncompressedRaw(ref file, mRaw.dim, pos, (int)(width * bits / 8), (int)bits, bo);
+            readUncompressedRaw(ref reader, rawImage.dim, pos, (int)(width * bits / 8), (int)bits, bo);
 
-            return mRaw;
+            return rawImage;
         }
 
         protected override void checkSupportInternal()

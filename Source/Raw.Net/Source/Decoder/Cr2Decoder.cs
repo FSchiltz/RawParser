@@ -12,14 +12,12 @@ namespace RawNet
         public UInt32 count;
     };
 
-    internal class Cr2Decoder : RawDecoder
+    internal class Cr2Decoder : TiffDecoder
     {
-        int[] sraw_coeffs = new int[3];
-        IFD rootIFD;
+        int[] sraw_coeffs = new int[3];      
 
-        public Cr2Decoder(IFD rootIFD, TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
+        public Cr2Decoder(ref Stream file, CameraMetaData meta) : base(ref file, meta)
         {
-            this.rootIFD = (rootIFD);
             decoderVersion = 6;
         }
 
@@ -29,7 +27,7 @@ namespace RawNet
         protected override Thumbnail decodeThumbInternal()
         {
             //find the preview ifd (ifd1 for thumb)(IFD0 is better, bigger preview buut too big and slow for now)
-            IFD preview = rootIFD.getIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)[0];
+            IFD preview = ifd.getIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)[0];
             //no thumbnail
             if (preview == null) return null;
 
@@ -38,10 +36,10 @@ namespace RawNet
             if (size == null || thumb == null) return null;
 
 
-            file.Position = (uint)(thumb.data[0]);
+            reader.Position = (uint)(thumb.data[0]);
             Thumbnail temp = new Thumbnail()
             {
-                data = file.ReadBytes(Convert.ToInt32(size.data[0])),
+                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
                 type = ThumbnailType.JPEG,
                 dim = new Point2D()
             };
@@ -53,12 +51,12 @@ namespace RawNet
             if (hints.ContainsKey("old_format"))
             {
                 UInt32 off = 0;
-                var t = rootIFD.getEntryRecursive((TagType)0x81);
+                var t = ifd.getEntryRecursive((TagType)0x81);
                 if (t != null)
                     off = t.getUInt();
                 else
                 {
-                    List<IFD> data2 = rootIFD.getIFDsWithTag(TagType.CFAPATTERN);
+                    List<IFD> data2 = ifd.getIFDsWithTag(TagType.CFAPATTERN);
                     if (data2.Count == 0)
                         throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
                     else
@@ -70,7 +68,7 @@ namespace RawNet
                     }
                 }
 
-                var b = new TIFFBinaryReader(file.BaseStream, off + 41, (uint)file.BaseStream.Length);
+                var b = new TIFFBinaryReader(reader.BaseStream, off + 41, (uint)reader.BaseStream.Length);
 
                 UInt32 height = (uint)b.ReadInt16();
                 UInt32 width = (uint)b.ReadInt16();
@@ -80,23 +78,23 @@ namespace RawNet
                 if (hints.ContainsKey("double_line_ljpeg"))
                 {
                     height *= 2;
-                    mRaw.dim = new Point2D((int)width * 2, (int)height / 2);
+                    rawImage.dim = new Point2D((int)width * 2, (int)height / 2);
                 }
                 else
                 {
                     width *= 2;
-                    mRaw.dim = new Point2D((int)width, (int)height);
+                    rawImage.dim = new Point2D((int)width, (int)height);
                 }
 
-                mRaw.Init();
-                LJpegPlain l = new LJpegPlain(file, mRaw);
+                rawImage.Init();
+                LJpegPlain l = new LJpegPlain(reader, rawImage);
                 try
                 {
-                    l.startDecoder(off, (uint)(file.BaseStream.Length - off), 0, 0);
+                    l.startDecoder(off, (uint)(reader.BaseStream.Length - off), 0, 0);
                 }
                 catch (IOException e)
                 {
-                    mRaw.errors.Add(e.Message);
+                    rawImage.errors.Add(e.Message);
                 }
 
                 if (hints.ContainsKey("double_line_ljpeg"))
@@ -109,28 +107,28 @@ namespace RawNet
                         dim = final_size
                     };
                     procRaw.Init();
-                    procRaw.metadata = mRaw.metadata;
+                    procRaw.metadata = rawImage.metadata;
                     //procRaw.copyErrorsFrom(mRaw);
 
                     for (UInt32 y = 0; y < height; y++)
                     {
                         for (UInt32 x = 0; x < width; x++)
-                            procRaw.rawData[x] = mRaw.rawData[((y % 2 == 0) ? 0 : width) + x];
+                            procRaw.rawData[x] = rawImage.rawData[((y % 2 == 0) ? 0 : width) + x];
                     }
-                    mRaw = procRaw;
+                    rawImage = procRaw;
                 }
 
-                var tv = rootIFD.getEntryRecursive((TagType)0x123);
+                var tv = ifd.getEntryRecursive((TagType)0x123);
                 if (tv != null)
                 {
-                    Tag curve = rootIFD.getEntryRecursive((TagType)0x123);
+                    Tag curve = ifd.getEntryRecursive((TagType)0x123);
                     if (curve.dataType == TiffDataType.SHORT && curve.dataCount == 4096)
                     {
-                        Tag linearization = rootIFD.getEntryRecursive((TagType)0x123);
+                        Tag linearization = ifd.getEntryRecursive((TagType)0x123);
                         UInt32 len = linearization.dataCount;
                         linearization.getShortArray(out var table, (int)len);
 
-                        mRaw.setTable(table, 4096, true);
+                        rawImage.setTable(table, 4096, true);
                         // Apply table
                         //mRaw.sixteenBitLookup();
                         // Delete table
@@ -139,17 +137,17 @@ namespace RawNet
                     }
                 }
 
-                return mRaw;
+                return rawImage;
             }
 
-            List<IFD> data = rootIFD.getIFDsWithTag((TagType)0xc5d8);
+            List<IFD> data = ifd.getIFDsWithTag((TagType)0xc5d8);
 
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Decoder: No image data found");
 
 
             IFD raw = data[0];
-            mRaw = new RawImage()
+            rawImage = new RawImage()
             {
                 isCFA = true
             };
@@ -157,7 +155,7 @@ namespace RawNet
             List<Cr2Slice> slices = new List<Cr2Slice>();
             int completeH = 0;
             bool doubleHeight = false;
-            mRaw.ColorDepth = 14;
+            rawImage.ColorDepth = 14;
             try
             {
                 Tag offsets = raw.getEntry(TagType.STRIPOFFSETS);
@@ -171,7 +169,7 @@ namespace RawNet
                         count = Convert.ToUInt32(counts.data[s])
                     };
                     SOFInfo sof = new SOFInfo();
-                    LJpegPlain l = new LJpegPlain(file, mRaw);
+                    LJpegPlain l = new LJpegPlain(reader, rawImage);
                     l.getSOF(ref sof, slice.offset, slice.count);
                     slice.w = sof.w * sof.cps;
                     slice.h = sof.h;
@@ -183,7 +181,7 @@ namespace RawNet
                         if (slices[0].w != slice.w)
                             throw new RawDecoderException("CR2 Decoder: Slice width does not match.");
 
-                    if (file.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                    if (reader.isValid(slice.offset, slice.count)) // Only decode if size is valid
                         slices.Add(slice);
                     completeH += (int)slice.h;
                 }
@@ -202,7 +200,7 @@ namespace RawNet
             {
                 throw new RawDecoderException("CR2 Decoder: No Slices found.");
             }
-            mRaw.dim = new Point2D((int)slices[0].w, completeH);
+            rawImage.dim = new Point2D((int)slices[0].w, completeH);
 
             // Fix for Canon 6D mRaw, which has flipped width & height for some part of the image
             // In that case, we swap width and height, since this is the correct dimension
@@ -214,9 +212,9 @@ namespace RawNet
                 // sRaw
                 if (ss == 4)
                 {
-                    mRaw.dim.x /= 3;
-                    mRaw.cpp = (3);
-                    mRaw.isCFA = false;
+                    rawImage.dim.x /= 3;
+                    rawImage.cpp = (3);
+                    rawImage.isCFA = false;
                     // Fix for Canon 80D mraw format.
                     // In that format, the frame (as read by getSOF()) is 4032x3402, while the
                     // real image should be 4536x3024 (where the full vertical slices in
@@ -226,23 +224,23 @@ namespace RawNet
                         wrappedCr2Slices = true;
                         int w = raw.getEntry(TagType.IMAGEWIDTH).getInt();
                         int h = raw.getEntry(TagType.IMAGELENGTH).getInt();
-                        if (w * h != mRaw.dim.x * mRaw.dim.y)
+                        if (w * h != rawImage.dim.x * rawImage.dim.y)
                         {
                             throw new RawDecoderException("CR2 Decoder: Wrapped slices don't match image size");
                         }
-                        mRaw.dim = new Point2D(w, h);
+                        rawImage.dim = new Point2D(w, h);
                     }
                 }
-                flipDims = mRaw.dim.x < mRaw.dim.y;
+                flipDims = rawImage.dim.x < rawImage.dim.y;
                 if (flipDims)
                 {
-                    int w = mRaw.dim.x;
-                    mRaw.dim.x = mRaw.dim.y;
-                    mRaw.dim.y = w;
+                    int w = rawImage.dim.x;
+                    rawImage.dim.x = rawImage.dim.y;
+                    rawImage.dim.y = w;
                 }
             }
 
-            mRaw.Init();
+            rawImage.Init();
 
             List<int> s_width = new List<int>();
             if (raw.hasEntry(TagType.CANONCR2SLICE))
@@ -268,7 +266,7 @@ namespace RawNet
                 Cr2Slice slice = slices[i];
                 try
                 {
-                    LJpegPlain l = new LJpegPlain(file, mRaw);
+                    LJpegPlain l = new LJpegPlain(reader, rawImage);
                     l.addSlices(s_width);
                     l.mUseBigtable = true;
                     l.mCanonFlipDim = flipDims;
@@ -281,12 +279,12 @@ namespace RawNet
                     if (i == 0)
                         throw new Exception();
                     // These may just be single slice error - store the error and move on
-                    mRaw.errors.Add(e.Message);
+                    rawImage.errors.Add(e.Message);
                 }
                 catch (IOException e)
                 {
                     // Let's try to ignore this - it might be truncated data, so something might be useful.
-                    mRaw.errors.Add(e.Message);
+                    rawImage.errors.Add(e.Message);
                 }
                 offY += slice.w;
             }
@@ -295,12 +293,12 @@ namespace RawNet
             if (mRaw.metadata.subsampling.x > 1 || mRaw.metadata.subsampling.y > 1)
                 sRawInterpolate();*/
 
-            return mRaw;
+            return rawImage;
         }
 
         protected override void checkSupportInternal()
         {
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Support check: Model name not found");
             if (!data[0].hasEntry(TagType.MAKE))
@@ -309,7 +307,7 @@ namespace RawNet
             string model = data[0].getEntry(TagType.MODEL).DataAsString;
 
             // Check for sRaw mode
-            data = rootIFD.getIFDsWithTag((TagType)0xc5d8);
+            data = ifd.getIFDsWithTag((TagType)0xc5d8);
             if (data.Count != 0)
             {
                 IFD raw = data[0];
@@ -329,8 +327,8 @@ namespace RawNet
         protected override void decodeMetaDataInternal()
         {
             int iso = 0;
-            mRaw.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
+            rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Meta Decoder: Model name not found");
@@ -339,19 +337,19 @@ namespace RawNet
             string model = data[0].getEntry(TagType.MODEL).DataAsString;
             string mode = "";
 
-            if (mRaw.metadata.subsampling.y == 2 && mRaw.metadata.subsampling.x == 2)
+            if (rawImage.metadata.subsampling.y == 2 && rawImage.metadata.subsampling.x == 2)
                 mode = "sRaw1";
 
-            if (mRaw.metadata.subsampling.y == 1 && mRaw.metadata.subsampling.x == 2)
+            if (rawImage.metadata.subsampling.y == 1 && rawImage.metadata.subsampling.x == 2)
                 mode = "sRaw2";
-            var isoTag = rootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
                 iso = isoTag.getInt();
 
             // Fetch the white balance
             try
             {
-                Tag wb = rootIFD.getEntryRecursive(TagType.CANONCOLORDATA);
+                Tag wb = ifd.getEntryRecursive(TagType.CANONCOLORDATA);
                 if (wb != null)
                 {
                     // this entry is a big table, and different cameras store used WB in
@@ -368,39 +366,39 @@ namespace RawNet
                     }
 
                     offset /= 2;
-                    mRaw.metadata.wbCoeffs[0] = Convert.ToSingle(wb.data[offset + 0]);
-                    mRaw.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[offset + 1]);
-                    mRaw.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[offset + 3]);
+                    rawImage.metadata.wbCoeffs[0] = Convert.ToSingle(wb.data[offset + 0]);
+                    rawImage.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[offset + 1]);
+                    rawImage.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[offset + 3]);
                 }
                 else
                 {
                     data = null;
-                    data = rootIFD.getIFDsWithTag(TagType.MODEL);
+                    data = ifd.getIFDsWithTag(TagType.MODEL);
 
-                    Tag shot_info = rootIFD.getEntryRecursive(TagType.CANONSHOTINFO);
-                    Tag g9_wb = rootIFD.getEntryRecursive(TagType.CANONPOWERSHOTG9WB);
+                    Tag shot_info = ifd.getEntryRecursive(TagType.CANONSHOTINFO);
+                    Tag g9_wb = ifd.getEntryRecursive(TagType.CANONPOWERSHOTG9WB);
                     if (shot_info != null && g9_wb != null)
                     {
                         UInt16 wb_index = Convert.ToUInt16(shot_info.data[7]);
                         int wb_offset = (wb_index < 18) ? "012347800000005896"[wb_index] - '0' : 0;
                         wb_offset = wb_offset * 8 + 2;
 
-                        mRaw.metadata.wbCoeffs[0] = (float)g9_wb.getInt(wb_offset + 1);
-                        mRaw.metadata.wbCoeffs[1] = ((float)g9_wb.getInt(wb_offset + 0) + (float)g9_wb.getInt(wb_offset + 3)) / 2.0f;
-                        mRaw.metadata.wbCoeffs[2] = (float)g9_wb.getInt(wb_offset + 2);
+                        rawImage.metadata.wbCoeffs[0] = (float)g9_wb.getInt(wb_offset + 1);
+                        rawImage.metadata.wbCoeffs[1] = ((float)g9_wb.getInt(wb_offset + 0) + (float)g9_wb.getInt(wb_offset + 3)) / 2.0f;
+                        rawImage.metadata.wbCoeffs[2] = (float)g9_wb.getInt(wb_offset + 2);
                     }
                     else
                     {
                         // WB for the old 1D and 1DS
                         wb = null;
-                        wb = rootIFD.getEntryRecursive((TagType)0xa4);
+                        wb = ifd.getEntryRecursive((TagType)0xa4);
                         if (wb != null)
                         {
                             if (wb.dataCount >= 3)
                             {
-                                mRaw.metadata.wbCoeffs[0] = wb.getFloat(0);
-                                mRaw.metadata.wbCoeffs[1] = wb.getFloat(1);
-                                mRaw.metadata.wbCoeffs[2] = wb.getFloat(2);
+                                rawImage.metadata.wbCoeffs[0] = wb.getFloat(0);
+                                rawImage.metadata.wbCoeffs[1] = wb.getFloat(1);
+                                rawImage.metadata.wbCoeffs[2] = wb.getFloat(2);
                             }
                         }
                     }
@@ -408,30 +406,30 @@ namespace RawNet
             }
             catch (Exception e)
             {
-                mRaw.errors.Add(e.Message);
+                rawImage.errors.Add(e.Message);
                 // We caught an exception reading WB, just ignore it
             }
             setMetaData(metaData, make, model, mode, iso);
 
-            mRaw.metadata.wbCoeffs[0] = mRaw.metadata.wbCoeffs[0] / mRaw.metadata.wbCoeffs[1];
-            mRaw.metadata.wbCoeffs[1] =  mRaw.metadata.wbCoeffs[1] / mRaw.metadata.wbCoeffs[1];
-            mRaw.metadata.wbCoeffs[2] =  mRaw.metadata.wbCoeffs[2] / mRaw.metadata.wbCoeffs[1];
+            rawImage.metadata.wbCoeffs[0] = rawImage.metadata.wbCoeffs[0] / rawImage.metadata.wbCoeffs[1];
+            rawImage.metadata.wbCoeffs[1] =  rawImage.metadata.wbCoeffs[1] / rawImage.metadata.wbCoeffs[1];
+            rawImage.metadata.wbCoeffs[2] =  rawImage.metadata.wbCoeffs[2] / rawImage.metadata.wbCoeffs[1];
         }
 
         int GetHue()
         {
             if (hints.ContainsKey("old_sraw_hue"))
-                return (mRaw.metadata.subsampling.y * mRaw.metadata.subsampling.x);
-            var tc = rootIFD.getEntryRecursive((TagType)0x10);
+                return (rawImage.metadata.subsampling.y * rawImage.metadata.subsampling.x);
+            var tc = ifd.getEntryRecursive((TagType)0x10);
             if (tc == null)
             {
                 return 0;
             }
-            UInt32 model_id = rootIFD.getEntryRecursive((TagType)0x10).getUInt();
+            UInt32 model_id = ifd.getEntryRecursive((TagType)0x10).getUInt();
             if (model_id >= 0x80000281 || model_id == 0x80000218 || (hints.ContainsKey("force_new_sraw_hue")))
-                return ((mRaw.metadata.subsampling.y * mRaw.metadata.subsampling.x) - 1) >> 1;
+                return ((rawImage.metadata.subsampling.y * rawImage.metadata.subsampling.x) - 1) >> 1;
 
-            return (mRaw.metadata.subsampling.y * mRaw.metadata.subsampling.x);
+            return (rawImage.metadata.subsampling.y * rawImage.metadata.subsampling.x);
         }
 
         /*

@@ -14,20 +14,17 @@ namespace RawNet
     };
 
 
-    internal class NefDecoder : RawDecoder
+    internal class NefDecoder : TiffDecoder
     {
-        protected IFD rootIFD;
-
-        public NefDecoder(ref IFD rootIFD, TIFFBinaryReader file, CameraMetaData meta) : base(ref file, meta)
+        public NefDecoder(ref Stream file, CameraMetaData meta) : base(ref file, meta)
         {
-            this.rootIFD = (rootIFD);
             decoderVersion = 5;
         }
 
         protected override Thumbnail decodeThumbInternal()
         {
             //find the preview ifd inside the makernote
-            List<IFD> makernote = rootIFD.getIFDsWithTag((TagType)0x011);
+            List<IFD> makernote = ifd.getIFDsWithTag((TagType)0x011);
             IFD preview = makernote[0].getIFDsWithTag((TagType)0x0201)[0];
             //no thumbnail
             if (preview == null) return null;
@@ -37,16 +34,16 @@ namespace RawNet
             if (size == null || thumb == null) return null;
 
             //get the makernote offset
-            List<IFD> exifs = rootIFD.getIFDsWithTag((TagType)0x927C);
+            List<IFD> exifs = ifd.getIFDsWithTag((TagType)0x927C);
 
             if (exifs == null || exifs.Count == 0) return null;
 
             Tag makerNoteOffsetTag = exifs[0].getEntryRecursive((TagType)0x927C);
             if (makerNoteOffsetTag == null) return null;
-            file.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
+            reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
             Thumbnail temp = new Thumbnail()
             {
-                data = file.ReadBytes(Convert.ToInt32(size.data[0])),
+                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
                 type = ThumbnailType.JPEG,
                 dim = new Point2D()
             };
@@ -55,7 +52,7 @@ namespace RawNet
 
         protected override RawImage decodeRawInternal()
         {
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.CFAPATTERN);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.CFAPATTERN);
 
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Decoder: No image data found");
@@ -63,7 +60,7 @@ namespace RawNet
             IFD raw = data[0];
             int compression = raw.getEntry(TagType.COMPRESSION).getInt();
 
-            data = rootIFD.getIFDsWithTag(TagType.MODEL);
+            data = ifd.getIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Decoder: No model data found");
@@ -73,25 +70,25 @@ namespace RawNet
 
             if (data[0].getEntry(TagType.MODEL).DataAsString == "NIKON D100 ")
             {  /**Sigh**/
-                if (!file.isValid(offsets.getUInt()))
+                if (!reader.isValid(offsets.getUInt()))
                     throw new RawDecoderException("NEF Decoder: Image data outside of file.");
                 if (!D100IsCompressed(offsets.getUInt()))
                 {
                     DecodeD100Uncompressed();
-                    return mRaw;
+                    return rawImage;
                 }
             }
             hints.TryGetValue("force_uncompressed", out string v);
             if (compression == 1 || (v != null) || NEFIsUncompressed(ref raw))
             {
                 DecodeUncompressed();
-                return mRaw;
+                return rawImage;
             }
 
             if (NEFIsUncompressedRGB(ref raw))
             {
                 DecodeSNefUncompressed();
-                return mRaw;
+                return rawImage;
             }
 
             if (offsets.dataCount != 1)
@@ -102,7 +99,7 @@ namespace RawNet
             {
                 throw new RawDecoderException("NEF Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
             }
-            if (!file.isValid(offsets.getUInt(), counts.getUInt()))
+            if (!reader.isValid(offsets.getUInt(), counts.getUInt()))
                 throw new RawDecoderException("NEF Decoder: Invalid strip byte count. File probably truncated.");
 
 
@@ -112,10 +109,10 @@ namespace RawNet
             UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
             UInt32 height = raw.getEntry(TagType.IMAGELENGTH).getUInt();
             UInt32 bitPerPixel = raw.getEntry(TagType.BITSPERSAMPLE).getUInt();
-            mRaw.ColorDepth = (ushort)bitPerPixel;
-            mRaw.dim = new Point2D((int)width, (int)height);
+            rawImage.ColorDepth = (ushort)bitPerPixel;
+            rawImage.dim = new Point2D((int)width, (int)height);
 
-            data = rootIFD.getIFDsWithTag((TagType)0x8c);
+            data = ifd.getIFDsWithTag((TagType)0x8c);
 
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Decoder: Decompression info tag not found");
@@ -130,10 +127,10 @@ namespace RawNet
                 meta = data[0].getEntry((TagType)0x8c);  // Fall back
             }
 
-            mRaw.Init();
+            rawImage.Init();
             try
             {
-                NikonDecompressor decompressor = new NikonDecompressor(file, mRaw);       
+                NikonDecompressor decompressor = new NikonDecompressor(reader, rawImage);
                 TIFFBinaryReader metastream;
                 if (data[0].endian == Endianness.big)
                     metastream = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(meta.data, meta.dataType));
@@ -148,11 +145,11 @@ namespace RawNet
             }
             catch (IOException e)
             {
-                mRaw.errors.Add(e.Message);
+                rawImage.errors.Add(e.Message);
                 // Let's ignore it, it may have delivered somewhat useful data.
             }
 
-            return mRaw;
+            return rawImage;
         }
 
         /*
@@ -163,9 +160,9 @@ namespace RawNet
         bool D100IsCompressed(UInt32 offset)
         {
             int i;
-            file.Position = offset;
+            reader.Position = offset;
             for (i = 15; i < 256; i += 16)
-                if (file.ReadByte() != 0) return true;
+                if (reader.ReadByte() != 0) return true;
             return false;
         }
 
@@ -213,7 +210,7 @@ namespace RawNet
 
         void DecodeUncompressed()
         {
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.CFAPATTERN);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.CFAPATTERN);
             IFD raw = FindBestImage(ref data);
             UInt32 nslices = raw.getEntry(TagType.STRIPOFFSETS).dataCount;
             Tag offsets = raw.getEntry(TagType.STRIPOFFSETS);
@@ -238,14 +235,14 @@ namespace RawNet
 
                 offY = Math.Min(height, offY + yPerSlice);
 
-                if (file.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                if (reader.isValid(slice.offset, slice.count)) // Only decode if size is valid
                     slices.Add(slice);
             }
 
             if (0 == slices.Count)
                 throw new RawDecoderException("NEF Decoder: No valid slices found. File probably truncated.");
 
-            mRaw.dim = new Point2D((int)width, (int)offY);
+            rawImage.dim = new Point2D((int)width, (int)offY);
             if (bitPerPixel == 14 && width * slices[0].h * 2 == slices[0].count)
                 bitPerPixel = 16; // D3 & D810
             hints.TryGetValue("real_bpp", out string v);
@@ -261,11 +258,11 @@ namespace RawNet
 
             offY = 0;
             //init the raw image
-            mRaw.Init();
+            rawImage.Init();
             for (Int32 i = 0; i < slices.Count; i++)
             {
                 NefSlice slice = slices[i];
-                TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, slice.offset, slice.count);
+                TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, slice.offset, slice.count);
                 Point2D size = new Point2D((int)width, (int)slice.h);
                 Point2D pos = new Point2D(0, (int)offY);
                 try
@@ -282,14 +279,14 @@ namespace RawNet
                 catch (RawDecoderException e)
                 {
                     if (i > 0)
-                        mRaw.errors.Add(e.Message);
+                        rawImage.errors.Add(e.Message);
                     else
                         throw;
                 }
                 catch (IOException e)
                 {
                     if (i > 0)
-                        mRaw.errors.Add(e.Message);
+                        rawImage.errors.Add(e.Message);
                     else
                         throw new RawDecoderException("NEF decoder: IO error occurred in first slice, unable to decode more. Error is: " + e.Message);
                 }
@@ -300,10 +297,10 @@ namespace RawNet
 
         void readCoolpixMangledRaw(ref TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
-            UInt32 outPitch = mRaw.pitch;
+            UInt32 outPitch = rawImage.pitch;
             UInt32 w = (uint)size.x;
             UInt32 h = (uint)size.y;
-            UInt32 cpp = mRaw.cpp;
+            UInt32 cpp = rawImage.cpp;
             if (input.getRemainSize() < (inputPitch * h))
             {
                 if (input.getRemainSize() > inputPitch)
@@ -312,13 +309,13 @@ namespace RawNet
                     throw new FileIOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
             }
 
-            if (offset.y > mRaw.dim.y)
+            if (offset.y > rawImage.dim.y)
                 throw new RawDecoderException("readUncompressedRaw: Invalid y offset");
-            if (offset.x + size.x > mRaw.dim.x)
+            if (offset.x + size.x > rawImage.dim.x)
                 throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
 
             UInt32 y = (uint)offset.y;
-            h = Math.Min(h + (UInt32)offset.y, (UInt32)mRaw.dim.y);
+            h = Math.Min(h + (UInt32)offset.y, (UInt32)rawImage.dim.y);
             w *= cpp;
             BitPumpMSB32 inputMSB = new BitPumpMSB32(ref input);
             for (; y < h; y++)
@@ -326,17 +323,17 @@ namespace RawNet
                 for (UInt32 x = 0; x < w; x++)
                 {
                     //TODO fix X
-                    mRaw.rawData[x + (offset.x * sizeof(UInt16) * cpp + y * outPitch)] = (ushort)inputMSB.getBits(12);
+                    rawImage.rawData[x + (offset.x * sizeof(UInt16) * cpp + y * outPitch)] = (ushort)inputMSB.getBits(12);
                 }
             }
         }
 
         void readCoolpixSplitRaw(ref TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
-            UInt32 outPitch = mRaw.pitch;
+            UInt32 outPitch = rawImage.pitch;
             UInt32 w = (uint)size.x;
             UInt32 h = (uint)size.y;
-            UInt32 cpp = mRaw.cpp;
+            UInt32 cpp = rawImage.cpp;
             if (input.getRemainSize() < (inputPitch * h))
             {
                 if (input.getRemainSize() > inputPitch)
@@ -345,13 +342,13 @@ namespace RawNet
                     throw new FileIOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
             }
 
-            if (offset.y > mRaw.dim.y)
+            if (offset.y > rawImage.dim.y)
                 throw new RawDecoderException("readCoolpixSplitRaw: Invalid y offset");
-            if (offset.x + size.x > mRaw.dim.x)
+            if (offset.x + size.x > rawImage.dim.x)
                 throw new RawDecoderException("readCoolpixSplitRaw: Invalid x offset");
 
             UInt32 y = (uint)offset.y;
-            h = Math.Min(h + (UInt32)offset.y, (UInt32)mRaw.dim.y);
+            h = Math.Min(h + (UInt32)offset.y, (UInt32)rawImage.dim.y);
             w *= cpp;
             h /= 2;
             BitPumpMSB inputMSB = new BitPumpMSB(ref input);
@@ -359,21 +356,21 @@ namespace RawNet
             {
                 for (UInt32 x = 0; x < w; x++)
                 {
-                    mRaw.rawData[x + (offset.x * sizeof(UInt16) * cpp + y * 2 * outPitch)] = (ushort)inputMSB.getBits(12);
+                    rawImage.rawData[x + (offset.x * sizeof(UInt16) * cpp + y * 2 * outPitch)] = (ushort)inputMSB.getBits(12);
                 }
             }
             for (y = (uint)offset.y; y < h; y++)
             {
                 for (UInt32 x = 0; x < w; x++)
                 {
-                    mRaw.rawData[x + (offset.x * sizeof(UInt16) * cpp + (y * 2 + 1) * outPitch)] = (ushort)inputMSB.getBits(12);
+                    rawImage.rawData[x + (offset.x * sizeof(UInt16) * cpp + (y * 2 + 1) * outPitch)] = (ushort)inputMSB.getBits(12);
                 }
             }
         }
 
         void DecodeD100Uncompressed()
         {
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.STRIPOFFSETS);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.STRIPOFFSETS);
 
             if (data.Count < 2)
                 throw new RawDecoderException("DecodeD100Uncompressed: No image data found");
@@ -385,32 +382,32 @@ namespace RawNet
             uint w = 3040;
             uint h = 2024;
 
-            mRaw.dim = new Point2D((int)w, (int)h);
-            TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, offset, (uint)file.BaseStream.Length);
+            rawImage.dim = new Point2D((int)w, (int)h);
+            TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset, (uint)reader.BaseStream.Length);
 
             Decode12BitRawBEWithControl(ref input, w, h);
         }
 
         void DecodeSNefUncompressed()
         {
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.CFAPATTERN);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.CFAPATTERN);
             IFD raw = FindBestImage(ref data);
             UInt32 offset = raw.getEntry(TagType.STRIPOFFSETS).getUInt();
             UInt32 w = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
             UInt32 h = raw.getEntry(TagType.IMAGELENGTH).getUInt();
 
-            mRaw.dim = new Point2D((int)w, (int)h);
-            mRaw.cpp = 3;
-            mRaw.isCFA = false;
+            rawImage.dim = new Point2D((int)w, (int)h);
+            rawImage.cpp = 3;
+            rawImage.isCFA = false;
 
-            TIFFBinaryReader input = new TIFFBinaryReader(file.BaseStream, offset, (uint)file.BaseStream.Length);
+            TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset, (uint)reader.BaseStream.Length);
 
             DecodeNikonSNef(ref input, w, h);
         }
 
         protected override void checkSupportInternal()
         {
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Support check: Model name not found");
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
@@ -427,7 +424,7 @@ namespace RawNet
         string getMode()
         {
             string mode = "";
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.CFAPATTERN);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.CFAPATTERN);
             IFD raw = FindBestImage(ref data);
             int compression = raw.getEntry(TagType.COMPRESSION).getInt();
             UInt32 bitPerPixel = raw.getEntry(TagType.BITSPERSAMPLE).getUInt();
@@ -447,7 +444,7 @@ namespace RawNet
         string getExtendedMode(string mode)
         {
             string extended_mode = "";
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.CFAPATTERN);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.CFAPATTERN);
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Support check: Image size not found");
             if (!data[0].hasEntry(TagType.IMAGEWIDTH) || !data[0].hasEntry(TagType.IMAGELENGTH))
@@ -462,22 +459,22 @@ namespace RawNet
         override protected void decodeMetaDataInternal()
         {
             int iso = 0;
-            mRaw.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
 
-            List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Meta Decoder: Model name not found");
             if (!data[0].hasEntry(TagType.MAKE))
                 throw new RawDecoderException("NEF Support: Make name not found");
 
-            uint white = mRaw.whitePoint;
-            int black = mRaw.blackLevel;
+            uint white = rawImage.whitePoint;
+            int black = rawImage.blackLevel;
 
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
             string model = data[0].getEntry(TagType.MODEL).DataAsString;
 
-            var t = rootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (t != null) iso = t.getInt();
 
             // Read the whitebalance
@@ -518,22 +515,22 @@ namespace RawNet
   0x3b,0x2d,0xeb,0x25,0x49,0xfa,0xa3,0xaa,0x39,0xa7,0xc5,0xa7,0x50,0x11,0x36,0xfb,
   0xc6,0x67,0x4a,0xf5,0xa5,0x12,0x65,0x7e,0xb0,0xdf,0xaf,0x4e,0xb3,0x61,0x7f,0x2f};
 
-            List<IFD> note = rootIFD.getIFDsWithTag((TagType)12);
+            List<IFD> note = ifd.getIFDsWithTag((TagType)12);
             if (note.Count != 0)
             {
                 Tag wb = note[0].getEntry((TagType)12);
                 if (wb.dataCount == 4)
                 {
-                    mRaw.metadata.wbCoeffs[0] = wb.getFloat(0);
-                    mRaw.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[2]);
-                    mRaw.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[1]);
-                    if (mRaw.metadata.wbCoeffs[1] == 0.0f)
-                        mRaw.metadata.wbCoeffs[1] = 1.0f;
+                    rawImage.metadata.wbCoeffs[0] = wb.getFloat(0);
+                    rawImage.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[2]);
+                    rawImage.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[1]);
+                    if (rawImage.metadata.wbCoeffs[1] == 0.0f)
+                        rawImage.metadata.wbCoeffs[1] = 1.0f;
                 }
             }
             else
             {
-                Tag wb = rootIFD.getEntryRecursive((TagType)0x0097);
+                Tag wb = ifd.getEntryRecursive((TagType)0x0097);
                 if (wb != null)
                 {
                     if (wb.dataCount > 4)
@@ -543,15 +540,15 @@ namespace RawNet
                             version = (version << 4) + Convert.ToUInt32(wb.data[i]) - '0';
                         if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == TiffDataType.UNDEFINED)
                         {
-                            mRaw.metadata.wbCoeffs[0] = wb.getShort(36);
-                            mRaw.metadata.wbCoeffs[2] = wb.getShort(37);
-                            mRaw.metadata.wbCoeffs[1] = wb.getShort(38);
+                            rawImage.metadata.wbCoeffs[0] = wb.getShort(36);
+                            rawImage.metadata.wbCoeffs[2] = wb.getShort(37);
+                            rawImage.metadata.wbCoeffs[1] = wb.getShort(38);
                         }
                         else if (version == 0x103 && wb.dataCount >= 26 && wb.dataType == TiffDataType.UNDEFINED)
                         {
-                            mRaw.metadata.wbCoeffs[0] = wb.getShort(10);
-                            mRaw.metadata.wbCoeffs[1] = wb.getShort(11);
-                            mRaw.metadata.wbCoeffs[2] = wb.getShort(12);
+                            rawImage.metadata.wbCoeffs[0] = wb.getShort(10);
+                            rawImage.metadata.wbCoeffs[1] = wb.getShort(11);
+                            rawImage.metadata.wbCoeffs[2] = wb.getShort(12);
                         }
                         else
                         {
@@ -559,7 +556,7 @@ namespace RawNet
                                 (version == 0x205 && wb.dataCount >= 284)))
                             {
                                 // Get the serial number
-                                Tag serial = rootIFD.getEntryRecursive((TagType)0x001d);
+                                Tag serial = ifd.getEntryRecursive((TagType)0x001d);
                                 if (serial != null)
                                 {
                                     UInt32 serialno = 0;
@@ -573,7 +570,7 @@ namespace RawNet
                                     }
 
                                     // Get the decryption key
-                                    Tag key = rootIFD.getEntryRecursive((TagType)0x00a7);
+                                    Tag key = ifd.getEntryRecursive((TagType)0x00a7);
                                     if (key != null)
                                     {
                                         UInt32 keyno = (uint)key.data[0] ^ (uint)key.data[1] ^ (uint)key.data[2] ^ (uint)key.data[3];
@@ -593,9 +590,9 @@ namespace RawNet
                                         // Finally set the WB coeffs
                                         UInt32 off = (uint)((version == 0x204) ? 6 : 14);
                                         off += bitOff;
-                                        mRaw.metadata.wbCoeffs[0] = wb.get2BE(off);
-                                        mRaw.metadata.wbCoeffs[1] = wb.get2BE(off + 2);
-                                        mRaw.metadata.wbCoeffs[2] = wb.get2BE(off + 6);
+                                        rawImage.metadata.wbCoeffs[0] = wb.get2BE(off);
+                                        rawImage.metadata.wbCoeffs[1] = wb.get2BE(off + 2);
+                                        rawImage.metadata.wbCoeffs[2] = wb.get2BE(off + 6);
                                     }
                                 }
                             }
@@ -604,16 +601,16 @@ namespace RawNet
                 }
                 else
                 {
-                    wb = rootIFD.getEntryRecursive((TagType)0x0014);
+                    wb = ifd.getEntryRecursive((TagType)0x0014);
                     if (wb != null)
                     {
                         if (wb.dataCount == 2560 && wb.dataType == TiffDataType.UNDEFINED)
                         {
                             UInt32 red = (uint)wb.data[1249] | (((UInt32)wb.data[1248]) << 8);
                             UInt32 blue = (uint)wb.data[1251] | (((UInt32)wb.data[1250]) << 8);
-                            mRaw.metadata.wbCoeffs[0] = red / 256.0f;
-                            mRaw.metadata.wbCoeffs[1] = 1.0f;
-                            mRaw.metadata.wbCoeffs[2] = blue / 256.0f;
+                            rawImage.metadata.wbCoeffs[0] = red / 256.0f;
+                            rawImage.metadata.wbCoeffs[1] = 1.0f;
+                            rawImage.metadata.wbCoeffs[2] = blue / 256.0f;
                         }
                         else if (wb.DataAsString.StartsWith("NRW "))
                         {
@@ -626,9 +623,9 @@ namespace RawNet
                             if (offset != 0)
                             {
                                 //TODO check iftag is byte type
-                                mRaw.metadata.wbCoeffs[0] = wb.get4LE(offset) << 2;
-                                mRaw.metadata.wbCoeffs[1] = wb.get4LE(offset + 4) + wb.get4LE(offset + 8);
-                                mRaw.metadata.wbCoeffs[2] = wb.get4LE(offset + 12) << 2;
+                                rawImage.metadata.wbCoeffs[0] = wb.get4LE(offset) << 2;
+                                rawImage.metadata.wbCoeffs[1] = wb.get4LE(offset + 4) + wb.get4LE(offset + 8);
+                                rawImage.metadata.wbCoeffs[2] = wb.get4LE(offset + 12) << 2;
                             }
                         }
                     }
@@ -637,8 +634,8 @@ namespace RawNet
             hints.TryGetValue("nikon_wb_adjustment", out string vt);
             if (vt != null)
             {
-                mRaw.metadata.wbCoeffs[0] *= (float)(256 / 527.0);
-                mRaw.metadata.wbCoeffs[2] *= (float)(256 / 317.0);
+                rawImage.metadata.wbCoeffs[0] *= (float)(256 / 527.0);
+                rawImage.metadata.wbCoeffs[2] *= (float)(256 / 317.0);
             }
 
             //TODO replace with info from camer
@@ -667,10 +664,10 @@ namespace RawNet
             }
 
             if (white != 65536)
-                mRaw.whitePoint = white;
+                rawImage.whitePoint = white;
             hints.TryGetValue("nikon_override_auto_black", out string k);
             if (black >= 0 && k == null)
-                mRaw.blackLevel = black;
+                rawImage.blackLevel = black;
 
         }
 
@@ -683,13 +680,13 @@ namespace RawNet
         {
             if (w < 6) throw new FileIOException("NEF: got a " + w + " wide sNEF, aborting");
 
-            UInt32 pitch = mRaw.pitch;
+            UInt32 pitch = rawImage.pitch;
             if (input.getRemainSize() < (w * h * 3))
             {
                 if ((UInt32)input.getRemainSize() > w * 3)
                 {
                     h = (uint)(input.getRemainSize() / (w * 3) - 1);
-                    mRaw.errors.Add("Image truncated (file is too short)");
+                    rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
                     throw new FileIOException("DecodeNikonSNef: Not enough data to decode a single line. Image file truncated.");
@@ -697,7 +694,7 @@ namespace RawNet
 
             // We need to read the applied whitebalance, since we should return
             // data before whitebalance, so we "unapply" it.
-            List<IFD> note = rootIFD.getIFDsWithTag((TagType)12);
+            List<IFD> note = ifd.getIFDsWithTag((TagType)12);
 
             if (note.Count == 0)
                 throw new RawDecoderException("NEF Decoder: Unable to locate whitebalance needed for decompression");
@@ -712,9 +709,9 @@ namespace RawNet
             if (wb_r == 0.0f || wb_b == 0.0f)
                 throw new RawDecoderException("NEF Decoder: Whitebalance has zero value");
 
-            mRaw.metadata.wbCoeffs[0] = wb_r;
-            mRaw.metadata.wbCoeffs[1] = 1.0f;
-            mRaw.metadata.wbCoeffs[2] = wb_b;
+            rawImage.metadata.wbCoeffs[0] = wb_r;
+            rawImage.metadata.wbCoeffs[1] = 1.0f;
+            rawImage.metadata.wbCoeffs[2] = wb_b;
 
             int inv_wb_r = (int)(1024.0 / wb_r);
             int inv_wb_b = (int)(1024.0 / wb_b);
@@ -726,7 +723,7 @@ namespace RawNet
                 int c = curve[i];
                 curve[i] = (ushort)Common.clampbits(c << 2, 16);
             }
-            mRaw.setTable(curve, 4095, true);
+            rawImage.setTable(curve, 4095, true);
 
             UInt16 tmp = 0;
             ushort[] tmpch = new ushort[2];
@@ -772,31 +769,31 @@ namespace RawNet
                     cr2 -= 2048;
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
-                    mRaw.setWithLookUp((ushort)Common.clampbits((int)(y1 + 1.370705 * cr), 12), ref tmpch, 0, ref random);
+                    rawImage.setWithLookUp((ushort)Common.clampbits((int)(y1 + 1.370705 * cr), 12), ref tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    mRaw.rawData[x + (y * pitch)] = (ushort)Common.clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.rawData[x + (y * pitch)] = (ushort)Common.clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
 
-                    mRaw.setWithLookUp((ushort)Common.clampbits((int)(y1 - 0.337633 * cb - 0.698001 * cr), 12), ref mRaw.rawData, x + 1, ref random);
+                    rawImage.setWithLookUp((ushort)Common.clampbits((int)(y1 - 0.337633 * cb - 0.698001 * cr), 12), ref rawImage.rawData, x + 1, ref random);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
-                    mRaw.setWithLookUp((ushort)Common.clampbits((int)(y1 + 1.732446 * cb), 12), ref tmpch, 0, ref random);
+                    rawImage.setWithLookUp((ushort)Common.clampbits((int)(y1 + 1.732446 * cb), 12), ref tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    mRaw.rawData[x + 2 + (y * pitch)] = (ushort)Common.clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.rawData[x + 2 + (y * pitch)] = (ushort)Common.clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
-                    mRaw.setWithLookUp((ushort)Common.clampbits((int)(y2 + 1.370705 * cr2), 12), ref tmpch, 0, ref random);
+                    rawImage.setWithLookUp((ushort)Common.clampbits((int)(y2 + 1.370705 * cr2), 12), ref tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    mRaw.rawData[x + 3 + (y * pitch)] = (ushort)Common.clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.rawData[x + 3 + (y * pitch)] = (ushort)Common.clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
 
-                    mRaw.setWithLookUp((ushort)Common.clampbits((int)(y2 - 0.337633 * cb2 - 0.698001 * cr2), 12), ref mRaw.rawData, x + 4, ref random);
+                    rawImage.setWithLookUp((ushort)Common.clampbits((int)(y2 - 0.337633 * cb2 - 0.698001 * cr2), 12), ref rawImage.rawData, x + 4, ref random);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
-                    mRaw.setWithLookUp((ushort)Common.clampbits((int)(y2 + 1.732446 * cb2), 12), ref tmpch, 0, ref random);
+                    rawImage.setWithLookUp((ushort)Common.clampbits((int)(y2 + 1.732446 * cb2), 12), ref tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    mRaw.rawData[x + 5 + (y * pitch)] = (ushort)Common.clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.rawData[x + 5 + (y * pitch)] = (ushort)Common.clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                 }
             }
-            mRaw.table = (null);
+            rawImage.table = (null);
         }
 
         double SQR(double x) { return ((x) * (x)); }
