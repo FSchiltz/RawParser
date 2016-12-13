@@ -211,7 +211,7 @@ namespace RawNet
             {
                 //TIFF based raw
                 case ".NEF":
-                    return new NefDecoder(ref stream, metadata);
+                    return new NefDecoder(ref stream);
                 case ".CR2":
                     return new Cr2Decoder(ref stream, metadata);
                 case ".TIFF":

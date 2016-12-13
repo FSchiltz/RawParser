@@ -31,9 +31,10 @@ namespace RawNet
         public RawImage()
         {
             //Set for 16bit image non demos
-            uint _cpp = 1; uint _bpc = 2;
-            cpp = (_cpp);
-            bpp = (_bpc * _cpp);
+            uint _cpp = 1;
+            uint _bpc = 2;
+            cpp = _cpp;
+            bpp = _bpc * _cpp;
         }
 
         internal void Init()
@@ -48,7 +49,7 @@ namespace RawNet
             rawData = new ushort[dim.x * dim.y * cpp];
             if (rawData == null)
                 throw new RawDecoderException("RawImageData::createData: Memory Allocation failed.");
-            uncroppedDim = dim;
+            uncroppedDim = new Point2D(dim.x, dim.y);
         }
 
         /*
@@ -72,7 +73,7 @@ namespace RawNet
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                rawData[(row * uncroppedDim.x) + col] = value;
+                rawData[(row * dim.x) + col] = value;
             }
         }
 
@@ -99,6 +100,11 @@ namespace RawNet
             mOffset += crop.pos;
 
             dim = crop.dim;
+
+            if ((crop.pos.x & 1) != 0)
+                cfa.shiftLeft(0);
+            if ((crop.pos.y & 1) != 0)
+                cfa.shiftDown(0);
         }
         /*
          * For testing
@@ -410,12 +416,12 @@ namespace RawNet
                     int xk = 0, yk = 0;
                     for (int i = 0; i < previewFactor; i++)
                     {
-                        int realY = dim.x * ((y * previewFactor) + i);
+                        int realY = dim.x * ((y * previewFactor) + i) + mOffset.y;
                         yk++;
                         for (int k = 0; k < previewFactor; k++)
                         {
                             xk++;
-                            long realX = (realY + (x * previewFactor + k)) * cpp;
+                            long realX = (realY + (x * previewFactor + k) + mOffset.x) * cpp;
                             r += rawData[realX];
                             g += rawData[realX + 1];
                             b += rawData[realX + 2];

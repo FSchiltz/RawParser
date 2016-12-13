@@ -50,7 +50,7 @@ namespace RawNet
             }
         }
 
-        protected override RawImage decodeRawInternal()
+        protected override void decodeRawInternal()
         {
             rawImage.ColorDepth = 8;
             rawImage.cpp = 3;
@@ -91,7 +91,6 @@ namespace RawNet
                     }
                 }
             }
-            return rawImage;
         }
     }
 }

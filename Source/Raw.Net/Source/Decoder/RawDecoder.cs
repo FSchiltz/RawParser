@@ -17,23 +17,14 @@ namespace RawNet
         }
 
         /* The decoded image - undefined if image has not or could not be decoded. */
-        /* Remember this is automatically refcounted, so a reference is retained until this class is destroyed */
         public RawImage rawImage;
-
-        /* Set how to handle bad pixels. */
-        /* If you disable this parameter, no bad pixel interpolation will be done */
-        protected bool interpolateBadPixels { get; set; }
-
+        
         /* Apply stage 1 DNG opcodes. */
         /* This usually maps out bad pixels, etc */
-        protected bool applyStage1DngOpcodes { get; set; }
-
-        /* Apply crop - if false uncropped image is delivered */
-        protected bool applyCrop { get; set; }
+        protected bool applyStage1DngOpcodes { get; set; }        
 
         /* Should Fuji images be rotated? */
         protected bool fujiRotate { get; set; }
-
 
         /* Retrieve the main RAW chunk */
         /* Returns null if unknown */
@@ -64,28 +55,17 @@ namespace RawNet
         {
             rawImage = new RawImage();
             decoderVersion = 0;
-            interpolateBadPixels = false;
             applyStage1DngOpcodes = true;
-            applyCrop = true;
             fujiRotate = true;
             this.metaData = metaData;
         }
 
-        public RawImage DecodeRaw()
+        public void DecodeRaw()
         {
             try
             {
-                RawImage raw = decodeRawInternal();
-                hints.TryGetValue("pixel_aspect_ratio", out string pixelRatio);
-                if (pixelRatio != null)
-                {
-                    raw.metadata.pixelAspectRatio = Double.Parse(pixelRatio);
-                }
-                //if (!uncorrectedRawValues) mRaw.scaleValues();
-                /*
-                if (interpolateBadPixels)
-                    raw-fixBadPixels();*/
-                return raw;
+                decodeRawInternal();              
+                //if (!uncorrectedRawValues) mRaw.scaleValues();               
             }
             catch (TiffParserException e)
             {
@@ -104,7 +84,7 @@ namespace RawNet
         /*
          * return a byte[] containing an JPEG image or null if the file doesn't have a thumbnail
          */
-        public Thumbnail decodeThumb()
+        public Thumbnail DecodeThumb()
         {
             try
             {
@@ -187,7 +167,6 @@ namespace RawNet
                     {
                         //TODO add something
                     }
-
                     else
                         throw;
                 }
@@ -197,7 +176,6 @@ namespace RawNet
                     {
                         //TODO add something
                     }
-
                     else
                         throw new RawDecoderException("RAW decoder: IO error occurred in first slice, unable to decode more. Error is: " + e);
                 }
@@ -816,15 +794,19 @@ namespace RawNet
             return true;
         }
 
-        protected void setMetaData(CameraMetaData meta, string make, string model, string mode, int iso_speed)
+        protected virtual void SetMetaData(string model) { }
+
+        //TODO remove this function
+        protected void setMetaData(CameraMetaData meta, string make, string model, string mode)
         {
-            rawImage.metadata.isoSpeed = iso_speed;
             make = make.Trim();
             model = model.Trim();
+            rawImage.metadata.make = make;
+            rawImage.metadata.model = model;
+            rawImage.metadata.mode = mode;
             Camera cam = meta.getCamera(make, model, mode);
             if (cam == null)
             {
-                Debug.WriteLine("ISO:" + iso_speed);
                 Debug.WriteLine("Unable to find camera in database: " + make + " " + model + " " + mode + "\nPlease upload file to ftp.rawstudio.org, thanks!");
                 return;
             }
@@ -834,75 +816,62 @@ namespace RawNet
             rawImage.metadata.canonical_model = cam.canonical_model;
             rawImage.metadata.canonical_alias = cam.canonical_alias;
             rawImage.metadata.canonical_id = cam.canonical_id;
-            rawImage.metadata.make = make;
-            rawImage.metadata.model = model;
-            rawImage.metadata.mode = mode;
 
-            if (applyCrop)
-            {
-                Point2D new_size = cam.cropSize;
+            Point2D new_size = cam.cropSize;
 
-                // If crop size is negative, use relative cropping
-                if (new_size.x <= 0)
-                    new_size.x = rawImage.dim.x - cam.cropPos.x + new_size.x;
+            // If crop size is negative, use relative cropping
+            if (new_size.x <= 0)
+                new_size.x = rawImage.dim.x - cam.cropPos.x + new_size.x;
 
-                if (new_size.y <= 0)
-                    new_size.y = rawImage.dim.y - cam.cropPos.y + new_size.y;
+            if (new_size.y <= 0)
+                new_size.y = rawImage.dim.y - cam.cropPos.y + new_size.y;
 
-                rawImage.subFrame(new Rectangle2D(cam.cropPos, new_size));
+            rawImage.subFrame(new Rectangle2D(cam.cropPos, new_size));
 
+            /*
+                        CameraSensorInfo sensor = cam.getSensorInfo(iso_speed);
+                        rawImage.blackLevel = sensor.blackLevel;
+                        rawImage.whitePoint = (uint)sensor.whiteLevel;
+                        rawImage.blackAreas = cam.blackAreas;
+                        if (rawImage.blackAreas.Count == 0 && sensor.mBlackLevelSeparate.Count != 0)
+                        {
+                            if (rawImage.isCFA && rawImage.cfa.size.area() <= sensor.mBlackLevelSeparate.Count)
+                            {
+                                for (UInt32 i = 0; i < rawImage.cfa.size.area(); i++)
+                                {
+                                    rawImage.blackLevelSeparate[i] = sensor.mBlackLevelSeparate[(int)i];
+                                }
+                            }
+                            else if (!rawImage.isCFA && rawImage.cpp <= sensor.mBlackLevelSeparate.Count)
+                            {
+                                for (UInt32 i = 0; i < rawImage.cpp; i++)
+                                {
+                                    rawImage.blackLevelSeparate[i] = sensor.mBlackLevelSeparate[(int)i];
+                                }
+                            }
+                        }
 
-                // Shift CFA to match crop
-                rawImage.UncroppedCfa = new ColorFilterArray(rawImage.cfa);
-                if ((cam.cropPos.x & 1) != 0)
-                    rawImage.cfa.shiftLeft(0);
-                if ((cam.cropPos.y & 1) != 0)
-                    rawImage.cfa.shiftDown(0);
-            }
-
-            CameraSensorInfo sensor = cam.getSensorInfo(iso_speed);
-            rawImage.blackLevel = sensor.blackLevel;
-            rawImage.whitePoint = (uint)sensor.whiteLevel;
-            rawImage.blackAreas = cam.blackAreas;
-            if (rawImage.blackAreas.Count == 0 && sensor.mBlackLevelSeparate.Count != 0)
-            {
-                if (rawImage.isCFA && rawImage.cfa.size.area() <= sensor.mBlackLevelSeparate.Count)
-                {
-                    for (UInt32 i = 0; i < rawImage.cfa.size.area(); i++)
-                    {
-                        rawImage.blackLevelSeparate[i] = sensor.mBlackLevelSeparate[(int)i];
-                    }
-                }
-                else if (!rawImage.isCFA && rawImage.cpp <= sensor.mBlackLevelSeparate.Count)
-                {
-                    for (UInt32 i = 0; i < rawImage.cpp; i++)
-                    {
-                        rawImage.blackLevelSeparate[i] = sensor.mBlackLevelSeparate[(int)i];
-                    }
-                }
-            }
-
-            // Allow overriding individual blacklevels. Values are in CFA order
-            // (the same order as the in the CFA tag)
-            // A hint could be:
-            // <Hint name="override_cfa_black" value="10,20,30,20"/>
-            cam.hints.TryGetValue("override_cfa_black", out string value);
-            if (value != null)
-            {
-                string rgb = value;
-                var v = rgb.Split(',');
-                if (v.Length != 4)
-                {
-                    rawImage.errors.Add("Expected 4 values '10,20,30,20' as values for override_cfa_black hint.");
-                }
-                else
-                {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        rawImage.blackLevelSeparate[i] = Int32.Parse(v[i]);
-                    }
-                }
-            }
+                        // Allow overriding individual blacklevels. Values are in CFA order
+                        // (the same order as the in the CFA tag)
+                        // A hint could be:
+                        // <Hint name="override_cfa_black" value="10,20,30,20"/>
+                        cam.hints.TryGetValue("override_cfa_black", out string value);
+                        if (value != null)
+                        {
+                            string rgb = value;
+                            var v = rgb.Split(',');
+                            if (v.Length != 4)
+                            {
+                                rawImage.errors.Add("Expected 4 values '10,20,30,20' as values for override_cfa_black hint.");
+                            }
+                            else
+                            {
+                                for (int i = 0; i < 4; i++)
+                                {
+                                    rawImage.blackLevelSeparate[i] = Int32.Parse(v[i]);
+                                }
+                            }
+                        }*/
         }
 
         public void decodeMetaData()
@@ -948,9 +917,9 @@ namespace RawNet
         /* A RawDecoderException will be thrown if the image cannot be decoded, */
         /* and there will not be any data in the mRaw image. */
         /* This function must be overridden by actual decoders. */
-        protected abstract RawImage decodeRawInternal();
+        protected abstract void decodeRawInternal();
         protected virtual Thumbnail decodeThumbInternal() { return null; }
         protected abstract void decodeMetaDataInternal();
-        protected abstract void checkSupportInternal();
+        protected abstract void checkSupportInternal();        
     }
 }

@@ -2,6 +2,31 @@
 
 namespace RawNet
 {
+    public class GPSInfo
+    {
+        public double[] longitude;
+        public double[] lattitude;
+        public int altitudeRef;
+        public double altitude;
+        public char lattitudeRef;
+        public char longitudeRef;
+
+        public string LattitudeToString()
+        {
+            return lattitude[0] + "°" + lattitude[1] + "'" + lattitude[2] + "\"" + lattitudeRef;
+        }
+
+        public string LongitudeToString()
+        {
+            return longitude[0] + "°" + longitude[1] + "'" + longitude[2] + "\"" + longitudeRef;
+        }
+
+        public string AltitudeToString()
+        {
+            return Math.Sign(altitudeRef) * altitude + "";
+        }
+    }
+
     public class ImageMetaData
     {
         public string fileName { get; set; }
@@ -28,8 +53,15 @@ namespace RawNet
         public string canonical_alias;
         public string canonical_id;
 
-        // ISO speed. If known the value is set, otherwise it will be '0'.
         public int isoSpeed;
+        public double exposure;
+        public double aperture;
+
+        public string timeTake;
+        public string timeModify;
+
+        public GPSInfo gps;
+
 
         public ImageMetaData()
         {
@@ -41,6 +73,12 @@ namespace RawNet
             wbCoeffs[1] = 1;
             wbCoeffs[2] = 1;
             wbCoeffs[3] = 1;
+        }
+
+        public string ExposureAsString()
+        {
+            if (exposure > 0) return exposure + "s";
+            else return "1/"+(1 / exposure).ToString("D") + "s";
         }
     }
 }
