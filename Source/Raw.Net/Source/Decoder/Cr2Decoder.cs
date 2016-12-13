@@ -412,8 +412,8 @@ namespace RawNet
             setMetaData(metaData, make, model, mode, iso);
 
             rawImage.metadata.wbCoeffs[0] = rawImage.metadata.wbCoeffs[0] / rawImage.metadata.wbCoeffs[1];
-            rawImage.metadata.wbCoeffs[1] =  rawImage.metadata.wbCoeffs[1] / rawImage.metadata.wbCoeffs[1];
             rawImage.metadata.wbCoeffs[2] =  rawImage.metadata.wbCoeffs[2] / rawImage.metadata.wbCoeffs[1];
+            rawImage.metadata.wbCoeffs[1] = rawImage.metadata.wbCoeffs[1] / rawImage.metadata.wbCoeffs[1];
         }
 
         int GetHue()
