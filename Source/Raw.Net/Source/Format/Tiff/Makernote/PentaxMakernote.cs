@@ -6,8 +6,6 @@ namespace RawNet
 {
     internal class PentaxMakernote : Makernote
     {
-        private byte[] data;
-
         public PentaxMakernote(byte[] data)
         {
             TIFFBinaryReader buffer;

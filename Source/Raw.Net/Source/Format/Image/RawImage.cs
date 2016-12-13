@@ -403,6 +403,7 @@ namespace RawNet
         public void CreatePreview(int previewFactor)
         {
             previewDim = new Point2D(dim.x / previewFactor, dim.y / previewFactor);
+            Debug.WriteLine("Preview of size w:" + previewDim.x + "y:" + previewDim.y);
             previewData = new ushort[previewDim.y * previewDim.x * cpp];
             int doubleFactor = previewFactor * previewFactor;
             ushort maxValue = (ushort)((1 << ColorDepth) - 1);
