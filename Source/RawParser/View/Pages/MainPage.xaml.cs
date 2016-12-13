@@ -238,6 +238,8 @@ namespace RawEditor
             {
                 try
                 {
+                    var watch = System.Diagnostics.Stopwatch.StartNew();
+
                     Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
                     RawParser parser = new RawParser(ref stream, metadata);
                     RawDecoder decoder = parser.decoder;
@@ -301,6 +303,8 @@ namespace RawEditor
                     //dispose
                     file = null;
                     parser = null;
+                    watch.Stop();
+                    Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
                 }
                 catch (FormatException e)
                 {
@@ -657,7 +661,7 @@ namespace RawEditor
                     //effect.gamma = gammaSlider.Value;
                     //effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
                     effect.shadow = ShadowSlider.Value * 2;
-                    effect.hightlight = HighLightSlider.Value *3;
+                    effect.hightlight = HighLightSlider.Value * 3;
                     effect.saturation = 1 + saturationSlider.Value / 100;
                 });
             });

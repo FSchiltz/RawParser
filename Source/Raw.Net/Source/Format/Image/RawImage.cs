@@ -291,7 +291,7 @@ namespace RawNet
                     blackLevel = b;
                 if (whitePoint >= 65536)
                     whitePoint = (uint)m;
-                Debug.WriteLine("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + " Estimated white: " + whitePoint);
+                //Debug.WriteLine("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + " Estimated white: " + whitePoint);
             }
 
             /* Skip, if not needed */
@@ -421,11 +421,11 @@ namespace RawNet
                             b += rawData[realX + 2];
                         }
                     }
-
+                    /*
                     if (xk != doubleFactor || yk != previewFactor)
                     {
                         Debug.WriteLine("yk :" + yk + " xk: " + xk + " doubleFactor:" + doubleFactor);
-                    }
+                    }*/
                     r = (ushort)(r / doubleFactor);
                     g = (ushort)(g / doubleFactor);
                     b = (ushort)(b / doubleFactor);

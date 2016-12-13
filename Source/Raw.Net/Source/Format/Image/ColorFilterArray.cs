@@ -116,7 +116,7 @@ namespace RawNet
             {
                 throw new RawDecoderException("ColorFilterArray:shiftLeft: No CFA size set (or set to zero)");
             }
-            Debug.Write("Shift left:" + n + "\n");
+            //Debug.Write("Shift left:" + n + "\n");
             int shift = n % size.x;
             if (0 == shift)
                 return;
@@ -136,7 +136,7 @@ namespace RawNet
             {
                 throw new RawDecoderException("ColorFilterArray:shiftDown: No CFA size set (or set to zero)");
             }
-            Debug.Write("Shift down:" + n + "\n");
+            //Debug.Write("Shift down:" + n + "\n");
             int shift = n % size.y;
             if (0 == shift)
                 return;
