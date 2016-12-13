@@ -305,8 +305,8 @@ namespace RawNet
                 throw new RawDecoderException("CR2 Support check: Model name not found");
             if (!data[0].hasEntry(TagType.MAKE))
                 throw new RawDecoderException("CR2 Support: Make name not found");
-            string make = data[0].getEntry(TagType.MAKE).dataAsString;
-            string model = data[0].getEntry(TagType.MODEL).dataAsString;
+            string make = data[0].getEntry(TagType.MAKE).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
 
             // Check for sRaw mode
             data = rootIFD.getIFDsWithTag((TagType)0xc5d8);
@@ -335,8 +335,8 @@ namespace RawNet
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Meta Decoder: Model name not found");
 
-            string make = data[0].getEntry(TagType.MAKE).dataAsString;
-            string model = data[0].getEntry(TagType.MODEL).dataAsString;
+            string make = data[0].getEntry(TagType.MAKE).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
             string mode = "";
 
             if (mRaw.metadata.subsampling.y == 2 && mRaw.metadata.subsampling.x == 2)

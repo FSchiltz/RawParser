@@ -52,7 +52,7 @@ namespace RawNet
             {
                 Tag model = rootIFD.getEntryRecursive(TagType.MODEL);
 
-                if (model != null && model.dataAsString == "DSLR-A100")
+                if (model != null && model.DataAsString == "DSLR-A100")
                 {
                     // We've caught the elusive A100 in the wild, a transitional format
                     // between the simple sanity of the MRW custom format and the wordly
@@ -175,7 +175,7 @@ namespace RawNet
             {
                 for (Int32 i = 0; i < data.Count; i++)
                 {
-                    string make = data[i].getEntry(TagType.MAKE).dataAsString;
+                    string make = data[i].getEntry(TagType.MAKE).DataAsString;
                     /* Check for maker "SONY" without spaces */
                     if (make != "SONY")
                         bitPerPixel = 8;
@@ -377,8 +377,8 @@ namespace RawNet
             List<IFD> data = rootIFD.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("ARW Support check: Model name found");
-            string make = data[0].getEntry(TagType.MAKE).dataAsString;
-            string model = data[0].getEntry(TagType.MODEL).dataAsString;
+            string make = data[0].getEntry(TagType.MAKE).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
             this.checkCameraSupported(metaData, make, model, "");
         }
 
@@ -395,8 +395,8 @@ namespace RawNet
             if (!data[0].hasEntry(TagType.MAKE))
                 throw new RawDecoderException("ARW Decoder: Make name not found");
 
-            string make = data[0].getEntry(TagType.MAKE).dataAsString;
-            string model = data[0].getEntry(TagType.MODEL).dataAsString;
+            string make = data[0].getEntry(TagType.MAKE).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
 
             Tag isoTag = rootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)

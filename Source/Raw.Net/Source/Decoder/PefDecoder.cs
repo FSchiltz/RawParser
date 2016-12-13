@@ -74,8 +74,8 @@ namespace RawNet
             if (!data[0].hasEntry(TagType.MAKE))
                 throw new RawDecoderException("PEF Support: Make name not found");
 
-            string make = data[0].getEntry(TagType.MAKE).dataAsString;
-            string model = data[0].getEntry(TagType.MODEL).dataAsString;
+            string make = data[0].getEntry(TagType.MAKE).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
             this.checkCameraSupported(metaData, make, model, "");
         }
 
@@ -90,8 +90,8 @@ namespace RawNet
 
             IFD raw = data[0];
 
-            string make = raw.getEntry(TagType.MAKE).dataAsString;
-            string model = raw.getEntry(TagType.MODEL).dataAsString;
+            string make = raw.getEntry(TagType.MAKE).DataAsString;
+            string model = raw.getEntry(TagType.MODEL).DataAsString;
 
             Tag isoTag = mRootIFD.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)

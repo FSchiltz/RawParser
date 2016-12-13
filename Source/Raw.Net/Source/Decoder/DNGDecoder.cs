@@ -49,8 +49,8 @@ namespace RawNet
             var t2 = mRootIFD.getEntryRecursive(TagType.MODEL);
             if (t != null && t != null)
             {
-                string make = t.dataAsString;
-                string model = t2.dataAsString;
+                string make = t.DataAsString;
+                string model = t2.DataAsString;
                 make = make.Trim();
                 model = model.Trim();
                 mRaw.metadata.make = make;
@@ -73,7 +73,7 @@ namespace RawNet
                     t = mRootIFD.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
                     if (t != null)
                     {
-                        mRaw.metadata.canonical_id = t.dataAsString;
+                        mRaw.metadata.canonical_id = t.DataAsString;
                     }
                     else
                     {
@@ -94,7 +94,7 @@ namespace RawNet
                 var t3 = mRootIFD.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
                 if (t3 != null)
                 {
-                    string unique = t3.dataAsString;
+                    string unique = t3.DataAsString;
                     this.checkCameraSupported(metaData, unique, unique, "dng");
                     return;
                 }
@@ -106,8 +106,8 @@ namespace RawNet
             }
 
             List<IFD> data = mRootIFD.getIFDsWithTag(TagType.MODEL);
-            string make = data[0].getEntry(TagType.MAKE).dataAsString;
-            string model = data[0].getEntry(TagType.MODEL).dataAsString;
+            string make = data[0].getEntry(TagType.MAKE).DataAsString;
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
             this.checkCameraSupported(metaData, make, model, "dng");
         }
 
