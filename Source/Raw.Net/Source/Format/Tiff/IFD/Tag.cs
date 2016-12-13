@@ -1,5 +1,8 @@
 ﻿using System.IO;
 using System;
+using System.Text;
+using System.Linq;
+using System.Diagnostics;
 
 namespace RawNet
 {
@@ -35,13 +38,12 @@ namespace RawNet
 
     internal class Tag
     {
-        public TagType tagId { get; set; }
+        public TagType TagId { get; set; }
         public TiffDataType dataType;
         public uint dataCount;
         public uint dataOffset;
         public object[] data;
-        public string displayName { get; set; }
-        public string dataAsString
+        public string DataAsString
         {
             get
             {
@@ -61,7 +63,9 @@ namespace RawNet
                             temp += "\0";
                             break;
                         case TiffDataType.ASCII:
-                            temp = (string)data[0];
+                            //remove \0 if any
+                            if ((byte)data[dataCount - 1] == 0) data[dataCount - 1] = (byte)' ';
+                            temp = Encoding.ASCII.GetString(data.Cast<byte>().ToArray());
                             break;
                         case TiffDataType.SHORT:
                             foreach (object t in data)
@@ -114,12 +118,93 @@ namespace RawNet
             }
         }
 
-        public Tag()
+        public Tag(TIFFBinaryReader fileStream, int baseOffset)
         {
-            data = new object[1];
-            dataCount = 1;
-            dataType = TiffDataType.UNDEFINED;
-            displayName = "";
+            TagId = (TagType)fileStream.ReadUInt16();
+
+            dataType = (TiffDataType)fileStream.ReadUInt16();
+            dataCount = fileStream.ReadUInt32();
+
+            dataOffset = 0;
+            if (((dataCount * getTypeSize(dataType) > 4)))
+            {
+                dataOffset = (uint)(fileStream.ReadUInt32());
+            }
+            //Get the tag data
+            data = new Object[dataCount];
+            long firstPosition = fileStream.Position;
+            if (dataOffset > 1)
+            {
+                fileStream.Position = dataOffset + baseOffset;
+                //todo check if correct
+            }
+
+            for (int j = 0; j < dataCount; j++)
+            {
+                try
+                {
+                    switch (dataType)
+                    {
+                        case TiffDataType.BYTE:
+                        case TiffDataType.UNDEFINED:
+                        case TiffDataType.ASCII:
+                        case TiffDataType.OFFSET:
+                            data[j] = fileStream.ReadByte();
+                            break;
+                        case TiffDataType.SHORT:
+                            data[j] = fileStream.ReadUInt16();
+                            break;
+                        case TiffDataType.LONG:
+                            data[j] = fileStream.ReadUInt32();
+                            break;
+                        case TiffDataType.RATIONAL:
+                            data[j] = fileStream.ReadDouble();
+                            break;
+                        case TiffDataType.SBYTE:
+                            data[j] = fileStream.ReadSByte();
+                            break;
+                        case TiffDataType.SSHORT:
+                            data[j] = fileStream.ReadInt16();
+                            //if ( dataOffset == 0 &&  dataCount == 1) fileStream.ReadInt16();
+                            break;
+                        case TiffDataType.SLONG:
+                            data[j] = fileStream.ReadInt32();
+                            break;
+                        case TiffDataType.SRATIONAL:
+                            //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.
+                            //TODO remove this Fix
+                            if (dataOffset == 0)
+                            {
+                                data[j] = .0;
+                            }
+                            else
+                            {
+                                data[j] = fileStream.ReadDouble();
+                            }
+                            break;
+                        case TiffDataType.FLOAT:
+                            data[j] = fileStream.ReadSingle();
+                            break;
+                        case TiffDataType.DOUBLE:
+                            data[j] = fileStream.ReadDouble();
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Error " + e.Message + " while reading IFD tag: " + dataType.ToString());
+                }
+            }
+            if (dataOffset > 1)
+            {
+                fileStream.BaseStream.Position = firstPosition;
+            }
+            else if (dataOffset == 0)
+            {
+                int k = (int)dataCount * getTypeSize(dataType);
+                if (k < 4)
+                    fileStream.ReadBytes(4 - k);
+            }
         }
 
         public int getTypeSize(TiffDataType id)
@@ -280,6 +365,6 @@ namespace RawNet
 (((UInt64)(data)[pos + 5]) << 16) |
 (((UInt64)(data)[pos + 6]) << 8) |
 ((UInt64)(data)[pos + 7]));
-        }       
+        }
     }
 }
