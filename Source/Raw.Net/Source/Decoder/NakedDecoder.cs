@@ -15,7 +15,7 @@ namespace RawNet
         }
 
 
-        protected override RawImage decodeRawInternal()
+        protected override void decodeRawInternal()
         {
             UInt32 width = 0, height = 0, filesize = 0, bits = 0, offset = 0;
             if (cam.hints.TryGetValue("full_width", out string tmp))
@@ -77,8 +77,6 @@ namespace RawNet
             reader = new TIFFBinaryReader(reader.BaseStream, offset, (uint)reader.BaseStream.Length);
             Point2D pos = new Point2D(0, 0);
             readUncompressedRaw(ref reader, rawImage.dim, pos, (int)(width * bits / 8), (int)bits, bo);
-
-            return rawImage;
         }
 
         protected override void checkSupportInternal()
@@ -88,7 +86,7 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal()
         {
-            setMetaData(metaData, cam.make, cam.model, cam.mode, 0);
+            setMetaData(metaData, cam.make, cam.model, cam.mode);
         }
 
     }

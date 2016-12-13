@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace RawNet
@@ -11,7 +12,7 @@ namespace RawNet
             decoderVersion = 3;
         }
 
-        protected override RawImage decodeRawInternal()
+        protected override void decodeRawInternal()
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.STRIPOFFSETS);
             if (data.Count == 0)
@@ -24,7 +25,7 @@ namespace RawNet
             if (1 == compression || compression == 32773)
             {
                 decodeUncompressed(ref raw, BitOrder.Jpeg);
-                return rawImage;
+                return;
             }
 
             if (65535 != compression)
@@ -59,8 +60,6 @@ namespace RawNet
                 rawImage.errors.Add(e.Message);
                 // Let's ignore it, it may have delivered somewhat useful data.
             }
-
-            return rawImage;
         }
 
         protected override void checkSupportInternal()
@@ -68,7 +67,7 @@ namespace RawNet
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("PEF Support check: Model name found");
-            if (!data[0].hasEntry(TagType.MAKE))
+            if (!data[0].tags.ContainsKey(TagType.MAKE))
                 throw new RawDecoderException("PEF Support: Make name not found");
 
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
@@ -78,8 +77,6 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal()
         {
-            int iso = 0;
-            rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
@@ -92,12 +89,23 @@ namespace RawNet
 
             Tag isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
-                iso = isoTag.getInt();
+                rawImage.metadata.isoSpeed = isoTag.getInt();
 
-            setMetaData(metaData, make, model, "", iso);
+            setMetaData(metaData, make, model, "");
+
+            //get cfa
+            var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
+            if (cfa == null)
+            {
+                Debug.WriteLine("CFA pattern is not found");
+                rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            }
+            else
+            {
+                rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.getInt(0), (CFAColor)cfa.getInt(1), (CFAColor)cfa.getInt(2), (CFAColor)cfa.getInt(3));
+            }
 
             // Read black level
-
             Tag black = ifd.getEntryRecursive((TagType)0x200);
             if (black != null)
             {
@@ -109,7 +117,6 @@ namespace RawNet
             }
 
             // Set the whitebalance
-
             Tag wb = ifd.getEntryRecursive((TagType)0x0201);
             if (wb != null)
             {

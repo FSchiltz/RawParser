@@ -56,7 +56,7 @@ namespace RawNet
             //check if no 
         }
 
-        protected override RawImage decodeRawInternal()
+        protected override void decodeRawInternal()
         {
             if (!ifd.tags.TryGetValue((TagType)0x0106, out var photoMetricTag)) throw new FormatException("File not correct");
             if (!ifd.tags.TryGetValue((TagType)0x0111, out var imageOffsetTag)) throw new FormatException("File not correct");
@@ -176,7 +176,6 @@ namespace RawNet
                 rawImage.ColorDepth = colorDepth;
                 rawImage.bpp = colorDepth;
                 rawImage.rawData = image;
-                return rawImage;
             }
             else throw new FormatException("Photometric interpretation " + photoMetricTag.DataAsString + " not supported yet");
         }

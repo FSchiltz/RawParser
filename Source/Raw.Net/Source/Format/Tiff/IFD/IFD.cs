@@ -48,12 +48,7 @@ namespace RawNet
 
             Parse(fileStream);
             nextOffset = fileStream.ReadUInt32();
-        }
-
-        internal bool hasEntry(TagType t)
-        {
-            return tags.ContainsKey(t);
-        }
+        }       
 
         protected void Parse(TIFFBinaryReader fileStream)
         {

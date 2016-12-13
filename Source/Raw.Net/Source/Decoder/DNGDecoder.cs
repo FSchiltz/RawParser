@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -86,6 +87,18 @@ namespace RawNet
                     {
                         rawImage.metadata.canonical_id = make + " " + model;
                     }
+                }
+
+                //get cfa
+                var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
+                if (cfa == null)
+                {
+                    Debug.WriteLine("CFA pattern is not found");
+                    rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                }
+                else
+                {
+                    rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.getInt(0), (CFAColor)cfa.getInt(1), (CFAColor)cfa.getInt(2), (CFAColor)cfa.getInt(3));
                 }
             }
         }
@@ -230,14 +243,14 @@ namespace RawNet
 
         void setBlack(IFD raw)
         {
-            if (raw.hasEntry(TagType.MASKEDAREAS))
+            if (raw.tags.ContainsKey(TagType.MASKEDAREAS))
                 if (decodeMaskedAreas(raw))
                     return;
             if (raw.getEntry(TagType.BLACKLEVEL) != null)
                 decodeBlackLevels(raw);
         }
 
-        protected override RawImage decodeRawInternal()
+        protected override void decodeRawInternal()
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.COMPRESSION);
 
@@ -273,7 +286,7 @@ namespace RawNet
             UInt32 sample_format = 1;
             UInt32 bps = raw.getEntry(TagType.BITSPERSAMPLE).getUInt();
 
-            if (raw.hasEntry(TagType.SAMPLEFORMAT))
+            if (raw.tags.ContainsKey(TagType.SAMPLEFORMAT))
                 sample_format = raw.getEntry(TagType.SAMPLEFORMAT).getUInt();
 
             if (sample_format != 1)
@@ -317,7 +330,7 @@ namespace RawNet
                 {
 
                     // Check if layout is OK, if present
-                    if (raw.hasEntry(TagType.CFALAYOUT))
+                    if (raw.tags.ContainsKey(TagType.CFALAYOUT))
                         if (raw.getEntry(TagType.CFALAYOUT).getShort() != 1)
                             throw new RawDecoderException("DNG Decoder: Unsupported CFA Layout.");
 
@@ -327,7 +340,7 @@ namespace RawNet
                     Tag pDim = raw.getEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
                     var cPat = raw.getEntry(TagType.CFAPATTERN).data;                 // Does NOT contain dimensions as some documents state
                                                                                       /*
-                                                                                            if (raw.hasEntry(CFAPLANECOLOR)) {
+                                                                                            if (raw.tags.ContainsKey(CFAPLANECOLOR)) {
                                                                                               Tag e = raw.getEntry(CFAPLANECOLOR);
                                                                                               unsigned stringcPlaneOrder = e.getData();       // Map from the order in the image, to the position in the CFA
                                                                                               printf("Planecolor: ");
@@ -455,7 +468,7 @@ namespace RawNet
                             throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported for compressed data.");
 
                         DngDecoderSlices slices = new DngDecoderSlices(reader, rawImage, compression);
-                        if (raw.hasEntry(TagType.TILEOFFSETS))
+                        if (raw.tags.ContainsKey(TagType.TILEOFFSETS))
                         {
                             UInt32 tilew = raw.getEntry(TagType.TILEWIDTH).getUInt();
                             UInt32 tileh = raw.getEntry(TagType.TILELENGTH).getUInt();
@@ -616,7 +629,7 @@ namespace RawNet
             // Apply stage 1 opcodes
             if (applyStage1DngOpcodes)
             {
-                if (raw.hasEntry(TagType.OPCODELIST1))
+                if (raw.tags.ContainsKey(TagType.OPCODELIST1))
                 {
                     // Apply stage 1 codes
                     try
@@ -697,7 +710,7 @@ namespace RawNet
             if (compression == 0x884c)
             {
                 /*
-                if (raw.hasEntry(TagType.OPCODELIST2))
+                if (raw.tags.ContainsKey(TagType.OPCODELIST2))
                 {
                     // We must apply black/white scaling
                     mRaw.scaleBlackWhite();
@@ -718,7 +731,6 @@ namespace RawNet
                     mRaw.whitePoint = 65535;
                 }*/
             }
-            return rawImage;
         }
 
         protected override Thumbnail decodeThumbInternal()
@@ -745,7 +757,7 @@ namespace RawNet
                         UInt32 sample_format = 1;
                         UInt32 bps = thumbIFD.getEntry(TagType.BITSPERSAMPLE).getUInt();
                         Point2D dim;
-                        if (thumbIFD.hasEntry(TagType.SAMPLEFORMAT))
+                        if (thumbIFD.tags.ContainsKey(TagType.SAMPLEFORMAT))
                             sample_format = thumbIFD.getEntry(TagType.SAMPLEFORMAT).getUInt();
                         try
                         {
@@ -833,7 +845,7 @@ namespace RawNet
                                 throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported for compressed data.");
 
                             DngDecoderSlices slices = new DngDecoderSlices(mFile, mRaw, compression);
-                            if (thumbIFD.hasEntry(TagType.TILEOFFSETS))
+                            if (thumbIFD.tags.ContainsKey(TagType.TILEOFFSETS))
                             {
                                 UInt32 tilew = thumbIFD.getEntry(TagType.TILEWIDTH).getUInt();
                                 UInt32 tileh = thumbIFD.getEntry(TagType.TILELENGTH).getUInt();

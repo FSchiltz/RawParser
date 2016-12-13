@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace RawNet
@@ -14,7 +15,7 @@ namespace RawNet
 
     internal class Cr2Decoder : TiffDecoder
     {
-        int[] sraw_coeffs = new int[3];      
+        int[] sraw_coeffs = new int[3];
 
         public Cr2Decoder(ref Stream file, CameraMetaData meta) : base(ref file, meta)
         {
@@ -46,7 +47,7 @@ namespace RawNet
             return temp;
         }
 
-        protected override RawImage decodeRawInternal()
+        protected override void decodeRawInternal()
         {
             if (hints.ContainsKey("old_format"))
             {
@@ -61,7 +62,7 @@ namespace RawNet
                         throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
                     else
                     {
-                        if (data2[0].hasEntry(TagType.STRIPOFFSETS))
+                        if (data2[0].tags.ContainsKey(TagType.STRIPOFFSETS))
                             off = data2[0].getEntry(TagType.STRIPOFFSETS).getUInt();
                         else
                             throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
@@ -137,7 +138,7 @@ namespace RawNet
                     }
                 }
 
-                return rawImage;
+                return;
             }
 
             List<IFD> data = ifd.getIFDsWithTag((TagType)0xc5d8);
@@ -206,7 +207,7 @@ namespace RawNet
             // In that case, we swap width and height, since this is the correct dimension
             bool flipDims = false;
             bool wrappedCr2Slices = false;
-            if (raw.hasEntry((TagType)0xc6c5))
+            if (raw.tags.ContainsKey((TagType)0xc6c5))
             {
                 UInt16 ss = raw.getEntry((TagType)0xc6c5).getUShort();
                 // sRaw
@@ -219,7 +220,7 @@ namespace RawNet
                     // In that format, the frame (as read by getSOF()) is 4032x3402, while the
                     // real image should be 4536x3024 (where the full vertical slices in
                     // the frame "wrap around" the image.
-                    if (hints.ContainsKey("wrapped_cr2_slices") && raw.hasEntry(TagType.IMAGEWIDTH) && raw.hasEntry(TagType.IMAGELENGTH))
+                    if (hints.ContainsKey("wrapped_cr2_slices") && raw.tags.ContainsKey(TagType.IMAGEWIDTH) && raw.tags.ContainsKey(TagType.IMAGELENGTH))
                     {
                         wrappedCr2Slices = true;
                         int w = raw.getEntry(TagType.IMAGEWIDTH).getInt();
@@ -243,7 +244,7 @@ namespace RawNet
             rawImage.Init();
 
             List<int> s_width = new List<int>();
-            if (raw.hasEntry(TagType.CANONCR2SLICE))
+            if (raw.tags.ContainsKey(TagType.CANONCR2SLICE))
             {
                 Tag ss = raw.getEntry(TagType.CANONCR2SLICE);
                 for (int i = 0; i < ss.getShort(0); i++)
@@ -292,8 +293,6 @@ namespace RawNet
             /*
             if (mRaw.metadata.subsampling.x > 1 || mRaw.metadata.subsampling.y > 1)
                 sRawInterpolate();*/
-
-            return rawImage;
         }
 
         protected override void checkSupportInternal()
@@ -301,7 +300,7 @@ namespace RawNet
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Support check: Model name not found");
-            if (!data[0].hasEntry(TagType.MAKE))
+            if (!data[0].tags.ContainsKey(TagType.MAKE))
                 throw new RawDecoderException("CR2 Support: Make name not found");
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
             string model = data[0].getEntry(TagType.MODEL).DataAsString;
@@ -311,7 +310,7 @@ namespace RawNet
             if (data.Count != 0)
             {
                 IFD raw = data[0];
-                if (raw.hasEntry((TagType)0xc6c5))
+                if (raw.tags.ContainsKey((TagType)0xc6c5))
                 {
                     UInt16 ss = raw.getEntry((TagType)0xc6c5).getUShort();
                     if (ss == 4)
@@ -326,8 +325,6 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal()
         {
-            int iso = 0;
-            rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
@@ -344,7 +341,7 @@ namespace RawNet
                 mode = "sRaw2";
             var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
-                iso = isoTag.getInt();
+                rawImage.metadata.isoSpeed = isoTag.getInt();
 
             // Fetch the white balance
             try
@@ -409,10 +406,22 @@ namespace RawNet
                 rawImage.errors.Add(e.Message);
                 // We caught an exception reading WB, just ignore it
             }
-            setMetaData(metaData, make, model, mode, iso);
+            setMetaData(metaData, make, model, mode);
+
+            //get cfa
+            var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
+            if (cfa == null)
+            {
+                Debug.WriteLine("CFA pattern is not found");
+                rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            }
+            else
+            {
+                rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.getInt(0), (CFAColor)cfa.getInt(1), (CFAColor)cfa.getInt(2), (CFAColor)cfa.getInt(3));
+            }
 
             rawImage.metadata.wbCoeffs[0] = rawImage.metadata.wbCoeffs[0] / rawImage.metadata.wbCoeffs[1];
-            rawImage.metadata.wbCoeffs[2] =  rawImage.metadata.wbCoeffs[2] / rawImage.metadata.wbCoeffs[1];
+            rawImage.metadata.wbCoeffs[2] = rawImage.metadata.wbCoeffs[2] / rawImage.metadata.wbCoeffs[1];
             rawImage.metadata.wbCoeffs[1] = rawImage.metadata.wbCoeffs[1] / rawImage.metadata.wbCoeffs[1];
         }
 

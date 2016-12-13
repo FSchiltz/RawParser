@@ -266,62 +266,29 @@ namespace RawNet
             return array;
         }
 
-        internal int getInt(int v)
-        {
-            return Convert.ToInt32(data[v]);
-        }
+        internal short getShort(int v) { return Convert.ToInt16(data[v]); }
 
-        internal int getInt()
-        {
-            return Convert.ToInt32(data[0]);
-        }
+        internal short getShort() { return getShort(0); }
 
-        internal uint getUInt()
-        {
-            return Convert.ToUInt32(data[0]);
-        }
+        internal ushort getUShort(int v) { return Convert.ToUInt16(data[v]); }
 
-        internal double getDouble()
-        {
-            return Convert.ToDouble(data[0]);
-        }
+        internal ushort getUShort() { return getUShort(0); }
 
-        internal uint getUInt(uint v)
-        {
-            return Convert.ToUInt32(data[v]);
-        }
+        internal int getInt(int v) { return Convert.ToInt32(data[v]); }
 
-        internal float getFloat(int v)
-        {
-            return Convert.ToSingle(data[v]);
-        }
+        internal int getInt() { return getInt(0); }
 
+        internal uint getUInt(uint v) { return Convert.ToUInt32(data[v]); }
 
-        internal float getFloat()
-        {
-            return Convert.ToSingle(data[0]);
-        }
+        internal uint getUInt() { return getUInt(0); }
 
-        internal short getShort(int v)
-        {
-            return Convert.ToInt16(data[v]);
-        }
+        internal double getDouble() { return getDouble(0); }
 
-        internal ushort getUShort(int v)
-        {
-            return Convert.ToUInt16(data[v]);
-        }
+        internal double getDouble(int v) { return Convert.ToDouble(data[v]); }
 
-        internal short getShort()
-        {
-            return Convert.ToInt16(data[0]);
-        }
+        internal float getFloat(int v) { return Convert.ToSingle(data[v]); }
 
-        internal ushort getUShort()
-        {
-            return Convert.ToUInt16(data[0]);
-        }
-
+        internal float getFloat() { return getFloat(0); }
 
         public void writeToStream(Stream s, ushort name, ulong count, object data, long offset)
         {

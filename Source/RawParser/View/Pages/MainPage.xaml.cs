@@ -252,8 +252,8 @@ namespace RawEditor
 
                     //change decoder detection with file extension
                     RawDecoder decoder = RawParser.GetDecoder(ref stream, metadata, file.FileType);
-                    decoder.checkSupport();
-                    thumbnail = decoder.decodeThumb();
+                   // decoder.checkSupport();
+                    thumbnail = decoder.DecodeThumb();
                     if (thumbnail != null)
                     {
                         //read the thumbnail
@@ -278,8 +278,9 @@ namespace RawEditor
                         });
                     }
 
-                    raw = decoder.DecodeRaw();
+                    decoder.DecodeRaw();
                     decoder.decodeMetaData();
+                    raw = decoder.rawImage;
                     raw.metadata.fileName = file.DisplayName;
                     raw.metadata.fileNameComplete = file.Name;
 
@@ -287,7 +288,7 @@ namespace RawEditor
                     decoder = null;
 
                     //read the exifs
-                    DisplayExif();
+                    DisplayExifAsync();
                     //scale the value
                     //raw.scaleValues();
 
@@ -422,33 +423,45 @@ namespace RawEditor
         }
         }*/
 
-        public async void DisplayExif()
+        public async void DisplayExifAsync()
         {
             //TODO add localized exifs name
             if (raw != null && raw.metadata != null)
             {
                 //create a list from the metadata object
-
                 Dictionary<string, string> exif = new Dictionary<string, string>();
                 exif.Add("File", raw.metadata.fileNameComplete);
-                //iso
-                if (raw.metadata.isoSpeed > 0)
-                    exif.Add("ISO", "" + raw.metadata.isoSpeed);
-                //maker
                 if (raw.metadata.make != null && raw.metadata.make.Trim() != "")
                     exif.Add("Maker", raw.metadata.make);
-                //model
                 if (raw.metadata.model != null && raw.metadata.model.Trim() != "")
                     exif.Add("Model", raw.metadata.model);
-                //mode
                 if (raw.metadata.mode != null && raw.metadata.mode.Trim() != "")
                     exif.Add("Image mode", raw.metadata.mode);
-                //dimension
+
+                exif.Add("Size", "" + ((raw.dim.x * raw.dim.y) / 1000000.0).ToString("F") + " MPixels");
                 exif.Add("Width", "" + raw.dim.x);
                 exif.Add("Height", "" + raw.dim.y);
-                //uncropped dim
                 exif.Add("Uncropped height", "" + raw.uncroppedDim.x);
                 exif.Add("Uncropped width", "" + raw.uncroppedDim.y);
+
+                if (raw.metadata.isoSpeed > 0)
+                    exif.Add("ISO", "" + raw.metadata.isoSpeed);
+                if (raw.metadata.aperture > 0)
+                    exif.Add("Aperture", "" + raw.metadata.aperture.ToString("F"));
+                if (raw.metadata.exposure > 0)
+                    exif.Add("Exposure time", "" + raw.metadata.ExposureAsString());
+
+                if (raw.metadata.timeTake != null)
+                    exif.Add("Time of capture", "" + raw.metadata.timeTake);
+                if (raw.metadata.timeModify != null)
+                    exif.Add("Time modified", "" + raw.metadata.timeModify);
+
+                if (raw.metadata.gps != null)
+                {
+                    exif.Add("Longitude", raw.metadata.gps.LongitudeToString());
+                    exif.Add("lattitude", raw.metadata.gps.LattitudeToString());
+                    exif.Add("altitude", raw.metadata.gps.AltitudeToString());
+                }
 
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                         {

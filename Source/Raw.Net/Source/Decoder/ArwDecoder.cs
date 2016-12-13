@@ -41,7 +41,7 @@ namespace RawNet
             return temp;
         }
 
-        protected override RawImage decodeRawInternal()
+        protected override void decodeRawInternal()
         {
             IFD raw = null;
             List<IFD> data = ifd.getIFDsWithTag(TagType.STRIPOFFSETS);
@@ -77,7 +77,7 @@ namespace RawNet
                         // Let's ignore it, it may have delivered somewhat useful data.
                     }
 
-                    return rawImage;
+                    return;
                 }
                 else if (hints.ContainsKey("srf_format"))
                 {
@@ -122,7 +122,7 @@ namespace RawNet
                     TIFFBinaryReader reader = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(image_data), len, (uint)image_data.Length);
                     Decode16BitRawBEunpacked(reader, w, h);
 
-                    return rawImage;
+                    return;
                 }
                 else
                 {
@@ -143,7 +143,7 @@ namespace RawNet
                     rawImage.errors.Add(e.Message);
                 }
 
-                return rawImage;
+                return;
             }
 
             if (32767 != compression)
@@ -231,9 +231,6 @@ namespace RawNet
             // Set the table, if it should be needed later.
             Debug.WriteLine("Set table is not correct");
             // mRaw.setTable(null);
-
-
-            return rawImage;
         }
 
         void DecodeUncompressed(IFD raw)
@@ -382,15 +379,11 @@ namespace RawNet
 
         protected override void decodeMetaDataInternal()
         {
-            //Default
-            int iso = 0;
-
-            rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
                 throw new RawDecoderException("ARW Meta Decoder: Model name found");
-            if (!data[0].hasEntry(TagType.MAKE))
+            if (!data[0].tags.ContainsKey(TagType.MAKE))
                 throw new RawDecoderException("ARW Decoder: Make name not found");
 
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
@@ -398,9 +391,22 @@ namespace RawNet
 
             Tag isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
-                iso = isoTag.getInt();
+                rawImage.metadata.isoSpeed = isoTag.getInt();
 
-            setMetaData(metaData, make, model, "", iso);
+            setMetaData(metaData, make, model, "");
+
+            //get cfa
+            var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
+            if (cfa == null)
+            {
+                Debug.WriteLine("CFA pattern is not found");
+                rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            }
+            else
+            {
+                rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.getInt(0), (CFAColor)cfa.getInt(1), (CFAColor)cfa.getInt(2), (CFAColor)cfa.getInt(3));
+            }
+
             rawImage.whitePoint >>= shiftDownScale;
             rawImage.blackLevel >>= shiftDownScale;
 
@@ -517,7 +523,7 @@ namespace RawNet
 
                 sony_private = new IFD(new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(ifp_data)), 0, ifd.endian, 0, -(int)off);
 
-                if (sony_private.hasEntry(TagType.SONYGRBGLEVELS))
+                if (sony_private.tags.ContainsKey(TagType.SONYGRBGLEVELS))
                 {
                     Tag wb = sony_private.getEntry(TagType.SONYGRBGLEVELS);
                     if (wb.dataCount != 4)
@@ -526,7 +532,7 @@ namespace RawNet
                     rawImage.metadata.wbCoeffs[1] = wb.getFloat(0) / wb.getFloat(0);
                     rawImage.metadata.wbCoeffs[2] = wb.getFloat(2) / wb.getFloat(0);
                 }
-                else if (sony_private.hasEntry(TagType.SONYRGGBLEVELS))
+                else if (sony_private.tags.ContainsKey(TagType.SONYRGGBLEVELS))
                 {
                     Tag wb = sony_private.getEntry(TagType.SONYRGGBLEVELS);
                     if (wb.dataCount != 4)
