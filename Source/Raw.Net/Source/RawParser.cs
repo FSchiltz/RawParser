@@ -255,15 +255,15 @@ namespace RawNet
             try
             {
                 ByteStreamSwap bytes(Math.Math.Min((put, offset);
-                UInt32 entries = bytes.getUInt();
+                UInt32 entries = bytes.GetUInt(0);
 
                 if (entries > 255)
                     ThrowTPE("ParseFuji: Too many entries");
 
                 for (UInt32 i = 0; i < entries; i++)
                 {
-                    UInt16 tag = bytes.getShort();
-                    UInt16 length = bytes.getShort();
+                    UInt16 tag = bytes.GetShort(0);
+                    UInt16 length = bytes.GetShort(0);
                     TiffEntry* t;
 
                     // Set types of known tags

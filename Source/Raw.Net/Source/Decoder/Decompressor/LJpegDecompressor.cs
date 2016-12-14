@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -431,7 +430,7 @@ namespace RawNet
             //long pos = input.BaseStream.Position;
             decodeScan();
 
-            input.Position = bits.getOffset();
+            input.Position = bits.GetOffset();
 
         }
 
@@ -731,14 +730,14 @@ namespace RawNet
              * First attempt to do complete decode, by using the first 14 bits
              */
 
-            bits.fill();
-            code = (int)bits.peekBitsNoFill(14);
+            bits.Fill();
+            code = (int)bits.PeekBitsNoFill(14);
             if (htbl.bigTable != null)
             {
                 val = htbl.bigTable[code];
                 if ((val & 0xff) != 0xff)
                 {
-                    bits.skipBitsNoFill((uint)val & 0xff);
+                    bits.SkipBitsNoFill((uint)val & 0xff);
                     return val >> 8;
                 }
             }
@@ -753,16 +752,16 @@ namespace RawNet
             l = (uint)val & 15;
             if (l != 0)
             {
-                bits.skipBitsNoFill(l);
+                bits.SkipBitsNoFill(l);
                 rv = val >> 4;
             }
             else
             {
-                bits.skipBitsNoFill(8);
+                bits.SkipBitsNoFill(8);
                 l = 8;
                 while (code > htbl.maxcode[l])
                 {
-                    temp = (int)bits.getBitNoFill();
+                    temp = (int)bits.GetBitNoFill();
                     code = (code << 1) | temp;
                     l++;
                 }
@@ -784,7 +783,7 @@ namespace RawNet
             if (rv == 16)
             {
                 if (mDNGCompatible)
-                    bits.skipBitsNoFill(16);
+                    bits.SkipBitsNoFill(16);
                 return -32768;
             }
 
@@ -794,7 +793,7 @@ namespace RawNet
                 if (rv > 16) // There is no values above 16 bits.
                     throw new Exception("Corrupt JPEG data: Too many bits requested.");
                 else
-                    bits.fill();
+                    bits.Fill();
             }
 
             /*
@@ -803,7 +802,7 @@ namespace RawNet
             */
             if (rv != 0)
             {
-                int x = (int)bits.getBitsNoFill((uint)rv);
+                int x = (int)bits.GetBitsNoFill((uint)rv);
                 if ((x & (1 << (rv - 1))) == 0)
                     x -= (1 << rv) - 1;
                 return x;

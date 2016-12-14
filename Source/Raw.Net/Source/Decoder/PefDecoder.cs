@@ -17,7 +17,7 @@ namespace RawNet
 
             IFD raw = data[0];
 
-            int compression = raw.getEntry(TagType.COMPRESSION).getInt();
+            int compression = raw.getEntry(TagType.COMPRESSION).GetInt(0);
 
             if (1 == compression || compression == 32773)
             {
@@ -39,18 +39,18 @@ namespace RawNet
             {
                 throw new RawDecoderException("PEF Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
             }
-            if (!reader.isValid(offsets.getUInt(), counts.getUInt()))
+            if (!reader.isValid(offsets.GetUInt(0), counts.GetUInt(0)))
                 throw new RawDecoderException("PEF Decoder: Truncated file.");
 
-            Int32 width = raw.getEntry(TagType.IMAGEWIDTH).getInt();
-            Int32 height = raw.getEntry(TagType.IMAGELENGTH).getInt();
+            Int32 width = raw.getEntry(TagType.IMAGEWIDTH).GetInt(0);
+            Int32 height = raw.getEntry(TagType.IMAGELENGTH).GetInt(0);
 
             rawImage.dim = new Point2D(width, height);
             rawImage.Init();
             try
             {
                 PentaxDecompressor l = new PentaxDecompressor(reader, rawImage);
-                l.decodePentax(ifd, offsets.getUInt(), counts.getUInt());
+                l.decodePentax(ifd, offsets.GetUInt(0), counts.GetUInt(0));
             }
             catch (IOException e)
             {
@@ -73,7 +73,7 @@ namespace RawNet
 
             Tag isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
-                rawImage.metadata.isoSpeed = isoTag.getInt();
+                rawImage.metadata.isoSpeed = isoTag.GetInt(0);
 
             SetMetaData(model);
 
@@ -86,7 +86,7 @@ namespace RawNet
             }
             else
             {
-                rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.getInt(0), (CFAColor)cfa.getInt(1), (CFAColor)cfa.getInt(2), (CFAColor)cfa.getInt(3));
+                rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
             // Read black level
@@ -96,7 +96,7 @@ namespace RawNet
                 if (black.dataCount == 4)
                 {
                     for (int i = 0; i < 4; i++)
-                        rawImage.blackLevelSeparate[i] = black.getInt(i);
+                        rawImage.blackLevelSeparate[i] = black.GetInt(i);
                 }
             }
 
@@ -106,9 +106,9 @@ namespace RawNet
             {
                 if (wb.dataCount == 4)
                 {
-                    rawImage.metadata.wbCoeffs[0] = wb.getInt(0);
-                    rawImage.metadata.wbCoeffs[1] = wb.getInt(1);
-                    rawImage.metadata.wbCoeffs[2] = wb.getInt(3);
+                    rawImage.metadata.wbCoeffs[0] = wb.GetInt(0);
+                    rawImage.metadata.wbCoeffs[1] = wb.GetInt(1);
+                    rawImage.metadata.wbCoeffs[2] = wb.GetInt(3);
                 }
             }
         }

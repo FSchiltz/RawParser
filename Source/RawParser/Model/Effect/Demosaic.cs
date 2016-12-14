@@ -15,7 +15,7 @@ namespace RawEditor
 
     public class Demosaic
     {
-        public static void demos(ref RawImage image, DemosAlgorithm algo)
+        public static void Demos(ref RawImage image, DemosAlgorithm algo)
         {
             ushort[] deflated = new ushort[image.dim.x * image.dim.y * 3];
             image.cpp = 3;
@@ -38,7 +38,7 @@ namespace RawEditor
                     break;
             }
             //set correct dim
-            image.mOffset = new Point2D();
+            image.offset = new Point2D();
             image.rawData = deflated;
         }
 
@@ -56,10 +56,10 @@ namespace RawEditor
         {
             Parallel.For(0, image.dim.y, row =>
             {
-                int realRow = row + image.mOffset.y;
+                int realRow = row + image.offset.y;
                 for (int col = 0; col < image.dim.x; col++)
                 {
-                    int realCol = col + image.mOffset.x;
+                    int realCol = col + image.offset.x;
                     int pixeltype = (int)image.cfa.cfa[((row % 2) * 2) + col % 2];
 
                     deflated[(((row * image.dim.x) + col) * 3) + pixeltype] = image[realRow, realCol];
@@ -71,10 +71,10 @@ namespace RawEditor
         {
             Parallel.For(0, image.dim.y, row =>
               {
-                  int realRow = row + image.mOffset.y;
+                  int realRow = row + image.offset.y;
                   for (int col = 0; col < image.dim.x; col++)
                   {
-                      int realCol = col + image.mOffset.x;
+                      int realCol = col + image.offset.x;
                       CFAColor pixeltype = image.cfa.cfa[((row % 2) * 2) + col % 2];
                       if (pixeltype == CFAColor.GREEN)
                       {

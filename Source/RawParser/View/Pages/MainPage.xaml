@@ -26,12 +26,12 @@
             <AppBarButton x:Name="ImageChooseButton" 
                           Icon="BrowsePhotos"
                           x:Uid="OpenImage" 
-                          Click="AppBarImageChooseClick"
+                          Click="ImageChooseClickAsync"
                           VerticalAlignment="Top" FontSize="12" Width="40"/>
             <AppBarButton x:Name="saveButton" 
                           Icon="SaveLocal"
                           x:Uid="Save" 
-                          Click="SaveButton_Click"
+                          Click="SaveButtonClickAsync"
                           VerticalAlignment="Top"
                           IsEnabled="False"/>
             <AppBarButton IsEnabled="False" 
@@ -42,7 +42,7 @@
 
             <AppBarButton x:Name="settingsButton"  
                           Icon="Setting" x:Uid="Setting" 
-                          Click="AppbarSettingClick"/>
+                          Click="SettingClick"/>
             <!--
             <CommandBar.SecondaryCommands>
                 <AppBarButton x:Name="settingsButton2" 
@@ -187,7 +187,7 @@
                                 <TextBlock FontSize="12">Blue</TextBlock>
                                 <Slider x:Name="colorTintBlueSlider"    PointerCaptureLost="WBSlider_DragStop"  Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="False"/>
 
-                                <Button IsEnabled="False" Click="cameraWBCheck_Click" FontSize="12" Grid.Column="1" 
+                                <Button IsEnabled="False" Click="CameraWBCheck_Click" FontSize="12" Grid.Column="1" 
                                         x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton" Margin="0,0,0,10"/>
                                 <TextBlock FontSize="12" x:Uid="Saturation"/>
                                 <Slider x:Name="saturationSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False"/>

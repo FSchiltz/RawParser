@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Windows.Graphics.Imaging;
-using Windows.Storage.Streams;
 
 namespace RawNet
 {

@@ -11,12 +11,12 @@ namespace RawNet
     {
         public ushort[] previewData, rawData;
 
-        public Point2D dim, mOffset = new Point2D(), previewDim, previewOffset = new Point2D(), uncroppedDim;
+        public Point2D dim, offset = new Point2D(), previewDim, previewOffset = new Point2D(), uncroppedDim;
         public ColorFilterArray cfa = new ColorFilterArray();
         public double[] camMul, black, curve;
         public int rotation = 0, blackLevel, saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
-        public bool mDitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
+        public bool DitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
         public ushort ColorDepth { get; set; }
 
         public ImageMetaData metadata = new ImageMetaData();
@@ -95,7 +95,7 @@ namespace RawNet
                 return;
             }
 
-            mOffset += crop.pos;
+            offset += crop.pos;
 
             dim = crop.dim;
 
@@ -169,7 +169,7 @@ namespace RawNet
             {  // Estimate
                 int b = 65536;
                 uint m = 0;
-                for (int row = skipBorder; row < (dim.y - skipBorder + mOffset.y); row++)
+                for (int row = skipBorder; row < (dim.y - skipBorder + offset.y); row++)
                 {
                     for (int col = skipBorder; col < gw; col++)
                     {
@@ -191,7 +191,7 @@ namespace RawNet
             /* If filter has not set separate blacklevel, compute or fetch it */
             if (blackLevelSeparate[0] < 0)
                 CalculateBlackAreas();
-            gw = (int)(dim.x * cpp) + mOffset.x;
+            gw = (int)(dim.x * cpp) + offset.x;
             int[] mul = new int[4];
             int[] sub = new int[4];
             int depth_values = (int)(whitePoint - blackLevelSeparate[0]);
@@ -205,22 +205,22 @@ namespace RawNet
             for (int i = 0; i < 4; i++)
             {
                 int v = i;
-                if ((mOffset.x & 1) != 0)
+                if ((offset.x & 1) != 0)
                     v ^= 1;
-                if ((mOffset.y & 1) != 0)
+                if ((offset.y & 1) != 0)
                     v ^= 2;
                 mul[i] = (int)(16384.0f * 65535.0f / (whitePoint - blackLevelSeparate[v]));
                 sub[i] = blackLevelSeparate[v];
             }
 
-            Parallel.For(mOffset.y, dim.y + mOffset.y, y =>
+            Parallel.For(offset.y, dim.y + offset.y, y =>
             //for (int y = mOffset.y; y < dim.y + mOffset.y; y++)
             {
                 int v = dim.x + y * 36969;
-                for (int x = mOffset.x; x < gw; x++)
+                for (int x = offset.x; x < gw; x++)
                 {
                     int rand;
-                    if (mDitherScale)
+                    if (DitherScale)
                     {
                         v = 18000 * (v & 65535) + (v >> 16);
                         rand = half_scale_fp - (full_scale_fp * (v & 2047));
@@ -252,12 +252,12 @@ namespace RawNet
         public void ScaleBlackWhite()
         {
             const int skipBorder = 250;
-            int gw = (int)((dim.x - skipBorder + mOffset.x) * cpp);
+            int gw = (int)((dim.x - skipBorder + offset.x) * cpp);
             if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
                 int m = 0;
-                for (int row = skipBorder; row < (dim.y - skipBorder + mOffset.y); row++)
+                for (int row = skipBorder; row < (dim.y - skipBorder + offset.y); row++)
                 {
                     ushort[] pixel = rawData.Skip(skipBorder + row * dim.x).ToArray();
                     int pix = 0;
@@ -307,9 +307,9 @@ namespace RawNet
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
                     for (int y = area.offset; y < area.offset + area.size; y++)
                     {
-                        ushort[] pixel = previewData.Skip(mOffset.x + dim.x * y).ToArray();
+                        ushort[] pixel = previewData.Skip(offset.x + dim.x * y).ToArray();
                         int[] localhist = histogram.Skip((y & 1) * (65536 * 2)).ToArray();
-                        for (int x = mOffset.x; x < dim.x + mOffset.x; x++)
+                        for (int x = offset.x; x < dim.x + offset.x; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
@@ -322,7 +322,7 @@ namespace RawNet
                 {
                     if (area.offset + area.size > uncroppedDim.x)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
-                    for (int y = mOffset.y; y < dim.y + mOffset.y; y++)
+                    for (int y = offset.y; y < dim.y + offset.y; y++)
                     {
                         ushort[] pixel = previewData.Skip(area.offset + dim.x * y).ToArray();
                         int[] localhist = histogram.Skip((y & 1) * (65536 * 2)).ToArray();

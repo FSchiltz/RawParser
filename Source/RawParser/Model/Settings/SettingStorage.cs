@@ -1,7 +1,6 @@
 ﻿using RawNet;
 using System;
 using Windows.Storage;
-using Windows.UI.Xaml;
 
 namespace RawEditor
 {

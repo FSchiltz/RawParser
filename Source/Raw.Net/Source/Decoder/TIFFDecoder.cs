@@ -76,7 +76,7 @@ namespace RawNet
                 ushort[] image = new ushort[width * height * 3];
                 long strips = height / Convert.ToInt64(rowPerStripTag.data[0]), lastStrip = height % Convert.ToInt64(rowPerStripTag.data[0]);
                 long rowperstrip = Convert.ToInt64(rowPerStripTag.data[0]);
-                uint compression = imageCompressedTag.getUInt();
+                uint compression = imageCompressedTag.GetUInt(0);
                 if (compression == 1)
                 {
                     //not compressed
@@ -180,11 +180,11 @@ namespace RawNet
         protected override void DecodeMetaDataInternal()
         {
             var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.getInt();
+            if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.GetInt(0);
             var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
             var fn = ifd.getEntryRecursive(TagType.FNUMBER);
-            if (exposure != null) rawImage.metadata.exposure = exposure.getFloat();
-            if (fn != null) rawImage.metadata.aperture = fn.getFloat();
+            if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
+            if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
 
             var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
             var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
