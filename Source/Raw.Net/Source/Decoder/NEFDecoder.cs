@@ -865,7 +865,7 @@ namespace RawNet
                     rawImage.mOffset.x = 2;
                     break;
                 case "D3100":
-                    rawImage.dim.x -= 24;
+                    rawImage.dim.x -= 28;
                     rawImage.mOffset.x = 6;
                     break;
                 case "D5000":

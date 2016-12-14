@@ -34,26 +34,15 @@
         </VisualStateManager.VisualStateGroups>
         <StackPanel x:Name="listView" Padding="10,0,10,5" Margin="10,0" HorizontalAlignment="Left">
             <TextBlock TextWrapping="WrapWholeWords" FontSize="48" x:Uid="Settings"/>
-            <!--Display border-->
-            <!-- <Grid HorizontalAlignment="Left" Margin="10,0,0,0" >
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-            
-                <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
-                    Relative border around the image (not working yet):
-                </TextBlock>
-                <Slider ValueChanged="Slider_ValueChanged" Grid.Row="2" Width="100" HorizontalAlignment="Center" Margin="0,10" IsEnabled="False"/>
-         
-            </Grid>   -->
+
+            <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
+                    Relative border around the image:
+            </TextBlock>
+            <Slider x:Name="BorderSlider" ValueChanged="Slider_ValueChanged" Width="100" HorizontalAlignment="Center" Margin="0,10" />
 
             <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="Display"/>
             <TextBlock  TextWrapping="Wrap" FontSize="18"  x:Uid="ScalingFactor"/>
-            <ComboBox x:Name="ScaleComboBox" Grid.Row="2" SelectionChanged="PreviewFactor_SelectionChanged" Margin="0,0,0,10" HorizontalAlignment="Stretch"></ComboBox>
+            <ComboBox x:Name="ScaleComboBox" SelectionChanged="PreviewFactor_SelectionChanged" Margin="0,0,0,10" HorizontalAlignment="Stretch"></ComboBox>
             <TextBlock  TextWrapping="Wrap" FontSize="18"  x:Uid="Demos"/>
             <TextBlock TextWrapping="WrapWholeWords" FontSize="12"  x:Uid="DemosWarningText" Margin="0,0,0,5" MaxWidth="360"/>
             <ComboBox Grid.Row="2" SelectionChanged="Algo_SelectionChanged"  Margin="0,0,0,10" x:Name="DemosComboBox" HorizontalAlignment="Stretch"></ComboBox>

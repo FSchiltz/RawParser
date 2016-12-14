@@ -252,7 +252,7 @@ namespace RawEditor
 
                     //change decoder detection with file extension
                     RawDecoder decoder = RawParser.GetDecoder(ref stream, metadata, file.FileType);
-                   // decoder.checkSupport();
+                    // decoder.checkSupport();
                     thumbnail = decoder.DecodeThumb();
                     if (thumbnail != null)
                     {
@@ -263,7 +263,8 @@ namespace RawEditor
                             {
                                 if (thumbnail.type == ThumbnailType.JPEG)
                                 {
-                                    DisplayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data));
+                                    DisplayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data), true);
+
                                 }
                                 else if (thumbnail.type == ThumbnailType.RAW)
                                 {
@@ -309,7 +310,7 @@ namespace RawEditor
                         Demosaic.demos(ref raw, algo);
                     }
                     CreatePreview();
-                    UpdatePreview();
+                    UpdatePreview(true);
 
                     //activate the editing control
                     SetWB();
@@ -397,22 +398,22 @@ namespace RawEditor
 
         /*private void SetScrollProperty()
         {                       
-            if (currentImageDisplayedWidth > 0 && currentImageDisplayedHeight > 0)
+            if (raw.previewDim.x > 0 && raw.previewDim.y > 0)
             {
                 float x = 0;
                 double relativeBorder = SettingStorage.ImageBoxBorder;
-                if ((currentImageDisplayedWidth / currentImageDisplayedHeight) < (ImageDisplay.ActualWidth / ImageDisplay.ActualHeight))
+                if ((raw.previewDim.x / raw.previewDim.y) < (ImageDisplay.ActualWidth / ImageDisplay.ActualHeight))
                 {
                     x = (float)(ImageDisplay.ViewportWidth /
-                        (currentImageDisplayedWidth +
-                            (relativeBorder * currentImageDisplayedWidth)
+                        (raw.previewDim.x +
+                            (relativeBorder * raw.previewDim.x)
                         ));
                 }
                 else
                 {
                     x = (float)(ImageDisplay.ViewportHeight /
-                        (currentImageDisplayedHeight +
-                            (relativeBorder * currentImageDisplayedHeight)
+                        (raw.previewDim.y +
+                            (relativeBorder * raw.previewDim.y)
                         ));
                 }
                 if (x < 0.1) x = 0.1f;
@@ -626,7 +627,7 @@ namespace RawEditor
             }
         }
 
-        private void DisplayImage(SoftwareBitmap image)
+        private void DisplayImage(SoftwareBitmap image, bool reset)
         {
             if (image != null)
             {
@@ -642,16 +643,37 @@ namespace RawEditor
                                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                                     image.CopyToBuffer(bitmap.PixelBuffer);
                                     ImageBox.Source = bitmap;
-                                    //currentImageDisplayedHeight = bitmap.PixelHeight;
-                                    //currentImageDisplayedWidth = bitmap.PixelWidth;
-                                    //SetScrollProperty();
+                                    if (reset)
+                                        SetScrollProperty(bitmap.PixelWidth, bitmap.PixelHeight);
                                 });
                     }
                 });
             }
         }
 
-        private void UpdatePreview()
+        private void SetScrollProperty(int w, int h)
+        {
+            if (w > 0 && h > 0)
+            {
+                float x = 0;
+                double relativeBorder = 1 + SettingStorage.ImageBoxBorder ;
+                if (w > h)
+                {
+                    x = (float)(ImageDisplay.ActualWidth / (w * relativeBorder));
+                }
+                else
+                {
+                    x = (float)(ImageDisplay.ActualHeight / (h * relativeBorder));
+                }
+                if (x < 0.1) x = 0.1f;
+                else if (x > 10) x = 10;
+                ImageDisplay.MinZoomFactor = 0.1f;
+                ImageDisplay.MaxZoomFactor = x + 10;
+                ImageDisplay.ChangeView(null, null, x);
+            }
+        }
+
+        private void UpdatePreview(bool reset)
         {
             //display the histogram                    
             Task histoTask = Task.Run(async () =>
@@ -663,7 +685,7 @@ namespace RawEditor
                 bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
             });
                 int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
-                DisplayImage(bitmap);
+                DisplayImage(bitmap, reset);
                 Histogram.Create(value, raw.ColorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
             });
         }
@@ -738,7 +760,7 @@ namespace RawEditor
                 cameraWB = false;
                 cameraWBCheck.IsEnabled = true;
                 EnableReset();
-                UpdatePreview();
+                UpdatePreview(false);
             }
         }
 
@@ -760,7 +782,7 @@ namespace RawEditor
             cameraWBCheck.IsEnabled = false;
             //TODO move slider to the camera WB
             SetWB();
-            UpdatePreview();
+            UpdatePreview(false);
         }
         #endregion
 
@@ -769,14 +791,14 @@ namespace RawEditor
             if (raw?.previewData != null)
             {
                 EnableReset();
-                UpdatePreview();
+                UpdatePreview(false);
             }
         }
 
         private void ResetButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             ResetControls();
-            UpdatePreview();
+            UpdatePreview(false);
         }
     }
 }
