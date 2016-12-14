@@ -279,18 +279,15 @@ namespace RawEditor
                     }
 
                     decoder.DecodeRaw();
-                    decoder.decodeMetaData();
+                    decoder.DecodeMetaData();
                     raw = decoder.rawImage;
                     raw.metadata.fileName = file.DisplayName;
                     raw.metadata.fileNameComplete = file.Name;
 
                     stream.Dispose();
                     decoder = null;
-
-                    //read the exifs
+                    
                     DisplayExifAsync();
-                    //scale the value
-                    //raw.scaleValues();
 
                     //demos
                     if (raw.cfa != null && raw.cpp == 1)
@@ -310,13 +307,13 @@ namespace RawEditor
                     }
                     CreatePreview();
                     UpdatePreview(true);
+                    thumbnail = null;
 
                     //activate the editing control
                     SetWB();
                     EnableEditingControl(true);
                     //dispose
                     file = null;
-                    raw.Thumbnail = null;
                     watch.Stop();
                     Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
                 }

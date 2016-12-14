@@ -97,7 +97,7 @@ namespace RawNet
 
             mRaw.whitePoint = curve[_max - 1];
             mRaw.blackLevel = curve[0];
-            mRaw.setTable(curve, _max, true);
+            mRaw.SetTable(curve, _max, true);
 
 
             UInt32 x, y;
@@ -120,18 +120,18 @@ namespace RawNet
                 pLeft1 = pUp1[y & 1];
                 pLeft2 = pUp2[y & 1];
                 uint dest = y * pitch;
-                mRaw.setWithLookUp((ushort)Common.clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
-                mRaw.setWithLookUp((ushort)Common.clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
+                mRaw.SetWithLookUp((ushort)Common.clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
+                mRaw.SetWithLookUp((ushort)Common.clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
                 for (x = 1; x < cw; x++)
                 {
                     bits.checkPos();
                     pLeft1 += HuffDecodeNikon(bits);
                     pLeft2 += HuffDecodeNikon(bits);
-                    mRaw.setWithLookUp((ushort)Common.clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
-                    mRaw.setWithLookUp((ushort)Common.clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
+                    mRaw.SetWithLookUp((ushort)Common.clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
+                    mRaw.SetWithLookUp((ushort)Common.clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
                 }
             }
-            mRaw.setTable(curve, _max, false);
+            mRaw.SetTable(curve, _max, false);
         }
 
         /*

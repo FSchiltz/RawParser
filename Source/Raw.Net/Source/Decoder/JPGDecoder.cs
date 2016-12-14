@@ -28,12 +28,7 @@ namespace RawNet
         {
         }
 
-        protected override void checkSupportInternal()
-        {            
-
-        }
-
-        protected override void decodeMetaDataInternal()
+        protected override void DecodeMetaDataInternal()
         {
             //fill useless metadata
             rawImage.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
@@ -48,7 +43,7 @@ namespace RawNet
             }
         }
 
-        protected override void decodeRawInternal()
+        protected override void DecodeRawInternal()
         {
             rawImage.ColorDepth = 8;
             rawImage.cpp = 3;

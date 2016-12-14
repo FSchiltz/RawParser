@@ -15,10 +15,7 @@ namespace RawNet
             shiftDownScale = 0;
         }
 
-        /**
-       * Taken from nikon decoder
-       */
-        protected override Thumbnail decodeThumbInternal()
+        protected override Thumbnail DecodeThumbInternal()
         {
             //find the preview ifd Preview is in the rootIFD (smaller preview in subiFD use those)
             List<IFD> possible = ifd.getIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT);
@@ -40,7 +37,7 @@ namespace RawNet
             return temp;
         }
 
-        protected override void decodeRawInternal()
+        protected override void DecodeRawInternal()
         {
             IFD raw = null;
             List<IFD> data = ifd.getIFDsWithTag(TagType.STRIPOFFSETS);
@@ -201,7 +198,7 @@ namespace RawNet
                     curve[j] = (ushort)(curve[j - 1] + (1 << (int)i));
 
 
-            rawImage.setTable(curve, 0x4000, true);
+            rawImage.SetTable(curve, 0x4000, true);
 
             UInt32 c2 = counts.getUInt();
             UInt32 off = offsets.getUInt();
@@ -315,7 +312,7 @@ namespace RawNet
                                 if (p > 0x7ff)
                                     p = 0x7ff;
                             }
-                            rawImage.setWithLookUp((ushort)(p << 1), ref rawImage.rawData, (uint)((y * rawImage.dim.x) + x + i * 2), ref random);
+                            rawImage.SetWithLookUp((ushort)(p << 1), ref rawImage.rawData, (uint)((y * rawImage.dim.x) + x + i * 2), ref random);
 
                         }
                         x += (x & 1) != 0 ? 31 : 1;  // Skip to next 32 pixels
@@ -366,17 +363,7 @@ namespace RawNet
                 throw new RawDecoderException("Unsupported bit depth");
         }
 
-        protected override void checkSupportInternal()
-        {/*
-            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
-            if (data.Count == 0)
-                throw new RawDecoderException("ARW Support check: Model name found");
-            string make = data[0].getEntry(TagType.MAKE).DataAsString;
-            string model = data[0].getEntry(TagType.MODEL).DataAsString;
-            this.checkCameraSupported(metaData, make, model, "");*/
-        }
-
-        protected override void decodeMetaDataInternal()
+        protected override void DecodeMetaDataInternal()
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
@@ -386,9 +373,7 @@ namespace RawNet
                 throw new RawDecoderException("ARW Decoder: Make name not found");
 
             string make = data[0].getEntry(TagType.MAKE).DataAsString;
-            string model = data[0].getEntry(TagType.MODEL).DataAsString;            
-
-            //setMetaData(metaData, make, model, "");
+            string model = data[0].getEntry(TagType.MODEL).DataAsString;
 
             //get cfa
             var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
@@ -470,7 +455,8 @@ namespace RawNet
             if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
         }
 
-        protected override void SetMetaData(string model) {
+        protected override void SetMetaData(string model)
+        {
             throw new NotImplementedException();
         }
 

@@ -9,7 +9,7 @@ namespace RawNet
     {
         public PefDecoder(ref Stream stream) : base(ref stream) { }
 
-        protected override void decodeRawInternal()
+        protected override void DecodeRawInternal()
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.STRIPOFFSETS);
             if (data.Count == 0)
@@ -21,7 +21,7 @@ namespace RawNet
 
             if (1 == compression || compression == 32773)
             {
-                decodeUncompressed(ref raw, BitOrder.Jpeg);
+                DecodeUncompressed(ref raw, BitOrder.Jpeg);
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace RawNet
             this.checkCameraSupported(metaData, make, model, "");*/
         }
 
-        protected override void decodeMetaDataInternal()
+        protected override void DecodeMetaDataInternal()
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
