@@ -60,32 +60,6 @@ namespace RawNet
                 rawImage.metadata.make = make;
                 rawImage.metadata.model = model;
 
-                /*
-                Camera cam = metaData.getCamera(make, model, "dng");
-                if (cam == null) //Also look for non-DNG cameras in case it's a converted file
-                    cam = metaData.getCamera(make, model, "");
-                if (cam != null)
-                {
-                    rawImage.metadata.canonical_make = cam.canonical_make;
-                    rawImage.metadata.canonical_model = cam.canonical_model;
-                    rawImage.metadata.canonical_alias = cam.canonical_alias;
-                    rawImage.metadata.canonical_id = cam.canonical_id;
-                }
-                else
-                {
-                    rawImage.metadata.canonical_make = make;
-                    rawImage.metadata.canonical_model = rawImage.metadata.canonical_alias = model;
-                    t = ifd.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
-                    if (t != null)
-                    {
-                        rawImage.metadata.canonical_id = t.DataAsString;
-                    }
-                    else
-                    {
-                        rawImage.metadata.canonical_id = make + " " + model;
-                    }
-                }*/
-
                 //get cfa
                 var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
                 if (cfa == null)
@@ -112,38 +86,9 @@ namespace RawNet
                 if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
             }
         }
-
-        /* DNG Images are assumed to be decodable unless explicitly set so */
-        protected override void checkSupportInternal()
-        {
-            /*
-            var t = ifd.getEntryRecursive(TagType.MAKE);
-            var t2 = ifd.getEntryRecursive(TagType.MODEL);
-            if (!(t != null && t2 != null))
-            {
-                // Check "Unique Camera Model" instead, uses this for both make + model.
-                var t3 = ifd.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
-                if (t3 != null)
-                {
-                    string unique = t3.DataAsString;
-                    this.checkCameraSupported(metaData, unique, unique, "dng");
-                    return;
-                }
-                else
-                {
-                    // If we don't have make/model we cannot tell, but still assume yes.
-                    return;
-                }
-            }
-
-            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
-            string make = data[0].getEntry(TagType.MAKE).DataAsString;
-            string model = data[0].getEntry(TagType.MODEL).DataAsString;
-            this.checkCameraSupported(metaData, make, model, "dng");*/
-        }
-
+        
         /* Decodes DNG masked areas into blackareas in the image */
-        bool decodeMaskedAreas(IFD raw)
+        bool DecodeMaskedAreas(IFD raw)
         {
             Tag masked = raw.getEntry(TagType.MASKEDAREAS);
 
@@ -176,7 +121,7 @@ namespace RawNet
             return rawImage.blackAreas.Count != 0;
         }
 
-        bool decodeBlackLevels(IFD raw)
+        bool DecodeBlackLevels(IFD raw)
         {
             Point2D blackdim = new Point2D(1, 1);
 
@@ -252,13 +197,13 @@ namespace RawNet
             return true;
         }
 
-        void setBlack(IFD raw)
+        void SetBlack(IFD raw)
         {
             if (raw.tags.ContainsKey(TagType.MASKEDAREAS))
-                if (decodeMaskedAreas(raw))
+                if (DecodeMaskedAreas(raw))
                     return;
             if (raw.getEntry(TagType.BLACKLEVEL) != null)
-                decodeBlackLevels(raw);
+                DecodeBlackLevels(raw);
         }
 
         protected override void DecodeRawInternal()
@@ -682,7 +627,7 @@ namespace RawNet
             catch (Exception) { }
 
             // Set black
-            setBlack(raw);
+            SetBlack(raw);
 
             //convert to linear value
             //*

@@ -457,7 +457,68 @@ namespace RawNet
 
         protected override void SetMetaData(string model)
         {
-            throw new NotImplementedException();
+            if (rawImage.dim.x > 3888)
+            {
+                rawImage.blackLevel = 128 << (rawImage.ColorDepth - 12);
+            }
+
+            switch (rawImage.dim.x)
+            {
+                case 3984:
+                    rawImage.dim.x = 3925;
+                    //order = 0x4d4d;
+                    break;
+                case 4288:
+                    rawImage.dim.x -= 32;
+                    break;
+                case 4600:
+                    if (model.Contains("DSLR-A350"))
+                        rawImage.dim.y -= 4;
+                    rawImage.blackLevel = 0;
+                    break;
+                case 4928:
+                    if (rawImage.dim.y < 3280) rawImage.dim.x -= 8;
+                    break;
+                case 5504:
+                    rawImage.dim.x -= (rawImage.dim.y > 3664) ? 8 : 32;
+                    if (model.StartsWith("DSC"))
+                        rawImage.blackLevel = 200 << (rawImage.ColorDepth - 12);
+                    break;
+                case 6048:
+                    rawImage.dim.x -= 24;
+                    if (model.Contains("RX1") || model.Contains("A99"))
+                        rawImage.dim.x -= 6;
+                    break;
+                case 7392:
+                    rawImage.dim.x -= 30;
+                    break;
+                case 8000:
+
+                    rawImage.dim.x -= 32;
+                    if (model.StartsWith("DSC"))
+                    {
+                        rawImage.ColorDepth = 14;
+                        //load_raw = &CLASS unpacked_load_raw;
+                        rawImage.blackLevel = 512;
+                    }
+                    break;
+            }
+            if (model == "DSLR-A100")
+            {
+                if (rawImage.dim.x == 3880)
+                {
+                    rawImage.dim.y--;
+                    rawImage.dim.x = ++rawImage.uncroppedDim.x;
+                }
+                else
+                {
+                    rawImage.dim.y -= 4;
+                    rawImage.dim.x -= 4;
+                    //order = 0x4d4d;
+                    //load_flags = 2;
+                }
+                //filters = 0x61616161;
+            }
         }
 
         unsafe void SonyDecrypt(byte[] ifpData, UInt32 len, UInt32 key)
