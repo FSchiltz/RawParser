@@ -19,7 +19,7 @@ namespace RawNet
         public bool DitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
         public ushort ColorDepth { get; set; }
 
-        public ImageMetaData metadata = new ImageMetaData();
+        public ImageMetadata metadata = new ImageMetadata();
         public uint pitch, cpp, bpp, whitePoint;
         public int[] blackLevelSeparate = new int[4];
         public List<String> errors = new List<string>();
@@ -37,17 +37,17 @@ namespace RawNet
 
         internal void Init()
         {
-            if (dim.x > 65535 || dim.y > 65535)
+            if (dim.width > 65535 || dim.height > 65535)
                 throw new RawDecoderException("RawImageData: Dimensions too large for allocation.");
-            if (dim.x <= 0 || dim.y <= 0)
+            if (dim.width <= 0 || dim.height <= 0)
                 throw new RawDecoderException("RawImageData: Dimension of one sides is less than 1 - cannot allocate image.");
             if (rawData != null)
                 throw new RawDecoderException("RawImageData: Duplicate data allocation in createData.");
-            pitch = (uint)(((dim.x * bpp) + 15) / 16) * 16;
-            rawData = new ushort[dim.x * dim.y * cpp];
+            pitch = (uint)(((dim.width * bpp) + 15) / 16) * 16;
+            rawData = new ushort[dim.width * dim.height * cpp];
             if (rawData == null)
                 throw new RawDecoderException("RawImageData::createData: Memory Allocation failed.");
-            uncroppedDim = new Point2D(dim.x, dim.y);
+            uncroppedDim = new Point2D(dim.width, dim.height);
         }
 
         /*
@@ -60,8 +60,8 @@ namespace RawNet
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var a = (row * uncroppedDim.x) + col;
-                if (row < 0 || row >= dim.y || col < 0 || col >= dim.x)
+                var a = (row * uncroppedDim.width) + col;
+                if (row < 0 || row >= dim.height || col < 0 || col >= dim.width)
                 {
                     return 0;
                 }
@@ -71,38 +71,38 @@ namespace RawNet
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                rawData[(row * dim.x) + col] = value;
+                rawData[(row * dim.width) + col] = value;
             }
         }
 
         public void SetTable(ushort[] table, int nfilled, bool dither)
         {
             TableLookUp t = new TableLookUp(1, dither);
-            t.setTable(0, table, nfilled);
+            t.SetTable(0, table, nfilled);
             this.table = (t);
         }
 
         public void Crop(Rectangle2D crop)
         {
-            if (!crop.dim.isThisInside(dim - crop.pos))
+            if (!crop.Dim.IsThisInside(dim - crop.Pos))
             {
                 Debug.WriteLine("WARNING: RawImageData::subFrame - Attempted to create new subframe larger than original size. Crop skipped.");
                 return;
             }
-            if (crop.pos.x < 0 || crop.pos.y < 0 || !crop.hasPositiveArea())
+            if (crop.Pos.width < 0 || crop.Pos.height < 0 || !crop.HasPositiveArea())
             {
                 Debug.WriteLine("WARNING: RawImageData::subFrame - Negative crop offset. Crop skipped.");
                 return;
             }
 
-            offset += crop.pos;
+            offset += crop.Pos;
 
-            dim = crop.dim;
+            dim = crop.Dim;
 
-            if ((crop.pos.x & 1) != 0)
-                cfa.shiftLeft(0);
-            if ((crop.pos.y & 1) != 0)
-                cfa.shiftDown(0);
+            if ((crop.Pos.width & 1) != 0)
+                cfa.ShiftLeft(0);
+            if ((crop.Pos.height & 1) != 0)
+                cfa.ShiftDown(0);
         }
      
         // setWithLookUp will set a single pixel by using the lookup table if supplied,
@@ -116,7 +116,7 @@ namespace RawNet
                 dst[offset] = value;
                 return;
             }
-            if (table.dither)
+            if (table.Dither)
             {/*
                 uint lookup = (uint)(table.tables[value * 2] | table.tables[value * 2 + 1] << 16);
                 uint basevalue = lookup & 0xffff;
@@ -145,7 +145,7 @@ namespace RawNet
                 *dest = value;
                 return;
             }
-            if (table.dither)
+            if (table.Dither)
             {
                 int basevalue = table.tables[value * 2];
                 uint delta = table.tables[value * 2 + 1];
@@ -164,17 +164,17 @@ namespace RawNet
             //skip 250 pixel to reduce calculation
             //TODO fix the condiftion
             const int skipBorder = 250;
-            int gw = (int)((dim.x - skipBorder) * cpp);
+            int gw = (int)((dim.width - skipBorder) * cpp);
             if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
                 uint m = 0;
-                for (int row = skipBorder; row < (dim.y - skipBorder + offset.y); row++)
+                for (int row = skipBorder; row < (dim.height - skipBorder + offset.height); row++)
                 {
                     for (int col = skipBorder; col < gw; col++)
                     {
-                        b = Math.Min(rawData[row * dim.x + col], b);
-                        m = Math.Min(rawData[row * dim.x + col], m);
+                        b = Math.Min(rawData[row * dim.width + col], b);
+                        m = Math.Min(rawData[row * dim.width + col], m);
                     }
                 }
                 if (blackLevel < 0)
@@ -185,13 +185,13 @@ namespace RawNet
             }
 
             /* Skip, if not needed */
-            if ((blackAreas.Count == 0 && blackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || dim.area() <= 0)
+            if ((blackAreas.Count == 0 && blackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || dim.Area() <= 0)
                 return;
 
             /* If filter has not set separate blacklevel, compute or fetch it */
             if (blackLevelSeparate[0] < 0)
                 CalculateBlackAreas();
-            gw = (int)(dim.x * cpp) + offset.x;
+            gw = (int)(dim.width * cpp) + offset.width;
             int[] mul = new int[4];
             int[] sub = new int[4];
             int depth_values = (int)(whitePoint - blackLevelSeparate[0]);
@@ -205,19 +205,19 @@ namespace RawNet
             for (int i = 0; i < 4; i++)
             {
                 int v = i;
-                if ((offset.x & 1) != 0)
+                if ((offset.width & 1) != 0)
                     v ^= 1;
-                if ((offset.y & 1) != 0)
+                if ((offset.height & 1) != 0)
                     v ^= 2;
                 mul[i] = (int)(16384.0f * 65535.0f / (whitePoint - blackLevelSeparate[v]));
                 sub[i] = blackLevelSeparate[v];
             }
 
-            Parallel.For(offset.y, dim.y + offset.y, y =>
+            Parallel.For(offset.height, dim.height + offset.height, y =>
             //for (int y = mOffset.y; y < dim.y + mOffset.y; y++)
             {
-                int v = dim.x + y * 36969;
-                for (int x = offset.x; x < gw; x++)
+                int v = dim.width + y * 36969;
+                for (int x = offset.width; x < gw; x++)
                 {
                     int rand;
                     if (DitherScale)
@@ -229,7 +229,7 @@ namespace RawNet
                     {
                         rand = 0;
                     }
-                    rawData[x + (y * dim.x * cpp)] = (ushort)Common.clampbits(((rawData[(y * dim.x * cpp) + x] - sub[(2 * (y & 1)) + (x & 1)]) * mul[(2 * (y & 1)) + (x & 1)] + 8192 + rand) >> 14, 16);
+                    rawData[x + (y * dim.width * cpp)] = (ushort)Common.Clampbits(((rawData[(y * dim.width * cpp) + x] - sub[(2 * (y & 1)) + (x & 1)]) * mul[(2 * (y & 1)) + (x & 1)] + 8192 + rand) >> 14, 16);
                 }
 
             });
@@ -252,14 +252,14 @@ namespace RawNet
         public void ScaleBlackWhite()
         {
             const int skipBorder = 250;
-            int gw = (int)((dim.x - skipBorder + offset.x) * cpp);
+            int gw = (int)((dim.width - skipBorder + offset.width) * cpp);
             if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
                 int m = 0;
-                for (int row = skipBorder; row < (dim.y - skipBorder + offset.y); row++)
+                for (int row = skipBorder; row < (dim.height - skipBorder + offset.height); row++)
                 {
-                    ushort[] pixel = rawData.Skip(skipBorder + row * dim.x).ToArray();
+                    ushort[] pixel = rawData.Skip(skipBorder + row * dim.width).ToArray();
                     int pix = 0;
                     for (int col = skipBorder; col < gw; col++)
                     {
@@ -276,7 +276,7 @@ namespace RawNet
             }
 
             /* Skip, if not needed */
-            if ((blackAreas.Count == 0 && blackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || dim.area() <= 0)
+            if ((blackAreas.Count == 0 && blackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || dim.Area() <= 0)
                 return;
 
             /* If filter has not set separate blacklevel, compute or fetch it */
@@ -298,40 +298,40 @@ namespace RawNet
 
                 /* Make sure area sizes are multiple of two, 
                    so we have the same amount of pixels for each CFA group */
-                area.size = area.size - (area.size & 1);
+                area.Size = area.Size - (area.Size & 1);
 
                 /* Process horizontal area */
-                if (!area.isVertical)
+                if (!area.IsVertical)
                 {
-                    if (area.offset + area.size > uncroppedDim.y)
+                    if (area.Offset + area.Size > uncroppedDim.height)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
-                    for (int y = area.offset; y < area.offset + area.size; y++)
+                    for (int y = area.Offset; y < area.Offset + area.Size; y++)
                     {
-                        ushort[] pixel = previewData.Skip(offset.x + dim.x * y).ToArray();
+                        ushort[] pixel = previewData.Skip(offset.width + dim.width * y).ToArray();
                         int[] localhist = histogram.Skip((y & 1) * (65536 * 2)).ToArray();
-                        for (int x = offset.x; x < dim.x + offset.x; x++)
+                        for (int x = offset.width; x < dim.width + offset.width; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
                     }
-                    totalpixels += area.size * dim.x;
+                    totalpixels += area.Size * dim.width;
                 }
 
                 /* Process vertical area */
-                if (area.isVertical)
+                if (area.IsVertical)
                 {
-                    if (area.offset + area.size > uncroppedDim.x)
+                    if (area.Offset + area.Size > uncroppedDim.width)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
-                    for (int y = offset.y; y < dim.y + offset.y; y++)
+                    for (int y = offset.height; y < dim.height + offset.height; y++)
                     {
-                        ushort[] pixel = previewData.Skip(area.offset + dim.x * y).ToArray();
+                        ushort[] pixel = previewData.Skip(area.Offset + dim.width * y).ToArray();
                         int[] localhist = histogram.Skip((y & 1) * (65536 * 2)).ToArray();
-                        for (int x = area.offset; x < area.size + area.offset; x++)
+                        for (int x = area.Offset; x < area.Size + area.Offset; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
                     }
-                    totalpixels += area.size * dim.y;
+                    totalpixels += area.Size * dim.height;
                 }
             }
 
@@ -377,22 +377,22 @@ namespace RawNet
          */
         public void CreatePreview(int previewFactor)
         {
-            previewDim = new Point2D(dim.x / previewFactor, dim.y / previewFactor);
-            Debug.WriteLine("Preview of size w:" + previewDim.x + "y:" + previewDim.y);
-            previewData = new ushort[previewDim.y * previewDim.x * cpp];
+            previewDim = new Point2D(dim.width / previewFactor, dim.height / previewFactor);
+            Debug.WriteLine("Preview of size w:" + previewDim.width + "y:" + previewDim.height);
+            previewData = new ushort[previewDim.height * previewDim.width * cpp];
             int doubleFactor = previewFactor * previewFactor;
             ushort maxValue = (ushort)((1 << ColorDepth) - 1);
             //loop over each block
-            Parallel.For(0, previewDim.y, y =>
+            Parallel.For(0, previewDim.height, y =>
             {
-                for (int x = 0; x < previewDim.x; x++)
+                for (int x = 0; x < previewDim.width; x++)
                 {
                     //find the mean of each block
                     long r = 0, g = 0, b = 0;
                     int xk = 0, yk = 0;
                     for (int i = 0; i < previewFactor; i++)
                     {
-                        int realY = dim.x * ((y * previewFactor) + i);
+                        int realY = dim.width * ((y * previewFactor) + i);
                         yk++;
                         for (int k = 0; k < previewFactor; k++)
                         {
@@ -414,9 +414,9 @@ namespace RawNet
                     if (r < 0) r = 0; else if (r > maxValue) r = maxValue;
                     if (g < 0) g = 0; else if (g > maxValue) g = maxValue;
                     if (b < 0) b = 0; else if (b > maxValue) b = maxValue;
-                    previewData[((y * previewDim.x) + x) * cpp] = (ushort)r;
-                    previewData[(((y * previewDim.x) + x) * cpp) + 1] = (ushort)g;
-                    previewData[(((y * previewDim.x) + x) * cpp) + 2] = (ushort)b;
+                    previewData[((y * previewDim.width) + x) * cpp] = (ushort)r;
+                    previewData[(((y * previewDim.width) + x) * cpp) + 1] = (ushort)g;
+                    previewData[(((y * previewDim.width) + x) * cpp) + 2] = (ushort)b;
                 }
             });
         }

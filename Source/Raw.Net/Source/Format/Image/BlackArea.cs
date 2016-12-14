@@ -4,15 +4,15 @@ namespace RawNet
 {
     public class BlackArea
     {
-        public Int32 offset { get; internal set; } // Offset in bayer pixels.
-        public Int32 size { get; internal set; }   // Size in bayer pixels.
-        public bool isVertical { get; internal set; }  // Otherwise horizontal
+        public Int32 Offset { get; internal set; } // Offset in bayer pixels.
+        public Int32 Size { get; internal set; }   // Size in bayer pixels.
+        public bool IsVertical { get; internal set; }  // Otherwise horizontal
 
-        public BlackArea(int _offset, int _size, bool _isVertical)
+        public BlackArea(int offset, int size, bool isVertical)
         {
-            offset = (_offset);
-            size = (_size);
-            isVertical = (_isVertical);
+            Offset = offset;
+            Size = size;
+            IsVertical = isVertical;
         }
     }
 }

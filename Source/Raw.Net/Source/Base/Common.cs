@@ -2,14 +2,9 @@
 
 namespace RawNet
 {
-    internal class Common
+    internal static class Common
     {
-        static public void memset<T>(T[] array, T value, int count)
-        {
-            for (int i = 0; i < count && i < array.Length; i++) array[i] = value;
-        }
-
-        static public int clampbits(int x, int n)
+        static public int Clampbits(int x, int n)
         {
             int _y_temp = x >> n;
             if ((_y_temp != 0))
@@ -17,7 +12,7 @@ namespace RawNet
             return x;
         }
 
-        static public int[] convertByteToInt(byte[] array)
+        static public int[] ConvertByteToInt(byte[] array)
         {
             int bytePerInt = sizeof(int);
             int[] temp = new int[array.Length / bytePerInt];
@@ -28,17 +23,17 @@ namespace RawNet
             return temp;
         }
 
-        static public void memcopy<T>(T[] dest, T[] src)
+        static public void Memcopy<T>(T[] dest, T[] src)
         {
-            memcopy<T>(dest, src, (uint)dest.Length);
+            Memcopy<T>(dest, src, (uint)dest.Length);
         }
 
-        internal static void memcopy<T>(T[] dest, T[] src, uint count)
+        internal static void Memcopy<T>(T[] dest, T[] src, uint count)
         {
-            memcopy<T>(dest, src, count, 0, 0);
+            Memcopy<T>(dest, src, count, 0, 0);
         }
 
-        internal static void memcopy<T>(T[] dest, T[] src, uint count, int destOffset, int srcOffset)
+        internal static void Memcopy<T>(T[] dest, T[] src, uint count, int destOffset, int srcOffset)
         {
             for (int i = 0; i < count; i++) dest[i + destOffset] = src[i + srcOffset];
         }
@@ -70,12 +65,12 @@ namespace RawNet
             }
         }
 
-        internal static Endianness getHostEndianness()
+        internal static Endianness GetHostEndianness()
         {
             return (BitConverter.IsLittleEndian) ? Endianness.little : Endianness.big;
         }
 
-        internal static bool strncmp(byte[] data, string v1, int count)
+        internal static bool Strncmp(byte[] data, string v1, int count)
         {
             for (int i = 0; i < count; i++)
             {
@@ -84,12 +79,12 @@ namespace RawNet
             return true;
         }
 
-        internal static bool memcmp(ref char[] a, ref byte[] b)
+        internal static bool Memcmp(ref char[] a, ref byte[] b)
         {
-            return memcmp(ref a, ref b, a.Length);
+            return Memcmp(ref a, ref b, a.Length);
         }
 
-        internal static bool memcmp(ref char[] a, ref byte[] b, int count)
+        internal static bool Memcmp(ref char[] a, ref byte[] b, int count)
         {
             for (int i = 0; i < count; i++)
             {
@@ -98,7 +93,7 @@ namespace RawNet
             return true;
         }
 
-        internal static uint[] convertByteToUInt(byte[] array)
+        internal static uint[] ConvertByteToUInt(byte[] array)
         {
             int bytePerInt = sizeof(uint);
             uint[] temp = new uint[array.Length / bytePerInt];
@@ -109,7 +104,7 @@ namespace RawNet
             return temp;
         }
 
-        internal static bool isPowerOfTwo(uint x)
+        internal static bool IsPowerOfTwo(uint x)
         {
             return (x != 0) && ((x & (x - 1)) == 0);
         }

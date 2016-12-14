@@ -2,9 +2,9 @@
 
 namespace RawEditor.Effect
 {
-    class Color
+    static public class Color
     {
-        public static void rgbToHsl(double r, double g, double b, uint maxValue, ref double h, ref double s, ref double l)
+        public static void RgbToHsl(double r, double g, double b, uint maxValue, ref double h, ref double s, ref double l)
         {
             r /= maxValue;
             g /= maxValue;
@@ -39,8 +39,7 @@ namespace RawEditor.Effect
             h /= 6;
         }
 
-
-        public static void hslToRgb(double h, double s, double l, uint maxValue, ref double r, ref double g, ref double b)
+        public static void HslToRgb(double h, double s, double l, uint maxValue, ref double r, ref double g, ref double b)
         {
             if (s == 0)
             {
@@ -50,16 +49,16 @@ namespace RawEditor.Effect
             {
                 var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
                 var p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1 / 3.0);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1 / 3.0);
+                r = Hue2rgb(p, q, h + 1 / 3.0);
+                g = Hue2rgb(p, q, h);
+                b = Hue2rgb(p, q, h - 1 / 3.0);
             }
             r *= maxValue;
             g *= maxValue;
             b *= maxValue;
         }
 
-        public static double hue2rgb(double p, double q, double t)
+        public static double Hue2rgb(double p, double q, double t)
         {
             if (t < 0) t += 1;
             else if (t > 1) t -= 1;

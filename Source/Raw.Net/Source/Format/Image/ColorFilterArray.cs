@@ -18,89 +18,88 @@ namespace RawNet
 
     public class ColorFilterArray
     {
-        public Point2D size { get; set; }
-        public CFAColor[] cfa { get; set; }
+        public Point2D Size { get; set; }
+        public CFAColor[] cfa;
 
-        public ColorFilterArray(Point2D _size)
+        public ColorFilterArray(Point2D size)
         {
-            setSize(_size);
+            SetSize(size);
         }
 
         public ColorFilterArray()
         {
-            size = new Point2D(0, 0);
+            Size = new Point2D(0, 0);
         }
 
         public ColorFilterArray(ColorFilterArray other)
         {
             cfa = null;
-            setSize(other.size);
+            SetSize(other.Size);
             if (cfa != null)
-                Common.memcopy(cfa, other.cfa, size.area());
+                Common.Memcopy(cfa, other.cfa, Size.Area());
         }
 
         // FC macro from dcraw outputs, given the filters definition, the dcraw color
         // number for that given position in the CFA pattern
-        protected uint FC(uint filters, int row, int col)
+        protected static uint FC(uint filters, int row, int col)
         {
             return ((filters) >> ((((row) << 1 & 14) + ((col) & 1)) << 1) & 3);
         }
 
         public ColorFilterArray(UInt32 filters)
         {
-            size = new Point2D(8, 2);
+            Size = new Point2D(8, 2);
             cfa = null;
-            setSize(size);
+            SetSize(Size);
 
             for (int x = 0; x < 8; x++)
             {
                 for (int y = 0; y < 2; y++)
                 {
-                    CFAColor c = toRawspeedColor(FC(filters, y, x));
-                    setColorAt(new Point2D(x, y), c);
+                    CFAColor c = ToRawspeedColor(FC(filters, y, x));
+                    SetColorAt(new Point2D(x, y), c);
                 }
             }
         }
 
         public ColorFilterArray Equal(ColorFilterArray other)
         {
-            setSize(other.size);
+            SetSize(other.Size);
             if (cfa != null)
-                Common.memcopy(cfa, other.cfa, size.area() * sizeof(CFAColor));
+                Common.Memcopy(cfa, other.cfa, Size.Area() * sizeof(CFAColor));
             return this;
         }
 
-        public void setSize(Point2D _size)
+        public void SetSize(Point2D size)
         {
-            size = _size;
+            Size = size;
             cfa = null;
-            if (size.area() > 100)
-                throw new RawDecoderException("ColorFilterArray:setSize if your CFA pattern is really " + size.area() + " pixels in area we may as well give up now");
-            if (size.area() <= 0)
+            if (Size.Area() > 100)
+                throw new RawDecoderException("ColorFilterArray:setSize if your CFA pattern is really " + Size.Area() + " pixels in area we may as well give up now");
+            if (Size.Area() <= 0)
                 return;
-            cfa = new CFAColor[size.area()];
+            cfa = new CFAColor[Size.Area()];
             if (cfa == null)
                 throw new RawDecoderException("ColorFilterArray:setSize Unable to allocate memory");
-            //Common.memset(cfa, CFAColor.UNKNOWN, (int)(size.area()));
         }
 
-        public CFAColor getColorAt(UInt32 x, UInt32 y)
+        public CFAColor GetColorAt(UInt32 x, UInt32 y)
         {
             if (cfa == null)
                 throw new RawDecoderException("ColorFilterArray:getColorAt: No CFA size set");
-            if (x >= (UInt32)size.x || y >= (UInt32)size.y)
+            if (x >= (UInt32)Size.width || y >= (UInt32)Size.height)
             {
-                x = (uint)(x % size.x);
-                y = (uint)(y % size.y);
+                x = (uint)(x % Size.width);
+                y = (uint)(y % Size.height);
             }
-            return cfa[x + y * size.x];
+            return cfa[x + y * Size.width];
         }
 
-        public void setCFA(Point2D in_size, CFAColor color1, CFAColor color2, CFAColor color3, CFAColor color4)
+        public void SetCFA(Point2D inSize, CFAColor color1, CFAColor color2, CFAColor color3, CFAColor color4)
         {
-            if (in_size != size)
+            if (inSize != Size)
             {
-                setSize(in_size);
+                SetSize(inSize);
             }
 
             cfa[0] = color1;
@@ -109,107 +108,80 @@ namespace RawNet
             cfa[3] = color4;
         }
 
-        public void shiftLeft(int n)
+        public void ShiftLeft(int n)
         {
-            if (size.x == 0)
+            if (Size.width == 0)
             {
                 throw new RawDecoderException("ColorFilterArray:shiftLeft: No CFA size set (or set to zero)");
             }
             //Debug.Write("Shift left:" + n + "\n");
-            int shift = n % size.x;
+            int shift = n % Size.width;
             if (0 == shift)
                 return;
-            CFAColor[] tmp = new CFAColor[size.x];
-            for (int y = 0; y < size.y; y++)
+            CFAColor[] tmp = new CFAColor[Size.width];
+            for (int y = 0; y < Size.height; y++)
             {
-                CFAColor[] old = cfa.Skip(y * size.x).ToArray();
-                Common.memcopy(tmp, old, (uint)((size.x - shift) * sizeof(CFAColor)), 0, shift);
-                Common.memcopy(tmp, old, (uint)(shift * sizeof(CFAColor)), size.x - shift, 0);
-                Common.memcopy(old, tmp, (uint)(size.x * sizeof(CFAColor)));
+                CFAColor[] old = cfa.Skip(y * Size.width).ToArray();
+                Common.Memcopy(tmp, old, (uint)((Size.width - shift) * sizeof(CFAColor)), 0, shift);
+                Common.Memcopy(tmp, old, (uint)(shift * sizeof(CFAColor)), Size.width - shift, 0);
+                Common.Memcopy(old, tmp, (uint)(Size.width * sizeof(CFAColor)));
             }
         }
 
-        public void shiftDown(int n)
+        public void ShiftDown(int n)
         {
-            if (size.y == 0)
+            if (Size.height == 0)
             {
                 throw new RawDecoderException("ColorFilterArray:shiftDown: No CFA size set (or set to zero)");
             }
             //Debug.Write("Shift down:" + n + "\n");
-            int shift = n % size.y;
+            int shift = n % Size.height;
             if (0 == shift)
                 return;
-            CFAColor[] tmp = new CFAColor[size.y];
-            for (int x = 0; x < size.x; x++)
+            CFAColor[] tmp = new CFAColor[Size.height];
+            for (int x = 0; x < Size.width; x++)
             {
                 CFAColor[] old = cfa.Skip(x).ToArray();
-                for (int y = 0; y < size.y; y++)
-                    tmp[y] = old[((y + shift) % size.y) * size.x];
-                for (int y = 0; y < size.y; y++)
-                    old[y * size.x] = tmp[y];
+                for (int y = 0; y < Size.height; y++)
+                    tmp[y] = old[((y + shift) % Size.height) * Size.width];
+                for (int y = 0; y < Size.height; y++)
+                    old[y * Size.width] = tmp[y];
             }
         }
 
-        protected string asString()
+        protected string AsString()
         {
             string dst = "";
-            for (int y = 0; y < size.y; y++)
+            for (int y = 0; y < Size.height; y++)
             {
-                for (int x = 0; x < size.x; x++)
+                for (int x = 0; x < Size.width; x++)
                 {
-                    dst += colorToString(getColorAt((uint)x, (uint)y));
-                    dst += (x == size.x - 1) ? "\n" : ",";
+                    dst += (GetColorAt((uint)x, (uint)y)).ToString();
+                    dst += (x == Size.width - 1) ? "\n" : ",";
                 }
             }
             return dst;
         }
 
-
-        protected string colorToString(CFAColor c)
+        public void SetColorAt(Point2D pos, CFAColor c)
         {
-            switch (c)
-            {
-                case CFAColor.RED:
-                    return "RED";
-                case CFAColor.GREEN:
-                    return "GREEN";
-                case CFAColor.BLUE:
-                    return "BLUE";
-                case CFAColor.CYAN:
-                    return "CYAN";
-                case CFAColor.MAGENTA:
-                    return "MAGENTA";
-                case CFAColor.YELLOW:
-                    return "YELLOW";
-                case CFAColor.WHITE:
-                    return "WHITE";
-                case CFAColor.FUJI_GREEN:
-                    return "FUJIGREEN";
-                default:
-                    return "UNKNOWN";
-            }
+            if (pos.width >= Size.width || pos.width < 0)
+                throw new RawDecoderException("SetColor: position out of CFA pattern");
+            if (pos.height >= Size.height || pos.height < 0)
+                throw new RawDecoderException("SetColor: position out of CFA pattern");
+            cfa[pos.width + pos.height * Size.width] = c;
         }
 
-
-        public void setColorAt(Point2D pos, CFAColor c)
-        {
-            if (pos.x >= size.x || pos.x < 0)
-                throw new RawDecoderException("SetColor: position out of CFA pattern");
-            if (pos.y >= size.y || pos.y < 0)
-                throw new RawDecoderException("SetColor: position out of CFA pattern");
-            cfa[pos.x + pos.y * size.x] = c;
-        }
-
-        protected UInt32 getDcrawFilter()
+        protected UInt32 GetDcrawFilter()
         {
             //dcraw magic
-            if (size.x == 6 && size.y == 6)
+            if (Size.width == 6 && Size.height == 6)
                 return 9;
 
-            if (size.x > 8 || size.y > 2 || cfa == null)
+            if (Size.width > 8 || Size.height > 2 || cfa == null)
                 return 1;
 
-            if (Math.Log(size.x, 2) % 1 == 0)
+            if (Math.Log(Size.width, 2) % 1 == 0)
                 return 1;
 
             UInt32 ret = 0;
@@ -217,25 +189,15 @@ namespace RawNet
             {
                 for (int y = 0; y < 2; y++)
                 {
-                    UInt32 c = toDcrawColor(getColorAt((uint)x, (uint)y));
+                    UInt32 c = ToDcrawColor(GetColorAt((uint)x, (uint)y));
                     int g = (x >> 1) * 8;
                     ret |= c << ((x & 1) * 2 + y * 4 + g);
                 }
             }
-            /*
-            for (int y = 0; y < size.y; y++)
-            {
-                for (int x = 0; x < size.x; x++)
-                {
-                    writeLog(DEBUG_PRIO_EXTRA, "%s,", colorToString((CFAColor)toDcrawColor(getColorAt(x, y))).c_str());
-                }
-                writeLog(DEBUG_PRIO_EXTRA, "\n");
-            }
-            writeLog(DEBUG_PRIO_EXTRA, "DCRAW filter:%x\n", ret);*/
             return ret;
         }
 
-        protected CFAColor toRawspeedColor(UInt32 dcrawColor)
+        protected static CFAColor ToRawspeedColor(UInt32 dcrawColor)
         {
             switch (dcrawColor)
             {
@@ -247,7 +209,7 @@ namespace RawNet
             return CFAColor.UNKNOWN;
         }
 
-        protected UInt32 toDcrawColor(CFAColor c)
+        protected static UInt32 ToDcrawColor(CFAColor c)
         {
             switch (c)
             {

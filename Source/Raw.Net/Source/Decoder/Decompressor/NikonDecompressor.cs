@@ -29,7 +29,7 @@ namespace RawNet
             }
         }
 
-        public void initTable(UInt32 huffSelect)
+        public void InitTable(UInt32 huffSelect)
         {
             HuffmanTable dctbl1 = huff[0];
             UInt32 acc = 0;
@@ -44,7 +44,7 @@ namespace RawNet
             {
                 dctbl1.huffval[i] = nikon_tree[huffSelect][i + 16];
             }
-            createHuffmanTable(dctbl1);
+            CreateHuffmanTable(dctbl1);
         }
 
         public void DecompressNikon(TIFFBinaryReader metadata, UInt32 w, UInt32 h, UInt32 bitsPS, UInt32 offset, UInt32 size)
@@ -56,7 +56,7 @@ namespace RawNet
             UInt32 split = 0;
             int[] pUp1 = new int[2];
             int[] pUp2 = new int[2];
-            mUseBigtable = true;
+            UseBigtable = true;
 
             //_RPT2(0, "Nef version v0:%u, v1:%u\n", v0, v1);
 
@@ -93,7 +93,7 @@ namespace RawNet
                 }
                 _max = (int)csize;
             }
-            initTable(huffSelect);
+            InitTable(huffSelect);
 
             mRaw.whitePoint = curve[_max - 1];
             mRaw.blackLevel = curve[0];
@@ -113,22 +113,22 @@ namespace RawNet
             {
                 if (split != 0 && (y == split))
                 {
-                    initTable(huffSelect + 1);
+                    InitTable(huffSelect + 1);
                 }
                 pUp1[y & 1] += HuffDecodeNikon(bits);
                 pUp2[y & 1] += HuffDecodeNikon(bits);
                 pLeft1 = pUp1[y & 1];
                 pLeft2 = pUp2[y & 1];
                 uint dest = y * pitch;
-                mRaw.SetWithLookUp((ushort)Common.clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
-                mRaw.SetWithLookUp((ushort)Common.clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
+                mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
+                mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
                 for (x = 1; x < cw; x++)
                 {
                     bits.checkPos();
                     pLeft1 += HuffDecodeNikon(bits);
                     pLeft2 += HuffDecodeNikon(bits);
-                    mRaw.SetWithLookUp((ushort)Common.clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
-                    mRaw.SetWithLookUp((ushort)Common.clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
+                    mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
+                    mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
                 }
             }
             mRaw.SetTable(curve, _max, false);
@@ -189,7 +189,7 @@ namespace RawNet
 
                 if (l > 16)
                 {
-                    throw new Exception("Corrupt JPEG data: bad Huffman code:" + l);
+                    throw new RawDecoderException("Corrupt JPEG data: bad Huffman code:" + l);
                 }
                 else
                 {

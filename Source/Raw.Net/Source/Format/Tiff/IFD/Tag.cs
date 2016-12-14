@@ -207,7 +207,7 @@ namespace RawNet
             }
         }
 
-        public int GetTypeSize(TiffDataType id)
+        protected static int GetTypeSize(TiffDataType id)
         {
             int size = 0;
             switch (id)
@@ -237,24 +237,24 @@ namespace RawNet
             return size;
         }
 
-        public void GetShortArray(out ushort[] array, int num)
+        internal void GetShortArray(out ushort[] array, int count)
         {
-            array = new ushort[num];
-            for (int i = 0; i < num; i++)
+            array = new ushort[count];
+            for (int i = 0; i < count; i++)
                 array[i] = Convert.ToUInt16(data[i]);
         }
 
-        public void GetIntArray(out int[] array, int num)
+        internal void GetIntArray(out int[] array, int count)
         {
-            array = new int[num];
-            for (int i = 0; i < num; i++)
+            array = new int[count];
+            for (int i = 0; i < count; i++)
                 array[i] = Convert.ToInt32(data[i]);
         }
 
-        public void GetFloatArray(out float[] array, int num)
+        internal void GetFloatArray(out float[] array, int count)
         {
-            array = new float[num];
-            for (int i = 0; i < num; i++)
+            array = new float[count];
+            for (int i = 0; i < count; i++)
                 array[i] = Convert.ToSingle(data[i]);
         }
 
@@ -266,40 +266,41 @@ namespace RawNet
             return array;
         }
 
-        internal short GetShort(int v) { return Convert.ToInt16(data[v]); }
+        internal short GetShort(int pos) { return Convert.ToInt16(data[pos]); }
 
-        internal ushort GetUShort(int v) { return Convert.ToUInt16(data[v]); }
+        internal ushort GetUShort(int pos) { return Convert.ToUInt16(data[pos]); }
 
-        internal int GetInt(int v) { return Convert.ToInt32(data[v]); }
+        internal int GetInt(int pos) { return Convert.ToInt32(data[pos]); }
 
-        internal uint GetUInt(uint v) { return Convert.ToUInt32(data[v]); }
+        internal uint GetUInt(uint pos) { return Convert.ToUInt32(data[pos]); }
 
-        internal double GetDouble(int v) { return Convert.ToDouble(data[v]); }
+        internal double GetDouble(int pos) { return Convert.ToDouble(data[pos]); }
 
-        internal float GetFloat(int v) { return Convert.ToSingle(data[v]); }
+        internal float GetFloat(int pos) { return Convert.ToSingle(data[pos]); }
 
-        public void WriteToStream(Stream s, ushort name, ulong count, object data, long offset)
+        public void WriteToStream(Stream s, long offset)
         {
             throw new NotImplementedException();
         }
 
-        public uint get4LE(uint pos)
+        internal uint Get4LE(uint pos)
         {
             return ((((uint)(data)[pos + 3]) << 24) | (((uint)(data)[pos + 2]) << 16) | (((uint)(data)[pos + 1]) << 8) | ((uint)(data)[pos]));
         }
-        public ushort get2BE(uint pos) { return (ushort)(((ushort)(data)[pos] << 8) | (ushort)(data)[pos + 1]); }
 
-        public ushort get2LE(uint pos)
+        internal ushort Get2BE(uint pos) { return (ushort)(((ushort)(data)[pos] << 8) | (ushort)(data)[pos + 1]); }
+
+        internal ushort Get2LE(uint pos)
         {
             return (ushort)((((ushort)(data)[pos + 1]) << 8) | ((ushort)(data)[pos]));
         }
 
-        public uint get4BE(uint pos)
+        internal uint Get4BE(uint pos)
         {
             return ((((uint)(data)[pos + 0]) << 24) | (((uint)(data)[pos + 1]) << 16) | (((uint)(data)[pos + 2]) << 8) | ((uint)(data)[pos + 3]));
         }
 
-        public UInt64 get8LE(uint pos)
+        internal UInt64 Get8LE(uint pos)
         {
             return ((((UInt64)(data)[pos + 7]) << 56) | (((UInt64)(data)[pos + 6]) << 48) |
       (((UInt64)(data)[pos + 5]) << 40) |
@@ -310,7 +311,7 @@ namespace RawNet
        ((UInt64)(data)[pos]));
         }
 
-        public UInt64 get8BE(uint pos)
+        internal UInt64 Get8BE(uint pos)
         {
             return ((((UInt64)(data)[pos + 0]) << 56) |
                 (((UInt64)(data)[pos + 1]) << 48) |

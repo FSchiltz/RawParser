@@ -51,7 +51,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>ExtendedCorrectnessRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <PlatformTarget>x86</PlatformTarget>
@@ -123,8 +123,8 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Source\Base\ByteArrayWithIndexValue.cs" />
     <Compile Include="Source\Base\Common.cs" />
     <Compile Include="Source\Base\Point2D.cs" />
     <Compile Include="Source\Base\Rectangle2D.cs" />
@@ -132,7 +132,6 @@
     <Compile Include="Source\Decoder\Cr2Decoder.cs" />
     <Compile Include="Source\Decoder\Decompressor\PentaxDecompressor.cs" />
     <Compile Include="Source\Decoder\Decompressor\Reader\BinaryReaderBE.cs" />
-    <Compile Include="Source\Decoder\Decoder.cs" />
     <Compile Include="Source\Decoder\Decompressor\BitPumpJPEG.cs" />
     <Compile Include="Source\Decoder\Decompressor\BitPumpMSB.cs" />
     <Compile Include="Source\Decoder\Decompressor\BitPumpMSB16.cs" />
@@ -147,11 +146,7 @@
     <Compile Include="Source\Decoder\PefDecoder.cs" />
     <Compile Include="Source\Decoder\RawDecoder.cs" />
     <Compile Include="Source\Decoder\TIFFDecoder.cs" />
-    <Compile Include="Source\Exception\CameraMetadataException.cs" />
-    <Compile Include="Source\Exception\CiffParserException.cs" />
-    <Compile Include="Source\Exception\FileIOException.cs" />
     <Compile Include="Source\Exception\RawDecoderException.cs" />
-    <Compile Include="Source\Exception\TiffParserException.cs" />
     <Compile Include="Source\Format\Ciff\CiffTag.cs" />
     <Compile Include="Source\Format\DNG\DngDecoderSlices.cs" />
     <Compile Include="Source\Decoder\Decompressor\Reader\BitOrder.cs" />

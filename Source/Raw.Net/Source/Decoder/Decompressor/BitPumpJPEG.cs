@@ -22,10 +22,10 @@ namespace RawNet
         public BitPumpJPEG(ref TIFFBinaryReader s, uint offset, uint count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
-            size = (uint)(s.getRemainSize() + sizeof(UInt32));
+            size = (uint)(s.GetRemainSize() + sizeof(UInt32));
             buffer = new byte[size];
             s.BaseStream.Position = offset;
-            s.Read(buffer, 0, s.getRemainSize());
+            s.Read(buffer, 0, s.GetRemainSize());
             Init();
         }
 
@@ -121,7 +121,7 @@ namespace RawNet
         {
             if (off >= size || stuffed > (mLeft >> 3))
             {
-                throw new FileIOException("Out of buffer read");
+                throw new IOException("Out of buffer read");
             }
         }        // Check if we have a valid position
 

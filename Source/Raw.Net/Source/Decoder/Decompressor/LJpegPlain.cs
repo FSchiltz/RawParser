@@ -9,16 +9,13 @@ namespace RawNet
 
     internal unsafe class LJpegPlain : LJpegDecompressor
     {
-        public LJpegPlain(TIFFBinaryReader file, RawImage img) : base(file, img)
-        {
-        }
+        public LJpegPlain(TIFFBinaryReader file, RawImage img) : base(file, img) { }
 
-        public override void decodeScan()
+        public override void DecodeScan()
         {
-
             // Fix for Canon 6D mRaw, which has flipped width & height for some part of the image
             // We temporarily swap width and height for cropping.
-            if (mCanonFlipDim)
+            if (CanonFlipDim)
             {
                 UInt32 w = frame.w;
                 frame.w = frame.h;
@@ -26,13 +23,13 @@ namespace RawNet
             }
 
             // If image attempts to decode beyond the image bounds, strip it.
-            if ((frame.w * frame.cps + offX * mRaw.cpp) > mRaw.dim.x * mRaw.cpp)
-                skipX = (uint)(((frame.w * frame.cps + offX * mRaw.cpp) - mRaw.dim.x * mRaw.cpp) / frame.cps);
-            if (frame.h + offY > (UInt32)mRaw.dim.y)
-                skipY = (uint)(frame.h + offY - mRaw.dim.y);
+            if ((frame.w * frame.cps + offX * mRaw.cpp) > mRaw.dim.width * mRaw.cpp)
+                skipX = (uint)(((frame.w * frame.cps + offX * mRaw.cpp) - mRaw.dim.width * mRaw.cpp) / frame.cps);
+            if (frame.h + offY > (UInt32)mRaw.dim.height)
+                skipY = (uint)(frame.h + offY - mRaw.dim.height);
 
             // Swap back (see above)
-            if (mCanonFlipDim)
+            if (CanonFlipDim)
             {
                 UInt32 w = frame.w;
                 frame.w = frame.h;
@@ -51,7 +48,7 @@ namespace RawNet
 
             for (UInt32 i = 0; i < frame.cps; i++)
             {
-                if (frame.compInfo[i].superH != 1 || frame.compInfo[i].superV != 1)
+                if (frame.CompInfo[i].superH != 1 || frame.CompInfo[i].superV != 1)
                 {
                     if (mRaw.isCFA)
                         throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot decode subsampled image to CFA data");
@@ -61,22 +58,22 @@ namespace RawNet
 
                     if (pred == 1)
                     {
-                        if (frame.compInfo[0].superH == 2 && frame.compInfo[0].superV == 2 &&
-                            frame.compInfo[1].superH == 1 && frame.compInfo[1].superV == 1 &&
-                            frame.compInfo[2].superH == 1 && frame.compInfo[2].superV == 1)
+                        if (frame.CompInfo[0].superH == 2 && frame.CompInfo[0].superV == 2 &&
+                            frame.CompInfo[1].superH == 1 && frame.CompInfo[1].superV == 1 &&
+                            frame.CompInfo[2].superH == 1 && frame.CompInfo[2].superV == 1)
                         {
                             // Something like Cr2 sRaw1, use fast decoder
-                            decodeScanLeft4_2_0();
+                            DecodeScanLeft4_2_0();
                             return;
                         }
-                        else if (frame.compInfo[0].superH == 2 && frame.compInfo[0].superV == 1 &&
-                                 frame.compInfo[1].superH == 1 && frame.compInfo[1].superV == 1 &&
-                                 frame.compInfo[2].superH == 1 && frame.compInfo[2].superV == 1)
+                        else if (frame.CompInfo[0].superH == 2 && frame.CompInfo[0].superV == 1 &&
+                                 frame.CompInfo[1].superH == 1 && frame.CompInfo[1].superV == 1 &&
+                                 frame.CompInfo[2].superH == 1 && frame.CompInfo[2].superV == 1)
                         {
                             // Something like Cr2 sRaw2, use fast decoder
-                            if (mCanonFlipDim)
+                            if (CanonFlipDim)
                                 throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot flip non 4:2:2 subsampled images.");
-                            decodeScanLeft4_2_2();
+                            DecodeScanLeft4_2_2();
                             return;
                         }
                         else
@@ -94,19 +91,19 @@ namespace RawNet
 
             if (pred == 1)
             {
-                if (mCanonFlipDim)
+                if (CanonFlipDim)
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot flip non subsampled images.");
-                if (mRaw.dim.y * mRaw.pitch >= 1 << 28)
+                if (mRaw.dim.height * mRaw.pitch >= 1 << 28)
                 {
-                    decodeScanLeftGeneric();
+                    DecodeScanLeftGeneric();
                     return;
                 }
                 if (frame.cps == 2)
-                    decodeScanLeft2Comps();
+                    DecodeScanLeft2Comps();
                 else if (frame.cps == 3)
-                    decodeScanLeft3Comps();
+                    DecodeScanLeft3Comps();
                 else if (frame.cps == 4)
-                    decodeScanLeft4Comps();
+                    DecodeScanLeft4Comps();
                 else
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Unsupported component direction count.");
                 return;
@@ -127,7 +124,7 @@ namespace RawNet
         *  counter, and a predictable branch.
         *  For unsliced images, add one slice with the width of the image.
         **/
-        void decodeScanLeftGeneric()
+        void DecodeScanLeftGeneric()
         {
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
             //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
@@ -152,21 +149,21 @@ namespace RawNet
 
                 for (UInt32 i = 0; i < comps; i++)
                 {
-                    dctbl[i] = huff[frame.compInfo[i].dcTblNo];
-                    samplesH[i] = frame.compInfo[i].superH;
-                    if (!Common.isPowerOfTwo(samplesH[i]))
+                    dctbl[i] = huff[frame.CompInfo[i].dcTblNo];
+                    samplesH[i] = frame.CompInfo[i].superH;
+                    if (!Common.IsPowerOfTwo(samplesH[i]))
                         throw new RawDecoderException("decodeScanLeftGeneric: Horizontal sampling is not power of two.");
                     maxSuperH = Math.Max(samplesH[i], maxSuperH);
-                    samplesV[i] = frame.compInfo[i].superV;
-                    if (!Common.isPowerOfTwo(samplesV[i]))
+                    samplesV[i] = frame.CompInfo[i].superV;
+                    if (!Common.IsPowerOfTwo(samplesV[i]))
                         throw new RawDecoderException("decodeScanLeftGeneric: Vertical sampling is not power of two.");
                     maxSuperV = Math.Max(samplesV[i], maxSuperV);
                     samplesComp[i] = samplesV[i] * samplesH[i];
                     pixGroup += samplesComp[i];
                 }
 
-                mRaw.metadata.subsampling.x = (int)maxSuperH;
-                mRaw.metadata.subsampling.y = (int)maxSuperV;
+                mRaw.metadata.subsampling.width = (int)maxSuperH;
+                mRaw.metadata.subsampling.height = (int)maxSuperV;
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)((frame.h - skipY) / maxSuperV);
@@ -208,7 +205,7 @@ namespace RawNet
                 slice_width = null;
 
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                fixed (ushort* t = &mRaw.rawData[mRaw.pitch * mRaw.dim.y])
+                fixed (ushort* t = &mRaw.rawData[mRaw.pitch * mRaw.dim.height])
                 {
                     if (imagePos[slices - 1] >= t)
                     {
@@ -327,7 +324,7 @@ namespace RawNet
         /* These are often used compression schemes, heavily optimized to decode */
         /* that specfic kind of images.                                          */
         /*************************************************************************/
-        unsafe void decodeScanLeft4_2_0()
+        unsafe void DecodeScanLeft4_2_0()
         {
             int COMPS = 3;
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
@@ -341,20 +338,20 @@ namespace RawNet
             //_ASSERTE(frame.cps == COMPS);
             //_ASSERTE(skipX == 0);
 
-            HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
-            HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
-            HuffmanTable dctbl3 = huff[frame.compInfo[2].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
 
             UInt16* predict;      // Prediction pointer
 
-            mRaw.metadata.subsampling.x = 2;
-            mRaw.metadata.subsampling.y = 2;
+            mRaw.metadata.subsampling.width = 2;
+            mRaw.metadata.subsampling.height = 2;
             fixed (ushort* d = mRaw.rawData)
             {
                 //TODO remove this hack
                 byte* draw = (byte*)d;
                 // Fix for Canon 6D mRaw, which has flipped width & height
-                UInt32 real_h = mCanonFlipDim ? frame.w : frame.h;
+                UInt32 real_h = CanonFlipDim ? frame.w : frame.h;
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(real_h - skipY) / 2;
@@ -386,7 +383,7 @@ namespace RawNet
                 }
 
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.y)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -439,7 +436,7 @@ namespace RawNet
                             UInt32 o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
                                                                     //_ASSERTE((o & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.y)
+                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             pixInSlice = (uint)slice_width[o >> 28];
 
@@ -480,7 +477,7 @@ namespace RawNet
             }
         }
 
-        void decodeScanLeft4_2_2()
+        void DecodeScanLeft4_2_2()
         {
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
             //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
@@ -493,12 +490,12 @@ namespace RawNet
             //_ASSERTE(frame.cps == COMPS);
             //_ASSERTE(skipX == 0);
             int COMPS = 3;
-            HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
-            HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
-            HuffmanTable dctbl3 = huff[frame.compInfo[2].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
 
-            mRaw.metadata.subsampling.x = 2;
-            mRaw.metadata.subsampling.y = 1;
+            mRaw.metadata.subsampling.width = 2;
+            mRaw.metadata.subsampling.height = 1;
 
             UInt16* predict;      // Prediction pointer
 
@@ -533,7 +530,7 @@ namespace RawNet
                         t_x += (uint)slice_width[t_s++];
                     }
                 }
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.y)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -584,7 +581,7 @@ namespace RawNet
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
                             UInt32 o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.y)
+                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             pixInSlice = (uint)slice_width[o >> 28];
 
@@ -619,7 +616,7 @@ namespace RawNet
             }
         }
 
-        void decodeScanLeft2Comps()
+        void DecodeScanLeft2Comps()
         {
             int COMPS = 2;
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
@@ -629,8 +626,8 @@ namespace RawNet
                 //TODO remove this hack
                 byte* draw = (byte*)d;
                 // First line
-                HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
-                HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
+                HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
+                HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
@@ -653,7 +650,7 @@ namespace RawNet
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.y)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -702,7 +699,7 @@ namespace RawNet
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
                             UInt32 o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.y)
+                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             pixInSlice = (uint)slice_width[o >> 28];
                         }
@@ -726,7 +723,7 @@ namespace RawNet
             }
         }
 
-        void decodeScanLeft3Comps()
+        void DecodeScanLeft3Comps()
         {
             int COMPS = 3;
             fixed (ushort* d = mRaw.rawData)
@@ -734,9 +731,9 @@ namespace RawNet
                 //TODO remove this hack
                 byte* draw = (byte*)d;
                 // First line
-                HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
-                HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
-                HuffmanTable dctbl3 = huff[frame.compInfo[2].dcTblNo];
+                HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
+                HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
+                HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
@@ -758,7 +755,7 @@ namespace RawNet
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.y)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -812,7 +809,7 @@ namespace RawNet
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
                             UInt32 o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.y)
+                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             //_ASSERTE((o >> 28) < slicesW.Count);
                             pixInSlice = (uint)slice_width[o >> 28];
@@ -840,16 +837,16 @@ namespace RawNet
 
         }
 
-        void decodeScanLeft4Comps()
+        void DecodeScanLeft4Comps()
         {
             int COMPS = 4;
             // First line
-            HuffmanTable dctbl1 = huff[frame.compInfo[0].dcTblNo];
-            HuffmanTable dctbl2 = huff[frame.compInfo[1].dcTblNo];
-            HuffmanTable dctbl3 = huff[frame.compInfo[2].dcTblNo];
-            HuffmanTable dctbl4 = huff[frame.compInfo[3].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
+            HuffmanTable dctbl4 = huff[frame.CompInfo[3].dcTblNo];
 
-            if (mCanonDoubleHeight)
+            if (CanonDoubleHeight)
             {
                 frame.h *= 2;
                 mRaw.dim = new Point2D((int)frame.w * 2, (int)frame.h);
@@ -879,7 +876,7 @@ namespace RawNet
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.y)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -916,7 +913,7 @@ namespace RawNet
                 UInt32 cw = (frame.w - skipX);
                 UInt32 x = 1;                            // Skip first pixels on first line.
 
-                if (mCanonDoubleHeight)
+                if (CanonDoubleHeight)
                     skipY = frame.h >> 1;
 
                 for (UInt32 y = 0; y < (frame.h - skipY); y++)
@@ -941,7 +938,7 @@ namespace RawNet
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
                             UInt32 o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.y)
+                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             pixInSlice = (uint)slice_width[o >> 28];
                         }

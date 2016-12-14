@@ -3,12 +3,12 @@ using MathNet.Numerics.Interpolation;
 
 namespace RawEditor.Effect
 {
-    public class Curve
+    public static class Curve
     {
         /*
          * Not working correcty
          */
-        public static double[] simpleInterpol(double[] x, double[] y)
+        public static double[] SimpleInterpol(double[] x, double[] y)
         {
             double[] curve = new double[(int)x[x.Length - 1]];
             var f = Fit.PolynomialFunc(x, y, 3);
@@ -19,10 +19,10 @@ namespace RawEditor.Effect
             return curve;
         }
 
-        public static double[] cubicSpline(double[] x, double[] y)
+        public static double[] CubicSpline(double[] x, double[] y)
         {
             double[] curve = new double[(int)x[x.Length - 1]];
-            var spline = CubicSpline.InterpolateNaturalInplace(x, y);
+            var spline = MathNet.Numerics.Interpolation.CubicSpline.InterpolateNaturalInplace(x, y);
 
             for (int i = 0; i < curve.Length; i++)
             {

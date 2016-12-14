@@ -31,7 +31,7 @@
             <AppBarButton x:Name="saveButton" 
                           Icon="SaveLocal"
                           x:Uid="Save" 
-                          Click="SaveButtonClickAsync"
+                          Click="SaveButtonClick"
                           VerticalAlignment="Top"
                           IsEnabled="False"/>
             <AppBarButton IsEnabled="False" 

@@ -15,9 +15,9 @@ namespace RawEditor
         void GetBuffer(out byte* buffer, out uint capacity);
     }
 
-    class JpegHelper
+    static class JpegHelper
     {
-        public static SoftwareBitmap getJpegInArrayAsync(byte[] im)
+        public static SoftwareBitmap GetJpegInArrayAsync(byte[] im)
         {
             try
             {
@@ -34,9 +34,9 @@ namespace RawEditor
                 bitmapasync.Wait();
                 return bitmapasync.Result;
             }
-            catch (AggregateException e)
+            catch (AggregateException)
             {
-                throw e;
+                throw;
             }
         }
 
@@ -81,11 +81,6 @@ namespace RawEditor
                 }
             }
             return image;
-        }
-
-        internal static void getThumbnailAsSoftwareBitmap(Thumbnail thumbnail)
-        {
-            throw new NotImplementedException();
         }
     }
 }

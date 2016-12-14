@@ -27,7 +27,7 @@ namespace RawNet
         {
         }
 
-        protected override void DecodeMetaDataInternal()
+        protected override void DecodeMetadataInternal()
         {
             //fill useless metadata
             rawImage.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
@@ -66,11 +66,11 @@ namespace RawNet
                     {
                         ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
 
-                        for (int y = 0; y < rawImage.dim.y; y++)
+                        for (int y = 0; y < rawImage.dim.height; y++)
                         {
-                            int realY = y * rawImage.dim.x * 3;
-                            int bufferY = y * rawImage.dim.x * 4 + +bufferLayout.StartIndex;
-                            for (int x = 0; x < rawImage.dim.x; x++)
+                            int realY = y * rawImage.dim.width * 3;
+                            int bufferY = y * rawImage.dim.width * 4 + +bufferLayout.StartIndex;
+                            for (int x = 0; x < rawImage.dim.width; x++)
                             {
                                 int realPix = realY + (3 * x);
                                 int bufferPix = bufferY + (4 * x);

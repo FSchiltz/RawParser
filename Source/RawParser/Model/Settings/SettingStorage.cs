@@ -76,7 +76,7 @@ namespace RawEditor
         {
             if (localSettings.Values[name] != null)
             {
-                bool t = (bool)localSettings.Values[name];
+                return (bool)localSettings.Values[name];
             }
             else
             {
@@ -89,7 +89,7 @@ namespace RawEditor
         {
             if (localSettings.Values[name] != null)
             {
-                int t = (int)localSettings.Values[name];
+                return (int)localSettings.Values[name];
             }
             else
             {
@@ -102,7 +102,7 @@ namespace RawEditor
         {
             if (localSettings.Values[name] != null)
             {
-                double t = (double)localSettings.Values[name];
+                return (double)localSettings.Values[name];
             }
             else
             {
@@ -115,7 +115,7 @@ namespace RawEditor
         {
             if (localSettings.Values[name] != null)
             {
-                string t = (string)localSettings.Values[name];
+                return (string)localSettings.Values[name];
             }
             else
             {

@@ -74,7 +74,7 @@ namespace RawNet
         public BitPumpMSB32(ref TIFFBinaryReader s)
         {
             s.Read(buffer, (int)s.Position, (int)s.BaseStream.Length);
-            size = (uint)(s.getRemainSize() + sizeof(UInt32));
+            size = (uint)(s.GetRemainSize() + sizeof(UInt32));
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
             init();
         }

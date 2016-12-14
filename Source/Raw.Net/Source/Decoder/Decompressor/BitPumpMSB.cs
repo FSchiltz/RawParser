@@ -118,7 +118,7 @@ namespace RawNet
         public void checkPos()
         {
             if (mStuffed > 8)
-                throw new FileIOException("Out of buffer read");
+                throw new IOException("Out of buffer read");
         }        // Check if we have a valid position
 
         // Fill the buffer with at least 24 bits
@@ -232,7 +232,7 @@ namespace RawNet
         public UInt32 getBitsSafe(uint nbits)
         {
             if (nbits > MIN_GET_BITS)
-                throw new FileIOException("Too many bits requested");
+                throw new IOException("Too many bits requested");
 
             fill();
             checkPos();
@@ -249,7 +249,7 @@ namespace RawNet
         public void setAbsoluteOffset(uint offset)
         {
             if (offset >= size)
-                throw new FileIOException("Offset set out of buffer");
+                throw new IOException("Offset set out of buffer");
 
             mLeft = 0;
             mStuffed = 0;

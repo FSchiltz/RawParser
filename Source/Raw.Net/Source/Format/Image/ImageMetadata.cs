@@ -27,10 +27,10 @@ namespace RawNet
         }
     }
 
-    public class ImageMetaData
+    public class ImageMetadata
     {
-        public string fileName { get; set; }
-        public string fileNameComplete { get; set; }
+        public string FileName { get; set; }
+        public string FileNameComplete { get; set; }
         // Aspect ratio of the pixels, usually 1 but some cameras need scaling
         // <1 means the image needs to be stretched vertically, (0.5 means 2x)
         // >1 means the image needs to be stretched horizontally (2 mean 2x)
@@ -64,9 +64,9 @@ namespace RawNet
         public GPSInfo gps;
 
 
-        public ImageMetaData()
+        public ImageMetadata()
         {
-            subsampling.x = subsampling.y = 1;
+            subsampling.width = subsampling.height = 1;
             isoSpeed = 0;
             pixelAspectRatio = 1;
             fujiRotationPos = 0;

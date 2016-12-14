@@ -11,7 +11,7 @@ namespace RawNet
         {
             //parse the ifd
             if (stream.Length < 16)
-                throw new TiffParserException("Not a TIFF file (size too small)");
+                throw new RawDecoderException("Not a TIFF file (size too small)");
             Endianness endian = Endianness.little;
             byte[] data = new byte[5];
             stream.Position = 0;
@@ -23,33 +23,33 @@ namespace RawNet
                 endian = Endianness.big;
 
                 if (data[3] != 42 && data[2] != 0x4f) // ORF sometimes has 0x4f, Lovely!
-                    throw new TiffParserException("Not a TIFF file (magic 42)");
+                    throw new RawDecoderException("Not a TIFF file (magic 42)");
             }
             else if (data[0] == 0x49 || data[1] == 0x49)
             {
                 reader = new TIFFBinaryReader(stream);
                 if (data[2] != 42 && data[2] != 0x52 && data[2] != 0x55) // ORF has 0x52, RW2 0x55 - Brillant!
-                    throw new TiffParserException("Not a TIFF file (magic 42)");
+                    throw new RawDecoderException("Not a TIFF file (magic 42)");
             }
             else
             {
-                throw new TiffParserException("Not a TIFF file (ID)");
+                throw new RawDecoderException("Not a TIFF file (ID)");
             }
 
             UInt32 nextIFD;
             reader.Position = 4;
             nextIFD = reader.ReadUInt32();
             ifd = new IFD(reader, nextIFD, endian, 0);
-            nextIFD = ifd.nextOffset;
+            nextIFD = ifd.NextOffset;
 
             while (nextIFD != 0)
             {
                 ifd.subIFD.Add(new IFD(reader, nextIFD, endian, 0));
                 if (ifd.subIFD.Count > 100)
                 {
-                    throw new TiffParserException("TIFF file has too many SubIFDs, probably broken");
+                    throw new RawDecoderException("TIFF file has too many SubIFDs, probably broken");
                 }
-                nextIFD = (ifd.subIFD[ifd.subIFD.Count - 1]).nextOffset;
+                nextIFD = (ifd.subIFD[ifd.subIFD.Count - 1]).NextOffset;
             }           
         }
 
@@ -177,22 +177,22 @@ namespace RawNet
             else throw new FormatException("Photometric interpretation " + photoMetricTag.DataAsString + " not supported yet");
         }
 
-        protected override void DecodeMetaDataInternal()
+        protected override void DecodeMetadataInternal()
         {
-            var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.GetInt(0);
-            var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
-            var fn = ifd.getEntryRecursive(TagType.FNUMBER);
+            var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
+            var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
             if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
             if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
 
-            var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
-            var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
+            var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
+            var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
             if (time != null) rawImage.metadata.timeTake = time.DataAsString;
             if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
             // Set the make and model
-            var t = ifd.getEntryRecursive(TagType.MAKE);
-            var t2 = ifd.getEntryRecursive(TagType.MODEL);
+            var t = ifd.GetEntryRecursive(TagType.MAKE);
+            var t2 = ifd.GetEntryRecursive(TagType.MODEL);
             if (t != null && t2 != null)
             {
                 string make = t.DataAsString;
