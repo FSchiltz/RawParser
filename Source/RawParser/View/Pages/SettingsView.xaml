@@ -35,9 +35,7 @@
         <StackPanel x:Name="listView" Padding="10,0,10,5" Margin="10,0" HorizontalAlignment="Left">
             <TextBlock TextWrapping="WrapWholeWords" FontSize="48" x:Uid="Settings"/>
 
-            <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left">
-                    Relative border around the image:
-            </TextBlock>
+            <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left" x:Uid="BorderText"/>
             <Slider x:Name="BorderSlider" ValueChanged="Slider_ValueChanged" Width="100" HorizontalAlignment="Center" Margin="0,10" />
 
             <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="Display"/>

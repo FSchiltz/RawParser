@@ -120,6 +120,9 @@
   <data name="About.Text" xml:space="preserve">
     <value>About</value>
   </data>
+  <data name="BorderText.Text" xml:space="preserve">
+    <value>Relative border around the image:</value>
+  </data>
   <data name="ColorBalance.Text" xml:space="preserve">
     <value>Color balance</value>
   </data>
