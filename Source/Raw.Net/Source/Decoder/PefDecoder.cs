@@ -59,20 +59,6 @@ namespace RawNet
             }
         }
 
-        protected override void checkSupportInternal()
-        {
-            /*
-            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
-            if (data.Count == 0)
-                throw new RawDecoderException("PEF Support check: Model name found");
-            if (!data[0].tags.ContainsKey(TagType.MAKE))
-                throw new RawDecoderException("PEF Support: Make name not found");
-
-            string make = data[0].getEntry(TagType.MAKE).DataAsString;
-            string model = data[0].getEntry(TagType.MODEL).DataAsString;
-            this.checkCameraSupported(metaData, make, model, "");*/
-        }
-
         protected override void DecodeMetaDataInternal()
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
