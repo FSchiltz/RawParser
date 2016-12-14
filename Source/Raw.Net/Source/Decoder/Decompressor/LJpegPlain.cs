@@ -315,7 +315,7 @@ namespace RawNet
                             throw new RawDecoderException("decodeScanLeftGeneric: Slice not placed at new line");
                     }
                     // Check if we are still within the file.
-                    bits.checkPos();
+                    bits.CheckPos();
                     predict = dest;
                     x = 0;
                 }
@@ -473,7 +473,7 @@ namespace RawNet
                     p3 = predict[2];
                     //_ASSERTE(pixInSlice == 0);  // Ensure, that there is a slice shift at new line
                     // Check if we are still within the file.
-                    bits.checkPos();
+                    bits.CheckPos();
 
                     x = 0;
                 }
@@ -614,7 +614,7 @@ namespace RawNet
                     predict = dest;
                     x = 0;
                     // Check if we are still within the file.
-                    bits.checkPos();
+                    bits.CheckPos();
                 }
             }
         }
@@ -721,7 +721,7 @@ namespace RawNet
                     p2 = predict[1];
                     predict = dest;  // Adjust destination for next prediction
                     x = 0;
-                    bits.checkPos();
+                    bits.CheckPos();
                 }
             }
         }
@@ -834,7 +834,7 @@ namespace RawNet
                     p3 = predict[2];  // Predictors for next row
                     predict = dest;  // Adjust destination for next prediction
                     x = 0;
-                    bits.checkPos();
+                    bits.CheckPos();
                 }
             }
 
@@ -956,7 +956,7 @@ namespace RawNet
                             HuffDecode(ref dctbl4);
                         }
                     }
-                    bits.checkPos();
+                    bits.CheckPos();
                     p1 = predict[0];  // Predictors for next row
                     p2 = predict[1];
                     p3 = predict[2];  // Predictors for next row

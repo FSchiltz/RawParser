@@ -14,13 +14,11 @@ using Windows.Storage.Provider;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using RawEditor.View.UIHelper;
-using RawEditor.Effect;
 using RawEditor.Model.Encoder;
 using Windows.UI.ViewManagement;
 using Windows.Foundation;
 using RawNet;
 using System.Diagnostics;
-using Windows.Foundation.Metadata;
 using Windows.Graphics.Display;
 
 namespace RawEditor
@@ -66,7 +64,7 @@ namespace RawEditor
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
         }
 
-        public async void DisplayLoad()
+        public async void DisplayLoadAsync()
         {
             displayMutex++;
             if (displayMutex > 0)
@@ -78,7 +76,7 @@ namespace RawEditor
             }
         }
 
-        public async void StopLoadDisplay()
+        public async void StopLoadDisplayAsync()
         {
             displayMutex--;
             if (displayMutex <= 0)
@@ -90,7 +88,7 @@ namespace RawEditor
             }
         }
 
-        private async void AppBarImageChooseClick(object sender, RoutedEventArgs e)
+        private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
         {
             if (!ImageSelected)
             {
@@ -133,7 +131,7 @@ namespace RawEditor
         }
 
         //Always call in the UI thread
-        private async void EmptyImage()
+        private async void EmptyImageAsync()
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher
                     .RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -146,15 +144,15 @@ namespace RawEditor
                         //empty the exif data
                         exifDisplay.ItemsSource = null;
                         //empty the histogram
-                        EnableEditingControl(false);
+                        EnableEditingControlAsync(false);
                         //free the histogram
                         histogramCanvas.Children.Clear();
                         //set back editing control to default value
-                        ResetControls();
+                        ResetControlsAsync();
                     });
         }
 
-        private async void ResetControls()
+        private async void ResetControlsAsync()
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher
                    .RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -169,11 +167,11 @@ namespace RawEditor
                        ResetButton.IsEnabled = false;
                        userAppliedModif = false;
                        //set white balance if any
-                       SetWB();
+                       SetWBAsync();
                    });
         }
 
-        private async void SetWB()
+        private async void SetWBAsync()
         {
             int rValue = 255, bValue = 255, gValue = 255;
             if (raw != null && raw.metadata != null)
@@ -199,7 +197,7 @@ namespace RawEditor
             });
         }
 
-        private async void EnableEditingControl(bool v)
+        private async void EnableEditingControlAsync(bool v)
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
@@ -217,23 +215,11 @@ namespace RawEditor
                  });
         }
 
-        /*
-         * For the zoom of the image
-         * 
-         */
-        /*
-        private void PageSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            pageWidth = e.NewSize.Width;
-            pageHeight = e.NewSize.Height;
-            SetScrollProperty();
-        }*/
-
         private void OpenFile(StorageFile file)
         {
             //Add a loading screen
-            DisplayLoad();
-            EmptyImage();
+            DisplayLoadAsync();
+            EmptyImageAsync();
             Task t = Task.Run(async () =>
             {
                 try
@@ -286,7 +272,7 @@ namespace RawEditor
 
                     stream.Dispose();
                     decoder = null;
-                    
+
                     DisplayExifAsync();
 
                     //demos
@@ -303,15 +289,15 @@ namespace RawEditor
                             Debug.WriteLine(e.Message);
                             algo = DemosAlgorithm.Deflate;
                         }
-                        Demosaic.demos(ref raw, algo);
+                        Demosaic.Demos(ref raw, algo);
                     }
                     CreatePreview();
                     UpdatePreview(true);
                     thumbnail = null;
 
                     //activate the editing control
-                    SetWB();
-                    EnableEditingControl(true);
+                    SetWBAsync();
+                    EnableEditingControlAsync(true);
                     //dispose
                     file = null;
                     watch.Stop();
@@ -321,15 +307,15 @@ namespace RawEditor
                 {
                     file = null;
                     raw = null;
-                    EmptyImage();
+                    EmptyImageAsync();
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     var str = loader.GetString("ExceptionText");
                     Debug.WriteLine(e.Message);
                     ExceptionDisplay.display(str);
-                   
+
                 }
 
-                StopLoadDisplay();
+                StopLoadDisplayAsync();
                 ImageSelected = false;
             });
         }
@@ -391,38 +377,10 @@ namespace RawEditor
             }
         }
 
-        private void AppbarSettingClick(object sender, RoutedEventArgs e)
+        private void SettingClick(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(SettingsView), null);
         }
-
-        /*private void SetScrollProperty()
-        {                       
-            if (raw.previewDim.x > 0 && raw.previewDim.y > 0)
-            {
-                float x = 0;
-                double relativeBorder = SettingStorage.ImageBoxBorder;
-                if ((raw.previewDim.x / raw.previewDim.y) < (ImageDisplay.ActualWidth / ImageDisplay.ActualHeight))
-                {
-                    x = (float)(ImageDisplay.ViewportWidth /
-                        (raw.previewDim.x +
-                            (relativeBorder * raw.previewDim.x)
-                        ));
-                }
-                else
-                {
-                    x = (float)(ImageDisplay.ViewportHeight /
-                        (raw.previewDim.y +
-                            (relativeBorder * raw.previewDim.y)
-                        ));
-                }
-                if (x < 0.1) x = 0.1f;
-                else if (x > 1) x = 1;
-                ImageDisplay.MinZoomFactor = 0.1f;
-                ImageDisplay.MaxZoomFactor = x + 10;
-                ImageDisplay.ChangeView(null, null, x);
-        }
-        }*/
 
         public async void DisplayExifAsync()
         {
@@ -475,7 +433,7 @@ namespace RawEditor
             }
         }
 
-        private async void SaveButton_Click(object sender, RoutedEventArgs e)
+        private async void SaveButtonClickAsync(object sender, RoutedEventArgs e)
         {
             //TODO reimplement correclty
             //Just for testing purpose for now
@@ -495,7 +453,7 @@ namespace RawEditor
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
 
-                DisplayLoad();
+                DisplayLoadAsync();
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
@@ -597,10 +555,10 @@ namespace RawEditor
                         Stream str = await file.OpenStreamForWriteAsync();
                         //create a copy
                         ushort[] copyOfimage = new ushort[raw.rawData.Length];
-                        Parallel.For(raw.mOffset.y, raw.dim.y, y =>
+                        Parallel.For(raw.offset.y, raw.dim.y, y =>
                         {
                             int realY = y * raw.dim.x * 3;
-                            for (int x = raw.mOffset.x; x < raw.dim.x; x++)
+                            for (int x = raw.offset.x; x < raw.dim.x; x++)
                             {
                                 int realPix = realY + (3 * x);
                                 copyOfimage[realPix] = (ushort)(raw.rawData[realPix] * raw.metadata.wbCoeffs[0]);
@@ -622,7 +580,7 @@ namespace RawEditor
                     {
                         ExceptionDisplay.display("File could not be saved");
                     }
-                    StopLoadDisplay();
+                    StopLoadDisplayAsync();
                 });
             }
         }
@@ -653,22 +611,22 @@ namespace RawEditor
 
         private void SetScrollProperty(int w, int h)
         {
-                float x = 0;
-                double relativeBorder = 1 + SettingStorage.ImageBoxBorder ;
-                if (w > h)
-                {
-                    x = (float)(ImageDisplay.ActualWidth / (w * relativeBorder));
-                }
-                else
-                {
-                    x = (float)(ImageDisplay.ActualHeight / (h * relativeBorder));
-                }
-                if (x < 0.1) x = 0.1f;
-                else if (x > 1) x = 1;
-                ImageDisplay.MinZoomFactor = 0.1f;
-                ImageDisplay.MaxZoomFactor = x + 10;
-                ImageDisplay.ChangeView(null, null, x);
-            
+            float x = 0;
+            double relativeBorder = 1 + SettingStorage.ImageBoxBorder;
+            if (w > h)
+            {
+                x = (float)(ImageDisplay.ActualWidth / (w * relativeBorder));
+            }
+            else
+            {
+                x = (float)(ImageDisplay.ActualHeight / (h * relativeBorder));
+            }
+            if (x < 0.1) x = 0.1f;
+            else if (x > 1) x = 1;
+            ImageDisplay.MinZoomFactor = 0.1f;
+            ImageDisplay.MaxZoomFactor = x + 10;
+            ImageDisplay.ChangeView(null, null, x);
+
         }
 
         private void UpdatePreview(bool reset)
@@ -718,7 +676,7 @@ namespace RawEditor
             effect.camCurve = raw.curve;
 
             //get the softwarebitmap buffer
-            return effect.applyModification(image, dim, colorDepth, ref bitmap);
+            return effect.ApplyModification(image, dim, colorDepth, ref bitmap);
         }
 
         private void ApplyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth)
@@ -747,7 +705,7 @@ namespace RawEditor
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
-            effect.applyModification(image, dim, colorDepth);
+            effect.ApplyModification(image, dim, colorDepth);
         }
 
         #region WBSlider
@@ -757,12 +715,12 @@ namespace RawEditor
             {
                 cameraWB = false;
                 cameraWBCheck.IsEnabled = true;
-                EnableReset();
+                EnableResetAsync();
                 UpdatePreview(false);
             }
         }
 
-        private async void EnableReset()
+        private async void EnableResetAsync()
         {
             if (!userAppliedModif)
             {
@@ -774,12 +732,12 @@ namespace RawEditor
             }
         }
 
-        private void cameraWBCheck_Click(object sender, RoutedEventArgs e)
+        private void CameraWBCheck_Click(object sender, RoutedEventArgs e)
         {
             cameraWB = true;
             cameraWBCheck.IsEnabled = false;
             //TODO move slider to the camera WB
-            SetWB();
+            SetWBAsync();
             UpdatePreview(false);
         }
         #endregion
@@ -788,14 +746,14 @@ namespace RawEditor
         {
             if (raw?.previewData != null)
             {
-                EnableReset();
+                EnableResetAsync();
                 UpdatePreview(false);
             }
         }
 
         private void ResetButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            ResetControls();
+            ResetControlsAsync();
             UpdatePreview(false);
         }
     }

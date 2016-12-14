@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 namespace RawNet
@@ -99,10 +98,10 @@ namespace RawNet
             UInt32 nslices = rawIFD.getEntry(TagType.STRIPOFFSETS).dataCount;
             Tag offsets = rawIFD.getEntry(TagType.STRIPOFFSETS);
             Tag counts = rawIFD.getEntry(TagType.STRIPBYTECOUNTS);
-            UInt32 yPerSlice = rawIFD.getEntry(TagType.ROWSPERSTRIP).getUInt();
-            Int32 width = rawIFD.getEntry(TagType.IMAGEWIDTH).getInt();
-            UInt32 height = rawIFD.getEntry(TagType.IMAGELENGTH).getUInt();
-            int bitPerPixel = rawIFD.getEntry(TagType.BITSPERSAMPLE).getInt();
+            UInt32 yPerSlice = rawIFD.getEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+            Int32 width = rawIFD.getEntry(TagType.IMAGEWIDTH).GetInt(0);
+            UInt32 height = rawIFD.getEntry(TagType.IMAGELENGTH).GetUInt(0);
+            int bitPerPixel = rawIFD.getEntry(TagType.BITSPERSAMPLE).GetInt(0);
 
             List<RawSlice> slices = new List<RawSlice>();
             UInt32 offY = 0;

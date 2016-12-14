@@ -26,23 +26,22 @@ namespace RawNet
             buffer = new byte[size];
             s.BaseStream.Position = offset;
             s.Read(buffer, 0, s.getRemainSize());
-            init();
+            Init();
         }
 
         public BitPumpJPEG(byte[] _buffer, UInt32 _size)
         {
             buffer = _buffer;
             size = _size + sizeof(UInt32);
-            init();
+            Init();
         }
 
-        public void init()
+        public void Init()
         {
-            //Common.memset<byte>(current_buffer, 0, 16);
-            fill();
+            Fill();
         }
 
-        public void _fill()
+        public void FillNoCheck()
         {
             // Fill in 96 bits
             //int[] b = Common.convertByteToInt(current_buffer);
@@ -113,12 +112,12 @@ namespace RawNet
             mLeft += 96;
         }
 
-        public UInt32 getOffset()
+        public UInt32 GetOffset()
         {
             return (uint)(off - (mLeft >> 3) + stuffed);
         }
 
-        public void checkPos()
+        public void CheckPos()
         {
             if (off >= size || stuffed > (mLeft >> 3))
             {
@@ -127,12 +126,12 @@ namespace RawNet
         }        // Check if we have a valid position
 
         // Fill the buffer with at least 24 bits
-        public void fill()
+        public void Fill()
         {
-            if (mLeft < 25) _fill();
+            if (mLeft < 25) FillNoCheck();
         }
 
-        public UInt32 peekBitsNoFill(UInt32 nbits)
+        public UInt32 PeekBitsNoFill(UInt32 nbits)
         {
             int shift = (int)(mLeft - nbits);
             UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
@@ -140,41 +139,41 @@ namespace RawNet
             return (uint)(ret & ((1 << (int)nbits) - 1));
         }
 
-        public UInt32 getBit()
+        public UInt32 GetBit()
         {
-            if (mLeft == 0) _fill();
+            if (mLeft == 0) FillNoCheck();
             mLeft--;
             UInt32 _byte = (uint)(mLeft >> 3);
             return (uint)(current_buffer[_byte] >> (mLeft & 0x7)) & 1;
         }
 
-        public UInt32 getBitsNoFill(UInt32 nbits)
+        public UInt32 GetBitsNoFill(UInt32 nbits)
         {
-            UInt32 ret = peekBitsNoFill(nbits);
+            UInt32 ret = PeekBitsNoFill(nbits);
             mLeft -= (int)nbits;
             return ret;
         }
 
-        public UInt32 getBits(UInt32 nbits)
+        public UInt32 GetBits(UInt32 nbits)
         {
-            fill();
-            return getBitsNoFill(nbits);
+            Fill();
+            return GetBitsNoFill(nbits);
         }
 
-        public UInt32 peekBit()
+        public UInt32 PeekBit()
         {
-            if (mLeft == 0) _fill();
+            if (mLeft == 0) FillNoCheck();
             return (uint)(current_buffer[(mLeft - 1) >> 3] >> ((mLeft - 1) & 0x7)) & 1;
         }
 
-        public UInt32 getBitNoFill()
+        public UInt32 GetBitNoFill()
         {
             mLeft--;
             UInt32 ret = (uint)(current_buffer[mLeft >> 3] >> (mLeft & 0x7)) & 1;
             return ret;
         }
 
-        public UInt32 peekByteNoFill()
+        public UInt32 PeekByteNoFill()
         {
             int shift = mLeft - 8;
             UInt32 ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
@@ -182,43 +181,42 @@ namespace RawNet
             return ret & 0xff;
         }
 
-        public UInt32 peekBits(UInt32 nbits)
+        public UInt32 PeekBits(UInt32 nbits)
         {
-            fill();
-            return peekBitsNoFill(nbits);
+            Fill();
+            return PeekBitsNoFill(nbits);
         }
 
-        public UInt32 peekByte()
+        public UInt32 PeekByte()
         {
-            fill();
-
+            Fill();
             if (off > size)
                 throw new IOException("Out of buffer read");
 
-            return peekByteNoFill();
+            return PeekByteNoFill();
         }
 
-        public void skipBits(UInt32 nbits)
+        public void SkipBits(UInt32 nbits)
         {
             int skipn = (int)nbits;
             while (skipn != 0)
             {
-                fill();
-                checkPos();
+                Fill();
+                CheckPos();
                 int n = Math.Min(skipn, mLeft);
                 mLeft -= n;
                 skipn -= n;
             }
         }
 
-        public void skipBitsNoFill(uint nbits)
+        public void SkipBitsNoFill(uint nbits)
         {
             mLeft -= (int)nbits;
         }
 
-        public byte getByte()
+        public byte GetByte()
         {
-            fill();
+            Fill();
             mLeft -= 8;
             int shift = mLeft;
             UInt32 ret = current_buffer[shift >> 3];
@@ -226,38 +224,38 @@ namespace RawNet
             return (byte)(ret & 0xff);
         }
 
-        public UInt32 getBitSafe()
+        public UInt32 GetBitSafe()
         {
-            fill();
-            checkPos();
-            return getBitNoFill();
+            Fill();
+            CheckPos();
+            return GetBitNoFill();
         }
 
-        public UInt32 getBitsSafe(uint nbits)
+        public UInt32 GetBitsSafe(uint nbits)
         {
             if (nbits > MIN_GET_BITS)
                 throw new IOException("Too many bits requested");
 
-            fill();
-            checkPos();
-            return getBitsNoFill(nbits);
+            Fill();
+            CheckPos();
+            return GetBitsNoFill(nbits);
         }
 
-        public byte getByteSafe()
+        public byte GetByteSafe()
         {
-            fill();
-            checkPos();
-            return (byte)getBitsNoFill(8);
+            Fill();
+            CheckPos();
+            return (byte)GetBitsNoFill(8);
         }
 
-        public void setAbsoluteOffset(uint offset)
+        public void SetAbsoluteOffset(uint offset)
         {
             if (offset >= size)
                 throw new IOException("Offset set out of buffer");
 
             mLeft = 0;
             off = offset;
-            _fill();
+            FillNoCheck();
         }
     }
 }

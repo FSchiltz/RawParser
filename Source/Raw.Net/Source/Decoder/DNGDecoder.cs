@@ -69,16 +69,16 @@ namespace RawNet
                 }
                 else
                 {
-                    rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.getInt(0), (CFAColor)cfa.getInt(1), (CFAColor)cfa.getInt(2), (CFAColor)cfa.getInt(3));
+                    rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
                 }
 
                 //more exifs
                 var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
                 var fn = ifd.getEntryRecursive(TagType.FNUMBER);
                 var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
-                if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.getInt();
-                if (exposure != null) rawImage.metadata.exposure = exposure.getFloat();
-                if (fn != null) rawImage.metadata.aperture = fn.getFloat();
+                if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.GetInt(0);
+                if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
+                if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
 
                 var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
                 var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
@@ -86,7 +86,7 @@ namespace RawNet
                 if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
             }
         }
-        
+
         /* Decodes DNG masked areas into blackareas in the image */
         bool DecodeMaskedAreas(IFD raw)
         {
@@ -101,9 +101,9 @@ namespace RawNet
 
             /* Since we may both have short or int, copy it to int array. */
 
-            masked.getIntArray(out Int32[] rects, nrects * 4);
+            masked.GetIntArray(out Int32[] rects, nrects * 4);
 
-            Point2D top = rawImage.mOffset;
+            Point2D top = rawImage.offset;
 
             for (UInt32 i = 0; i < nrects; i++)
             {
@@ -130,7 +130,7 @@ namespace RawNet
             {
                 if (bleveldim.dataCount != 2)
                     return false;
-                blackdim = new Point2D(bleveldim.getInt(0), bleveldim.getInt(1));
+                blackdim = new Point2D(bleveldim.GetInt(0), bleveldim.GetInt(1));
             }
 
             if (blackdim.x == 0 || blackdim.y == 0)
@@ -150,7 +150,7 @@ namespace RawNet
             {
                 // We so not have enough to fill all individually, read a single and copy it
                 //TODO check if float
-                float value = black_entry.getFloat();
+                float value = black_entry.GetFloat(0);
                 for (int y = 0; y < 2; y++)
                 {
                     for (int x = 0; x < 2; x++)
@@ -162,7 +162,7 @@ namespace RawNet
                 for (int y = 0; y < 2; y++)
                 {
                     for (int x = 0; x < 2; x++)
-                        rawImage.blackLevelSeparate[y * 2 + x] = (int)black_entry.getFloat(y * blackdim.x + x);
+                        rawImage.blackLevelSeparate[y * 2 + x] = (int)black_entry.GetFloat(y * blackdim.x + x);
                 }
             }
 
@@ -175,7 +175,7 @@ namespace RawNet
                     throw new RawDecoderException("DNG: BLACKLEVELDELTAV array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
                 for (int i = 0; i < rawImage.dim.y; i++)
-                    black_sum[i & 1] += blackleveldeltav.getFloat(i);
+                    black_sum[i & 1] += blackleveldeltav.GetFloat(i);
 
                 for (int i = 0; i < 4; i++)
                     rawImage.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / rawImage.dim.y * 2.0f);
@@ -189,7 +189,7 @@ namespace RawNet
                     throw new RawDecoderException("DNG: BLACKLEVELDELTAH array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
                 for (int i = 0; i < rawImage.dim.x; i++)
-                    black_sum[i & 1] += blackleveldeltah.getFloat(i);
+                    black_sum[i & 1] += blackleveldeltah.GetFloat(i);
 
                 for (int i = 0; i < 4; i++)
                     rawImage.blackLevelSeparate[i] += (int)(black_sum[i & 1] / rawImage.dim.x * 2.0f);
@@ -217,11 +217,11 @@ namespace RawNet
             for (int k = data.Count - 1; k >= 0; k--)
             {
                 IFD i = data[k];
-                int comp = i.getEntry(TagType.COMPRESSION).getShort(0);
+                int comp = i.getEntry(TagType.COMPRESSION).GetShort(0);
                 bool isSubsampled = false;
                 try
                 {
-                    isSubsampled = (i.getEntry(TagType.NEWSUBFILETYPE).getInt() & 1) != 0; // bit 0 is on if image is subsampled
+                    isSubsampled = (i.getEntry(TagType.NEWSUBFILETYPE).GetInt(0) & 1) != 0; // bit 0 is on if image is subsampled
                 }
                 catch (TiffParserException) { }
                 if ((comp != 7 && comp != 1 && comp != 0x884c) || isSubsampled)
@@ -240,15 +240,15 @@ namespace RawNet
 
             IFD raw = data[0];
             UInt32 sample_format = 1;
-            UInt32 bps = raw.getEntry(TagType.BITSPERSAMPLE).getUInt();
+            UInt32 bps = raw.getEntry(TagType.BITSPERSAMPLE).GetUInt(0);
 
             if (raw.tags.ContainsKey(TagType.SAMPLEFORMAT))
-                sample_format = raw.getEntry(TagType.SAMPLEFORMAT).getUInt();
+                sample_format = raw.getEntry(TagType.SAMPLEFORMAT).GetUInt(0);
 
             if (sample_format != 1)
                 throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported.");
 
-            rawImage.isCFA = (raw.getEntry(TagType.PHOTOMETRICINTERPRETATION).getUShort() == 32803);
+            rawImage.isCFA = (raw.getEntry(TagType.PHOTOMETRICINTERPRETATION).GetUShort(0) == 32803);
 
             /*
             if (mRaw.isCFA)
@@ -266,8 +266,8 @@ namespace RawNet
             try
             {
                 rawImage.dim = new Point2D();
-                rawImage.dim.x = raw.getEntry(TagType.IMAGEWIDTH).getInt();
-                rawImage.dim.y = raw.getEntry(TagType.IMAGELENGTH).getInt();
+                rawImage.dim.x = raw.getEntry(TagType.IMAGEWIDTH).GetInt(0);
+                rawImage.dim.y = raw.getEntry(TagType.IMAGELENGTH).GetInt(0);
             }
             catch (TiffParserException)
             {
@@ -281,32 +281,21 @@ namespace RawNet
 
             try
             {
-                compression = raw.getEntry(TagType.COMPRESSION).getShort();
+                compression = raw.getEntry(TagType.COMPRESSION).GetShort(0);
                 if (rawImage.isCFA)
                 {
-
                     // Check if layout is OK, if present
                     if (raw.tags.ContainsKey(TagType.CFALAYOUT))
-                        if (raw.getEntry(TagType.CFALAYOUT).getShort() != 1)
+                        if (raw.getEntry(TagType.CFALAYOUT).GetShort(0) != 1)
                             throw new RawDecoderException("DNG Decoder: Unsupported CFA Layout.");
 
                     Tag cfadim = raw.getEntry(TagType.CFAREPEATPATTERNDIM);
                     if (cfadim.dataCount != 2)
                         throw new RawDecoderException("DNG Decoder: Couldn't read CFA pattern dimension");
                     Tag pDim = raw.getEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
-                    var cPat = raw.getEntry(TagType.CFAPATTERN).data;                 // Does NOT contain dimensions as some documents state
-                                                                                      /*
-                                                                                            if (raw.tags.ContainsKey(CFAPLANECOLOR)) {
-                                                                                              Tag e = raw.getEntry(CFAPLANECOLOR);
-                                                                                              unsigned stringcPlaneOrder = e.getData();       // Map from the order in the image, to the position in the CFA
-                                                                                              printf("Planecolor: ");
-                                                                                              for (UInt32 i = 0; i < e.count; i++) {
-                                                                                                printf("%u,",cPlaneOrder[i]);
-                                                                                              }
-                                                                                              printf("\n");
-                                                                                            }
-                                                                                      */
-                    Point2D cfaSize = new Point2D(pDim.getInt(1), pDim.getInt(0));
+                    var cPat = raw.getEntry(TagType.CFAPATTERN).data;     // Does NOT contain dimensions as some documents state
+
+                    Point2D cfaSize = new Point2D(pDim.GetInt(1), pDim.GetInt(0));
                     rawImage.cfa.setSize(cfaSize);
                     if (cfaSize.area() != raw.getEntry(TagType.CFAPATTERN).dataCount)
                         throw new RawDecoderException("DNG Decoder: CFA pattern dimension and pattern count does not match: " + raw.getEntry(TagType.CFAPATTERN).dataCount);
@@ -347,16 +336,16 @@ namespace RawNet
                 {  // Uncompressed.
                     try
                     {
-                        UInt32 cpp = raw.getEntry(TagType.SAMPLESPERPIXEL).getUInt();
+                        UInt32 cpp = raw.getEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
                         if (cpp > 4)
                             throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
                         rawImage.cpp = cpp;
 
                         Tag offsets = raw.getEntry(TagType.STRIPOFFSETS);
                         Tag counts = raw.getEntry(TagType.STRIPBYTECOUNTS);
-                        UInt32 yPerSlice = raw.getEntry(TagType.ROWSPERSTRIP).getUInt();
-                        UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
-                        UInt32 height = raw.getEntry(TagType.IMAGELENGTH).getUInt();
+                        UInt32 yPerSlice = raw.getEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+                        UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).GetUInt(0);
+                        UInt32 height = raw.getEntry(TagType.IMAGELENGTH).GetUInt(0);
 
                         if (counts.dataCount != offsets.dataCount)
                         {
@@ -368,8 +357,8 @@ namespace RawNet
                         for (UInt32 s = 0; s < offsets.dataCount; s++)
                         {
                             DngStrip slice = new DngStrip();
-                            slice.offset = offsets.getUInt(s);
-                            slice.count = counts.getUInt(s);
+                            slice.offset = offsets.GetUInt(s);
+                            slice.count = counts.GetUInt(s);
                             slice.offsetY = offY;
                             if (offY + yPerSlice > height)
                                 slice.h = height - offY;
@@ -418,7 +407,7 @@ namespace RawNet
                     {
                         // Let's try loading it as tiles instead
 
-                        rawImage.cpp = (raw.getEntry(TagType.SAMPLESPERPIXEL).getUInt());
+                        rawImage.cpp = (raw.getEntry(TagType.SAMPLESPERPIXEL).GetUInt(0));
 
                         if (sample_format != 1)
                             throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported for compressed data.");
@@ -426,8 +415,8 @@ namespace RawNet
                         DngDecoderSlices slices = new DngDecoderSlices(reader, rawImage, compression);
                         if (raw.tags.ContainsKey(TagType.TILEOFFSETS))
                         {
-                            UInt32 tilew = raw.getEntry(TagType.TILEWIDTH).getUInt();
-                            UInt32 tileh = raw.getEntry(TagType.TILELENGTH).getUInt();
+                            UInt32 tilew = raw.getEntry(TagType.TILEWIDTH).GetUInt(0);
+                            UInt32 tileh = raw.getEntry(TagType.TILELENGTH).GetUInt(0);
                             if (tilew == 0 || tileh == 0)
                                 throw new RawDecoderException("DNG Decoder: Invalid tile size");
 
@@ -446,7 +435,7 @@ namespace RawNet
                             {
                                 for (UInt32 x = 0; x < tilesX; x++)
                                 {
-                                    DngSliceElement e = new DngSliceElement(offsets.getUInt(x + y * tilesX), counts.getUInt(x + y * tilesX), tilew * x, tileh * y);
+                                    DngSliceElement e = new DngSliceElement(offsets.GetUInt(x + y * tilesX), counts.GetUInt(x + y * tilesX), tilew * x, tileh * y);
                                     e.mUseBigtable = tilew * tileh > 1024 * 1024;
                                     slices.addSlice(e);
                                 }
@@ -457,7 +446,7 @@ namespace RawNet
                             Tag offsets = raw.getEntry(TagType.STRIPOFFSETS);
                             Tag counts = raw.getEntry(TagType.STRIPBYTECOUNTS);
 
-                            UInt32 yPerSlice = raw.getEntry(TagType.ROWSPERSTRIP).getUInt();
+                            UInt32 yPerSlice = raw.getEntry(TagType.ROWSPERSTRIP).GetUInt(0);
 
                             if (counts.dataCount != offsets.dataCount)
                             {
@@ -470,7 +459,7 @@ namespace RawNet
                             UInt32 offY = 0;
                             for (UInt32 s = 0; s < counts.dataCount; s++)
                             {
-                                DngSliceElement e = new DngSliceElement(offsets.getUInt(s), counts.getUInt(s), 0, offY);
+                                DngSliceElement e = new DngSliceElement(offsets.GetUInt(s), counts.GetUInt(s), 0, offY);
                                 e.mUseBigtable = yPerSlice * rawImage.dim.y > 1024 * 1024;
                                 offY += yPerSlice;
 
@@ -518,8 +507,8 @@ namespace RawNet
                 {
                     if (as_shot_white_xy.dataCount == 2)
                     {
-                        rawImage.metadata.wbCoeffs[0] = as_shot_white_xy.getFloat(0);
-                        rawImage.metadata.wbCoeffs[1] = as_shot_white_xy.getFloat(1);
+                        rawImage.metadata.wbCoeffs[0] = as_shot_white_xy.GetFloat(0);
+                        rawImage.metadata.wbCoeffs[1] = as_shot_white_xy.GetFloat(1);
                         rawImage.metadata.wbCoeffs[2] = 1 - rawImage.metadata.wbCoeffs[0] - rawImage.metadata.wbCoeffs[1];
 
                         float[] d65_white = { 0.950456F, 1, 1.088754F };
@@ -538,7 +527,7 @@ namespace RawNet
                 if (active_area.dataCount != 4)
                     throw new RawDecoderException("DNG: active area has " + active_area.dataCount + " values instead of 4");
 
-                active_area.getIntArray(out int[] corners, 4);
+                active_area.GetIntArray(out int[] corners, 4);
                 if (new Point2D(corners[1], corners[0]).isThisInside(rawImage.dim))
                 {
                     if (new Point2D(corners[3], corners[2]).isThisInside(rawImage.dim))
@@ -557,14 +546,14 @@ namespace RawNet
             {
                 Rectangle2D cropped = new Rectangle2D(0, 0, rawImage.dim.x, rawImage.dim.y);
                 /* Read crop position (sometimes is rational so use float) */
-                origin_entry.getFloatArray(out float[] tl, 2);
+                origin_entry.GetFloatArray(out float[] tl, 2);
                 if (new Point2D((int)tl[0], (int)tl[1]).isThisInside(rawImage.dim))
                     cropped = new Rectangle2D((int)tl[0], (int)tl[1], 0, 0);
 
                 cropped.dim = rawImage.dim - cropped.pos;
                 /* Read size (sometimes is rational so use float) */
 
-                size_entry.getFloatArray(out float[] sz, 2);
+                size_entry.GetFloatArray(out float[] sz, 2);
                 Point2D size = new Point2D((int)sz[0], (int)sz[1]);
                 if ((size + cropped.pos).isThisInside(rawImage.dim))
                     cropped.dim = size;
@@ -606,7 +595,7 @@ namespace RawNet
             if (lintable != null)
             {
                 UInt32 len = lintable.dataCount;
-                lintable.getShortArray(out ushort[] table, (int)len);
+                lintable.GetShortArray(out ushort[] table, (int)len);
                 rawImage.SetTable(table, (int)len, true);
 
                 //TODO Fix
@@ -616,13 +605,13 @@ namespace RawNet
             }
 
             // Default white level is (2 ** BitsPerSample) - 1
-            rawImage.whitePoint = (uint)(1 >> raw.getEntry(TagType.BITSPERSAMPLE).getShort()) - 1;
+            rawImage.whitePoint = (uint)(1 >> raw.getEntry(TagType.BITSPERSAMPLE).GetShort(0)) - 1;
 
 
             Tag whitelevel = raw.getEntry(TagType.WHITELEVEL);
             try
             {
-                rawImage.whitePoint = whitelevel.getUInt();
+                rawImage.whitePoint = whitelevel.GetUInt(0);
             }
             catch (Exception) { }
 
@@ -634,12 +623,12 @@ namespace RawNet
             //TODO optimize (super slow)
             double maxVal = Math.Pow(2, rawImage.ColorDepth);
             double coeff = maxVal / (rawImage.whitePoint - rawImage.blackLevelSeparate[0]);
-            Parallel.For(rawImage.mOffset.y, rawImage.dim.y + rawImage.mOffset.y, y =>
+            Parallel.For(rawImage.offset.y, rawImage.dim.y + rawImage.offset.y, y =>
             //for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)
             {
                 //int offset = ((y % 2) * 2);
                 int realY = y * rawImage.dim.x;
-                for (int x = rawImage.mOffset.x; x < rawImage.dim.x + rawImage.mOffset.x; x++)
+                for (int x = rawImage.offset.x; x < rawImage.dim.x + rawImage.offset.x; x++)
                 {
                     int pos = realY + x;
                     double val;
@@ -701,7 +690,7 @@ namespace RawNet
                     for (int i = 0; i < potential.Count; i++)
                     {
                         var subFile = potential[i].getEntry(TagType.NEWSUBFILETYPE);
-                        if (subFile.getInt() == 1)
+                        if (subFile.GetInt(0) == 1)
                         {
                             thumbIFD = potential[i];
                             break;
@@ -711,16 +700,16 @@ namespace RawNet
                     {
                         //there is a thumbnail
                         UInt32 sample_format = 1;
-                        UInt32 bps = thumbIFD.getEntry(TagType.BITSPERSAMPLE).getUInt();
+                        UInt32 bps = thumbIFD.getEntry(TagType.BITSPERSAMPLE).GetUInt(0);
                         Point2D dim;
                         if (thumbIFD.tags.ContainsKey(TagType.SAMPLEFORMAT))
-                            sample_format = thumbIFD.getEntry(TagType.SAMPLEFORMAT).getUInt();
+                            sample_format = thumbIFD.getEntry(TagType.SAMPLEFORMAT).GetUInt(0);
                         try
                         {
                             dim = new Point2D()
                             {
-                                x = thumbIFD.getEntry(TagType.IMAGEWIDTH).getInt(),
-                                y = thumbIFD.getEntry(TagType.IMAGELENGTH).getInt()
+                                x = thumbIFD.getEntry(TagType.IMAGEWIDTH).GetInt(0),
+                                y = thumbIFD.getEntry(TagType.IMAGELENGTH).GetInt(0)
                             };
                         }
                         catch (TiffParserException)
@@ -728,21 +717,21 @@ namespace RawNet
                             throw new RawDecoderException("DNG Decoder: Could not read basic image information.");
                         }
 
-                        int compression = thumbIFD.getEntry(TagType.COMPRESSION).getShort();
+                        int compression = thumbIFD.getEntry(TagType.COMPRESSION).GetShort(0);
                         // Now load the image
                         if (compression == 1)
                         {  // Uncompressed.
 
-                            UInt32 cpp = thumbIFD.getEntry(TagType.SAMPLESPERPIXEL).getUInt();
+                            UInt32 cpp = thumbIFD.getEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
                             if (cpp > 4)
                                 throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
 
 
                             Tag offsets = thumbIFD.getEntry(TagType.STRIPOFFSETS);
                             Tag counts = thumbIFD.getEntry(TagType.STRIPBYTECOUNTS);
-                            UInt32 yPerSlice = thumbIFD.getEntry(TagType.ROWSPERSTRIP).getUInt();
-                            UInt32 width = thumbIFD.getEntry(TagType.IMAGEWIDTH).getUInt();
-                            UInt32 height = thumbIFD.getEntry(TagType.IMAGELENGTH).getUInt();
+                            UInt32 yPerSlice = thumbIFD.getEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+                            UInt32 width = thumbIFD.getEntry(TagType.IMAGEWIDTH).GetUInt(0);
+                            UInt32 height = thumbIFD.getEntry(TagType.IMAGELENGTH).GetUInt(0);
 
                             if (counts.dataCount != offsets.dataCount)
                             {
@@ -754,8 +743,8 @@ namespace RawNet
                             for (UInt32 s = 0; s < offsets.dataCount; s++)
                             {
                                 DngStrip slice = new DngStrip();
-                                slice.offset = offsets.getUInt(s);
-                                slice.count = counts.getUInt(s);
+                                slice.offset = offsets.GetUInt(s);
+                                slice.count = counts.GetUInt(s);
                                 slice.offsetY = offY;
                                 if (offY + yPerSlice > height)
                                     slice.h = height - offY;
@@ -795,7 +784,7 @@ namespace RawNet
                             /*
                             // Let's try loading it as tiles instead
 
-                            uint cpp = (thumbIFD.getEntry(TagType.SAMPLESPERPIXEL).getUInt());
+                            uint cpp = (thumbIFD.getEntry(TagType.SAMPLESPERPIXEL).GetUInt(0));
 
                             if (sample_format != 1)
                                 throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported for compressed data.");
@@ -803,8 +792,8 @@ namespace RawNet
                             DngDecoderSlices slices = new DngDecoderSlices(mFile, mRaw, compression);
                             if (thumbIFD.tags.ContainsKey(TagType.TILEOFFSETS))
                             {
-                                UInt32 tilew = thumbIFD.getEntry(TagType.TILEWIDTH).getUInt();
-                                UInt32 tileh = thumbIFD.getEntry(TagType.TILELENGTH).getUInt();
+                                UInt32 tilew = thumbIFD.getEntry(TagType.TILEWIDTH).GetUInt(0);
+                                UInt32 tileh = thumbIFD.getEntry(TagType.TILELENGTH).GetUInt(0);
                                 if (tilew == 0 || tileh == 0)
                                     throw new RawDecoderException("DNG Decoder: Invalid tile size");
 
@@ -834,7 +823,7 @@ namespace RawNet
                                 Tag offsets = thumbIFD.getEntry(TagType.STRIPOFFSETS);
                                 Tag counts = thumbIFD.getEntry(TagType.STRIPBYTECOUNTS);
 
-                                UInt32 yPerSlice = thumbIFD.getEntry(TagType.ROWSPERSTRIP).getUInt();
+                                UInt32 yPerSlice = thumbIFD.getEntry(TagType.ROWSPERSTRIP).GetUInt(0);
 
                                 if (counts.dataCount != offsets.dataCount)
                                 {

@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 
 namespace RawNet
 {
@@ -33,9 +32,9 @@ namespace RawNet
 
                     TIFFBinaryReader stream;
                     if (root.endian == Common.getHostEndianness())
-                        stream = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(t.getByteArray()), 0, t.dataCount);
+                        stream = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(t.GetByteArray()), 0, t.dataCount);
                     else
-                        stream = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(t.getByteArray()), 0, t.dataCount);
+                        stream = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(t.GetByteArray()), 0, t.dataCount);
 
                     UInt32 depth = (uint)(stream.ReadUInt16() + 12) & 0xf;
                     stream.ReadBytes(12);

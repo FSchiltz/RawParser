@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace RawNet
 {
@@ -55,7 +54,7 @@ namespace RawNet
                     if (data.Count == 0)
                         throw new RawDecoderException("ARW: A100 format, couldn't find offset");
                     raw = data[0];
-                    UInt32 offset = raw.getEntry(TagType.SUBIFDS).getUInt();
+                    UInt32 offset = raw.getEntry(TagType.SUBIFDS).GetUInt(0);
                     UInt32 w = 3881;
                     UInt32 h = 2608;
 
@@ -83,8 +82,8 @@ namespace RawNet
                         throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
                     raw = data[0];
 
-                    UInt32 w = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
-                    UInt32 h = raw.getEntry(TagType.IMAGELENGTH).getUInt();
+                    UInt32 w = raw.getEntry(TagType.IMAGEWIDTH).GetUInt(0);
+                    UInt32 h = raw.getEntry(TagType.IMAGELENGTH).GetUInt(0);
                     UInt32 len = w * h * 2;
 
                     // Constants taken from dcraw
@@ -127,7 +126,7 @@ namespace RawNet
             }
 
             raw = data[0];
-            int compression = raw.getEntry(TagType.COMPRESSION).getInt();
+            int compression = raw.getEntry(TagType.COMPRESSION).GetInt(0);
             if (1 == compression)
             {
                 try
@@ -156,9 +155,9 @@ namespace RawNet
             {
                 throw new RawDecoderException("ARW Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:%u " + offsets.dataCount);
             }
-            UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
-            UInt32 height = raw.getEntry(TagType.IMAGELENGTH).getUInt();
-            UInt32 bitPerPixel = raw.getEntry(TagType.BITSPERSAMPLE).getUInt();
+            UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            UInt32 height = raw.getEntry(TagType.IMAGELENGTH).GetUInt(0);
+            UInt32 bitPerPixel = raw.getEntry(TagType.BITSPERSAMPLE).GetUInt(0);
             rawImage.ColorDepth = (ushort)bitPerPixel;
             // Sony E-550 marks compressed 8bpp ARW with 12 bit per pixel
             // this makes the compression detect it as a ARW v1.
@@ -176,7 +175,7 @@ namespace RawNet
                 }
             }
 
-            bool arw1 = counts.getInt() * 8 != width * height * bitPerPixel;
+            bool arw1 = counts.GetInt(0) * 8 != width * height * bitPerPixel;
             if (arw1)
                 height += 8;
 
@@ -188,7 +187,7 @@ namespace RawNet
             UInt32[] sony_curve = { 0, 0, 0, 0, 0, 4095 };
 
             for (Int32 i = 0; i < 4; i++)
-                sony_curve[i + 1] = (uint)(c.getShort(i) >> 2) & 0xfff;
+                sony_curve[i + 1] = (uint)(c.GetShort(i) >> 2) & 0xfff;
 
             for (Int32 i = 0; i < 0x4001; i++)
                 curve[i] = (ushort)i;
@@ -200,8 +199,8 @@ namespace RawNet
 
             rawImage.SetTable(curve, 0x4000, true);
 
-            UInt32 c2 = counts.getUInt();
-            UInt32 off = offsets.getUInt();
+            UInt32 c2 = counts.GetUInt(0);
+            UInt32 off = offsets.GetUInt(0);
 
             if (!reader.isValid(off))
                 throw new RawDecoderException("Sony ARW decoder: Data offset after EOF, file probably truncated");
@@ -231,10 +230,10 @@ namespace RawNet
 
         void DecodeUncompressed(IFD raw)
         {
-            UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).getUInt();
-            UInt32 height = raw.getEntry(TagType.IMAGELENGTH).getUInt();
-            UInt32 off = raw.getEntry(TagType.STRIPOFFSETS).getUInt();
-            UInt32 c2 = raw.getEntry(TagType.STRIPBYTECOUNTS).getUInt();
+            UInt32 width = raw.getEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            UInt32 height = raw.getEntry(TagType.IMAGELENGTH).GetUInt(0);
+            UInt32 off = raw.getEntry(TagType.STRIPOFFSETS).GetUInt(0);
+            UInt32 c2 = raw.getEntry(TagType.STRIPBYTECOUNTS).GetUInt(0);
 
             rawImage.dim = new Point2D((int)width, (int)height);
             rawImage.Init();
@@ -384,7 +383,7 @@ namespace RawNet
             }
             else
             {
-                rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.getInt(0), (CFAColor)cfa.getInt(1), (CFAColor)cfa.getInt(2), (CFAColor)cfa.getInt(3));
+                rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
             rawImage.whitePoint >>= shiftDownScale;
@@ -397,7 +396,7 @@ namespace RawNet
                 Tag priv = ifd.getEntryRecursive(TagType.DNGPRIVATEDATA);
                 if (priv != null)
                 {
-                    byte[] offdata = priv.getByteArray();
+                    byte[] offdata = priv.GetByteArray();
                     UInt32 off = ((uint)(offdata[3] << 24) | (uint)(offdata[2] << 16) |
                             (uint)(offdata[1] << 8) | (uint)offdata[0]);
                     UInt32 length = (uint)reader.BaseStream.Length - off;
@@ -445,9 +444,9 @@ namespace RawNet
             var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
             var fn = ifd.getEntryRecursive(TagType.FNUMBER);
             var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (t != null) rawImage.metadata.isoSpeed = t.getInt();
-            if (exposure != null) rawImage.metadata.exposure = exposure.getFloat();
-            if (fn != null) rawImage.metadata.aperture = fn.getFloat();
+            if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
+            if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
+            if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
 
             var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
             var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
@@ -561,7 +560,7 @@ namespace RawNet
             Tag priv = ifd.getEntryRecursive(TagType.DNGPRIVATEDATA);
             if (priv != null)
             {
-                byte[] data = priv.getByteArray();
+                byte[] data = priv.GetByteArray();
                 UInt32 off = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | ((uint)(data)[0]));
                 IFD sony_private;
                 sony_private = new IFD(reader, off, ifd.endian);
@@ -572,9 +571,9 @@ namespace RawNet
                 if (sony_offset == null || sony_length == null || sony_key == null || sony_key.dataCount != 4)
                     throw new RawDecoderException("ARW: couldn't find the correct metadata for WB decoding");
 
-                off = sony_offset.getUInt();
-                UInt32 len = sony_length.getUInt();
-                data = sony_key.getByteArray();
+                off = sony_offset.GetUInt(0);
+                UInt32 len = sony_length.GetUInt(0);
+                data = sony_key.GetByteArray();
                 UInt32 key = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | ((uint)(data)[0]));
                 reader.BaseStream.Position = off;
                 byte[] ifp_data = reader.ReadBytes((int)len);
@@ -589,18 +588,18 @@ namespace RawNet
                     Tag wb = sony_private.getEntry(TagType.SONYGRBGLEVELS);
                     if (wb.dataCount != 4)
                         throw new RawDecoderException("ARW: WB has " + wb.dataCount + " entries instead of 4");
-                    rawImage.metadata.wbCoeffs[0] = wb.getFloat(1) / wb.getFloat(0);
-                    rawImage.metadata.wbCoeffs[1] = wb.getFloat(0) / wb.getFloat(0);
-                    rawImage.metadata.wbCoeffs[2] = wb.getFloat(2) / wb.getFloat(0);
+                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(1) / wb.GetFloat(0);
+                    rawImage.metadata.wbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
+                    rawImage.metadata.wbCoeffs[2] = wb.GetFloat(2) / wb.GetFloat(0);
                 }
                 else if (sony_private.tags.ContainsKey(TagType.SONYRGGBLEVELS))
                 {
                     Tag wb = sony_private.getEntry(TagType.SONYRGGBLEVELS);
                     if (wb.dataCount != 4)
                         throw new RawDecoderException("ARW: WB has " + wb.dataCount + " entries instead of 4");
-                    rawImage.metadata.wbCoeffs[0] = wb.getFloat(0) / wb.getFloat(1);
-                    rawImage.metadata.wbCoeffs[1] = wb.getFloat(1) / wb.getFloat(1);
-                    rawImage.metadata.wbCoeffs[2] = wb.getFloat(3) / wb.getFloat(1);
+                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0) / wb.GetFloat(1);
+                    rawImage.metadata.wbCoeffs[1] = wb.GetFloat(1) / wb.GetFloat(1);
+                    rawImage.metadata.wbCoeffs[2] = wb.GetFloat(3) / wb.GetFloat(1);
 
                 }
             }

@@ -126,7 +126,7 @@ namespace RawNet
             dataCount = fileStream.ReadUInt32();
 
             dataOffset = 0;
-            if (((dataCount * getTypeSize(dataType) > 4)))
+            if (((dataCount * GetTypeSize(dataType) > 4)))
             {
                 dataOffset = (uint)(fileStream.ReadUInt32());
             }
@@ -201,13 +201,13 @@ namespace RawNet
             }
             else if (dataOffset == 0)
             {
-                int k = (int)dataCount * getTypeSize(dataType);
+                int k = (int)dataCount * GetTypeSize(dataType);
                 if (k < 4)
                     fileStream.ReadBytes(4 - k);
             }
         }
 
-        public int getTypeSize(TiffDataType id)
+        public int GetTypeSize(TiffDataType id)
         {
             int size = 0;
             switch (id)
@@ -237,28 +237,28 @@ namespace RawNet
             return size;
         }
 
-        public void getShortArray(out ushort[] array, int num)
+        public void GetShortArray(out ushort[] array, int num)
         {
             array = new ushort[num];
             for (int i = 0; i < num; i++)
                 array[i] = Convert.ToUInt16(data[i]);
         }
 
-        public void getIntArray(out int[] array, int num)
+        public void GetIntArray(out int[] array, int num)
         {
             array = new int[num];
             for (int i = 0; i < num; i++)
                 array[i] = Convert.ToInt32(data[i]);
         }
 
-        public void getFloatArray(out float[] array, int num)
+        public void GetFloatArray(out float[] array, int num)
         {
             array = new float[num];
             for (int i = 0; i < num; i++)
                 array[i] = Convert.ToSingle(data[i]);
         }
 
-        internal byte[] getByteArray()
+        internal byte[] GetByteArray()
         {
             byte[] array = new byte[dataCount];
             for (int i = 0; i < dataCount; i++)
@@ -266,31 +266,19 @@ namespace RawNet
             return array;
         }
 
-        internal short getShort(int v) { return Convert.ToInt16(data[v]); }
+        internal short GetShort(int v) { return Convert.ToInt16(data[v]); }
 
-        internal short getShort() { return getShort(0); }
+        internal ushort GetUShort(int v) { return Convert.ToUInt16(data[v]); }
 
-        internal ushort getUShort(int v) { return Convert.ToUInt16(data[v]); }
+        internal int GetInt(int v) { return Convert.ToInt32(data[v]); }
 
-        internal ushort getUShort() { return getUShort(0); }
+        internal uint GetUInt(uint v) { return Convert.ToUInt32(data[v]); }
 
-        internal int getInt(int v) { return Convert.ToInt32(data[v]); }
+        internal double GetDouble(int v) { return Convert.ToDouble(data[v]); }
 
-        internal int getInt() { return getInt(0); }
+        internal float GetFloat(int v) { return Convert.ToSingle(data[v]); }
 
-        internal uint getUInt(uint v) { return Convert.ToUInt32(data[v]); }
-
-        internal uint getUInt() { return getUInt(0); }
-
-        internal double getDouble() { return getDouble(0); }
-
-        internal double getDouble(int v) { return Convert.ToDouble(data[v]); }
-
-        internal float getFloat(int v) { return Convert.ToSingle(data[v]); }
-
-        internal float getFloat() { return getFloat(0); }
-
-        public void writeToStream(Stream s, ushort name, ulong count, object data, long offset)
+        public void WriteToStream(Stream s, ushort name, ulong count, object data, long offset)
         {
             throw new NotImplementedException();
         }
