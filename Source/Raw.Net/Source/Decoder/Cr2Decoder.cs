@@ -21,9 +21,6 @@ namespace RawNet
         {
         }
 
-        /**
-         * Taken from nikon decoder
-         */
         protected override Thumbnail DecodeThumbInternal()
         {
             //find the preview ifd (ifd1 for thumb)(IFD0 is better, bigger preview buut too big and slow for now)
@@ -108,7 +105,7 @@ namespace RawNet
                     };
                     procRaw.Init();
                     procRaw.metadata = rawImage.metadata;
-                    //procRaw.copyErrorsFrom(mRaw);
+                    //procRaw.copyErrorsFrom(rawImage);
 
                     for (UInt32 y = 0; y < height; y++)
                     {
@@ -130,9 +127,9 @@ namespace RawNet
 
                         rawImage.SetTable(table, 4096, true);
                         // Apply table
-                        //mRaw.sixteenBitLookup();
+                        //rawImage.sixteenBitLookup();
                         // Delete table
-                        // mRaw.setTable(null);
+                        // rawImage.setTable(null);
 
                     }
                 }
@@ -202,7 +199,7 @@ namespace RawNet
             }
             rawImage.dim = new Point2D((int)slices[0].w, completeH);
 
-            // Fix for Canon 6D mRaw, which has flipped width & height for some part of the image
+            // Fix for Canon 6D rawImage, which has flipped width & height for some part of the image
             // In that case, we swap width and height, since this is the correct dimension
             bool flipDims = false;
             bool wrappedCr2Slices = false;
@@ -215,7 +212,7 @@ namespace RawNet
                     rawImage.dim.x /= 3;
                     rawImage.cpp = (3);
                     rawImage.isCFA = false;
-                    // Fix for Canon 80D mraw format.
+                    // Fix for Canon 80D rawImage format.
                     // In that format, the frame (as read by getSOF()) is 4032x3402, while the
                     // real image should be 4536x3024 (where the full vertical slices in
                     // the frame "wrap around" the image.
@@ -289,37 +286,8 @@ namespace RawNet
                 offY += slice.w;
             }
 
-            /*
-            if (mRaw.metadata.subsampling.x > 1 || mRaw.metadata.subsampling.y > 1)
-                sRawInterpolate();*/
-        }
-
-        protected override void checkSupportInternal()
-        {
-            /*List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
-            if (data.Count == 0)
-                throw new RawDecoderException("CR2 Support check: Model name not found");
-            if (!data[0].tags.ContainsKey(TagType.MAKE))
-                throw new RawDecoderException("CR2 Support: Make name not found");
-            string make = data[0].getEntry(TagType.MAKE).DataAsString;
-            string model = data[0].getEntry(TagType.MODEL).DataAsString;
-
-            // Check for sRaw mode
-            data = ifd.getIFDsWithTag((TagType)0xc5d8);
-            if (data.Count != 0)
-            {
-                IFD raw = data[0];
-                if (raw.tags.ContainsKey((TagType)0xc6c5))
-                {
-                    UInt16 ss = raw.getEntry((TagType)0xc6c5).getUShort();
-                    if (ss == 4)
-                    {
-                        //this.checkCameraSupported(metaData, make, model, "sRaw1");
-                        return;
-                    }
-                }
-            }
-            //this.checkCameraSupported(metaData, make, model, "");*/
+            if (rawImage.metadata.subsampling.x > 1 || rawImage.metadata.subsampling.y > 1)
+                SRawInterpolate();
         }
 
         protected override void DecodeMetaDataInternal()
@@ -396,9 +364,9 @@ namespace RawNet
                         int wb_offset = (wb_index < 18) ? "012347800000005896"[wb_index] - '0' : 0;
                         wb_offset = wb_offset * 8 + 2;
 
-                        rawImage.metadata.wbCoeffs[0] = (float)g9_wb.getInt(wb_offset + 1);
-                        rawImage.metadata.wbCoeffs[1] = ((float)g9_wb.getInt(wb_offset + 0) + (float)g9_wb.getInt(wb_offset + 3)) / 2.0f;
-                        rawImage.metadata.wbCoeffs[2] = (float)g9_wb.getInt(wb_offset + 2);
+                        rawImage.metadata.wbCoeffs[0] = g9_wb.getInt(wb_offset + 1);
+                        rawImage.metadata.wbCoeffs[1] = (g9_wb.getInt(wb_offset + 0) + (float)g9_wb.getInt(wb_offset + 3)) / 2.0f;
+                        rawImage.metadata.wbCoeffs[2] = g9_wb.getInt(wb_offset + 2);
                     }
                     else
                     {
@@ -511,14 +479,12 @@ namespace RawNet
                         rawImage.metadata.pixelAspectRatio = 256 / 235.0;
                         //filters = 0x1e4e1e4e;
                         goto canon_a5;
-                        break;
                     case "PowerShot A50":
                         rawImage.dim.y = 968;
                         rawImage.dim.x = 1290;
                         //rawImage.dim.x = 1320;
                         //filters = 0x1b4e4b1e;
                         goto canon_a5;
-                        break;
                     case "PowerShot Pro70":
                         rawImage.dim.y = 1024;
                         rawImage.dim.x = 1552;
@@ -563,17 +529,16 @@ namespace RawNet
             return (rawImage.metadata.subsampling.y * rawImage.metadata.subsampling.x);
         }
 
-        /*
         // Interpolate and convert sRaw data.
-        void sRawInterpolate()
+        void SRawInterpolate()
         {
-            List<IFD> data = mRootIFD.getIFDsWithTag(CANONCOLORDATA);
+            List<IFD> data = ifd.getIFDsWithTag(TagType.CANONCOLORDATA);
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 sRaw: Unable to locate WB info.");
 
-            Tag wb = data[0].getEntry(CANONCOLORDATA);
+            Tag wb = data[0].getEntry(TagType.CANONCOLORDATA);
             // Offset to sRaw coefficients used to reconstruct uncorrected RGB data.
-            UInt32 offset = 78;
+            Int32 offset = 78;
 
             sraw_coeffs[0] = wb.getShort(offset + 0);
             sraw_coeffs[1] = (wb.getShort(offset + 1) + wb.getShort(offset + 2) + 1) >> 1;
@@ -581,423 +546,397 @@ namespace RawNet
 
             if (hints.ContainsKey("invert_sraw_wb"))
             {
-                sraw_coeffs[0] = (int)(1024.0f / ((float)sraw_coeffs[0] / 1024.0f));
-                sraw_coeffs[2] = (int)(1024.0f / ((float)sraw_coeffs[2] / 1024.0f));
+                sraw_coeffs[0] = (int)(1024.0f / (sraw_coeffs[0] / 1024.0f));
+                sraw_coeffs[2] = (int)(1024.0f / (sraw_coeffs[2] / 1024.0f));
             }
 
             // Determine sRaw coefficients 
             bool isOldSraw = hints.ContainsKey("sraw_40d");
             bool isNewSraw = hints.ContainsKey("sraw_new");
 
-            if (mRaw.metadata.subsampling.y == 1 && mRaw.metadata.subsampling.x == 2)
+            if (rawImage.metadata.subsampling.y == 1 && rawImage.metadata.subsampling.x == 2)
             {
                 if (isOldSraw)
-                    interpolate_422_old(mRaw.dim.x / 2, mRaw.dim.y, 0, mRaw.dim.y);
+                    Interpolate_422_old(rawImage.dim.x / 2, rawImage.dim.y, 0, rawImage.dim.y);
                 else if (isNewSraw)
-                    interpolate_422_new(mRaw.dim.x / 2, mRaw.dim.y, 0, mRaw.dim.y);
+                    Interpolate_422_new(rawImage.dim.x / 2, rawImage.dim.y, 0, rawImage.dim.y);
                 else
-                    interpolate_422(mRaw.dim.x / 2, mRaw.dim.y, 0, mRaw.dim.y);
+                    Interpolate_422(rawImage.dim.x / 2, rawImage.dim.y, 0, rawImage.dim.y);
             }
-            else if (mRaw.metadata.subsampling.y == 2 && mRaw.metadata.subsampling.x == 2)
+            else if (rawImage.metadata.subsampling.y == 2 && rawImage.metadata.subsampling.x == 2)
             {
                 if (isNewSraw)
-                    interpolate_420_new(mRaw.dim.x / 2, mRaw.dim.y / 2, 0, mRaw.dim.y / 2);
+                    Interpolate_420_new(rawImage.dim.x / 2, rawImage.dim.y / 2, 0, rawImage.dim.y / 2);
                 else
-                    interpolate_420(mRaw.dim.x / 2, mRaw.dim.y / 2, 0, mRaw.dim.y / 2);
+                    Interpolate_420(rawImage.dim.x / 2, rawImage.dim.y / 2, 0, rawImage.dim.y / 2);
             }
             else
                 throw new RawDecoderException("CR2 Decoder: Unknown subsampling");
         }
 
-#define YUV_TO_RGB(Y, Cb, Cr) r = sraw_coeffs[0] * ((int)Y + (( 50*(int)Cb + 22929*(int)Cr) >> 12));\
-        g = sraw_coeffs[1] * ((int) Y + ((-5640 * (int) Cb - 11751 * (int) Cr) >> 12));\
-  b = sraw_coeffs[2] * ((int) Y + ((29040 * (int) Cb - 101 * (int) Cr) >> 12));\
-  r >>= 8; g >>= 8; b >>= 8;
-
-void STORE_RGB(X, A, B, C)
+        private void YUV_TO_RGB1(int Y, int Cb, int Cr, out int r, out int g, out int b)
         {
-            X[A] = Common.clampbits(r, 16); X[B] = Common.clampbits(g, 16); X[C] = Common.clampbits(b, 16);
+            r = (ushort)(sraw_coeffs[0] * (Y + ((50 * Cb + 22929 * Cr) >> 12)));
+            g = (ushort)(sraw_coeffs[1] * (Y + ((-5640 * Cb - 11751 * Cr) >> 12)));
+            b = (ushort)(sraw_coeffs[2] * (Y + ((29040 * Cb - 101 * Cr) >> 12)));
+            r >>= 8; g >>= 8; b >>= 8;
         }
-        */
 
-        /*
-    // sRaw interpolators - ugly as sin, but does the job in reasonably speed
-    // Note: Thread safe.
-    void interpolate_422(int w, int h, int start_h, int end_h)
-    {
-        // Last pixel should not be interpolated
-        w--;
-
-        // Current line
-        UInt16* c_line;
-        int hue = -getHue() + 16384;
-        for (int y = start_h; y < end_h; y++)
+        //TODO remove
+        private unsafe void STORE_RGB(ushort* X, int A, int B, int C, int r, int g, int b)
         {
-            c_line = (UInt16*)mRaw.getData(0, y);
-            int r, g, b;
-            int off = 0;
-            for (int x = 0; x < w; x++)
+            X[A] = (ushort)Common.clampbits(r, 16);
+            X[B] = (ushort)Common.clampbits(g, 16);
+            X[C] = (ushort)Common.clampbits(b, 16);
+        }
+
+        // sRaw interpolators - ugly as sin, but does the job in reasonably speed
+        // Note: Thread safe.
+        unsafe void Interpolate_422(int w, int h, int start_h, int end_h)
+        {
+            // Last pixel should not be interpolated
+            w--;
+            int hue = -GetHue() + 16384;
+            for (int y = start_h; y < end_h; y++)
             {
-                int Y = c_line[off];
-                int Cb = c_line[off + 1] - hue;
-                int Cr = c_line[off + 2] - hue;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-                off += 3;
+                fixed (UInt16* c_line = &rawImage.rawData[y * rawImage.dim.x])
+                {
+                    int r, g, b, Y, Cb, Cr, off = 0;
+                    for (int x = 0; x < w; x++)
+                    {
+                        Y = c_line[off];
+                        Cb = c_line[off + 1] - hue;
+                        Cr = c_line[off + 2] - hue;
+                        YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+                        off += 3;
 
-                Y = c_line[off];
-                int Cb2 = (Cb + c_line[off + 1 + 3] - hue) >> 1;
-                int Cr2 = (Cr + c_line[off + 2 + 3] - hue) >> 1;
-                YUV_TO_RGB(Y, Cb2, Cr2);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-                off += 3;
-            }
-            // Last two pixels
-            int Y = c_line[off];
-            int Cb = c_line[off + 1] - hue;
-            int Cr = c_line[off + 2] - hue;
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off, off + 1, off + 2);
+                        Y = c_line[off];
+                        int Cb2 = (Cb + c_line[off + 1 + 3] - hue) >> 1;
+                        int Cr2 = (Cr + c_line[off + 2 + 3] - hue) >> 1;
+                        YUV_TO_RGB1(Y, Cb2, Cr2, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+                        off += 3;
+                    }
+                    // Last two pixels
+                    Y = c_line[off];
+                    Cb = c_line[off + 1] - hue;
+                    Cr = c_line[off + 2] - hue;
+                    YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
 
-            Y = c_line[off + 3];
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off + 3, off + 4, off + 5);
-        }
-    }
-
-
-    // Note: Not thread safe, since it writes inplace.
-    void interpolate_420(int w, int h, int start_h, int end_h)
-    {
-        // Last pixel should not be interpolated
-        w--;
-
-        bool atLastLine = false;
-
-        if (end_h == h)
-        {
-            end_h--;
-            atLastLine = true;
-        }
-
-        // Current line
-        UInt16* c_line;
-        // Next line
-        UInt16* n_line;
-        // Next line again
-        UInt16* nn_line;
-
-        int off;
-        int r, g, b;
-        int hue = -getHue() + 16384;
-
-        for (int y = start_h; y < end_h; y++)
-        {
-            c_line = (UInt16*)mRaw.getData(0, y * 2);
-            n_line = (UInt16*)mRaw.getData(0, y * 2 + 1);
-            nn_line = (UInt16*)mRaw.getData(0, y * 2 + 2);
-            off = 0;
-            for (int x = 0; x < w; x++)
-            {
-                int Y = c_line[off];
-                int Cb = c_line[off + 1] - hue;
-                int Cr = c_line[off + 2] - hue;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-
-                Y = c_line[off + 3];
-                int Cb2 = (Cb + c_line[off + 1 + 6] - hue) >> 1;
-                int Cr2 = (Cr + c_line[off + 2 + 6] - hue) >> 1;
-                YUV_TO_RGB(Y, Cb2, Cr2);
-                STORE_RGB(c_line, off + 3, off + 4, off + 5);
-
-                // Next line
-                Y = n_line[off];
-                int Cb3 = (Cb + nn_line[off + 1] - hue) >> 1;
-                int Cr3 = (Cr + nn_line[off + 2] - hue) >> 1;
-                YUV_TO_RGB(Y, Cb3, Cr3);
-                STORE_RGB(n_line, off, off + 1, off + 2);
-
-                Y = n_line[off + 3];
-                Cb = (Cb + Cb2 + Cb3 + nn_line[off + 1 + 6] - hue) >> 2;  //Left + Above + Right +Below
-                Cr = (Cr + Cr2 + Cr3 + nn_line[off + 2 + 6] - hue) >> 2;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(n_line, off + 3, off + 4, off + 5);
-                off += 6;
-            }
-            int Y = c_line[off];
-            int Cb = c_line[off + 1] - hue;
-            int Cr = c_line[off + 2] - hue;
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off, off + 1, off + 2);
-
-            Y = c_line[off + 3];
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off + 3, off + 4, off + 5);
-
-            // Next line
-            Y = n_line[off];
-            Cb = (Cb + nn_line[off + 1] - hue) >> 1;
-            Cr = (Cr + nn_line[off + 2] - hue) >> 1;
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(n_line, off, off + 1, off + 2);
-
-            Y = n_line[off + 3];
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(n_line, off + 3, off + 4, off + 5);
-        }
-
-        if (atLastLine)
-        {
-            c_line = (UInt16*)mRaw.getData(0, end_h * 2);
-            n_line = (UInt16*)mRaw.getData(0, end_h * 2 + 1);
-            off = 0;
-
-            // Last line
-            for (int x = 0; x < w; x++)
-            {
-                int Y = c_line[off];
-                int Cb = c_line[off + 1] - hue;
-                int Cr = c_line[off + 2] - hue;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-
-                Y = c_line[off + 3];
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off + 3, off + 4, off + 5);
-
-                // Next line
-                Y = n_line[off];
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(n_line, off, off + 1, off + 2);
-
-                Y = n_line[off + 3];
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(n_line, off + 3, off + 4, off + 5);
-                off += 6;
+                    Y = c_line[off + 3];
+                    YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+                }
             }
         }
-    }
 
-#undef YUV_TO_RGB
+        // Note: Not thread safe, since it writes inplace.
+        unsafe void Interpolate_420(int w, int h, int start_h, int end_h)
+        {
+            // Last pixel should not be interpolated
+            w--;
+            bool atLastLine = false;
 
-#define YUV_TO_RGB(Y, Cb, Cr) r = sraw_coeffs[0] * (Y + Cr -512 );\
-    g = sraw_coeffs[1] * (Y + ((-778 * Cb - (Cr << 11)) >> 12) - 512);\
-b = sraw_coeffs[2] * (Y + (Cb - 512));\
-r >>= 8; g >>= 8; b >>= 8;
+            if (end_h == h)
+            {
+                end_h--;
+                atLastLine = true;
+            }
 
+            int off, r, g, b, Y, Cb, Cr;
+            int hue = -GetHue() + 16384;
+            for (int y = start_h; y < end_h; y++)
+            {
+                fixed (UInt16* c_line = &rawImage.rawData[y * 2 * rawImage.dim.x], n_line = &rawImage.rawData[(y * 2 + 1) * rawImage.dim.x], nn_line = &rawImage.rawData[(y * 2 + 2) * rawImage.dim.x])
+                {
+                    off = 0;
+                    for (int x = 0; x < w; x++)
+                    {
+                        Y = c_line[off];
+                        Cb = c_line[off + 1] - hue;
+                        Cr = c_line[off + 2] - hue;
+                        YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+
+                        Y = c_line[off + 3];
+                        int Cb2 = (Cb + c_line[off + 1 + 6] - hue) >> 1;
+                        int Cr2 = (Cr + c_line[off + 2 + 6] - hue) >> 1;
+                        YUV_TO_RGB1(Y, Cb2, Cr2, out r, out g, out b);
+                        STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+
+                        // Next line
+                        Y = n_line[off];
+                        int Cb3 = (Cb + nn_line[off + 1] - hue) >> 1;
+                        int Cr3 = (Cr + nn_line[off + 2] - hue) >> 1;
+                        YUV_TO_RGB1(Y, Cb3, Cr3, out r, out g, out b);
+                        STORE_RGB(n_line, off, off + 1, off + 2, r, g, b);
+
+                        Y = n_line[off + 3];
+                        Cb = (Cb + Cb2 + Cb3 + nn_line[off + 1 + 6] - hue) >> 2;  //Left + Above + Right +Below
+                        Cr = (Cr + Cr2 + Cr3 + nn_line[off + 2 + 6] - hue) >> 2;
+                        YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(n_line, off + 3, off + 4, off + 5, r, g, b);
+                        off += 6;
+                    }
+                    Y = c_line[off];
+                    Cb = c_line[off + 1] - hue;
+                    Cr = c_line[off + 2] - hue;
+                    YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+
+                    Y = c_line[off + 3];
+                    YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+
+                    // Next line
+                    Y = n_line[off];
+                    Cb = (Cb + nn_line[off + 1] - hue) >> 1;
+                    Cr = (Cr + nn_line[off + 2] - hue) >> 1;
+                    YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(n_line, off, off + 1, off + 2, r, g, b);
+
+                    Y = n_line[off + 3];
+                    YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(n_line, off + 3, off + 4, off + 5, r, g, b);
+                }
+
+                if (atLastLine)
+                {
+                    fixed (UInt16* c_line = &(rawImage.rawData[(end_h * 2)]), n_line = &(rawImage.rawData[(end_h * 2 + 1)]))
+                    {
+                        off = 0;
+                        // Last line
+                        for (int x = 0; x < w; x++)
+                        {
+                            Y = c_line[off];
+                            Cb = c_line[off + 1] - hue;
+                            Cr = c_line[off + 2] - hue;
+                            YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                            STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+
+                            Y = c_line[off + 3];
+                            YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                            STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+
+                            // Next line
+                            Y = n_line[off];
+                            YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                            STORE_RGB(n_line, off, off + 1, off + 2, r, g, b);
+
+                            Y = n_line[off + 3];
+                            YUV_TO_RGB1(Y, Cb, Cr, out r, out g, out b);
+                            STORE_RGB(n_line, off + 3, off + 4, off + 5, r, g, b);
+                            off += 6;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void YUV_TO_RGB2(int Y, int Cb, int Cr, out int r, out int g, out int b)
+        {
+            r = sraw_coeffs[0] * (Y + Cr - 512);
+            g = sraw_coeffs[1] * (Y + ((-778 * Cb - (Cr << 11)) >> 12) - 512);
+            b = sraw_coeffs[2] * (Y + (Cb - 512));
+            r >>= 8; g >>= 8; b >>= 8;
+        }
 
         // Note: Thread safe.
-        void interpolate_422_old(int w, int h, int start_h, int end_h)
-    {
-        // Last pixel should not be interpolated
-        w--;
-
-        // Current line
-        UInt16* c_line;
-        int hue = -getHue() + 16384;
-
-        for (int y = start_h; y < end_h; y++)
+        unsafe void Interpolate_422_old(int w, int h, int start_h, int end_h)
         {
-            c_line = (UInt16*)mRaw.getData(0, y);
-            int r, g, b;
-            int off = 0;
-            for (int x = 0; x < w; x++)
+            // Last pixel should not be interpolated
+            w--;
+            int hue = -GetHue() + 16384;
+            for (int y = start_h; y < end_h; y++)
             {
-                int Y = c_line[off];
-                int Cb = c_line[off + 1] - hue;
-                int Cr = c_line[off + 2] - hue;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-                off += 3;
+                fixed (UInt16* c_line = &(rawImage.rawData[y * rawImage.dim.x]))
+                {
+                    int Y, Cb, Cr, r, g, b, off = 0;
+                    for (int x = 0; x < w; x++)
+                    {
+                        Y = c_line[off];
+                        Cb = c_line[off + 1] - hue;
+                        Cr = c_line[off + 2] - hue;
+                        YUV_TO_RGB2(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+                        off += 3;
 
-                Y = c_line[off];
-                int Cb2 = (Cb + c_line[off + 1 + 3] - hue) >> 1;
-                int Cr2 = (Cr + c_line[off + 2 + 3] - hue) >> 1;
-                YUV_TO_RGB(Y, Cb2, Cr2);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-                off += 3;
-            }
-            // Last two pixels
-            int Y = c_line[off];
-            int Cb = c_line[off + 1] - 16384;
-            int Cr = c_line[off + 2] - 16384;
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off, off + 1, off + 2);
+                        Y = c_line[off];
+                        int Cb2 = (Cb + c_line[off + 1 + 3] - hue) >> 1;
+                        int Cr2 = (Cr + c_line[off + 2 + 3] - hue) >> 1;
+                        YUV_TO_RGB2(Y, Cb2, Cr2, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+                        off += 3;
+                    }
+                    // Last two pixels
+                    Y = c_line[off];
+                    Cb = c_line[off + 1] - 16384;
+                    Cr = c_line[off + 2] - 16384;
+                    YUV_TO_RGB2(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
 
-            Y = c_line[off + 3];
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off + 3, off + 4, off + 5);
-        }
-    }
-    */
-
-        /*
-    // Algorithm found in EOS 5d Mk III
-
-#undef YUV_TO_RGB
-
-#define YUV_TO_RGB(Y, Cb, Cr) r = sraw_coeffs[0] * (Y + Cr);\
-    g = sraw_coeffs[1] * (Y + ((-778 * Cb - (Cr << 11)) >> 12));\
-b = sraw_coeffs[2] * (Y + Cb);\
-r >>= 8; g >>= 8; b >>= 8;
-
-        void interpolate_422_new(int w, int h, int start_h, int end_h)
-    {
-        // Last pixel should not be interpolated
-        w--;
-
-        // Current line
-        UInt16* c_line;
-        int hue = -getHue() + 16384;
-
-        for (int y = start_h; y < end_h; y++)
-        {
-            c_line = (UInt16*)mRaw.getData(0, y);
-            int r, g, b;
-            int off = 0;
-            for (int x = 0; x < w; x++)
-            {
-                int Y = c_line[off];
-                int Cb = c_line[off + 1] - hue;
-                int Cr = c_line[off + 2] - hue;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-                off += 3;
-
-                Y = c_line[off];
-                int Cb2 = (Cb + c_line[off + 1 + 3] - hue) >> 1;
-                int Cr2 = (Cr + c_line[off + 2 + 3] - hue) >> 1;
-                YUV_TO_RGB(Y, Cb2, Cr2);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-                off += 3;
-            }
-            // Last two pixels
-            int Y = c_line[off];
-            int Cb = c_line[off + 1] - 16384;
-            int Cr = c_line[off + 2] - 16384;
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off, off + 1, off + 2);
-
-            Y = c_line[off + 3];
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off + 3, off + 4, off + 5);
-        }
-    }
-
-
-    // Note: Not thread safe, since it writes inplace.
-    void interpolate_420_new(int w, int h, int start_h, int end_h)
-    {
-        // Last pixel should not be interpolated
-        w--;
-
-        bool atLastLine = false;
-
-        if (end_h == h)
-        {
-            end_h--;
-            atLastLine = true;
-        }
-
-        // Current line
-        UInt16* c_line;
-        // Next line
-        UInt16* n_line;
-        // Next line again
-        UInt16* nn_line;
-        int hue = -getHue() + 16384;
-
-        int off;
-        int r, g, b;
-
-        for (int y = start_h; y < end_h; y++)
-        {
-            c_line = (UInt16*)mRaw.getData(0, y * 2);
-            n_line = (UInt16*)mRaw.getData(0, y * 2 + 1);
-            nn_line = (UInt16*)mRaw.getData(0, y * 2 + 2);
-            off = 0;
-            for (int x = 0; x < w; x++)
-            {
-                int Y = c_line[off];
-                int Cb = c_line[off + 1] - hue;
-                int Cr = c_line[off + 2] - hue;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-
-                Y = c_line[off + 3];
-                int Cb2 = (Cb + c_line[off + 1 + 6] - hue) >> 1;
-                int Cr2 = (Cr + c_line[off + 2 + 6] - hue) >> 1;
-                YUV_TO_RGB(Y, Cb2, Cr2);
-                STORE_RGB(c_line, off + 3, off + 4, off + 5);
-
-                // Next line
-                Y = n_line[off];
-                int Cb3 = (Cb + nn_line[off + 1] - hue) >> 1;
-                int Cr3 = (Cr + nn_line[off + 2] - hue) >> 1;
-                YUV_TO_RGB(Y, Cb3, Cr3);
-                STORE_RGB(n_line, off, off + 1, off + 2);
-
-                Y = n_line[off + 3];
-                Cb = (Cb + Cb2 + Cb3 + nn_line[off + 1 + 6] - hue) >> 2;  //Left + Above + Right +Below
-                Cr = (Cr + Cr2 + Cr3 + nn_line[off + 2 + 6] - hue) >> 2;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(n_line, off + 3, off + 4, off + 5);
-                off += 6;
-            }
-            int Y = c_line[off];
-            int Cb = c_line[off + 1] - hue;
-            int Cr = c_line[off + 2] - hue;
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off, off + 1, off + 2);
-
-            Y = c_line[off + 3];
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(c_line, off + 3, off + 4, off + 5);
-
-            // Next line
-            Y = n_line[off];
-            Cb = (Cb + nn_line[off + 1] - hue) >> 1;
-            Cr = (Cr + nn_line[off + 2] - hue) >> 1;
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(n_line, off, off + 1, off + 2);
-
-            Y = n_line[off + 3];
-            YUV_TO_RGB(Y, Cb, Cr);
-            STORE_RGB(n_line, off + 3, off + 4, off + 5);
-        }
-
-        if (atLastLine)
-        {
-            c_line = (UInt16*)mRaw.getData(0, end_h * 2);
-            n_line = (UInt16*)mRaw.getData(0, end_h * 2 + 1);
-            off = 0;
-
-            // Last line
-            for (int x = 0; x < w; x++)
-            {
-                int Y = c_line[off];
-                int Cb = c_line[off + 1] - hue;
-                int Cr = c_line[off + 2] - hue;
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off, off + 1, off + 2);
-
-                Y = c_line[off + 3];
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(c_line, off + 3, off + 4, off + 5);
-
-                // Next line
-                Y = n_line[off];
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(n_line, off, off + 1, off + 2);
-
-                Y = n_line[off + 3];
-                YUV_TO_RGB(Y, Cb, Cr);
-                STORE_RGB(n_line, off + 3, off + 4, off + 5);
-                off += 6;
+                    Y = c_line[off + 3];
+                    YUV_TO_RGB2(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+                }
             }
         }
-    }*/
+
+        // Algorithm found in EOS 5d Mk III
+        private void YUV_TO_RGB3(int Y, int Cb, int Cr, out int r, out int g, out int b)
+        {
+            r = sraw_coeffs[0] * (Y + Cr);
+            g = sraw_coeffs[1] * (Y + ((-778 * Cb - (Cr << 11)) >> 12));
+            b = sraw_coeffs[2] * (Y + Cb);
+            r >>= 8; g >>= 8; b >>= 8;
+        }
+
+        unsafe void Interpolate_422_new(int w, int h, int start_h, int end_h)
+        {
+            // Last pixel should not be interpolated
+            w--;
+
+            // Current line
+            int hue = -GetHue() + 16384;
+            for (int y = start_h; y < end_h; y++)
+            {
+                fixed (UInt16* c_line = &rawImage.rawData[y * rawImage.dim.x])
+                {
+                    int r, g, b, Y, Cb, Cr, off = 0;
+                    for (int x = 0; x < w; x++)
+                    {
+                        Y = c_line[off];
+                        Cb = c_line[off + 1] - hue;
+                        Cr = c_line[off + 2] - hue;
+                        YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+                        off += 3;
+
+                        Y = c_line[off];
+                        int Cb2 = (Cb + c_line[off + 1 + 3] - hue) >> 1;
+                        int Cr2 = (Cr + c_line[off + 2 + 3] - hue) >> 1;
+                        YUV_TO_RGB3(Y, Cb2, Cr2, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+                        off += 3;
+                    }
+                    // Last two pixels
+                    Y = c_line[off];
+                    Cb = c_line[off + 1] - 16384;
+                    Cr = c_line[off + 2] - 16384;
+                    YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+
+                    Y = c_line[off + 3];
+                    YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+                }
+            }
+        }
+
+        // Note: Not thread safe, since it writes inplace.
+        unsafe void Interpolate_420_new(int w, int h, int start_h, int end_h)
+        {
+            // Last pixel should not be interpolated
+            w--;
+            bool atLastLine = false;
+            if (end_h == h)
+            {
+                end_h--;
+                atLastLine = true;
+            }
+
+            int hue = -GetHue() + 16384;
+            int off, r, g, b, Y, Cb, Cr;
+            for (int y = start_h; y < end_h; y++)
+            {
+                fixed (UInt16* c_line = &rawImage.rawData[y * 2 * rawImage.dim.x], n_line = &rawImage.rawData[(y * 2 + 1) * rawImage.dim.x], nn_line = &rawImage.rawData[(y * 2 + 2) * rawImage.dim.x])
+                {
+                    off = 0;
+                    for (int x = 0; x < w; x++)
+                    {
+                        Y = c_line[off];
+                        Cb = c_line[off + 1] - hue;
+                        Cr = c_line[off + 2] - hue;
+                        YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+
+                        Y = c_line[off + 3];
+                        int Cb2 = (Cb + c_line[off + 1 + 6] - hue) >> 1;
+                        int Cr2 = (Cr + c_line[off + 2 + 6] - hue) >> 1;
+                        YUV_TO_RGB3(Y, Cb2, Cr2, out r, out g, out b);
+                        STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+
+                        // Next line
+                        Y = n_line[off];
+                        int Cb3 = (Cb + nn_line[off + 1] - hue) >> 1;
+                        int Cr3 = (Cr + nn_line[off + 2] - hue) >> 1;
+                        YUV_TO_RGB3(Y, Cb3, Cr3, out r, out g, out b);
+                        STORE_RGB(n_line, off, off + 1, off + 2, r, g, b);
+
+                        Y = n_line[off + 3];
+                        Cb = (Cb + Cb2 + Cb3 + nn_line[off + 1 + 6] - hue) >> 2;  //Left + Above + Right +Below
+                        Cr = (Cr + Cr2 + Cr3 + nn_line[off + 2 + 6] - hue) >> 2;
+                        YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(n_line, off + 3, off + 4, off + 5, r, g, b);
+                        off += 6;
+                    }
+                    Y = c_line[off];
+                    Cb = c_line[off + 1] - hue;
+                    Cr = c_line[off + 2] - hue;
+                    YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+
+                    Y = c_line[off + 3];
+                    YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+
+                    // Next line
+                    Y = n_line[off];
+                    Cb = (Cb + nn_line[off + 1] - hue) >> 1;
+                    Cr = (Cr + nn_line[off + 2] - hue) >> 1;
+                    YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(n_line, off, off + 1, off + 2, r, g, b);
+
+                    Y = n_line[off + 3];
+                    YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                    STORE_RGB(n_line, off + 3, off + 4, off + 5, r, g, b);
+                }
+            }
+            if (atLastLine)
+            {
+                fixed (UInt16* c_line = &(rawImage.rawData[(end_h * 2)]), n_line = &(rawImage.rawData[(end_h * 2 + 1)]))
+                {
+                    off = 0;
+
+                    // Last line
+                    for (int x = 0; x < w; x++)
+                    {
+                        Y = c_line[off];
+                        Cb = c_line[off + 1] - hue;
+                        Cr = c_line[off + 2] - hue;
+                        YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(c_line, off, off + 1, off + 2, r, g, b);
+
+                        Y = c_line[off + 3];
+                        YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(c_line, off + 3, off + 4, off + 5, r, g, b);
+
+                        // Next line
+                        Y = n_line[off];
+                        YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(n_line, off, off + 1, off + 2, r, g, b);
+
+                        Y = n_line[off + 3];
+                        YUV_TO_RGB3(Y, Cb, Cr, out r, out g, out b);
+                        STORE_RGB(n_line, off + 3, off + 4, off + 5, r, g, b);
+                        off += 6;
+                    }
+                }
+            }
+        }
+
         private ushort[][] canon = {
       new ushort[]{ 1944, 1416,   0,  0, 48,  0 },
       new ushort[]{ 2144, 1560,   4,  8, 52,  2, 0, 0, 0, 25 },
