@@ -295,7 +295,7 @@ namespace RawEditor
                     //demos
                     if (raw.cfa != null && raw.cpp == 1)
                     {
-                        //get th ealgo from the settings
+                        //get the algo from the settings
                         DemosAlgorithm algo;
                         try
                         {
@@ -322,10 +322,14 @@ namespace RawEditor
                 }
                 catch (FormatException e)
                 {
+                    file = null;
+                    raw = null;
+                    EmptyImage();
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     var str = loader.GetString("ExceptionText");
                     Debug.WriteLine(e.Message);
                     ExceptionDisplay.display(str);
+                   
                 }
 
                 StopLoadDisplay();

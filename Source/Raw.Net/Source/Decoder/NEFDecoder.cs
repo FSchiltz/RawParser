@@ -23,31 +23,38 @@ namespace RawNet
 
         protected override Thumbnail decodeThumbInternal()
         {
-            //find the preview ifd inside the makernote
-            List<IFD> makernote = ifd.getIFDsWithTag((TagType)0x011);
-            IFD preview = makernote[0].getIFDsWithTag((TagType)0x0201)[0];
-            //no thumbnail
-            if (preview == null) return null;
-
-            var thumb = preview.getEntry((TagType)0x0201);
-            var size = preview.getEntry((TagType)0x0202);
-            if (size == null || thumb == null) return null;
-
-            //get the makernote offset
-            List<IFD> exifs = ifd.getIFDsWithTag((TagType)0x927C);
-
-            if (exifs == null || exifs.Count == 0) return null;
-
-            Tag makerNoteOffsetTag = exifs[0].getEntryRecursive((TagType)0x927C);
-            if (makerNoteOffsetTag == null) return null;
-            reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
-            Thumbnail temp = new Thumbnail()
+            try
             {
-                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
-                type = ThumbnailType.JPEG,
-                dim = new Point2D()
-            };
-            return temp;
+                //find the preview ifd inside the makernote
+                List<IFD> makernote = ifd.getIFDsWithTag((TagType)0x011);
+                IFD preview = makernote[0].getIFDsWithTag((TagType)0x0201)[0];
+                //no thumbnail
+                if (preview == null) return null;
+
+                var thumb = preview.getEntry((TagType)0x0201);
+                var size = preview.getEntry((TagType)0x0202);
+                if (size == null || thumb == null) return null;
+
+                //get the makernote offset
+                List<IFD> exifs = ifd.getIFDsWithTag((TagType)0x927C);
+
+                if (exifs == null || exifs.Count == 0) return null;
+
+                Tag makerNoteOffsetTag = exifs[0].getEntryRecursive((TagType)0x927C);
+                if (makerNoteOffsetTag == null) return null;
+                reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
+                Thumbnail temp = new Thumbnail()
+                {
+                    data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                    type = ThumbnailType.JPEG,
+                    dim = new Point2D()
+                };
+                return temp;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         protected override void decodeRawInternal()
@@ -135,7 +142,7 @@ namespace RawNet
                     metastream = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(meta.data, meta.dataType));
                 else
                     metastream = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(meta.data, meta.dataType));
-                
+
                 decompressor.DecompressNikon(metastream, width, height, bitPerPixel, offsets.getUInt(), counts.getUInt());
             }
             catch (IOException e)
@@ -243,6 +250,7 @@ namespace RawNet
                 bitPerPixel = UInt32.Parse(v);
             }
 
+            rawImage.ColorDepth = (ushort)bitPerPixel;
             bool bitorder = true;
             hints.TryGetValue("msb_override", out string v1);
             if (v1 != null)
@@ -261,9 +269,9 @@ namespace RawNet
                 {
                     hints.TryGetValue("coolpixmangled", out string mangled);
                     hints.TryGetValue("coolpixsplit", out string split);
-                    if (mangled != hints.Last().Value)
+                    if (mangled != null)
                         readCoolpixMangledRaw(ref input, size, pos, (int)(width * bitPerPixel / 8));
-                    else if (split != hints.Last().Value)
+                    else if (split != null)
                         readCoolpixSplitRaw(ref input, size, pos, (int)(width * bitPerPixel / 8));
                     else
                         readUncompressedRaw(ref input, size, pos, (int)(width * bitPerPixel / 8), (int)bitPerPixel, ((bitorder) ? BitOrder.Jpeg : BitOrder.Plain));
@@ -372,7 +380,7 @@ namespace RawNet
             // Hardcode the sizes as at least the width is not correctly reported
             uint w = 3040;
             uint h = 2024;
-
+            rawImage.ColorDepth = 12;
             rawImage.dim = new Point2D((int)w, (int)h);
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset, (uint)reader.BaseStream.Length);
 
@@ -390,7 +398,7 @@ namespace RawNet
             rawImage.dim = new Point2D((int)w, (int)h);
             rawImage.cpp = 3;
             rawImage.isCFA = false;
-
+            rawImage.ColorDepth = 12;
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset, (uint)reader.BaseStream.Length);
 
             DecodeNikonSNef(ref input, w, h);
@@ -434,6 +442,7 @@ namespace RawNet
             return mode;
         }
 
+        /*
         string getExtendedMode(string mode)
         {
             string extended_mode = "";
@@ -448,6 +457,7 @@ namespace RawNet
             extended_mode += width + "x" + height + "-" + mode;
             return extended_mode;
         }
+        */
 
         override protected void decodeMetaDataInternal()
         {
@@ -465,7 +475,7 @@ namespace RawNet
             if (!data[0].tags.TryGetValue(TagType.MAKE, out Tag makeTag))
                 throw new RawDecoderException("NEF Support: Make name not found");
             string make = makeTag.DataAsString;
-                        
+
             // Read the whitebalance
             // We use this for the D50 and D2X whacky WB "encryption"
             byte[] serialmap = {
