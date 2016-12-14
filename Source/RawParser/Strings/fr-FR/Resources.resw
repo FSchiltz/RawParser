@@ -120,6 +120,9 @@
   <data name="About.Text" xml:space="preserve">
     <value>A propos</value>
   </data>
+  <data name="BorderText.Text" xml:space="preserve">
+    <value>Taille de marge à l'affichage de la preview</value>
+  </data>
   <data name="ColorBalance.Text" xml:space="preserve">
     <value>Balance des couleurs</value>
   </data>
