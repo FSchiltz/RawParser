@@ -15,13 +15,11 @@ namespace RawEditor
 {
     public sealed partial class SettingsView : Page
     {
-
         public List<BitmapImage> PdfPages
         {
             get;
             set;
         } = new List<BitmapImage>();
-
 
         public SettingsView()
         {
@@ -56,6 +54,8 @@ namespace RawEditor
             DemosComboBox.SelectedItem = SettingStorage.DemosAlgo;
 
             ThemeComboBox.SelectedItem = SettingStorage.SelectedTheme;
+
+            BorderSlider.Value = SettingStorage.ImageBoxBorder * 100;
         }
 
         private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)

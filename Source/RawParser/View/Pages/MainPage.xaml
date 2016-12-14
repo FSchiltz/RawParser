@@ -136,8 +136,8 @@
                           VerticalScrollBarVisibility="Auto" 
                           RelativePanel.AlignTopWithPanel="True" 
                           RelativePanel.AlignLeftWithPanel="True"  
-                          HorizontalContentAlignment="Center" 
-                          VerticalContentAlignment="Center">
+                          HorizontalContentAlignment="Stretch" 
+                          VerticalContentAlignment="Stretch">
                 <ScrollViewer.Background>
                     <SolidColorBrush Color="#19FFFFFF"/>
                 </ScrollViewer.Background>

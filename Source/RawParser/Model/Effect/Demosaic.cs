@@ -6,41 +6,54 @@ namespace RawEditor
 {
     public enum DemosAlgorithm
     {
-        NearNeighbour,
         Bicubic,
         Spline,
         Bilinear,
-        Deflate
+        Deflate,
+        AHD
     }
 
     public class Demosaic
     {
         public static void demos(ref RawImage image, DemosAlgorithm algo)
         {
+            ushort[] deflated = new ushort[image.dim.x * image.dim.y * 3];
+            image.cpp = 3;
             switch (algo)
             {
-                case DemosAlgorithm.Bilinear:
-                    //break;
+                case DemosAlgorithm.AHD:
+                    Demosaic.AHD(image, deflated);
+                    break;
+                //break;
                 case DemosAlgorithm.Bicubic:
-                    //break;
+                    Demosaic.Bicubic(image, deflated);
+                    break;
                 case DemosAlgorithm.Spline:
-                    //break;
-                case DemosAlgorithm.NearNeighbour:
-                    Demosaic.NearNeighbour(image);
+                //break;
+                case DemosAlgorithm.Bilinear:
+                    Demosaic.Bilinear(image, deflated);
                     break;
                 case DemosAlgorithm.Deflate:
-                    Demosaic.Deflate(image);
+                    Demosaic.Deflate(image, deflated);
                     break;
             }
             //set correct dim
             image.mOffset = new Point2D();
+            image.rawData = deflated;
         }
 
-        private static void Deflate(RawImage image)
+        private static void AHD(RawImage image, ushort[] deflated)
         {
-            //TODO check if correct
-            ushort[] deflated = new ushort[image.dim.x * image.dim.y * 3];
-            image.cpp = 3;
+            throw new NotImplementedException();
+        }
+
+        private static void Bicubic(RawImage image, ushort[] deflated)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void Deflate(RawImage image, ushort[] deflated)
+        {
             Parallel.For(0, image.dim.y, row =>
             {
                 int realRow = row + image.mOffset.y;
@@ -52,19 +65,16 @@ namespace RawEditor
                     deflated[(((row * image.dim.x) + col) * 3) + pixeltype] = image[realRow, realCol];
                 }
             });
-            image.rawData = deflated;
         }
 
-        private static void NearNeighbour(RawImage image)
+        private static void Bilinear(RawImage image, ushort[] deflated)
         {
-            ushort[] deflated = new ushort[image.dim.x * image.dim.y * 3];
-            image.cpp = 3;
             Parallel.For(0, image.dim.y, row =>
               {
                   int realRow = row + image.mOffset.y;
                   for (int col = 0; col < image.dim.x; col++)
                   {
-                      int realCol = col + image.mOffset.x ;
+                      int realCol = col + image.mOffset.x;
                       CFAColor pixeltype = image.cfa.cfa[((row % 2) * 2) + col % 2];
                       if (pixeltype == CFAColor.GREEN)
                       {

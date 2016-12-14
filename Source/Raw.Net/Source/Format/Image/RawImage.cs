@@ -417,22 +417,22 @@ namespace RawNet
                     int xk = 0, yk = 0;
                     for (int i = 0; i < previewFactor; i++)
                     {
-                        int realY = dim.x * ((y * previewFactor) + i) + mOffset.y;
+                        int realY = dim.x * ((y * previewFactor) + i);
                         yk++;
                         for (int k = 0; k < previewFactor; k++)
                         {
                             xk++;
-                            long realX = (realY + (x * previewFactor + k) + mOffset.x) * cpp;
+                            UInt64 realX = (UInt64)(realY + (x * previewFactor + k)) * cpp;                            
                             r += rawData[realX];
                             g += rawData[realX + 1];
                             b += rawData[realX + 2];
                         }
                     }
-                    /*
+                    
                     if (xk != doubleFactor || yk != previewFactor)
                     {
                         Debug.WriteLine("yk :" + yk + " xk: " + xk + " doubleFactor:" + doubleFactor);
-                    }*/
+                    }
                     r = (ushort)(r / doubleFactor);
                     g = (ushort)(g / doubleFactor);
                     b = (ushort)(b / doubleFactor);

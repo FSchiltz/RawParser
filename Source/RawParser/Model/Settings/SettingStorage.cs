@@ -12,13 +12,14 @@ namespace RawEditor
         static private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         private static string def = "Default";
-        private static uint version = 1;
+        private static uint version = 2;
         //check if settings already exists
         public static double ImageBoxBorder
         {
             get { return GetDoubleSetting("imageBoxBorder"); }
             set { localSettings.Values["imageBoxBorder"] = value; }
         }
+
         public static FactorValue PreviewFactor
         {
             get
@@ -63,7 +64,7 @@ namespace RawEditor
             localSettings.Values["previewFactor" + def] = FactorValue.Auto.ToString();
             localSettings.Values["saveFormat" + def] = ".jpg";
             localSettings.Values["autoPreviewFormat" + def] = false;
-            localSettings.Values["demosAlgo" + def] = DemosAlgorithm.NearNeighbour.ToString();
+            localSettings.Values["demosAlgo" + def] = DemosAlgorithm.Bilinear.ToString();
             localSettings.Values["Theme" + def] = ThemeEnum.System.ToString();
             if (localSettings.Values["version"] == null || (uint)localSettings.Values["version"] < version)
                 Reset();
