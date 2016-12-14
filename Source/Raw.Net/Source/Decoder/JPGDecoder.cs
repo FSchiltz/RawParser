@@ -22,12 +22,10 @@ namespace RawNet
      */
     internal class JPGDecoder : RawDecoder
     {
-        IRandomAccessStream stream;
         BitmapPropertiesView meta;
 
-        public JPGDecoder(ref Stream file) : base(null)
+        public JPGDecoder(ref Stream file) : base(ref file)
         {
-            stream = file.AsRandomAccessStream();
         }
 
         protected override void checkSupportInternal()
@@ -55,7 +53,7 @@ namespace RawNet
             rawImage.ColorDepth = 8;
             rawImage.cpp = 3;
             rawImage.bpp = 8;
-            var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, stream).AsTask();
+            var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, stream.AsRandomAccessStream()).AsTask();
 
             decoder.Wait();
 

@@ -7,9 +7,8 @@ namespace RawNet
     {
         protected IFD ifd;
 
-        public TiffDecoder(ref Stream stream) : base(null)
+        public TiffDecoder(ref Stream stream) : base(ref stream)
         {
-            decoderVersion = 1;
             //parse the ifd
             if (stream.Length < 16)
                 throw new TiffParserException("Not a TIFF file (size too small)");

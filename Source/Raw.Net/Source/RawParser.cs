@@ -28,7 +28,7 @@ namespace RawNet
         }*/
 
 
-        public RawDecoder GetDecoder(Stream stream, CameraMetaData meta)
+        public RawDecoder GetDecoder(Stream stream)
         {
             // We need some data.
             // For now it is 104 bytes for RAF images.
@@ -180,7 +180,7 @@ namespace RawNet
 
 
             // Detect camera on filesize (CHDK).
-            if (meta != null && meta.hasChdkCamera((uint)stream.Length))
+            /*if (meta != null && meta.hasChdkCamera((uint)stream.Length))
             {
                 Camera c = meta.getChdkCamera((uint)stream.Length);
                 try
@@ -190,7 +190,7 @@ namespace RawNet
                 catch (RawDecoderException)
                 {
                 }
-            }
+            }*/
 
             //try jpeg file
             try
@@ -205,7 +205,7 @@ namespace RawNet
         }
 
 
-        public static RawDecoder GetDecoder(ref Stream stream, CameraMetaData metadata, string fileType)
+        public static RawDecoder GetDecoder(ref Stream stream, string fileType)
         {
             switch (fileType.ToUpper())
             {
@@ -222,7 +222,7 @@ namespace RawNet
                 case ".PEF":
                     return new PefDecoder(ref stream);
                 case ".DNG":
-                    return new DngDecoder(ref stream);                    
+                    return new DngDecoder(ref stream);
 
                 //other raw format
                 case ".JPG":
@@ -230,6 +230,7 @@ namespace RawNet
                 case ".PNG":
                     return new JPGDecoder(ref stream);
                 default:
+                    /*
                     // Detect camera on filesize (CHDK).
                     if (metadata != null && metadata.hasChdkCamera((uint)stream.Length))
                     {
@@ -241,7 +242,7 @@ namespace RawNet
                         catch (RawDecoderException)
                         {
                         }
-                    }
+                    }*/
                     throw new RawDecoderException("No decoder found sorry");
             }
         }
