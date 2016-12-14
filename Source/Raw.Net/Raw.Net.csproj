@@ -143,10 +143,6 @@
     <Compile Include="Source\Decoder\Decompressor\NikonDecompressor.cs" />
     <Compile Include="Source\Decoder\DngDecoder.cs" />
     <Compile Include="Source\Decoder\JPGDecoder.cs" />
-    <Compile Include="Source\Decoder\Metadata\Camera.cs" />
-    <Compile Include="Source\Decoder\Metadata\CameraMetaData.cs" />
-    <Compile Include="Source\Decoder\Metadata\CameraSensorInfo.cs" />
-    <Compile Include="Source\Decoder\NakedDecoder.cs" />
     <Compile Include="Source\Decoder\NEFDecoder.cs" />
     <Compile Include="Source\Decoder\PefDecoder.cs" />
     <Compile Include="Source\Decoder\RawDecoder.cs" />

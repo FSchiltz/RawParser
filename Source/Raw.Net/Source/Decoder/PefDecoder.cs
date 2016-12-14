@@ -7,10 +7,7 @@ namespace RawNet
 {
     class PefDecoder : TiffDecoder
     {
-        public PefDecoder(ref Stream file) : base(ref file)
-        {
-            decoderVersion = 3;
-        }
+        public PefDecoder(ref Stream stream) : base(ref stream) { }
 
         protected override void decodeRawInternal()
         {
@@ -92,7 +89,7 @@ namespace RawNet
             if (isoTag != null)
                 rawImage.metadata.isoSpeed = isoTag.getInt();
 
-            setMetaData(metaData, make, model, "");
+            SetMetaData(model);
 
             //get cfa
             var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);

@@ -34,7 +34,6 @@ namespace RawEditor
         public bool ImageSelected { set; get; }
         public Size dim;//for auto preview
         bool cameraWB = true;
-        CameraMetaData metadata = null;
         public Thumbnail thumbnail;
         private uint displayMutex = 0;
         private bool userAppliedModif = false;
@@ -251,7 +250,7 @@ namespace RawEditor
                     stream.Position = 0;*/
 
                     //change decoder detection with file extension
-                    RawDecoder decoder = RawParser.GetDecoder(ref stream, metadata, file.FileType);
+                    RawDecoder decoder = RawParser.GetDecoder(ref stream, file.FileType);
                     // decoder.checkSupport();
                     thumbnail = decoder.DecodeThumb();
                     if (thumbnail != null)
@@ -653,8 +652,6 @@ namespace RawEditor
 
         private void SetScrollProperty(int w, int h)
         {
-            if (w > 0 && h > 0)
-            {
                 float x = 0;
                 double relativeBorder = 1 + SettingStorage.ImageBoxBorder ;
                 if (w > h)
@@ -666,11 +663,11 @@ namespace RawEditor
                     x = (float)(ImageDisplay.ActualHeight / (h * relativeBorder));
                 }
                 if (x < 0.1) x = 0.1f;
-                else if (x > 10) x = 10;
+                else if (x > 1) x = 1;
                 ImageDisplay.MinZoomFactor = 0.1f;
                 ImageDisplay.MaxZoomFactor = x + 10;
                 ImageDisplay.ChangeView(null, null, x);
-            }
+            
         }
 
         private void UpdatePreview(bool reset)

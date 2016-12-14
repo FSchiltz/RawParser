@@ -13,7 +13,6 @@ namespace RawNet
         internal ArwDecoder(ref Stream file) : base(ref file)
         {
             shiftDownScale = 0;
-            decoderVersion = 1;
         }
 
         /**

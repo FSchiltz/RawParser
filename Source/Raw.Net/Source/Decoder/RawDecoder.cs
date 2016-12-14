@@ -26,38 +26,23 @@ namespace RawNet
         /* Should Fuji images be rotated? */
         protected bool fujiRotate { get; set; }
 
-        /* Retrieve the main RAW chunk */
-        /* Returns null if unknown */
-        public byte[] getCompressedData()
-        {
-            return null;
-        }
-
         /* The Raw input file to be decoded */
         protected TIFFBinaryReader reader;
-
-        /* Decoder version - defaults to 0, but can be overridden by decoders */
-        /* This can be used to avoid newer version of an xml file to indicate that a file */
-        /* can be decoded, when a specific version of the code is needed */
-        /* Higher number in camera xml file: Files for this camera will not be decoded */
-        /* Higher number in code than xml: Image will be decoded. */
-        protected int decoderVersion;
 
         /* Hints set for the camera after checkCameraSupported has been called from the implementation*/
         protected Dictionary<string, string> hints = new Dictionary<string, string>();
 
-        protected CameraMetaData metaData;
+        protected Stream stream;
 
         /* Construct decoder instance - FileMap is a filemap of the file to be decoded */
         /* The FileMap is not owned by this class, will not be deleted, and must remain */
         /* valid while this object exists */
-        public RawDecoder(CameraMetaData metaData)
+        public RawDecoder(ref Stream stream)
         {
+            this.stream = stream;
             rawImage = new RawImage();
-            decoderVersion = 0;
             applyStage1DngOpcodes = true;
             fujiRotate = true;
-            this.metaData = metaData;
         }
 
         public void DecodeRaw()
@@ -766,9 +751,9 @@ namespace RawNet
             }
         }
 
-        protected bool checkCameraSupported(CameraMetaData meta, string make, string model, string mode)
+        protected bool checkCameraSupported( string make, string model, string mode)
         {
-            make = make.Trim();
+           /* make = make.Trim();
             model = model.Trim();
             rawImage.metadata.make = make;
             rawImage.metadata.model = model;
@@ -790,14 +775,15 @@ namespace RawNet
             if (cam.decoderVersion > decoderVersion)
                 throw new RawDecoderException("Camera not supported in this version. Update RawSpeed for support.");
 
-            hints = cam.hints;
+            hints = cam.hints;*/
             return true;
         }
 
         protected virtual void SetMetaData(string model) { }
 
         //TODO remove this function
-        protected void setMetaData(CameraMetaData meta, string make, string model, string mode)
+        /*
+        protected void setMetaData(string make, string model, string mode)
         {
             make = make.Trim();
             model = model.Trim();
@@ -824,7 +810,7 @@ namespace RawNet
 
             rawImage.subFrame(new Rectangle2D(cam.cropPos, new_size));
 
-            /*
+            
                         CameraSensorInfo sensor = cam.getSensorInfo(iso_speed);
                         rawImage.blackLevel = sensor.blackLevel;
                         rawImage.whitePoint = (uint)sensor.whiteLevel;
@@ -867,8 +853,9 @@ namespace RawNet
                                     rawImage.blackLevelSeparate[i] = Int32.Parse(v[i]);
                                 }
                             }
-                        }*/
+                        }
         }
+        */
 
         public void decodeMetaData()
         {

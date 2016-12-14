@@ -19,7 +19,6 @@ namespace RawNet
     {
         public NefDecoder(ref Stream file) : base(ref file)
         {
-            decoderVersion = 5;
         }
 
         protected override Thumbnail decodeThumbInternal()
