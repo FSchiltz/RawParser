@@ -46,7 +46,7 @@ namespace RawNet
                 mFixLjpeg = false;
         }
 
-        protected override void decodeMetaDataInternal()
+        protected override void DecodeMetaDataInternal()
         {
             // Set the make and model
             var t = ifd.getEntryRecursive(TagType.MAKE);
@@ -261,7 +261,7 @@ namespace RawNet
                 decodeBlackLevels(raw);
         }
 
-        protected override void decodeRawInternal()
+        protected override void DecodeRawInternal()
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.COMPRESSION);
 
@@ -450,7 +450,7 @@ namespace RawNet
                                 big_endian = true;
                             try
                             {
-                                readUncompressedRaw(ref input, size, pos, (int)(rawImage.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
+                                ReadUncompressedRaw(ref input, size, pos, (int)(rawImage.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
                             }
                             catch (IOException ex)
                             {
@@ -599,7 +599,7 @@ namespace RawNet
                     if (new Point2D(corners[3], corners[2]).isThisInside(rawImage.dim))
                     {
                         Rectangle2D crop = new Rectangle2D(corners[1], corners[0], corners[3] - corners[1], corners[2] - corners[0]);
-                        rawImage.subFrame(crop);
+                        rawImage.Crop(crop);
                     }
                 }
             }
@@ -627,7 +627,7 @@ namespace RawNet
                 if (!cropped.hasPositiveArea())
                     throw new RawDecoderException("DNG Decoder: No positive crop area");
 
-                rawImage.subFrame(cropped);
+                rawImage.Crop(cropped);
                 if (rawImage.isCFA && cropped.pos.x % 2 == 1)
                     rawImage.cfa.shiftLeft(1);
                 if (rawImage.isCFA && cropped.pos.y % 2 == 1)
@@ -638,7 +638,7 @@ namespace RawNet
 
 
             // Apply stage 1 opcodes
-            if (applyStage1DngOpcodes)
+            if (ApplyStage1DngOpcodes)
             {
                 if (raw.tags.ContainsKey(TagType.OPCODELIST1))
                 {
@@ -662,7 +662,7 @@ namespace RawNet
             {
                 UInt32 len = lintable.dataCount;
                 lintable.getShortArray(out ushort[] table, (int)len);
-                rawImage.setTable(table, (int)len, true);
+                rawImage.SetTable(table, (int)len, true);
 
                 //TODO Fix
                 //mRaw.sixteenBitLookup();
@@ -744,7 +744,7 @@ namespace RawNet
             }
         }
 
-        protected override Thumbnail decodeThumbInternal()
+        protected override Thumbnail DecodeThumbInternal()
         {
             //find the preview IFD (usually the first if any)
             try

@@ -50,11 +50,10 @@ namespace RawNet
                     throw new TiffParserException("TIFF file has too many SubIFDs, probably broken");
                 }
                 nextIFD = (ifd.subIFD[ifd.subIFD.Count - 1]).nextOffset;
-            }            
-            //check if no 
+            }           
         }
 
-        protected override void decodeRawInternal()
+        protected override void DecodeRawInternal()
         {
             if (!ifd.tags.TryGetValue((TagType)0x0106, out var photoMetricTag)) throw new FormatException("File not correct");
             if (!ifd.tags.TryGetValue((TagType)0x0111, out var imageOffsetTag)) throw new FormatException("File not correct");
@@ -178,7 +177,7 @@ namespace RawNet
             else throw new FormatException("Photometric interpretation " + photoMetricTag.DataAsString + " not supported yet");
         }
 
-        protected override void decodeMetaDataInternal()
+        protected override void DecodeMetaDataInternal()
         {
             var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.getInt();
@@ -201,25 +200,8 @@ namespace RawNet
                 make = make.Trim();
                 model = model.Trim();
                 rawImage.metadata.make = make;
-                rawImage.metadata.model = model;
-                /*
-                rawImage.metadata.canonical_make = make;
-                rawImage.metadata.canonical_model = rawImage.metadata.canonical_alias = model;
-                t = ifd.getEntryRecursive(TagType.UNIQUECAMERAMODEL);
-                if (t != null)
-                {
-                    rawImage.metadata.canonical_id = t.DataAsString;
-                }
-                else
-                {
-                    rawImage.metadata.canonical_id = make + " " + model;
-                }*/
+                rawImage.metadata.model = model;                
             }
-        }
-
-        protected override void checkSupportInternal()
-        {
-            //TODO add more check
         }
     }
 }

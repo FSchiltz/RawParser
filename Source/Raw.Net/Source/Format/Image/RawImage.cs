@@ -9,7 +9,6 @@ namespace RawNet
 {
     public class RawImage
     {
-        public byte[] Thumbnail { get; set; }
         public ushort[] previewData, rawData;
 
         public Point2D dim, mOffset = new Point2D(), previewDim, previewOffset = new Point2D(), uncroppedDim;
@@ -30,11 +29,10 @@ namespace RawNet
 
         public RawImage()
         {
-            //Set for 16bit image non demos
-            uint _cpp = 1;
-            uint _bpc = 2;
-            cpp = _cpp;
-            bpp = _bpc * _cpp;
+            //Set for 16bit image non demos           
+            cpp = 1;
+            bpp = 2;
+            ColorDepth = 16;
         }
 
         internal void Init()
@@ -53,9 +51,9 @@ namespace RawNet
         }
 
         /*
-         * Should be allows if possible
+         * Should not be used if possible
          * not efficient but allows more concise code
-         * 
+         * for demos
          */
         public ushort this[int row, int col]
         {
@@ -77,14 +75,14 @@ namespace RawNet
             }
         }
 
-        public void setTable(ushort[] table, int nfilled, bool dither)
+        public void SetTable(ushort[] table, int nfilled, bool dither)
         {
             TableLookUp t = new TableLookUp(1, dither);
             t.setTable(0, table, nfilled);
             this.table = (t);
         }
 
-        public void subFrame(Rectangle2D crop)
+        public void Crop(Rectangle2D crop)
         {
             if (!crop.dim.isThisInside(dim - crop.pos))
             {
@@ -106,35 +104,12 @@ namespace RawNet
             if ((crop.pos.y & 1) != 0)
                 cfa.shiftDown(0);
         }
-        /*
-         * For testing
-         */
-        internal ushort[] GetImageAsByteArray()
-        {
-            ushort[] tempByteArray = new ushort[dim.x * dim.y];
-            for (int i = 0; i < tempByteArray.Length; i++)
-            {
-                //get the pixel
-                ushort temp = rawData[(i * ColorDepth)];
-                /*
-            for (int k = 0; k < 8; k++)
-            {
-                bool xy = rawData[(i * (int)colorDepth) + k];
-                if (xy)
-                {
-                    temp |= (ushort)(1 << k);
-                }
-            }*/
-                tempByteArray[i] = temp;
-            }
-            return tempByteArray;
-        }
-
+     
         // setWithLookUp will set a single pixel by using the lookup table if supplied,
         // You must supply the destination where the value should be written, and a pointer to
         // a value that will be used to store a random counter that can be reused between calls.
         // this needs to be inline to speed up tight decompressor loops
-        internal void setWithLookUp(UInt16 value, ref ushort[] dst, uint offset, ref uint random)
+        internal void SetWithLookUp(UInt16 value, ref ushort[] dst, uint offset, ref uint random)
         {
             if (table == null)
             {
@@ -163,7 +138,7 @@ namespace RawNet
         // You must supply the destination where the value should be written, and a pointer to
         // a value that will be used to store a random counter that can be reused between calls.
         // this needs to be inline to speed up tight decompressor loops
-        internal unsafe void setWithLookUp(ushort value, ushort* dest, ref uint random)
+        internal unsafe void SetWithLookUp(ushort value, ushort* dest, ref uint random)
         {
             if (table == null)
             {
@@ -184,7 +159,7 @@ namespace RawNet
             *dest = table.tables[value];
         }
 
-        public void scaleValues()
+        public void ScaleValues()
         {
             //skip 250 pixel to reduce calculation
             //TODO fix the condiftion
@@ -215,7 +190,7 @@ namespace RawNet
 
             /* If filter has not set separate blacklevel, compute or fetch it */
             if (blackLevelSeparate[0] < 0)
-                calculateBlackAreas();
+                CalculateBlackAreas();
             gw = (int)(dim.x * cpp) + mOffset.x;
             int[] mul = new int[4];
             int[] sub = new int[4];
@@ -265,7 +240,7 @@ namespace RawNet
         /*
          * return the n byte of the image
          */
-        internal byte getByteAt(uint n)
+        internal byte GetByteAt(uint n)
         {
             //find the index of the short
             int index = (int)n / 2;
@@ -274,7 +249,7 @@ namespace RawNet
             return (reste == 0) ? (byte)(value >> 8) : (byte)value;
         }
 
-        public void scaleBlackWhite()
+        public void ScaleBlackWhite()
         {
             const int skipBorder = 250;
             int gw = (int)((dim.x - skipBorder + mOffset.x) * cpp);
@@ -306,12 +281,12 @@ namespace RawNet
 
             /* If filter has not set separate blacklevel, compute or fetch it */
             if (blackLevelSeparate[0] < 0)
-                calculateBlackAreas();
+                CalculateBlackAreas();
 
-            scaleValues();
+            ScaleValues();
         }
 
-        void calculateBlackAreas()
+        void CalculateBlackAreas()
         {
             int[] histogram = new int[4 * 65536 * sizeof(int)];
             //memset(histogram, 0, 4 * 65536 * sizeof(int));
@@ -422,13 +397,13 @@ namespace RawNet
                         for (int k = 0; k < previewFactor; k++)
                         {
                             xk++;
-                            UInt64 realX = (UInt64)(realY + (x * previewFactor + k)) * cpp;                            
+                            UInt64 realX = (UInt64)(realY + (x * previewFactor + k)) * cpp;
                             r += rawData[realX];
                             g += rawData[realX + 1];
                             b += rawData[realX + 2];
                         }
                     }
-                    
+
                     if (xk != doubleFactor || yk != previewFactor)
                     {
                         Debug.WriteLine("yk :" + yk + " xk: " + xk + " doubleFactor:" + doubleFactor);
@@ -445,50 +420,6 @@ namespace RawNet
                 }
             });
         }
-
-
-        /*protected void doLookup(int start_y, int end_y)
-        {
-            if (table.ntables == 1)
-            {
-                ushort[] t = table.getTable(0);
-                if (table.dither)
-                {
-                    long g = uncropped_dim.x * cpp;
-                    Common.ConvertArray(ref table.getTable(0), out int[]t2);
-                    for (int y = start_y; y < end_y; y++)
-                    {
-                        int v = (uncropped_dim.x + y * 13) ^ 0x45694584;
-                        ushort[] pixel = getDataUncropped(0, y);
-                        for (int x = 0; x < g; x++)
-                        {
-                            ushort p = pixel;
-                            uint lookup = t2[p];
-                            uint b = lookup & 0xffff;
-                            uint delta = lookup >> 16;
-                            v = 15700 * (v & 65535) + (v >> 16);
-                            uint pix = b + (((delta * (v & 2047) + 1024)) >> 12);
-                            pixel = pix;
-                            pixel++;
-                        }
-                    }
-                    return;
-                }
-
-                long gw = uncropped_dim.x * cpp;
-                for (int y = start_y; y < end_y; y++)
-                {
-                    ushort[] pixel = getDataUncropped(0, y);
-                    for (int x = 0; x < gw; x++)
-                    {
-                        *pixel = t[*pixel];
-                        pixel++;
-                    }
-                }
-                return;
-            }
-            throw new RawDecoderException("Table lookup with multiple components not implemented");
-        }*/
     }
 }
 

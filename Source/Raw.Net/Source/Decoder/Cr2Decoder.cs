@@ -24,7 +24,7 @@ namespace RawNet
         /**
          * Taken from nikon decoder
          */
-        protected override Thumbnail decodeThumbInternal()
+        protected override Thumbnail DecodeThumbInternal()
         {
             //find the preview ifd (ifd1 for thumb)(IFD0 is better, bigger preview buut too big and slow for now)
             IFD preview = ifd.getIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)[0];
@@ -46,7 +46,7 @@ namespace RawNet
             return temp;
         }
 
-        protected override void decodeRawInternal()
+        protected override void DecodeRawInternal()
         {
             if (hints.ContainsKey("old_format"))
             {
@@ -128,7 +128,7 @@ namespace RawNet
                         UInt32 len = linearization.dataCount;
                         linearization.getShortArray(out var table, (int)len);
 
-                        rawImage.setTable(table, 4096, true);
+                        rawImage.SetTable(table, 4096, true);
                         // Apply table
                         //mRaw.sixteenBitLookup();
                         // Delete table
@@ -322,7 +322,7 @@ namespace RawNet
             //this.checkCameraSupported(metaData, make, model, "");*/
         }
 
-        protected override void decodeMetaDataInternal()
+        protected override void DecodeMetaDataInternal()
         {
             List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
 
