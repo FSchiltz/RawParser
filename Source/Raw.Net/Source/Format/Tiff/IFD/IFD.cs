@@ -11,26 +11,18 @@ namespace RawNet
         public ushort tagNumber;
         public Dictionary<TagType, Tag> tags = new Dictionary<TagType, Tag>();
         public List<IFD> subIFD = new List<IFD>();
-        public uint nextOffset { get; set; }
+        public uint NextOffset { get; protected set; }
         public Endianness endian = Endianness.unknown;
-        public int depth, relativeOffset;
+        public int Depth { protected set; get; }
+        protected int relativeOffset;
 
-        char[] fuji_signature = {
-  'F', 'U', 'J', 'I', 'F', 'I', 'L', 'M', (char)0x0c,(char) 0x00,(char) 0x00,(char) 0x00
-};
+        protected static char[] fuji_signature = {
+          'F', 'U', 'J', 'I', 'F', 'I', 'L', 'M', (char)0x0c,(char) 0x00,(char) 0x00,(char) 0x00
+        };
 
-        char[] nikon_v3_signature = {
-  'N', 'i', 'k', 'o', 'n', (char)0x0,(char) 0x2
-};
-
-        Endianness getTiffEndianness(byte[] tifftag)
-        {
-            if (tifftag[0] == 0x49 && tifftag[1] == 0x49)
-                return Endianness.little;
-            if (tifftag[0] == 0x4d && tifftag[1] == 0x4d)
-                return Endianness.big;
-            return Endianness.unknown;
-        }
+        protected static char[] nikon_v3_signature = {
+          'N', 'i', 'k', 'o', 'n', (char)0x0,(char) 0x2
+        };
 
         public IFD() { }
 
@@ -42,17 +34,16 @@ namespace RawNet
         {
             this.endian = endian;
             fileStream.Position = offset;
-            this.depth = depth;
+            this.Depth = depth;
             this.relativeOffset = relativeOffset;
 
             Parse(fileStream);
-            nextOffset = fileStream.ReadUInt32();
-        }       
+            NextOffset = fileStream.ReadUInt32();
+        }
 
         protected void Parse(TIFFBinaryReader fileStream)
         {
             tagNumber = fileStream.ReadUInt16();
-
             for (int i = 0; i < tagNumber; i++)
             {
                 long tagPos = fileStream.BaseStream.Position;
@@ -62,46 +53,42 @@ namespace RawNet
                 switch (temp.TagId)
                 {
                     case TagType.DNGPRIVATEDATA:
+                        try
                         {
-                            try
+                            IFD maker_ifd = ParseDngPrivateData(temp);
+                            if (maker_ifd != null)
                             {
-                                IFD maker_ifd = parseDngPrivateData(temp);
-                                if (maker_ifd != null)
-                                {
-                                    subIFD.Add(maker_ifd);
-                                    temp.data = null;
-                                }
-                            }
-                            catch (TiffParserException)
-                            { // Unparsable private data are added as entries
-
-                            }
-                            catch (IOException)
-                            { // Unparsable private data are added as entries
-
+                                subIFD.Add(maker_ifd);
+                                temp.data = null;
                             }
                         }
+                        catch (RawDecoderException)
+                        { // Unparsable private data are added as entries
+
+                        }
+                        catch (IOException)
+                        { // Unparsable private data are added as entries
+
+                        }
+
                         break;
                     case TagType.MAKERNOTE:
                     case TagType.MAKERNOTE_ALT:
+                        try
                         {
-                            try
-                            {
-                                Common.ConvertArray(ref temp.data, out byte[] dest);
-                                Makernote makernote = parseMakerNote(dest, endian, temp.dataOffset);
-                                if (makernote != null) subIFD.Add(makernote);
-                            }
-                            catch (TiffParserException)
-                            { // Unparsable makernotes are added as entries
+                            Common.ConvertArray(ref temp.data, out byte[] dest);
+                            Makernote makernote = ParseMakerNote(dest, endian, temp.dataOffset);
+                            if (makernote != null) subIFD.Add(makernote);
+                        }
+                        catch (RawDecoderException)
+                        { // Unparsable makernotes are added as entries
 
-                            }
-                            catch (IOException)
-                            { // Unparsable makernotes are added as entries
+                        }
+                        catch (IOException)
+                        { // Unparsable makernotes are added as entries
 
-                            }
                         }
                         break;
-
                     case TagType.FUJI_RAW_IFD:
                         if (temp.dataType == TiffDataType.OFFSET) // FUJI - correct type
                             temp.dataType = TiffDataType.LONG;
@@ -114,10 +101,10 @@ namespace RawNet
                         {
                             for (Int32 k = 0; k < temp.dataCount; k++)
                             {
-                                subIFD.Add(new IFD(fileStream, Convert.ToUInt32(temp.data[k]), endian, depth));
+                                subIFD.Add(new IFD(fileStream, Convert.ToUInt32(temp.data[k]), endian, Depth));
                             }
                         }
-                        catch (TiffParserException)
+                        catch (RawDecoderException)
                         { // Unparsable subifds are added as entries
 
                         }
@@ -142,7 +129,7 @@ namespace RawNet
 
         /* This will attempt to parse makernotes and return it as an IFD */
         //makernote should be selfcontained
-        Makernote parseMakerNote(byte[] data, Endianness parent_end, uint parentOffset)
+        Makernote ParseMakerNote(byte[] data, Endianness parentEndian, uint parentOffset)
         {
             uint offset = 0;
             //reader.Position = off;
@@ -164,18 +151,18 @@ namespace RawNet
                 mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
                 parent_end = getTiffEndianness(data.Skip(8).ToArray());
                 if (parent_end == Endianness.unknown)
-                    throw new TiffParserException("Cannot determine Pentax makernote endianness");
+                    throw new RawDecoderException("Cannot determine Pentax makernote endianness");
                 //data = data.Skip(10).ToArray();
                 offset += 10;*/
 
             }
-            else if (Common.memcmp(ref fuji_signature, ref data))
+            else if (Common.Memcmp(ref fuji_signature, ref data))
             {
                 return new FujiMakerNote(data);
                 //offset = 12;
                 //mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
             }
-            else if (Common.memcmp(ref nikon_v3_signature, ref data))
+            else if (Common.Memcmp(ref nikon_v3_signature, ref data))
             {
                 return new NikonMakerNote(data);
             }
@@ -188,7 +175,7 @@ namespace RawNet
                 /*
                 parent_end = getTiffEndianness(data.Skip(12).ToArray());
                 if (parent_end == Endianness.unknown)
-                    throw new TiffParserException("Cannot determine Panasonic makernote endianness");
+                    throw new RawDecoderException("Cannot determine Panasonic makernote endianness");
                 offset = 20;*/
             }
 
@@ -196,26 +183,26 @@ namespace RawNet
             if (data[offset] == 0x49 && data[1 + offset] == 0x49)
             {
                 offset += 2;
-                parent_end = Endianness.little;
+                parentEndian = Endianness.little;
             }
             else if (data[offset] == 0x4D && data[offset + 1] == 0x4D)
             {
-                parent_end = Endianness.big;
+                parentEndian = Endianness.big;
                 offset += 2;
             }
 
             // Olympus starts the makernote with their own name, sometimes truncated
-            if (Common.strncmp(data, "OLYMP", 5))
+            if (Common.Strncmp(data, "OLYMP", 5))
             {
                 offset += 8;
-                if (Common.strncmp(data, "OLYMPUS", 7))
+                if (Common.Strncmp(data, "OLYMPUS", 7))
                 {
                     offset += 4;
                 }
             }
 
             // Epson starts the makernote with its own name
-            if (Common.strncmp(data, "EPSON", 5))
+            if (Common.Strncmp(data, "EPSON", 5))
             {
                 offset += 8;
             }
@@ -223,22 +210,17 @@ namespace RawNet
             // Attempt to parse the rest as an IFD
             try
             {
-                /* if (parent_end == getHostEndianness())
-                     maker_ifd = new IFD(mFile, offset, depth);
-                 else
-                     maker_ifd = new IFDBE(mFile, offset, depth);*/
-                return new Makernote(data, offset, parent_end, depth, parentOffset);
-
+                return new Makernote(data, offset, parentEndian, Depth, parentOffset);
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
                 return null;
             }
-            // If the structure cannot be read, a TiffParserException will be thrown.            
+            // If the structure cannot be read, a RawDecoderException will be thrown.            
         }
 
-        Makernote parseDngPrivateData(Tag t)
+        Makernote ParseDngPrivateData(Tag t)
         {
             /*
             1. Six bytes containing the zero-terminated string "Adobe". (The DNG specification calls for the DNGPrivateData tag to start with an ASCII string identifying the creator/format).
@@ -287,8 +269,6 @@ namespace RawNet
             }
             data = data.Skip(2).ToArray();
             uint org_offset;
-
-
             org_offset = (uint)data[0] << 24 | (uint)data[1] << 16 | (uint)data[2] << 8 | data[3];
 
             data = data.Skip(4).ToArray();
@@ -298,29 +278,26 @@ namespace RawNet
                 Debug.WriteLine("Adobe Private data: original offset of makernote is past 300MB offset");
                 return null;
             }
-            /* Create fake tiff with original offsets */
-            //byte[] maker_data = new byte[count];
-            // Common.memcopy(ref maker_data, ref data, count, 0, 0);            
-            Makernote maker_ifd;
+            Makernote makerIfd;
             try
             {
-                maker_ifd = parseMakerNote(data, makernote_endian, 0);
+                makerIfd = ParseMakerNote(data, makernote_endian, 0);
             }
-            catch (TiffParserException e)
+            catch (RawDecoderException e)
             {
                 Debug.WriteLine(e.Message);
                 return null;
             }
-            return maker_ifd;
+            return makerIfd;
         }
 
-        public Tag getEntry(TagType type)
+        public Tag GetEntry(TagType type)
         {
             tags.TryGetValue(type, out Tag tag);
             return tag;
         }
 
-        public List<IFD> getIFDsWithTag(TagType tag)
+        public List<IFD> GetIFDsWithTag(TagType tag)
         {
             List<IFD> matchingIFDs = new List<IFD>();
             if (tags.ContainsKey(tag))
@@ -330,7 +307,7 @@ namespace RawNet
 
             foreach (IFD i in subIFD)
             {
-                List<IFD> t = (i).getIFDsWithTag(tag);
+                List<IFD> t = (i).GetIFDsWithTag(tag);
                 for (int j = 0; j < t.Count; j++)
                 {
                     matchingIFDs.Add(t[j]);
@@ -339,8 +316,7 @@ namespace RawNet
             return matchingIFDs;
         }
 
-
-        protected void mergeIFD(IFD other_tiff)
+        protected void MergeIFD(IFD other_tiff)
         {
             if (other_tiff?.subIFD.Count == 0)
                 return;
@@ -356,15 +332,15 @@ namespace RawNet
             }
         }
 
-        public Tag getEntryRecursive(TagType t)
+        public Tag GetEntryRecursive(TagType t)
         {
             Tag tag = null;
-            tag = getEntry(t);
+            tag = GetEntry(t);
             if (tag == null)
             {
                 foreach (IFD ifd in subIFD)
                 {
-                    tag = ifd.getEntryRecursive(t);
+                    tag = ifd.GetEntryRecursive(t);
                     if (tag != null) break;
                 }
             }

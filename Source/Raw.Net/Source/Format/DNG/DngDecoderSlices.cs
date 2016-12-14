@@ -26,9 +26,9 @@ namespace RawNet
     internal class DngDecoderSlices
     {
         public Queue<DngSliceElement> slices = new Queue<DngSliceElement>();
-        TIFFBinaryReader mFile;
-        RawImage mRaw;
-        public bool mFixLjpeg;
+        TIFFBinaryReader file;
+        RawImage raw;
+        public bool FixLjpeg { get; set; }
         int compression;
 
         /*
@@ -47,45 +47,45 @@ namespace RawNet
             }
             return;
         }*/
-        
+
 
         public DngDecoderSlices(TIFFBinaryReader file, RawImage img, int _compression)
         {
-            mFile = (file);
-            mRaw = (img);
-            mFixLjpeg = false;
+            this.file = (file);
+            raw = (img);
+            FixLjpeg = false;
             compression = _compression;
         }
 
-        
-        public void addSlice(DngSliceElement slice)
+
+        public void AddSlice(DngSliceElement slice)
         {
             slices.Enqueue(slice);
         }
 
-        public void decodeSlice()
+        public void DecodeSlice()
         {
             if (compression == 7)
             {
                 while (slices.Count != 0)
                 {
-                    LJpegPlain l = new LJpegPlain(mFile, mRaw)
+                    LJpegPlain l = new LJpegPlain(file, raw)
                     {
-                        mDNGCompatible = mFixLjpeg
+                        DNGCompatible = FixLjpeg
                     };
                     DngSliceElement e = slices.Dequeue();
-                    l.mUseBigtable = e.mUseBigtable;                    
+                    l.UseBigtable = e.mUseBigtable;
                     try
                     {
-                        l.startDecoder(e.byteOffset, e.byteCount, e.offX, e.offY);
+                        l.StartDecoder(e.byteOffset, e.byteCount, e.offX, e.offY);
                     }
                     catch (RawDecoderException err)
                     {
-                        mRaw.errors.Add(err.Message);
+                        raw.errors.Add(err.Message);
                     }
                     catch (IOException err)
                     {
-                        mRaw.errors.Add(err.Message);
+                        raw.errors.Add(err.Message);
                     }
                 }
                 /* Lossy DNG */
@@ -146,10 +146,10 @@ UInt16* dst = (UInt16*)mRaw.getData(e.offX, y + e.offY);
 }
         }*/
             else
-                mRaw.errors.Add("DngDecoderSlices: Unknown compression");
+                raw.errors.Add("DngDecoderSlices: Unknown compression");
         }
 
-        int size()
+        int Size()
         {
             return slices.Count;
         }

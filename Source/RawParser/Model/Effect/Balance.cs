@@ -2,11 +2,9 @@
 
 namespace RawEditor.Effect
 {
-    public class Balance
+    public static class Balance
     {
-        private Balance() { }
-
-        public static void sRGBToRGB(ref double value, double maxValue)
+        public static void SRGBToRGB(ref double value, double maxValue)
         {
             value /= maxValue;
             if (value < 0.04045)
@@ -20,7 +18,7 @@ namespace RawEditor.Effect
             value *= maxValue;
         }
 
-        public static void calculateRGB(int temp, out double rRefer, out double gRefer, out double bRefer)
+        public static void CalculateRGB(int temp, out double rRefer, out double gRefer, out double bRefer)
         {
             ushort maxValue = 255;
             temp /= 100;
@@ -106,14 +104,14 @@ namespace RawEditor.Effect
             }
         }*/
 
-        public static void scaleGamma(ref double r, ref double g, ref double b, double gamma, uint maxValue)
+        public static void ScaleGamma(ref double r, ref double g, ref double b, double gamma, uint maxValue)
         {
             r = maxValue * Math.Pow(r / maxValue, gamma);
             g = maxValue * Math.Pow(g / maxValue, gamma);
             b = maxValue * Math.Pow(b / maxValue, gamma);
         }
 
-        public static double[] gamma_curve(double pwr, double ts, int mode, int imax)
+        public static double[] GammaCurve(double pwr, double ts, int mode, int imax)
         {
             int i;
             double[] g = new double[6], bnd = { 0, 0 };
@@ -152,20 +150,6 @@ namespace RawEditor.Effect
                     curve[i] = 0x10000 * (Convert.ToBoolean(mode)
                   ? (r < g[3] ? r * g[1] : (Convert.ToBoolean(g[0]) ? Math.Pow(r, g[0]) * (1 + g[4]) - g[4] : Math.Log(r) * g[2] + 1))
                   : (r < g[2] ? r / g[1] : (Convert.ToBoolean(g[0]) ? Math.Pow((r + g[4]) / (1 + g[4]), 1 / g[0]) : Math.Exp((r - 1) / g[2]))));
-            }
-            return curve;
-        }
-
-        internal static double[] contrast_curve(double shadow, double highlight, int v)
-        {
-            double[] curve = new double[v];
-            for (int i = 0; i < v / 2; i++)
-            {
-                curve[i] = i + ((shadow - (i / (v / 2) * 100) > 0) ? shadow - (i / (v / 2) * 100) : 0) * 100;
-            }
-            for (int i = v - 1; i >= v / 2; i--)
-            {
-                curve[i] = i - (((i / (v / 2) * 100) - highlight > 0) ? (i / (v / 2) * 100) - highlight : 0);
             }
             return curve;
         }

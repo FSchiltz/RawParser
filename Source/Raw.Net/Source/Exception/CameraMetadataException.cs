@@ -4,10 +4,9 @@ namespace RawNet
 {
     public class CameraMetadataException : Exception
     {
-        public CameraMetadataException(string _msg) : base(_msg)
-        {
-
-        }
+        public CameraMetadataException(string msg) : base(msg) { }
+        public CameraMetadataException() { }
+        public CameraMetadataException(string msg, Exception innerException):base(msg,innerException){ }
     }
 }
 

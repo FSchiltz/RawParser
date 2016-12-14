@@ -25,20 +25,21 @@ namespace RawNet
             TIFFBinaryReader buffer;
             if (data[0] == 0x4D && data[1] == 0x4D)
             {
-                buffer = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(data));
+                buffer = new TIFFBinaryReaderRE(data);
                 endian = Endianness.big;
             }
             else if (data[0] == 0x49 && data[1] == 0x49)
             {
-                buffer = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(data));
+                buffer = new TIFFBinaryReader(data);
                 endian = Endianness.little;
             }
             else throw new RawDecoderException("Makernote endianess unknown " + data[0]);
             buffer.BaseStream.Position = 2;
-            ushort TIFFMagic = buffer.ReadUInt16();
+            buffer.ReadUInt16();
             uint TIFFoffset = buffer.ReadUInt32();
             buffer.BaseStream.Position = TIFFoffset;
             Parse(buffer);
+            buffer.Dispose();
         }
     }
 }

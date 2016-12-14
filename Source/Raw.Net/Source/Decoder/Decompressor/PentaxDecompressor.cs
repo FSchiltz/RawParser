@@ -6,14 +6,9 @@ namespace RawNet
     class PentaxDecompressor : LJpegDecompressor
     {
         BitPumpMSB pentaxBits;
-        TIFFBinaryReader reader;
-        public PentaxDecompressor(TIFFBinaryReader file, RawImage img) : base(file, img)
-        {
-            reader = file;
-            pentaxBits = null;
-        }
+        public PentaxDecompressor(TIFFBinaryReader file, RawImage img) : base(file, img) { }
 
-        public void decodePentax(IFD root, UInt32 offset, UInt32 size)
+        public void DecodePentax(IFD root, UInt32 offset, UInt32 size)
         {
             // Prepare huffmann table              0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 = 16 entries
             byte[] pentax_tree =  { 0, 2, 3, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0,
@@ -24,17 +19,16 @@ namespace RawNet
 
             /* Attempt to read huffman table, if found in makernote */
 
-            Tag t = root.getEntryRecursive((TagType)0x220);
+            Tag t = root.GetEntryRecursive((TagType)0x220);
             if (t != null)
             {
                 if (t.dataType == TiffDataType.UNDEFINED)
                 {
-
                     TIFFBinaryReader stream;
-                    if (root.endian == Common.getHostEndianness())
-                        stream = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(t.GetByteArray()), 0, t.dataCount);
+                    if (root.endian == Common.GetHostEndianness())
+                        stream = new TIFFBinaryReader(t.GetByteArray());
                     else
-                        stream = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(t.GetByteArray()), 0, t.dataCount);
+                        stream = new TIFFBinaryReaderRE(t.GetByteArray());
 
                     UInt32 depth = (uint)(stream.ReadUInt16() + 12) & 0xf;
                     stream.ReadBytes(12);
@@ -73,6 +67,7 @@ namespace RawNet
                         dctbl1.huffval[i] = sm_num;
                         v2[sm_num] = 0xffffffff;
                     }
+                    stream.Dispose();
                 }
                 else
                 {
@@ -94,19 +89,19 @@ namespace RawNet
                     dctbl1.huffval[i] = pentax_tree[i + 16];
                 }
             }
-            mUseBigtable = true;
-            createHuffmanTable(dctbl1);
+            UseBigtable = true;
+            CreateHuffmanTable(dctbl1);
 
-            reader.BaseStream.Position = 0;
-            pentaxBits = new BitPumpMSB(ref reader, offset, size);
+            input.BaseStream.Position = 0;
+            pentaxBits = new BitPumpMSB(ref input, offset, size);
             unsafe
             {
                 fixed (ushort* tt = mRaw.rawData)
                 {
                     byte* draw = (byte*)tt;
                     UInt16* dest;
-                    Int32 w = mRaw.dim.x;
-                    Int32 h = mRaw.dim.y;
+                    Int32 w = mRaw.dim.width;
+                    Int32 h = mRaw.dim.height;
                     int[] pUp1 = { 0, 0 };
                     int[] pUp2 = { 0, 0 };
                     int pLeft1 = 0;

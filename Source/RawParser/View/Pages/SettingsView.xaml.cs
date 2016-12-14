@@ -17,7 +17,6 @@ namespace RawEditor
         public List<BitmapImage> PdfPages
         {
             get;
-            set;
         } = new List<BitmapImage>();
 
         public SettingsView()
@@ -72,7 +71,7 @@ namespace RawEditor
             SettingStorage.DemosAlgo = ((DemosAlgorithm)e.AddedItems[0]);
         }
 
-        private async void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private async void Button_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             if (PdfPages.Count == 0)
             {

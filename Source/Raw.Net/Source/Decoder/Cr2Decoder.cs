@@ -24,12 +24,12 @@ namespace RawNet
         protected override Thumbnail DecodeThumbInternal()
         {
             //find the preview ifd (ifd1 for thumb)(IFD0 is better, bigger preview buut too big and slow for now)
-            IFD preview = ifd.getIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)[0];
+            IFD preview = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)[0];
             //no thumbnail
             if (preview == null) return null;
 
-            var thumb = preview.getEntry(TagType.JPEGINTERCHANGEFORMAT);
-            var size = preview.getEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
+            var thumb = preview.GetEntry(TagType.JPEGINTERCHANGEFORMAT);
+            var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
             if (size == null || thumb == null) return null;
 
 
@@ -37,7 +37,7 @@ namespace RawNet
             Thumbnail temp = new Thumbnail()
             {
                 data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
-                type = ThumbnailType.JPEG,
+                Type = ThumbnailType.JPEG,
                 dim = new Point2D()
             };
             return temp;
@@ -48,24 +48,24 @@ namespace RawNet
             if (hints.ContainsKey("old_format"))
             {
                 UInt32 off = 0;
-                var t = ifd.getEntryRecursive((TagType)0x81);
+                var t = ifd.GetEntryRecursive((TagType)0x81);
                 if (t != null)
                     off = t.GetUInt(0);
                 else
                 {
-                    List<IFD> data2 = ifd.getIFDsWithTag(TagType.CFAPATTERN);
+                    List<IFD> data2 = ifd.GetIFDsWithTag(TagType.CFAPATTERN);
                     if (data2.Count == 0)
                         throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
                     else
                     {
                         if (data2[0].tags.ContainsKey(TagType.STRIPOFFSETS))
-                            off = data2[0].getEntry(TagType.STRIPOFFSETS).GetUInt(0);
+                            off = data2[0].GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
                         else
                             throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
                     }
                 }
 
-                var b = new TIFFBinaryReader(reader.BaseStream, off + 41, (uint)reader.BaseStream.Length);
+                var b = new TIFFBinaryReader(reader.BaseStream, off + 41);
 
                 UInt32 height = (uint)b.ReadInt16();
                 UInt32 width = (uint)b.ReadInt16();
@@ -87,7 +87,7 @@ namespace RawNet
                 LJpegPlain l = new LJpegPlain(reader, rawImage);
                 try
                 {
-                    l.startDecoder(off, (uint)(reader.BaseStream.Length - off), 0, 0);
+                    l.StartDecoder(off, (uint)(reader.BaseStream.Length - off), 0, 0);                    
                 }
                 catch (IOException e)
                 {
@@ -115,13 +115,13 @@ namespace RawNet
                     rawImage = procRaw;
                 }
 
-                var tv = ifd.getEntryRecursive((TagType)0x123);
+                var tv = ifd.GetEntryRecursive((TagType)0x123);
                 if (tv != null)
                 {
-                    Tag curve = ifd.getEntryRecursive((TagType)0x123);
+                    Tag curve = ifd.GetEntryRecursive((TagType)0x123);
                     if (curve.dataType == TiffDataType.SHORT && curve.dataCount == 4096)
                     {
-                        Tag linearization = ifd.getEntryRecursive((TagType)0x123);
+                        Tag linearization = ifd.GetEntryRecursive((TagType)0x123);
                         UInt32 len = linearization.dataCount;
                         linearization.GetShortArray(out var table, (int)len);
 
@@ -133,11 +133,10 @@ namespace RawNet
 
                     }
                 }
-
                 return;
             }
 
-            List<IFD> data = ifd.getIFDsWithTag((TagType)0xc5d8);
+            List<IFD> data = ifd.GetIFDsWithTag((TagType)0xc5d8);
 
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Decoder: No image data found");
@@ -155,8 +154,8 @@ namespace RawNet
             rawImage.ColorDepth = 14;
             try
             {
-                Tag offsets = raw.getEntry(TagType.STRIPOFFSETS);
-                Tag counts = raw.getEntry(TagType.STRIPBYTECOUNTS);
+                Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
+                Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
                 // Iterate through all slices
                 for (UInt32 s = 0; s < offsets.dataCount; s++)
                 {
@@ -167,7 +166,7 @@ namespace RawNet
                     };
                     SOFInfo sof = new SOFInfo();
                     LJpegPlain l = new LJpegPlain(reader, rawImage);
-                    l.getSOF(ref sof, slice.offset, slice.count);
+                    l.GetSOF(ref sof, slice.offset, slice.count);
                     slice.w = sof.w * sof.cps;
                     slice.h = sof.h;
                     if (sof.cps == 4 && slice.w > slice.h * 4)
@@ -178,12 +177,12 @@ namespace RawNet
                         if (slices[0].w != slice.w)
                             throw new RawDecoderException("CR2 Decoder: Slice width does not match.");
 
-                    if (reader.isValid(slice.offset, slice.count)) // Only decode if size is valid
+                    if (reader.IsValid(slice.offset, slice.count)) // Only decode if size is valid
                         slices.Add(slice);
                     completeH += (int)slice.h;
                 }
             }
-            catch (TiffParserException)
+            catch (RawDecoderException)
             {
                 throw new RawDecoderException("CR2 Decoder: Unsupported format.");
             }
@@ -205,11 +204,11 @@ namespace RawNet
             bool wrappedCr2Slices = false;
             if (raw.tags.ContainsKey((TagType)0xc6c5))
             {
-                UInt16 ss = raw.getEntry((TagType)0xc6c5).GetUShort(0);
+                UInt16 ss = raw.GetEntry((TagType)0xc6c5).GetUShort(0);
                 // sRaw
                 if (ss == 4)
                 {
-                    rawImage.dim.x /= 3;
+                    rawImage.dim.width /= 3;
                     rawImage.cpp = (3);
                     rawImage.isCFA = false;
                     // Fix for Canon 80D rawImage format.
@@ -219,21 +218,21 @@ namespace RawNet
                     if (hints.ContainsKey("wrapped_cr2_slices") && raw.tags.ContainsKey(TagType.IMAGEWIDTH) && raw.tags.ContainsKey(TagType.IMAGELENGTH))
                     {
                         wrappedCr2Slices = true;
-                        int w = raw.getEntry(TagType.IMAGEWIDTH).GetInt(0);
-                        int h = raw.getEntry(TagType.IMAGELENGTH).GetInt(0);
-                        if (w * h != rawImage.dim.x * rawImage.dim.y)
+                        int w = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
+                        int h = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+                        if (w * h != rawImage.dim.width * rawImage.dim.height)
                         {
                             throw new RawDecoderException("CR2 Decoder: Wrapped slices don't match image size");
                         }
                         rawImage.dim = new Point2D(w, h);
                     }
                 }
-                flipDims = rawImage.dim.x < rawImage.dim.y;
+                flipDims = rawImage.dim.width < rawImage.dim.height;
                 if (flipDims)
                 {
-                    int w = rawImage.dim.x;
-                    rawImage.dim.x = rawImage.dim.y;
-                    rawImage.dim.y = w;
+                    int w = rawImage.dim.width;
+                    rawImage.dim.width = rawImage.dim.height;
+                    rawImage.dim.height = w;
                 }
             }
 
@@ -242,7 +241,7 @@ namespace RawNet
             List<int> s_width = new List<int>();
             if (raw.tags.ContainsKey(TagType.CANONCR2SLICE))
             {
-                Tag ss = raw.getEntry(TagType.CANONCR2SLICE);
+                Tag ss = raw.GetEntry(TagType.CANONCR2SLICE);
                 for (int i = 0; i < ss.GetShort(0); i++)
                 {
                     s_width.Add(ss.GetShort(1));
@@ -264,17 +263,17 @@ namespace RawNet
                 try
                 {
                     LJpegPlain l = new LJpegPlain(reader, rawImage);
-                    l.addSlices(s_width);
-                    l.mUseBigtable = true;
-                    l.mCanonFlipDim = flipDims;
-                    l.mCanonDoubleHeight = doubleHeight;
-                    l.mWrappedCr2Slices = wrappedCr2Slices;
-                    l.startDecoder(slice.offset, slice.count, 0, offY);
+                    l.AddSlices(s_width);
+                    l.UseBigtable = true;
+                    l.CanonFlipDim = flipDims;
+                    l.CanonDoubleHeight = doubleHeight;
+                    l.WrappedCr2Slices = wrappedCr2Slices;
+                    l.StartDecoder(slice.offset, slice.count, 0, offY);
                 }
                 catch (RawDecoderException e)
                 {
                     if (i == 0)
-                        throw new Exception();
+                        throw;
                     // These may just be single slice error - store the error and move on
                     rawImage.errors.Add(e.Message);
                 }
@@ -286,25 +285,25 @@ namespace RawNet
                 offY += slice.w;
             }
 
-            if (rawImage.metadata.subsampling.x > 1 || rawImage.metadata.subsampling.y > 1)
+            if (rawImage.metadata.subsampling.width > 1 || rawImage.metadata.subsampling.height > 1)
                 SRawInterpolate();
         }
 
-        protected override void DecodeMetaDataInternal()
+        protected override void DecodeMetadataInternal()
         {
-            List<IFD> data = ifd.getIFDsWithTag(TagType.MODEL);
+            List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Meta Decoder: Model name not found");
 
-            string make = data[0].getEntry(TagType.MAKE).DataAsString;
-            string model = data[0].getEntry(TagType.MODEL).DataAsString;
+            string make = data[0].GetEntry(TagType.MAKE).DataAsString;
+            string model = data[0].GetEntry(TagType.MODEL).DataAsString;
             string mode = "";
 
-            if (rawImage.metadata.subsampling.y == 2 && rawImage.metadata.subsampling.x == 2)
+            if (rawImage.metadata.subsampling.height == 2 && rawImage.metadata.subsampling.width == 2)
                 mode = "sRaw1";
 
-            if (rawImage.metadata.subsampling.y == 1 && rawImage.metadata.subsampling.x == 2)
+            if (rawImage.metadata.subsampling.height == 1 && rawImage.metadata.subsampling.width == 2)
                 mode = "sRaw2";
 
             rawImage.metadata.make = make;
@@ -312,25 +311,25 @@ namespace RawNet
             rawImage.metadata.mode = mode;
 
             //more exifs
-            var isoTag = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null)
                 rawImage.metadata.isoSpeed = isoTag.GetInt(0);
-            var exposure = ifd.getEntryRecursive(TagType.EXPOSURETIME);
-            var fn = ifd.getEntryRecursive(TagType.FNUMBER);
-            var t = ifd.getEntryRecursive(TagType.ISOSPEEDRATINGS);
+            var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
+            var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
+            var t = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
             if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
             if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
 
-            var time = ifd.getEntryRecursive(TagType.DATETIMEORIGINAL);
-            var timeModify = ifd.getEntryRecursive(TagType.DATETIMEDIGITIZED);
+            var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
+            var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
             if (time != null) rawImage.metadata.timeTake = time.DataAsString;
             if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
 
             // Fetch the white balance
             try
             {
-                Tag wb = ifd.getEntryRecursive(TagType.CANONCOLORDATA);
+                Tag wb = ifd.GetEntryRecursive(TagType.CANONCOLORDATA);
                 if (wb != null)
                 {
                     // this entry is a big table, and different cameras store used WB in
@@ -354,10 +353,10 @@ namespace RawNet
                 else
                 {
                     data = null;
-                    data = ifd.getIFDsWithTag(TagType.MODEL);
+                    data = ifd.GetIFDsWithTag(TagType.MODEL);
 
-                    Tag shot_info = ifd.getEntryRecursive(TagType.CANONSHOTINFO);
-                    Tag g9_wb = ifd.getEntryRecursive(TagType.CANONPOWERSHOTG9WB);
+                    Tag shot_info = ifd.GetEntryRecursive(TagType.CANONSHOTINFO);
+                    Tag g9_wb = ifd.GetEntryRecursive(TagType.CANONPOWERSHOTG9WB);
                     if (shot_info != null && g9_wb != null)
                     {
                         UInt16 wb_index = Convert.ToUInt16(shot_info.data[7]);
@@ -372,7 +371,7 @@ namespace RawNet
                     {
                         // WB for the old 1D and 1DS
                         wb = null;
-                        wb = ifd.getEntryRecursive((TagType)0xa4);
+                        wb = ifd.GetEntryRecursive((TagType)0xa4);
                         if (wb != null)
                         {
                             if (wb.dataCount >= 3)
@@ -392,17 +391,17 @@ namespace RawNet
             }
             //setMetaData(metaData, make, model, mode);
 
-            SetMetaData(model);
+            SetMetadata(model);
             //get cfa
-            var cfa = ifd.getEntryRecursive(TagType.CFAPATTERN);
+            var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)
             {
                 Debug.WriteLine("CFA pattern is not found");
-                rawImage.cfa.setCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
             }
             else
             {
-                rawImage.cfa.setCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
+                rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
             rawImage.metadata.wbCoeffs[0] = rawImage.metadata.wbCoeffs[0] / rawImage.metadata.wbCoeffs[1];
@@ -410,18 +409,18 @@ namespace RawNet
             rawImage.metadata.wbCoeffs[1] = rawImage.metadata.wbCoeffs[1] / rawImage.metadata.wbCoeffs[1];
         }
 
-        override protected void SetMetaData(string model)
+        override protected void SetMetadata(string model)
         {
             for (int i = 0; i < canon.GetLength(0); i++)
             {
-                if (rawImage.dim.x == canon[i][0] && rawImage.dim.y == canon[i][1])
+                if (rawImage.dim.width == canon[i][0] && rawImage.dim.height == canon[i][1])
                 {
-                    rawImage.offset.x = canon[i][2];
-                    rawImage.offset.y = canon[i][3];
-                    rawImage.dim.x -= (canon[i][2]);
-                    rawImage.dim.y -= (canon[i][3]);
-                    //rawImage.dim.x -= canon[i][4];
-                    //rawImage.dim.y -= canon[i][5];
+                    rawImage.offset.width = canon[i][2];
+                    rawImage.offset.height = canon[i][3];
+                    rawImage.dim.width -= (canon[i][2]);
+                    rawImage.dim.height -= (canon[i][3]);
+                    rawImage.dim.width -= canon[i][4];
+                    rawImage.dim.height -= canon[i][5];
                     /* mask[0][1] = canon[i][6];
                      mask[0][3] = -canon[i][7];
                      mask[1][1] = canon[i][8];
@@ -436,24 +435,24 @@ namespace RawNet
             }
             if (rawImage.ColorDepth == 15)
             {
-                switch (rawImage.dim.x)
+                switch (rawImage.dim.width)
                 {
                     case 3344:
-                        rawImage.dim.x -= 66;
+                        rawImage.dim.width -= 66;
                         break;
                     case 3872:
-                        rawImage.dim.x -= 72;
+                        rawImage.dim.width -= 72;
                         break;
                 }
-                if (rawImage.dim.y > rawImage.dim.x)
+                if (rawImage.dim.height > rawImage.dim.width)
                 {
                     //SWAP(height, width);
                     //SWAP(raw_height, raw_width);
                 }
-                if (rawImage.dim.x == 7200 && rawImage.dim.y == 3888)
+                if (rawImage.dim.width == 7200 && rawImage.dim.height == 3888)
                 {
-                    rawImage.dim.x = 6480;
-                    rawImage.dim.y = 4320;
+                    rawImage.dim.width = 6480;
+                    rawImage.dim.height = 4320;
                 }
                 /*
                 filters = 0;
@@ -464,8 +463,8 @@ namespace RawNet
                 switch (model.Trim())
                 {
                     case "PowerShot 600":
-                        rawImage.dim.y = 613;
-                        rawImage.dim.x = 854;
+                        rawImage.dim.height = 613;
+                        rawImage.dim.width = 854;
                         //raw_width = 896;
                         //colors = 4;
                         //filters = 0xe1e4e1e4;
@@ -473,21 +472,21 @@ namespace RawNet
                         break;
                     case "PowerShot A5":
                     case "PowerShot A5 Zoom":
-                        rawImage.dim.y = 773;
-                        rawImage.dim.x = 960;
+                        rawImage.dim.height = 773;
+                        rawImage.dim.width = 960;
                         //raw_width = 992;
                         rawImage.metadata.pixelAspectRatio = 256 / 235.0;
                         //filters = 0x1e4e1e4e;
                         goto canon_a5;
                     case "PowerShot A50":
-                        rawImage.dim.y = 968;
-                        rawImage.dim.x = 1290;
+                        rawImage.dim.height = 968;
+                        rawImage.dim.width = 1290;
                         //rawImage.dim.x = 1320;
                         //filters = 0x1b4e4b1e;
                         goto canon_a5;
                     case "PowerShot Pro70":
-                        rawImage.dim.y = 1024;
-                        rawImage.dim.x = 1552;
+                        rawImage.dim.height = 1024;
+                        rawImage.dim.width = 1552;
                         //filters = 0x1e4b4e1b;
                         canon_a5:
                         //colors = 4;
@@ -507,7 +506,7 @@ namespace RawNet
                         //mask[1][3] = -4;
                         break;
                     case "EOS D2000C":
-                        //filters = 0x61616161;
+                        rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.GREEN, CFAColor.RED, CFAColor.BLUE, CFAColor.GREEN);
                         rawImage.blackLevel = (int)rawImage.curve[200];
                         break;
                 }
@@ -516,27 +515,27 @@ namespace RawNet
         int GetHue()
         {
             if (hints.ContainsKey("old_sraw_hue"))
-                return (rawImage.metadata.subsampling.y * rawImage.metadata.subsampling.x);
-            var tc = ifd.getEntryRecursive((TagType)0x10);
+                return (rawImage.metadata.subsampling.height * rawImage.metadata.subsampling.width);
+            var tc = ifd.GetEntryRecursive((TagType)0x10);
             if (tc == null)
             {
                 return 0;
             }
-            UInt32 model_id = ifd.getEntryRecursive((TagType)0x10).GetUInt(0);
+            UInt32 model_id = ifd.GetEntryRecursive((TagType)0x10).GetUInt(0);
             if (model_id >= 0x80000281 || model_id == 0x80000218 || (hints.ContainsKey("force_new_sraw_hue")))
-                return ((rawImage.metadata.subsampling.y * rawImage.metadata.subsampling.x) - 1) >> 1;
+                return ((rawImage.metadata.subsampling.height * rawImage.metadata.subsampling.width) - 1) >> 1;
 
-            return (rawImage.metadata.subsampling.y * rawImage.metadata.subsampling.x);
+            return (rawImage.metadata.subsampling.height * rawImage.metadata.subsampling.width);
         }
 
         // Interpolate and convert sRaw data.
         void SRawInterpolate()
         {
-            List<IFD> data = ifd.getIFDsWithTag(TagType.CANONCOLORDATA);
+            List<IFD> data = ifd.GetIFDsWithTag(TagType.CANONCOLORDATA);
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 sRaw: Unable to locate WB info.");
 
-            Tag wb = data[0].getEntry(TagType.CANONCOLORDATA);
+            Tag wb = data[0].GetEntry(TagType.CANONCOLORDATA);
             // Offset to sRaw coefficients used to reconstruct uncorrected RGB data.
             Int32 offset = 78;
 
@@ -554,21 +553,21 @@ namespace RawNet
             bool isOldSraw = hints.ContainsKey("sraw_40d");
             bool isNewSraw = hints.ContainsKey("sraw_new");
 
-            if (rawImage.metadata.subsampling.y == 1 && rawImage.metadata.subsampling.x == 2)
+            if (rawImage.metadata.subsampling.height == 1 && rawImage.metadata.subsampling.width == 2)
             {
                 if (isOldSraw)
-                    Interpolate_422_old(rawImage.dim.x / 2, rawImage.dim.y, 0, rawImage.dim.y);
+                    Interpolate_422_old(rawImage.dim.width / 2, rawImage.dim.height, 0, rawImage.dim.height);
                 else if (isNewSraw)
-                    Interpolate_422_new(rawImage.dim.x / 2, rawImage.dim.y, 0, rawImage.dim.y);
+                    Interpolate_422_new(rawImage.dim.width / 2, rawImage.dim.height, 0, rawImage.dim.height);
                 else
-                    Interpolate_422(rawImage.dim.x / 2, rawImage.dim.y, 0, rawImage.dim.y);
+                    Interpolate_422(rawImage.dim.width / 2, rawImage.dim.height, 0, rawImage.dim.height);
             }
-            else if (rawImage.metadata.subsampling.y == 2 && rawImage.metadata.subsampling.x == 2)
+            else if (rawImage.metadata.subsampling.height == 2 && rawImage.metadata.subsampling.width == 2)
             {
                 if (isNewSraw)
-                    Interpolate_420_new(rawImage.dim.x / 2, rawImage.dim.y / 2, 0, rawImage.dim.y / 2);
+                    Interpolate_420_new(rawImage.dim.width / 2, rawImage.dim.height / 2, 0, rawImage.dim.height / 2);
                 else
-                    Interpolate_420(rawImage.dim.x / 2, rawImage.dim.y / 2, 0, rawImage.dim.y / 2);
+                    Interpolate_420(rawImage.dim.width / 2, rawImage.dim.height / 2, 0, rawImage.dim.height / 2);
             }
             else
                 throw new RawDecoderException("CR2 Decoder: Unknown subsampling");
@@ -585,9 +584,9 @@ namespace RawNet
         //TODO remove
         private unsafe void STORE_RGB(ushort* X, int A, int B, int C, int r, int g, int b)
         {
-            X[A] = (ushort)Common.clampbits(r, 16);
-            X[B] = (ushort)Common.clampbits(g, 16);
-            X[C] = (ushort)Common.clampbits(b, 16);
+            X[A] = (ushort)Common.Clampbits(r, 16);
+            X[B] = (ushort)Common.Clampbits(g, 16);
+            X[C] = (ushort)Common.Clampbits(b, 16);
         }
 
         // sRaw interpolators - ugly as sin, but does the job in reasonably speed
@@ -599,7 +598,7 @@ namespace RawNet
             int hue = -GetHue() + 16384;
             for (int y = start_h; y < end_h; y++)
             {
-                fixed (UInt16* c_line = &rawImage.rawData[y * rawImage.dim.x])
+                fixed (UInt16* c_line = &rawImage.rawData[y * rawImage.dim.width])
                 {
                     int r, g, b, Y, Cb, Cr, off = 0;
                     for (int x = 0; x < w; x++)
@@ -649,7 +648,7 @@ namespace RawNet
             int hue = -GetHue() + 16384;
             for (int y = start_h; y < end_h; y++)
             {
-                fixed (UInt16* c_line = &rawImage.rawData[y * 2 * rawImage.dim.x], n_line = &rawImage.rawData[(y * 2 + 1) * rawImage.dim.x], nn_line = &rawImage.rawData[(y * 2 + 2) * rawImage.dim.x])
+                fixed (UInt16* c_line = &rawImage.rawData[y * 2 * rawImage.dim.width], n_line = &rawImage.rawData[(y * 2 + 1) * rawImage.dim.width], nn_line = &rawImage.rawData[(y * 2 + 2) * rawImage.dim.width])
                 {
                     off = 0;
                     for (int x = 0; x < w; x++)
@@ -751,7 +750,7 @@ namespace RawNet
             int hue = -GetHue() + 16384;
             for (int y = start_h; y < end_h; y++)
             {
-                fixed (UInt16* c_line = &(rawImage.rawData[y * rawImage.dim.x]))
+                fixed (UInt16* c_line = &(rawImage.rawData[y * rawImage.dim.width]))
                 {
                     int Y, Cb, Cr, r, g, b, off = 0;
                     for (int x = 0; x < w; x++)
@@ -802,7 +801,7 @@ namespace RawNet
             int hue = -GetHue() + 16384;
             for (int y = start_h; y < end_h; y++)
             {
-                fixed (UInt16* c_line = &rawImage.rawData[y * rawImage.dim.x])
+                fixed (UInt16* c_line = &rawImage.rawData[y * rawImage.dim.width])
                 {
                     int r, g, b, Y, Cb, Cr, off = 0;
                     for (int x = 0; x < w; x++)
@@ -851,7 +850,7 @@ namespace RawNet
             int off, r, g, b, Y, Cb, Cr;
             for (int y = start_h; y < end_h; y++)
             {
-                fixed (UInt16* c_line = &rawImage.rawData[y * 2 * rawImage.dim.x], n_line = &rawImage.rawData[(y * 2 + 1) * rawImage.dim.x], nn_line = &rawImage.rawData[(y * 2 + 2) * rawImage.dim.x])
+                fixed (UInt16* c_line = &rawImage.rawData[y * 2 * rawImage.dim.width], n_line = &rawImage.rawData[(y * 2 + 1) * rawImage.dim.width], nn_line = &rawImage.rawData[(y * 2 + 2) * rawImage.dim.width])
                 {
                     off = 0;
                     for (int x = 0; x < w; x++)

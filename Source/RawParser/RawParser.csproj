@@ -35,7 +35,7 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>ExtendedCorrectnessRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -138,12 +138,9 @@
     <Compile Include="Model\Effect\Curve.cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
     <Compile Include="Model\Effect\Rotate.cs" />
-    <Compile Include="Model\Encoder\JpegEncoder.cs" />
-    <Compile Include="Model\Encoder\PpmEncoder.cs" />
     <Compile Include="Model\Effect\Demosaic.cs" />
-    <Compile Include="Model\Encoder\TiffWriter.cs" />
-    <Compile Include="Model\Image\JpegHelper.cs" />
     <Compile Include="Model\Effect\ImageEffect.cs" />
+    <Compile Include="Model\Encoder\SaveHelper.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="View\UIHelper\PortraitOrLandscapeTrigger.cs" />
     <Compile Include="View\UIHelper\UIImageHelper.cs" />

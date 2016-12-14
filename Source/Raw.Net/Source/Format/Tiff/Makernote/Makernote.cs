@@ -10,11 +10,11 @@
 
             if (endian == Endianness.little)
             {
-                file = new TIFFBinaryReader(TIFFBinaryReader.streamFromArray(data));
+                file = new TIFFBinaryReader(data);
             }
             else if (endian == Endianness.big)
             {
-                file = new TIFFBinaryReaderRE(TIFFBinaryReader.streamFromArray(data));
+                file = new TIFFBinaryReaderRE(data);
             }
             else
             {
@@ -23,6 +23,7 @@
             file.BaseStream.Position = offset;
             relativeOffset = -(int)parentOffset;
             Parse(file);
+            file.Dispose();
         }
     }
 }

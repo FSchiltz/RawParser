@@ -48,7 +48,7 @@ namespace RawEditor
 
             //interpolate with spline
             //double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
-            return Curve.cubicSpline(xCurve, yCurve);
+            return Curve.CubicSpline(xCurve, yCurve);
         }
 
         public void ApplyModification(ushort[] image, Point2D dim, int colorDepth)
@@ -70,10 +70,10 @@ namespace RawEditor
             //gammacurve from camera
             //double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
 
-            Parallel.For(0, dim.y, y =>
+            Parallel.For(0, dim.height, y =>
             {
-                int realY = y * dim.x * 3;
-                for (int x = 0; x < dim.x; x++)
+                int realY = y * dim.width * 3;
+                for (int x = 0; x < dim.width; x++)
                 {
                     int realPix = realY + (3 * x);
                     //get the RGB value
@@ -95,7 +95,7 @@ namespace RawEditor
                     Luminance.Clip(ref red, ref green, ref blue, maxValue);
                     double h = 0, s = 0, l = 0;
                     //transform to HSL value
-                    Color.rgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
+                    Color.RgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
                     //change brightness from curve
                     //add saturation
                     l = contrastCurve[(uint)(l * maxValue)] / maxValue;
@@ -104,7 +104,7 @@ namespace RawEditor
                     l *= exposure;
                     l += brightness / 100;
                     //change back to RGB
-                    Color.hslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+                    Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
 
                     //Luminance.Exposure(ref red, ref green, ref blue, exposure);
                     //Luminance.Brightness(ref red, ref green, ref blue, brightness);
@@ -157,11 +157,11 @@ namespace RawEditor
                     //gammacurve from camera
                     //double[] gammaCurve = Balance.gamma_curve(camCurve[0] / 100, camCurve[1] / 10, 2, 8192 << 3);
 
-                    Parallel.For(0, dim.y, y =>
+                    Parallel.For(0, dim.height, y =>
                    {
-                       int realY = y * dim.x * 3;
-                       int bufferY = y * dim.x * 4 + +bufferLayout.StartIndex;
-                       for (int x = 0; x < dim.x; x++)
+                       int realY = y * dim.width * 3;
+                       int bufferY = y * dim.width * 4 + +bufferLayout.StartIndex;
+                       for (int x = 0; x < dim.width; x++)
                        {
                            int realPix = realY + (3 * x);
                            int bufferPix = bufferY + (4 * x);
@@ -183,7 +183,7 @@ namespace RawEditor
                            Luminance.Clip(ref red, ref green, ref blue, maxValue);
                            double h = 0, s = 0, l = 0;
                            //transform to HSL value
-                           Color.rgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
+                           Color.RgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
                            //change brightness from curve
                            //add saturation
                            l = contrastCurve[(uint)(l * maxValue)] / maxValue;
@@ -192,7 +192,7 @@ namespace RawEditor
                            l *= exposure;
                            l += brightness / 100;
                            //change back to RGB
-                           Color.hslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+                           Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
 
                            //Luminance.Exposure(ref red, ref green, ref blue, exposure);
                            //Luminance.Brightness(ref red, ref green, ref blue, brightness);

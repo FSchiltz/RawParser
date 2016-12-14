@@ -10,19 +10,28 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using RawEditor.View.Exception;
-using Windows.Storage.Provider;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using RawEditor.View.UIHelper;
-using RawEditor.Model.Encoder;
 using Windows.UI.ViewManagement;
 using Windows.Foundation;
 using RawNet;
 using System.Diagnostics;
 using Windows.Graphics.Display;
+using System.Runtime.InteropServices;
 
 namespace RawEditor
 {
+
+    // Using the COM interface IMemoryBufferByteAccess allows us to access the underlying byte array in an AudioFrame
+    [ComImport]
+    [Guid("5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    unsafe interface IMemoryBufferByteAccess
+    {
+        void GetBuffer(out byte* buffer, out uint capacity);
+    }
+
     /// <summary>
     /// The main class of the appliation
     /// </summary>
@@ -30,7 +39,7 @@ namespace RawEditor
     {
         public RawImage raw;
         public bool ImageSelected { set; get; }
-        public Size dim;//for auto preview
+        public Size ViewDim;//for auto preview
         bool cameraWB = true;
         public Thumbnail thumbnail;
         private uint displayMutex = 0;
@@ -40,7 +49,7 @@ namespace RawEditor
         {
             InitializeComponent(); var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel * 1.2;
-            dim = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
+            ViewDim = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
             this.NavigationCacheMode = NavigationCacheMode.Required;
             /*if (null == metadata)
             {
@@ -64,24 +73,25 @@ namespace RawEditor
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
         }
 
-        public async void DisplayLoadAsync()
+        public void DisplayLoad()
         {
             displayMutex++;
             if (displayMutex > 0)
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     progressDisplay.Visibility = Visibility.Visible;
                 });
             }
         }
 
-        public async void StopLoadDisplayAsync()
+        public void StopLoadDisplay()
         {
             displayMutex--;
             if (displayMutex <= 0)
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                displayMutex = 0;
+                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     progressDisplay.Visibility = Visibility.Collapsed;
                 });
@@ -120,12 +130,9 @@ namespace RawEditor
                     }
                     catch (Exception ex)
                     {
-                        ExceptionDisplay.display(ex.Message + ex.StackTrace);
+                        ExceptionDisplay.DisplayAsync(ex.Message + ex.StackTrace);
                         ImageSelected = false;
                     }
-                }
-                else
-                {
                 }
             }
         }
@@ -218,14 +225,13 @@ namespace RawEditor
         private void OpenFile(StorageFile file)
         {
             //Add a loading screen
-            DisplayLoadAsync();
+            DisplayLoad();
             EmptyImageAsync();
-            Task t = Task.Run(async () =>
+            Task.Run(async () =>
             {
                 try
                 {
-                    var watch = System.Diagnostics.Stopwatch.StartNew();
-
+                    var watch = Stopwatch.StartNew();
                     Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
 
                     //Does not improve speed
@@ -235,9 +241,7 @@ namespace RawEditor
                     stream = new MemoryStream(data);
                     stream.Position = 0;*/
 
-                    //change decoder detection with file extension
                     RawDecoder decoder = RawParser.GetDecoder(ref stream, file.FileType);
-                    // decoder.checkSupport();
                     thumbnail = decoder.DecodeThumb();
                     if (thumbnail != null)
                     {
@@ -246,16 +250,7 @@ namespace RawEditor
                         {
                             try
                             {
-                                if (thumbnail.type == ThumbnailType.JPEG)
-                                {
-                                    DisplayImage(JpegHelper.getJpegInArrayAsync(thumbnail.data), true);
-
-                                }
-                                else if (thumbnail.type == ThumbnailType.RAW)
-                                {
-                                    //this is a raw image in an array
-                                    JpegHelper.getThumbnailAsSoftwareBitmap(thumbnail);
-                                }
+                                DisplayImage(thumbnail.GetSoftwareBitmap(), true);
                             }
                             catch (Exception e)
                             {
@@ -265,17 +260,15 @@ namespace RawEditor
                     }
 
                     decoder.DecodeRaw();
-                    decoder.DecodeMetaData();
+                    decoder.DecodeMetadata();
                     raw = decoder.rawImage;
-                    raw.metadata.fileName = file.DisplayName;
-                    raw.metadata.fileNameComplete = file.Name;
+                    raw.metadata.FileName = file.DisplayName;
+                    raw.metadata.FileNameComplete = file.Name;
 
                     stream.Dispose();
+                    file = null;
                     decoder = null;
-
-                    DisplayExifAsync();
-
-                    //demos
+                    DisplayExif();
                     if (raw.cfa != null && raw.cpp == 1)
                     {
                         //get the algo from the settings
@@ -305,17 +298,14 @@ namespace RawEditor
                 }
                 catch (FormatException e)
                 {
-                    file = null;
                     raw = null;
                     EmptyImageAsync();
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     var str = loader.GetString("ExceptionText");
                     Debug.WriteLine(e.Message);
-                    ExceptionDisplay.display(str);
-
+                    ExceptionDisplay.DisplayAsync(str);
                 }
-
-                StopLoadDisplayAsync();
+                StopLoadDisplay();
                 ImageSelected = false;
             });
         }
@@ -329,13 +319,13 @@ namespace RawEditor
             int previewFactor = 0;
             if (factor == FactorValue.Auto)
             {
-                if (raw.dim.y > raw.dim.x)
+                if (raw.dim.height > raw.dim.width)
                 {
-                    previewFactor = (int)(raw.dim.y / dim.Height);
+                    previewFactor = (int)(raw.dim.height / ViewDim.Height);
                 }
                 else
                 {
-                    previewFactor = (int)(raw.dim.x / dim.Width);
+                    previewFactor = (int)(raw.dim.width / ViewDim.Width);
                 }
                 int start = 1;
                 for (; previewFactor > (start << 1); start <<= 1) ;
@@ -356,8 +346,8 @@ namespace RawEditor
             if (args?.Kind == Windows.ApplicationModel.Activation.ActivationKind.File)
             {
                 var fileArgs = args as Windows.ApplicationModel.Activation.FileActivatedEventArgs;
-                string strFilePath = fileArgs.Files[0].Path;
                 var file = (StorageFile)fileArgs.Files[0];
+                args = null;
                 if (file != null)
                 {
                     // Application now has read/write access to the picked file
@@ -367,12 +357,12 @@ namespace RawEditor
                     }
                     catch (Exception ex)
                     {
-                        ExceptionDisplay.display(ex.Message + ex.StackTrace);
+                        ExceptionDisplay.DisplayAsync(ex.Message + ex.StackTrace);
                     }
                 }
                 else
                 {
-                    ExceptionDisplay.display("No file selected");
+                    ExceptionDisplay.DisplayAsync("No file selected");
                 }
             }
         }
@@ -382,205 +372,62 @@ namespace RawEditor
             Frame.Navigate(typeof(SettingsView), null);
         }
 
-        public async void DisplayExifAsync()
+        public void DisplayExif()
         {
-            //TODO add localized exifs name
             if (raw != null && raw.metadata != null)
             {
                 //create a list from the metadata object
-                Dictionary<string, string> exif = new Dictionary<string, string>();
-                exif.Add("File", raw.metadata.fileNameComplete);
-                if (raw.metadata.make != null && raw.metadata.make.Trim() != "")
-                    exif.Add("Maker", raw.metadata.make);
-                if (raw.metadata.model != null && raw.metadata.model.Trim() != "")
-                    exif.Add("Model", raw.metadata.model);
-                if (raw.metadata.mode != null && raw.metadata.mode.Trim() != "")
-                    exif.Add("Image mode", raw.metadata.mode);
-
-                exif.Add("Size", "" + ((raw.dim.x * raw.dim.y) / 1000000.0).ToString("F") + " MPixels");
-                exif.Add("Width", "" + raw.dim.x);
-                exif.Add("Height", "" + raw.dim.y);
-                exif.Add("Uncropped height", "" + raw.uncroppedDim.x);
-                exif.Add("Uncropped width", "" + raw.uncroppedDim.y);
-
-                if (raw.metadata.isoSpeed > 0)
-                    exif.Add("ISO", "" + raw.metadata.isoSpeed);
-                if (raw.metadata.aperture > 0)
-                    exif.Add("Aperture", "" + raw.metadata.aperture.ToString("F"));
-                if (raw.metadata.exposure > 0)
-                    exif.Add("Exposure time", "" + raw.metadata.ExposureAsString());
-
-                if (raw.metadata.timeTake != null)
-                    exif.Add("Time of capture", "" + raw.metadata.timeTake);
-                if (raw.metadata.timeModify != null)
-                    exif.Add("Time modified", "" + raw.metadata.timeModify);
-
-                if (raw.metadata.gps != null)
+                Dictionary<string, string> exif = ExifDisplay.ParseExif(ref raw);
+                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    exif.Add("Longitude", raw.metadata.gps.LongitudeToString());
-                    exif.Add("lattitude", raw.metadata.gps.LattitudeToString());
-                    exif.Add("altitude", raw.metadata.gps.AltitudeToString());
-                }
-
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            //set exif datasource
-                            //TODO add
-                            exifDisplay.ItemsSource = exif;
-                        });
-
+                    exifDisplay.ItemsSource = exif;
+                }).AsTask().Wait();
             }
         }
 
-        private async void SaveButtonClickAsync(object sender, RoutedEventArgs e)
+        private void SaveButtonClick(object sender, RoutedEventArgs e)
         {
-            //TODO reimplement correclty
-            //Just for testing purpose for now
             if (raw?.rawData != null)
             {
                 var savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                    SuggestedFileName = raw.metadata.fileName
+                    SuggestedFileName = raw.metadata.FileName
                 };
                 // Dropdown of file types the user can save the file as
-                savePicker.FileTypeChoices.Add("Jpeg image file", new List<string>() { ".jpg" });
-                savePicker.FileTypeChoices.Add("PNG image file", new List<string>() { ".png" });
-                savePicker.FileTypeChoices.Add("PPM image file", new List<string>() { ".ppm" });
-                savePicker.FileTypeChoices.Add("TIFF image file", new List<string>() { ".tiff" });
-                savePicker.FileTypeChoices.Add("BitMap image file", new List<string>() { ".bmp" });
-                StorageFile file = await savePicker.PickSaveFileAsync();
+                foreach (KeyValuePair<string, List<string>> format in SaveHelper.SaveSupportedFormat)
+                {
+                    savePicker.FileTypeChoices.Add(format.Key, format.Value);
+                }
+                var t = savePicker.PickSaveFileAsync().AsTask();
+                t.Wait();
+                StorageFile file = t.Result;
                 if (file == null) return;
 
-                DisplayLoadAsync();
-                // Prevent updates to the remote version of the file until
-                // we finish making changes and call CompleteUpdatesAsync.
-                CachedFileManager.DeferUpdates(file);
+                DisplayLoad();
+
                 var exposure = exposureSlider.Value;
                 int temperature = (int)colorTempSlider.Value;
                 var temp = (int)colorTempSlider.Value;
-                var task = Task.Run(async () =>
+                var task = Task.Run(() =>
                 {
                     SoftwareBitmap bitmap = null;
                     //Needs to run in UI thread
-                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.x, raw.dim.y);
-                });
+                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.width, raw.dim.height);
+                    }).AsTask().Wait();
                     ApplyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
-                    // write to file
-                    if (file.FileType == ".jpg")
+                    try
                     {
-                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
-                        {
-                            int[] t = new int[3];
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
-                            var x = encoder.BitmapProperties;
-
-                            //Needs to run in the UI thread because fuck performance
-                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            encoder.SetSoftwareBitmap(bitmap);
-                        });
-                            await encoder.FlushAsync();
-                            encoder = null;
-                            bitmap.Dispose();
-                        }
+                        SaveHelper.SaveAsync(file, bitmap);
                     }
-                    else if (file.FileType == ".png")
+                    catch (IOException ex)
                     {
-                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
-                        {
-                            int[] t = new int[3];
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, filestream);
-
-                            //Needs to run in the UI thread because fuck performance
-                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            encoder.SetSoftwareBitmap(bitmap);
-                        });
-                            await encoder.FlushAsync();
-                            encoder = null;
-                            bitmap.Dispose();
-                        }
-                    }
-                    else if (file.FileType == ".bmp")
-                    {
-                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
-                        {
-                            int[] t = new int[3];
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.BmpEncoderId, filestream);
-
-                            //Needs to run in the UI thread because fuck performance
-                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            encoder.SetSoftwareBitmap(bitmap);
-                        });
-                            await encoder.FlushAsync();
-                            encoder = null;
-                            bitmap.Dispose();
-                        }
+                        ExceptionDisplay.DisplayAsync(ex.Message);
                     }
 
-                    else if (file.FileType == ".tiff")
-                    {
-                        using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
-                        {
-                            int[] t = new int[3];
-                            var propertySet = new BitmapPropertySet();
-                            var compressionValue = new BitmapTypedValue(
-                                TiffCompressionMode.None, // no compression
-                                PropertyType.UInt8
-                                );
-                            propertySet.Add("TiffCompressionMethod", compressionValue);
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.TiffEncoderId, filestream, propertySet);
-
-                            //Needs to run in the UI thread because fuck performance
-                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            encoder.SetSoftwareBitmap(bitmap);
-                        });
-                            await encoder.FlushAsync();
-                            encoder = null;
-                            bitmap.Dispose();
-                        }
-                    }
-
-                    else if (file.FileType == ".ppm")
-                    {
-                        Stream str = await file.OpenStreamForWriteAsync();
-                        //create a copy
-                        ushort[] copyOfimage = new ushort[raw.rawData.Length];
-                        Parallel.For(raw.offset.y, raw.dim.y, y =>
-                        {
-                            int realY = y * raw.dim.x * 3;
-                            for (int x = raw.offset.x; x < raw.dim.x; x++)
-                            {
-                                int realPix = realY + (3 * x);
-                                copyOfimage[realPix] = (ushort)(raw.rawData[realPix] * raw.metadata.wbCoeffs[0]);
-                                copyOfimage[realPix + 1] = (ushort)(raw.rawData[realPix + 1] * raw.metadata.wbCoeffs[1]);
-                                copyOfimage[realPix + 2] = (ushort)(raw.rawData[realPix + 2] * raw.metadata.wbCoeffs[2]);
-                            }
-                        });
-                        //apply white balance
-                        PpmEncoder.WriteToFile(str, ref copyOfimage, raw.dim.y, raw.dim.x, raw.ColorDepth);
-                    }
-                    else throw new FormatException("Format not supported: " + file.FileType);
-                    // Let Windows know that we're finished changing the file so
-                    // the other app can update the remote version of the file.
-                    // Completing updates may require Windows to ask for user input.
-                    FileUpdateStatus status =
-                await CachedFileManager.CompleteUpdatesAsync(file);
-
-                    if (status != FileUpdateStatus.Complete)
-                    {
-                        ExceptionDisplay.display("File could not be saved");
-                    }
-                    StopLoadDisplayAsync();
+                    StopLoadDisplay();
                 });
             }
         }
@@ -589,7 +436,7 @@ namespace RawEditor
         {
             if (image != null)
             {
-                Task t = Task.Run(async () =>
+                Task.Run(async () =>
                 {
                     using (image)
                     {
@@ -632,17 +479,17 @@ namespace RawEditor
         private void UpdatePreview(bool reset)
         {
             //display the histogram                    
-            Task histoTask = Task.Run(async () =>
+            Task.Run(async () =>
             {
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.x, raw.previewDim.y);
-            });
+                {
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.width, raw.previewDim.height);
+                });
                 int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
                 DisplayImage(bitmap, reset);
-                Histogram.Create(value, raw.ColorDepth, (uint)raw.previewDim.y, (uint)raw.previewDim.x, histogramCanvas);
+                Histogram.Create(value, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width, histogramCanvas);
             });
         }
 

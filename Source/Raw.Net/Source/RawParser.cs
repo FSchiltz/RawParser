@@ -3,7 +3,7 @@ using System.IO;
 
 namespace RawNet
 {
-    public class RawParser
+    public static class RawParser
     {
         //private Stream stream;
         //public RawDecoder decoder;
@@ -28,12 +28,12 @@ namespace RawNet
         }*/
 
 
-        public RawDecoder GetDecoder(Stream stream)
+        public static RawDecoder GetDecoder(Stream stream)
         {
             // We need some data.
             // For now it is 104 bytes for RAF images.
             if (stream.Length <= 104)
-                throw new Exception("File too small");
+                throw new RawDecoderException("File too small");
 
             byte[] data = new byte[105];
             stream.Read(data, 0, 104);
@@ -72,7 +72,7 @@ namespace RawNet
                 UInt32 first_ifd = (uint)(data[87] | (data[86] << 8) | (data[85] << 16) | (data[84] << 24));
                 first_ifd += 12;
                 if (stream.Length <= first_ifd)
-                  throw new Exception("File too small (FUJI first IFD)");
+                  throw new RawDecoderException("File too small (FUJI first IFD)");
 
                 // RAW IFD on newer, pointer to raw data on older models, so we try parsing first
                 // And adds it as data if parsin fails
@@ -101,7 +101,7 @@ namespace RawNet
                             p2.parseData();
                             p.MergeIFD(&p2);
                         }
-                        catch (TiffParserException e)
+                        catch (RawDecoderException e)
                         {
                             delete m2;
                             m2 = null;
@@ -117,7 +117,7 @@ namespace RawNet
                         {
                             ParseFuji(third_ifd, new_ifd);
                         }
-                        catch (TiffParserException e)
+                        catch (RawDecoderException e)
                         {
                         }
                     }
@@ -139,8 +139,8 @@ namespace RawNet
                     }
                     return d;
                 }
-                catch (TiffParserException) { }
-                throw new Exception("No decoder found. Sorry.");
+                catch (RawDecoderException) { }
+                throw new RawDecoderException("No decoder found. Sorry.");
             }
 
 
@@ -151,7 +151,7 @@ namespace RawNet
                 p.parseData();
                 return p.getDecoder();
             }
-            catch (TiffParserException)
+            catch (RawDecoderException)
             {
             }
 
@@ -197,7 +197,7 @@ namespace RawNet
             {
                 return new JPGDecoder(ref stream);
             }
-            catch (TiffParserException)
+            catch (RawDecoderException)
             {
             }
             // File could not be decoded, so no further options for now.

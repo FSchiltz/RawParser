@@ -17,7 +17,7 @@ namespace RawNet
         int MIN_GET_BITS;// = (BITS_PER_LONG - 7);  /* max value for long getBuffer */
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpPlain(ref TIFFBinaryReader s) : this(ref s, (uint)s.Position, (uint)s.getRemainSize()) { }
+        public BitPumpPlain(ref TIFFBinaryReader s) : this(ref s, (uint)s.Position, (uint)s.GetRemainSize()) { }
 
 
         /*** Used for entropy encoded sections ***/

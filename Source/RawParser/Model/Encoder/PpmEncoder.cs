@@ -3,7 +3,7 @@ using System.Text;
 
 namespace RawEditor.Model.Encoder
 {
-    class PpmEncoder
+    static class PpmEncoder
     {
         public static void WriteToFile(Stream str, ref ushort[] image, int height, int width, int colorDepth)
         {

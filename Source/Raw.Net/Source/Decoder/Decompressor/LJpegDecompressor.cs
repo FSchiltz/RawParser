@@ -120,15 +120,15 @@ namespace RawNet
         public int[] maxcode = new int[18];
         public short[] valptr = new short[17];
         public UInt32[] numbits = new UInt32[256];
-        public int[] bigTable { get; set; }
-        public bool initialized { get; set; }
+        public int[] bigTable;
+        public bool Initialized { get; set; }
 
         public HuffmanTable()
         {
             //init to maxvalue
             bits = Enumerable.Repeat<uint>(UInt32.MaxValue, 17).ToArray();
             huffval = Enumerable.Repeat<uint>(UInt32.MaxValue, 256).ToArray();
-            minCode = Enumerable.Repeat<UInt16>(UInt16.MaxValue, 17).ToArray();
+            minCode = Enumerable.Repeat(UInt16.MaxValue, 17).ToArray();
             maxcode = Enumerable.Repeat<int>(Int32.MinValue, 18).ToArray();
             valptr = Enumerable.Repeat<short>(Int16.MaxValue, 17).ToArray();
             //numbits = Enumerable.Repeat<uint>(UInt32.MaxValue, 256).ToArray();
@@ -137,24 +137,24 @@ namespace RawNet
 
     internal class SOFInfo
     {
-        public UInt32 w { get; set; }   // Width
-        public UInt32 h { get; set; }     // Height
-        public UInt32 cps { get; set; }  // Components
-        public UInt32 prec { get; set; }  // Precision
-        public JpegComponentInfo[] compInfo { get; set; } = new JpegComponentInfo[4];
-        public bool initialized { get; set; }
+        public UInt32 w;   // Width
+        public UInt32 h;    // Height
+        public UInt32 cps;  // Components
+        public UInt32 prec;  // Precision
+        public JpegComponentInfo[] CompInfo { get; set; } = new JpegComponentInfo[4];
+        public bool Initialized { get; set; }
     };
 
     internal class LJpegDecompressor
     {
-        public bool mDNGCompatible;  // DNG v1.0.x compatibility
-        public bool mUseBigtable;    // Use only for large images
-        public bool mCanonFlipDim;   // Fix Canon 6D mRaw where width/height is flipped
-        public bool mCanonDoubleHeight; // Fix Canon double height on 4 components (EOS 5DS R)
-        public bool mWrappedCr2Slices; // Fix Canon 80D mRaw where the slices are wrapped
-        public void addSlices(List<int> slices) { slicesW = slices; }  // CR2 slices.
+        public bool DNGCompatible { get; set; }  // DNG v1.0.x compatibility
+        public bool UseBigtable { get; set; }     // Use only for large images
+        public bool CanonFlipDim { get; set; }    // Fix Canon 6D mRaw where width/height is flipped
+        public bool CanonDoubleHeight { get; set; }  // Fix Canon double height on 4 components (EOS 5DS R)
+        public bool WrappedCr2Slices { get; set; } // Fix Canon 80D mRaw where the slices are wrapped
+        public void AddSlices(List<int> slices) { slicesW = slices; }  // CR2 slices.
 
-        public virtual void decodeScan() { throw new Exception("LJpegDecompressor: No Scan decoder found"); }
+        public virtual void DecodeScan() { throw new RawDecoderException("LJpegDecompressor: No Scan decoder found"); }
 
         public TIFFBinaryReader input;
         public BitPumpJPEG bits;
@@ -228,86 +228,86 @@ namespace RawNet
             skipX = skipY = 0;
             for (int i = 0; i < 4; i++)
             {
-                huff[i].initialized = false;
+                huff[i].Initialized = false;
                 huff[i].bigTable = null;
             }
-            mDNGCompatible = false;
+            DNGCompatible = false;
             slicesW.Clear();
-            mUseBigtable = false;
-            mCanonFlipDim = false;
-            mCanonDoubleHeight = false;
+            UseBigtable = false;
+            CanonFlipDim = false;
+            CanonDoubleHeight = false;
         }
 
-        public void getSOF(ref SOFInfo sof, UInt32 offset, UInt32 size)
+        public void GetSOF(ref SOFInfo sof, UInt32 offset, UInt32 size)
         {
-            if (!input.isValid(offset, size))
-                throw new Exception("getSOF: Start offset plus size is longer than file. Truncated file.");
+            if (!input.IsValid(offset, size))
+                throw new RawDecoderException("getSOF: Start offset plus size is longer than file. Truncated file.");
             try
             {
-                Endianness host_endian = Common.getHostEndianness();
+                Endianness host_endian = Common.GetHostEndianness();
                 // JPEG is big endian
                 if (host_endian == Endianness.big)
-                    input = new TIFFBinaryReader(input.BaseStream, offset, size);
+                    input = new TIFFBinaryReader(input.BaseStream, offset);
                 else
-                    input = new TIFFBinaryReaderRE(input.BaseStream, offset, size);
+                    input = new TIFFBinaryReaderRE(input.BaseStream, offset);
 
-                if (getNextMarker(false) != JpegMarker.M_SOI)
-                    throw new Exception("getSOF: Image did not start with SOI. Probably not an LJPEG");
+                if (GetNextMarker(false) != JpegMarker.M_SOI)
+                    throw new RawDecoderException("getSOF: Image did not start with SOI. Probably not an LJPEG");
 
                 while (true)
                 {
-                    JpegMarker m = getNextMarker(true);
+                    JpegMarker m = GetNextMarker(true);
                     if (JpegMarker.M_SOF3 == m)
                     {
-                        parseSOF(ref sof);
+                        ParseSOF(ref sof);
                         return;
                     }
                     if (JpegMarker.M_EOI == m)
                     {
-                        throw new Exception("LJpegDecompressor: Could not locate Start of Frame.");
+                        throw new RawDecoderException("LJpegDecompressor: Could not locate Start of Frame.");
                     }
                 }
             }
             catch (IOException)
             {
-                throw new Exception("LJpegDecompressor: IO exception, read outside file. Corrupt File.");
+                throw new RawDecoderException("LJpegDecompressor: IO exception, read outside file. Corrupt File.");
             }
         }
 
-        public void startDecoder(UInt32 offset, UInt32 size, UInt32 offsetX, UInt32 offsetY)
+        public void StartDecoder(UInt32 offset, UInt32 size, UInt32 offsetX, UInt32 offsetY)
         {
-            if (!input.isValid(offset, size))
-                throw new Exception("startDecoder: Start offset plus size is longer than file. Truncated file.");
-            if ((int)offsetX >= mRaw.dim.x)
-                throw new Exception("startDecoder: X offset outside of image");
-            if ((int)offsetY >= mRaw.dim.y)
-                throw new Exception("startDecoder: Y offset outside of image");
+            if (!input.IsValid(offset, size))
+                throw new RawDecoderException("startDecoder: Start offset plus size is longer than file. Truncated file.");
+            if ((int)offsetX >= mRaw.dim.width)
+                throw new RawDecoderException("startDecoder: X offset outside of image");
+            if ((int)offsetY >= mRaw.dim.height)
+                throw new RawDecoderException("startDecoder: Y offset outside of image");
             offX = offsetX;
             offY = offsetY;
 
             try
             {
-                Endianness host_endian = Common.getHostEndianness();
+                Endianness host_endian = Common.GetHostEndianness();
                 // JPEG is big endian
                 if (host_endian == Endianness.big)
-                    input = new TIFFBinaryReader(input.BaseStream, offset, size);
+                    input = new TIFFBinaryReader(input.BaseStream, offset);
                 else
-                    input = new TIFFBinaryReaderRE(input.BaseStream, offset, size);
+                    input = new TIFFBinaryReaderRE(input.BaseStream, offset);
 
-                if (getNextMarker(false) != JpegMarker.M_SOI)
-                    throw new Exception("startDecoder: Image did not start with SOI. Probably not an LJPEG");
+                if (GetNextMarker(false) != JpegMarker.M_SOI)
+                    throw new RawDecoderException("startDecoder: Image did not start with SOI. Probably not an LJPEG");
                 //    _RPT0(0,"Found SOI marker\n");
 
                 bool moreImage = true;
                 while (moreImage)
                 {
-                    JpegMarker m = getNextMarker(true);
+                    JpegMarker m = GetNextMarker(true);
 
                     switch (m)
                     {
                         case JpegMarker.M_SOS:
                             //          _RPT0(0,"Found SOS marker\n");
-                            parseSOS();
+                            ParseSOS();
                             break;
                         case JpegMarker.M_EOI:
                             //          _RPT0(0,"Found EOI marker\n");
@@ -316,11 +316,11 @@ namespace RawNet
 
                         case JpegMarker.M_DHT:
                             //          _RPT0(0,"Found DHT marker\n");
-                            parseDHT();
+                            ParseDHT();
                             break;
 
                         case JpegMarker.M_DQT:
-                            throw new Exception("LJpegDecompressor: Not a valid RAW file.");
+                            throw new RawDecoderException("LJpegDecompressor: Not a valid RAW file.");
 
                         case JpegMarker.M_DRI:
                             //          _RPT0(0,"Found DRI marker\n");
@@ -332,7 +332,7 @@ namespace RawNet
 
                         case JpegMarker.M_SOF3:
                             //          _RPT0(0,"Found SOF 3 marker:\n");
-                            parseSOF(ref frame);
+                            ParseSOF(ref frame);
                             break;
 
                         default:  // Just let it skip to next marker
@@ -348,7 +348,7 @@ namespace RawNet
             }
         }
 
-        public void parseSOF(ref SOFInfo sof)
+        public void ParseSOF(ref SOFInfo sof)
         {
             UInt32 headerLength = (uint)input.ReadInt16();
             sof.prec = input.ReadByte();
@@ -358,103 +358,95 @@ namespace RawNet
             sof.cps = input.ReadByte();
 
             if (sof.prec > 16)
-                throw new Exception("LJpegDecompressor: More than 16 bits per channel is not supported.");
+                throw new RawDecoderException("LJpegDecompressor: More than 16 bits per channel is not supported.");
 
             if (sof.cps > 4 || sof.cps < 1)
-                throw new Exception("LJpegDecompressor: Only from 1 to 4 components are supported.");
+                throw new RawDecoderException("LJpegDecompressor: Only from 1 to 4 components are supported.");
 
             if (headerLength != 8 + sof.cps * 3)
-                throw new Exception("LJpegDecompressor: Header size mismatch.");
+                throw new RawDecoderException("LJpegDecompressor: Header size mismatch.");
 
             for (UInt32 i = 0; i < sof.cps; i++)
             {
-                sof.compInfo[i].componentId = input.ReadByte();
+                sof.CompInfo[i].componentId = input.ReadByte();
                 UInt32 subs = input.ReadByte();
-                frame.compInfo[i].superV = subs & 0xf;
-                frame.compInfo[i].superH = subs >> 4;
+                frame.CompInfo[i].superV = subs & 0xf;
+                frame.CompInfo[i].superH = subs >> 4;
                 UInt32 Tq = input.ReadByte();
                 if (Tq != 0)
-                    throw new Exception("LJpegDecompressor: Quantized components not supported.");
+                    throw new RawDecoderException("LJpegDecompressor: Quantized components not supported.");
             }
-            sof.initialized = true;
+            sof.Initialized = true;
         }
 
-        public void parseSOS()
+        public void ParseSOS()
         {
-            if (!frame.initialized)
-                throw new Exception("parseSOS: Frame not yet initialized (SOF Marker not parsed)");
+            if (!frame.Initialized)
+                throw new RawDecoderException("parseSOS: Frame not yet initialized (SOF Marker not parsed)");
 
-            UInt32 headerLength = (uint)input.ReadInt16();
+            input.ReadInt16();
             UInt32 soscps = input.ReadByte();
             if (frame.cps != soscps)
-                throw new Exception("parseSOS: Component number mismatch.");
+                throw new RawDecoderException("parseSOS: Component number mismatch.");
 
             for (UInt32 i = 0; i < frame.cps; i++)
             {
                 UInt32 cs = input.ReadByte();
 
                 UInt32 count = 0;  // Find the correct component
-                while (frame.compInfo[count].componentId != cs)
+                while (frame.CompInfo[count].componentId != cs)
                 {
                     if (count >= frame.cps)
-                        throw new Exception("parseSOS: Invalid Component Selector");
+                        throw new RawDecoderException("parseSOS: Invalid Component Selector");
                     count++;
                 }
 
                 UInt32 b1 = input.ReadByte();
                 UInt32 td = b1 >> 4;
                 if (td > 3)
-                    throw new Exception("parseSOS: Invalid Huffman table selection");
-                if (!huff[td].initialized)
-                    throw new Exception("parseSOS: Invalid Huffman table selection, not defined.");
+                    throw new RawDecoderException("parseSOS: Invalid Huffman table selection");
+                if (!huff[td].Initialized)
+                    throw new RawDecoderException("parseSOS: Invalid Huffman table selection, not defined.");
 
                 if (count > 3)
-                    throw new Exception("parseSOS: Component count out of range");
+                    throw new RawDecoderException("parseSOS: Component count out of range");
 
-                frame.compInfo[count].dcTblNo = td;
+                frame.CompInfo[count].dcTblNo = td;
             }
 
             // Get predictor
             pred = input.ReadByte();
             if (pred > 7)
-                throw new Exception("parseSOS: Invalid predictor mode.");
+                throw new RawDecoderException("parseSOS: Invalid predictor mode.");
 
             input.ReadBytes(1);                    // Se + Ah Not used in LJPEG
             UInt32 b = input.ReadByte();
-            Pt = b & 0xf;        // Point Transform
-
-            UInt32 cheadersize = 3 + frame.cps * 2 + 3;
-            //_ASSERTE(cheadersize == headerLength);
+            Pt = b & 0xf;        // Point Transform            
 
             bits = new BitPumpJPEG(ref input);
-            //long pos = input.BaseStream.Position;
-            decodeScan();
-
+            DecodeScan();
             input.Position = bits.GetOffset();
-
         }
 
-        public void parseDHT()
+        public void ParseDHT()
         {
             UInt32 headerLength = (uint)input.ReadInt16() - 2; // Subtract myself
-
             while (headerLength != 0)
             {
                 UInt32 b = input.ReadByte();
-
                 UInt32 Tc = (b >> 4);
                 if (Tc != 0)
-                    throw new Exception("parseDHT: Unsupported Table class.");
+                    throw new RawDecoderException("parseDHT: Unsupported Table class.");
 
                 UInt32 Th = b & 0xf;
                 if (Th > 3)
-                    throw new Exception("parseDHT: Invalid huffman table destination id.");
+                    throw new RawDecoderException("parseDHT: Invalid huffman table destination id.");
 
                 UInt32 acc = 0;
                 HuffmanTable t = huff[Th];
 
-                if (t.initialized)
-                    throw new Exception("parseDHT: Duplicate table definition");
+                if (t.Initialized)
+                    throw new RawDecoderException("parseDHT: Duplicate table definition");
 
                 for (UInt32 i = 0; i < 16; i++)
                 {
@@ -464,45 +456,44 @@ namespace RawNet
                 t.bits[0] = 0;
                 //Common.memset<uint>(t.huffval, 0, sizeof(uint) * t.huffval.Length);
                 if (acc > 256)
-                    throw new Exception("parseDHT: Invalid DHT table.");
+                    throw new RawDecoderException("parseDHT: Invalid DHT table.");
 
                 if (headerLength < 1 + 16 + acc)
-                    throw new Exception("parseDHT: Invalid DHT table length.");
+                    throw new RawDecoderException("parseDHT: Invalid DHT table length.");
 
                 for (UInt32 i = 0; i < acc; i++)
                 {
                     t.huffval[i] = input.ReadByte();
                 }
-                createHuffmanTable(t);
+                CreateHuffmanTable(t);
                 headerLength -= 1 + 16 + acc;
             }
         }
 
-
-        public JpegMarker getNextMarker(bool allowskip)
+        public JpegMarker GetNextMarker(bool allowskip)
         {
             if (!allowskip)
             {
                 byte idL = input.ReadByte();
                 if (idL != 0xff)
-                    throw new Exception("getNextMarker: (Noskip) Expected marker not found. Propably corrupt file.");
+                    throw new RawDecoderException("getNextMarker: (Noskip) Expected marker not found. Propably corrupt file.");
 
                 JpegMarker markL = (JpegMarker)input.ReadByte();
 
                 if (JpegMarker.M_FILL == markL || JpegMarker.M_STUFF == markL)
-                    throw new Exception("getNextMarker: (Noskip) Expected marker, but found stuffed 00 or ff.");
+                    throw new RawDecoderException("getNextMarker: (Noskip) Expected marker, but found stuffed 00 or ff.");
 
                 return markL;
             }
-            input.skipToMarker();
-            byte id = input.ReadByte();
+            input.SkipToMarker();
+            input.ReadByte();
             //TODO change
             //Debug.Assert(0xff == id);
             JpegMarker mark = (JpegMarker)input.ReadByte();
             return mark;
         }
 
-        public void createHuffmanTable(HuffmanTable htbl)
+        public void CreateHuffmanTable(HuffmanTable htbl)
         {
             int p, i, l, lastp, si;
             byte[] huffsize = new byte[257];
@@ -522,7 +513,7 @@ namespace RawNet
                 {
                     huffsize[p++] = (byte)l;
                     if (p > 256)
-                        throw new Exception("createHuffmanTable: Code length too long. Corrupt data.");
+                        throw new RawDecoderException("createHuffmanTable: Code length too long. Corrupt data.");
                 }
             }
             huffsize[p] = 0;
@@ -546,7 +537,7 @@ namespace RawNet
                 code <<= 1;
                 si++;
                 if (p > 256)
-                    throw new Exception("createHuffmanTable: Code length too long. Corrupt data.");
+                    throw new RawDecoderException("createHuffmanTable: Code length too long. Corrupt data.");
             }
 
 
@@ -571,7 +562,7 @@ namespace RawNet
                     htbl.maxcode[l] = -1;
                 }
                 if (p > 256)
-                    throw new Exception("createHuffmanTable: Code length too long. Corrupt data.");
+                    throw new RawDecoderException("createHuffmanTable: Code length too long. Corrupt data.");
             }
 
             /*
@@ -604,16 +595,16 @@ namespace RawNet
                         ul = ll;
                     }
                     if (ul > 256 || ll > ul)
-                        throw new Exception("createHuffmanTable: Code length too long. Corrupt data.");
+                        throw new RawDecoderException("createHuffmanTable: Code length too long. Corrupt data.");
                     for (i = ll; i <= ul; i++)
                     {
                         htbl.numbits[i] = (uint)(size | (value << 4));
                     }
                 }
             }
-            if (mUseBigtable)
-                createBigTable(ref htbl);
-            htbl.initialized = true;
+            if (UseBigtable)
+                CreateBigTable(ref htbl);
+            htbl.Initialized = true;
         }
 
         /************************************
@@ -627,7 +618,7 @@ namespace RawNet
          * Hit rate is about 90-99% for typical LJPEGS, usually about 98%
          *
          ************************************/
-        public void createBigTable(ref HuffmanTable htbl)
+        public void CreateBigTable(ref HuffmanTable htbl)
         {
             UInt32 bits = 14;      // HuffDecode functions must be changed, if this is modified.
             UInt32 size = (uint)(1 << (int)(bits));
@@ -638,7 +629,7 @@ namespace RawNet
             if (htbl.bigTable == null)
                 htbl.bigTable = new int[size];
             if (htbl.bigTable == null)
-                throw new Exception("Out of memory, failed to allocate " + size * sizeof(int) + " bytes");
+                throw new RawDecoderException("Out of memory, failed to allocate " + size * sizeof(int) + " bytes");
             for (UInt32 i = 0; i < size; i++)
             {
                 UInt16 input = (ushort)((int)i << 2); // Calculate input value
@@ -676,7 +667,7 @@ namespace RawNet
 
                 if (rv == 16)
                 {
-                    if (mDNGCompatible)
+                    if (DNGCompatible)
                         htbl.bigTable[i] = (-(32768 << 8)) | (16 + (int)l);
                     else
                         htbl.bigTable[i] = (-(32768 << 8)) | (int)l;
@@ -772,7 +763,7 @@ namespace RawNet
 
                 if (l > frame.prec || htbl.valptr[l] == 0xff)
                 {
-                    throw new Exception("Corrupt JPEG data: bad Huffman code:" + l);
+                    throw new RawDecoderException("Corrupt JPEG data: bad Huffman code:" + l);
                 }
                 else
                 {
@@ -782,7 +773,7 @@ namespace RawNet
 
             if (rv == 16)
             {
-                if (mDNGCompatible)
+                if (DNGCompatible)
                     bits.SkipBitsNoFill(16);
                 return -32768;
             }
@@ -791,7 +782,7 @@ namespace RawNet
             if ((rv + l) > 24)
             {
                 if (rv > 16) // There is no values above 16 bits.
-                    throw new Exception("Corrupt JPEG data: Too many bits requested.");
+                    throw new RawDecoderException("Corrupt JPEG data: Too many bits requested.");
                 else
                     bits.Fill();
             }

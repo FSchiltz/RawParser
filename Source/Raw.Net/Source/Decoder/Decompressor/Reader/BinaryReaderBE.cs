@@ -9,21 +9,96 @@ namespace RawNet
         big, little, unknown
     };
 
-    public class TIFFBinaryReader : BinaryReader
+    public class TIFFBinaryReader : BinaryReader, IDisposable
     {
         private uint offset;
-        private uint count;
+        public long Position
+        {
+            get { return BaseStream.Position; }
+            set { BaseStream.Position = value + offset; }
+        }
+
 
         public TIFFBinaryReader(Stream s) : base(s, Encoding.ASCII) { }
         public TIFFBinaryReader(Stream s, Encoding e) : base(s, e) { }
-        public TIFFBinaryReader(Stream s, uint offset, uint count) : base(s, Encoding.ASCII)
+        public TIFFBinaryReader(Stream s, uint offset) : base(s, Encoding.ASCII)
         {
             this.offset = offset;
             s.Position = offset;
-            this.count = count;
         }
 
-        public static Stream streamFromArray(object[] array, TiffDataType type)
+        public TIFFBinaryReader(byte[] s, uint o) : this(StreamFromArray(s), o) { }
+        public TIFFBinaryReader(byte[] s, Encoding e) : this(StreamFromArray(s), e) { }
+        public TIFFBinaryReader(byte[] s) : this(StreamFromArray(s)) { }
+
+        public TIFFBinaryReader(object[] data, TiffDataType dataType) : this(StreamFromArray(data, dataType)) { }
+        public TIFFBinaryReader(object[] data, TiffDataType dataType, uint offset) : this(StreamFromArray(data, dataType), offset) { }
+        public TIFFBinaryReader(object[] data, TiffDataType dataType, Encoding e) : this(StreamFromArray(data, dataType), e) { }
+
+        public void SkipToMarker()
+        {
+            byte[] buffer = ReadBytes(2);
+            BaseStream.Position -= 1;
+            while (!(buffer[0] == 0xFF && buffer[1] != 0 && buffer[1] != 0xFF))
+            {
+                buffer = ReadBytes(2);
+                BaseStream.Position -= 1;
+                if (this.Position >= this.BaseStream.Length)
+                    throw new IOException("No marker found inside rest of buffer");
+            }
+            BaseStream.Position -= 1;
+        }
+
+        public int GetRemainSize() { return (int)(BaseStream.Length - Position); }
+        public override double ReadDouble()
+        {
+            byte[] part1 = base.ReadBytes(4);
+            byte[] part2 = base.ReadBytes(4);
+            double d1 = BitConverter.ToInt32(part1, 0);
+            double d2 = BitConverter.ToInt32(part2, 0);
+            return d1 / d2;
+        }
+
+        public ushort ReadUshortFromArray(ref byte[] array, int offset)
+        {
+            return BitConverter.ToUInt16(new byte[2] { array[offset], array[offset + 1] }, 0);
+        }
+
+        public short ReadshortFromArray(ref byte[] array, int offset)
+        {
+            return BitConverter.ToInt16(new byte[2] { array[offset], array[offset + 1] }, 0);
+        }
+
+        public ushort ReadUshortFromArrayC(ref object[] array, int offset)
+        {
+            return BitConverter.ToUInt16(new byte[2] { (byte)array[offset], (byte)array[offset + 1] }, 0);
+        }
+
+        public short ReadshortFromArrayC(ref object[] array, int offset)
+        {
+            return BitConverter.ToInt16(new byte[2] { (byte)array[offset], (byte)array[offset + 1] }, 0);
+        }
+
+        public bool IsValid(uint offset, uint count)
+        {
+            return (offset <= this.offset + count);
+        }
+
+        public bool IsValid(uint offset)
+        {
+            return offset < this.BaseStream.Length;
+        }
+
+        protected static Stream StreamFromArray(byte[] data)
+        {
+            Stream stream = new MemoryStream(data)
+            {
+                Position = 0
+            };
+            return stream;
+        }
+
+        protected static Stream StreamFromArray(object[] array, TiffDataType type)
         {
             byte[] temp;
             //get type of array
@@ -75,87 +150,10 @@ namespace RawNet
                     }
                     break;
                 default:
-                    throw new Exception();
+                    throw new IOException();
             }
 
             Stream stream = new MemoryStream(temp)
-            {
-                Position = 0
-            };
-            return stream;
-        }
-
-        public long Position
-        {
-            get { return this.BaseStream.Position; }
-            set { this.BaseStream.Position = value + offset; }
-        }
-
-        public void skipToMarker()
-        {
-            byte[] buffer = ReadBytes(2);
-
-            //Debug.WriteLine(buffer[0] + " " + buffer[1]);
-            this.BaseStream.Position -= 1;
-            int c = 0;
-            while (!(buffer[0] == 0xFF && buffer[1] != 0 && buffer[1] != 0xFF))
-            {
-                buffer = ReadBytes(2);
-                this.BaseStream.Position -= 1;
-
-                //Debug.WriteLine(buffer[0] + " " + buffer[1]);
-                c++;
-
-                if (this.Position >= this.BaseStream.Length)
-                    throw new IOException("No marker found inside rest of buffer");
-            }
-            this.BaseStream.Position -= 1;
-            //Debug.WriteLine(0, "Skipped " + c + " bytes.");
-        }
-
-        public int getRemainSize() { return (int)(this.BaseStream.Length - this.Position); }
-        public override double ReadDouble()
-        {
-            byte[] part1 = base.ReadBytes(4);
-            byte[] part2 = base.ReadBytes(4);
-            double d1 = BitConverter.ToInt32(part1, 0);
-            double d2 = BitConverter.ToInt32(part2, 0);
-            return d1 / d2;
-        }
-
-        public ushort readUshortFromArray(ref byte[] array, int offset)
-        {
-            return BitConverter.ToUInt16(new byte[2] { array[offset], array[offset + 1] }, 0);
-        }
-
-        public short readshortFromArray(ref byte[] array, int offset)
-        {
-            return BitConverter.ToInt16(new byte[2] { array[offset], array[offset + 1] }, 0);
-        }
-
-        public ushort readUshortFromArrayC(ref object[] array, int offset)
-        {
-            return BitConverter.ToUInt16(new byte[2] { (byte)array[offset], (byte)array[offset + 1] }, 0);
-        }
-
-        public short readshortFromArrayC(ref object[] array, int offset)
-        {
-            return BitConverter.ToInt16(new byte[2] { (byte)array[offset], (byte)array[offset + 1] }, 0);
-        }
-
-        public bool isValid(uint offset, uint count)
-        {
-            return (offset <= this.offset + count);
-        }
-
-        public bool isValid(uint offset)
-        {
-            return offset < this.BaseStream.Length;
-        }
-
-        public static Stream streamFromArray(byte[] data)
-        {
-            Stream stream = new MemoryStream(data)
             {
                 Position = 0
             };
@@ -167,7 +165,13 @@ namespace RawNet
     {
         public TIFFBinaryReaderRE(Stream s) : base(s) { }
         public TIFFBinaryReaderRE(Stream s, Encoding e) : base(s, e) { }
-        public TIFFBinaryReaderRE(Stream s, uint o, uint c) : base(s, o, c) { }
+        public TIFFBinaryReaderRE(Stream s, uint o) : base(s, o) { }
+
+        public TIFFBinaryReaderRE(byte[] s, uint o) : base(StreamFromArray(s), o) { }
+        public TIFFBinaryReaderRE(byte[] s, Encoding e) : base(StreamFromArray(s), e) { }
+        public TIFFBinaryReaderRE(byte[] s) : base(StreamFromArray(s)) { }
+
+        public TIFFBinaryReaderRE(object[] data, TiffDataType dataType) : base(StreamFromArray(data, dataType)) { }
 
         public override ushort ReadUInt16()
         {
@@ -223,22 +227,22 @@ namespace RawNet
             return d1 / d2;
         }
 
-        public new ushort readUshortFromArray(ref byte[] array, int offset)
+        public new ushort ReadUshortFromArray(ref byte[] array, int offset)
         {
             return BitConverter.ToUInt16(new byte[2] { array[offset + 1], array[offset] }, 0);
         }
 
-        public new short readshortFromArray(ref byte[] array, int offset)
+        public new short ReadshortFromArray(ref byte[] array, int offset)
         {
             return BitConverter.ToInt16(new byte[2] { array[offset + 1], array[offset] }, 0);
         }
 
-        public new ushort readUshortFromArrayC(ref object[] array, int offset)
+        public new ushort ReadUshortFromArrayC(ref object[] array, int offset)
         {
             return BitConverter.ToUInt16(new byte[2] { (byte)array[offset + 1], (byte)array[offset] }, 0);
         }
 
-        public new short readshortFromArrayC(ref object[] array, int offset)
+        public new short ReadshortFromArrayC(ref object[] array, int offset)
         {
             return BitConverter.ToInt16(new byte[2] { (byte)array[offset + 1], (byte)array[offset] }, 0);
         }
