@@ -186,12 +186,9 @@ namespace RawEditor
                 rValue = (int)(r * 255);
                 bValue = (int)(b * 255);
                 gValue = (int)(g * 255);
-                if (rValue > 510) rValue = 510;
-                else if (rValue < 0) rValue = 0;
-                if (bValue > 510) bValue = 510;
-                else if (bValue < 0) bValue = 0;
-                if (gValue > 510) gValue = 510;
-                else if (gValue < 0) gValue = 0;
+               /* if (rValue > 510) rValue = 765;
+                if (bValue > 510) bValue = 765;
+                if (gValue > 510) gValue = 765;*/
 
             }
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>

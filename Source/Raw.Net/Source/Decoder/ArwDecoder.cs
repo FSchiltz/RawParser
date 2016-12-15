@@ -414,9 +414,9 @@ namespace RawNet
                             for (UInt32 i = 0; i < 4; i++)
                                 tmp[i] = (ushort)(((int)stringdata[(currpos + 12 + i * 2) + 1] << 8) | (int)stringdata[currpos + 12 + i * 2]);
 
-                            rawImage.metadata.wbCoeffs[0] = (float)tmp[0];
-                            rawImage.metadata.wbCoeffs[1] = (float)tmp[1];
-                            rawImage.metadata.wbCoeffs[2] = (float)tmp[3];
+                            rawImage.metadata.wbCoeffs[0] = (float)tmp[0]/tmp[1];
+                            rawImage.metadata.wbCoeffs[1] = (float)tmp[1] / tmp[1];
+                            rawImage.metadata.wbCoeffs[2] = (float)tmp[3] / tmp[1];
                             break;
                         }
                         currpos += (int)Math.Max(len + 8, 1); // Math.Max(,1) to make sure we make progress
@@ -596,7 +596,6 @@ namespace RawNet
                     rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0) / wb.GetFloat(1);
                     rawImage.metadata.wbCoeffs[1] = wb.GetFloat(1) / wb.GetFloat(1);
                     rawImage.metadata.wbCoeffs[2] = wb.GetFloat(3) / wb.GetFloat(1);
-
                 }
             }
         }
