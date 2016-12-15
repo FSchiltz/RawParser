@@ -50,10 +50,10 @@ namespace RawNet
                     throw new RawDecoderException("TIFF file has too many SubIFDs, probably broken");
                 }
                 nextIFD = (ifd.subIFD[ifd.subIFD.Count - 1]).NextOffset;
-            }           
+            }
         }
 
-        protected override void DecodeRawInternal()
+        public override void DecodeRaw()
         {
             if (!ifd.tags.TryGetValue((TagType)0x0106, out var photoMetricTag)) throw new FormatException("File not correct");
             if (!ifd.tags.TryGetValue((TagType)0x0111, out var imageOffsetTag)) throw new FormatException("File not correct");
@@ -177,7 +177,7 @@ namespace RawNet
             else throw new FormatException("Photometric interpretation " + photoMetricTag.DataAsString + " not supported yet");
         }
 
-        protected override void DecodeMetadataInternal()
+        public override void DecodeMetadata()
         {
             var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.GetInt(0);
@@ -200,7 +200,7 @@ namespace RawNet
                 make = make.Trim();
                 model = model.Trim();
                 rawImage.metadata.make = make;
-                rawImage.metadata.model = model;                
+                rawImage.metadata.model = model;
             }
         }
     }

@@ -31,6 +31,13 @@ namespace RawNet
     {
         public string FileName { get; set; }
         public string FileNameComplete { get; set; }
+        public long ParsingTime { get; set; }
+
+        public string ParsingTimeAsString()
+        {
+            return ParsingTime / 1000 + "s " + ParsingTime % 1000 + "ms";
+        }
+
         // Aspect ratio of the pixels, usually 1 but some cameras need scaling
         // <1 means the image needs to be stretched vertically, (0.5 means 2x)
         // >1 means the image needs to be stretched horizontally (2 mean 2x)
@@ -53,7 +60,7 @@ namespace RawNet
         public string canonical_model;
         public string canonical_alias;
         public string canonical_id;*/
-
+        public int rotation;
         public int isoSpeed;
         public double exposure;
         public double aperture;
@@ -79,7 +86,7 @@ namespace RawNet
         public string ExposureAsString()
         {
             if (exposure >= 1) return exposure + "s";
-            else return "1/"+(1 / exposure).ToString("F0") + "s";
+            else return "1/" + (1 / exposure).ToString("F0") + "s";
         }
     }
 }

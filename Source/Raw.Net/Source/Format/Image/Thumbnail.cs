@@ -37,11 +37,11 @@ namespace RawNet
                     ms.Dispose();
                     throw decoder.Exception;
                 }
-                ms.Dispose();
                 var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
                 bitmapasync.Wait();
                 if (bitmapasync.Status == TaskStatus.Faulted)
                 {
+                    ms.Dispose();
                     throw bitmapasync.Exception;
                 }
                 ms.Dispose();

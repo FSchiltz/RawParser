@@ -47,11 +47,11 @@ namespace RawNet
             CreateHuffmanTable(dctbl1);
         }
 
-        public void DecompressNikon(TIFFBinaryReader metadata, UInt32 w, UInt32 h, UInt32 bitsPS, UInt32 offset, UInt32 size)
+        public void DecompressNikon(TIFFBinaryReader metadata, UInt32 offset, UInt32 size)
         {
             metadata.Position = 0;
-            UInt32 v0 = metadata.ReadByte();
-            UInt32 v1 = metadata.ReadByte();
+            byte v0 = metadata.ReadByte();
+            byte v1 = metadata.ReadByte();
             UInt32 huffSelect = 0;
             UInt32 split = 0;
             int[] pUp1 = new int[2];
@@ -64,52 +64,44 @@ namespace RawNet
                 metadata.ReadBytes(2110);
 
             if (v0 == 70) huffSelect = 2;
-            if (bitsPS == 14) huffSelect += 3;
+            if (mRaw.ColorDepth == 14) huffSelect += 3;
 
             pUp1[0] = metadata.ReadInt16();
             pUp1[1] = metadata.ReadInt16();
             pUp2[0] = metadata.ReadInt16();
             pUp2[1] = metadata.ReadInt16();
 
-            int _max = 1 << (int)bitsPS & 0x7fff;
-            UInt32 step = 0;
-            UInt32 csize = metadata.ReadUInt16();
+            int max = 1 << mRaw.ColorDepth & 0x7fff;
+            int step = 0, csize = metadata.ReadUInt16();
             if (csize > 1)
-                step = (uint)_max / (csize - 1);
+                step = max / (csize - 1);
             if (v0 == 68 && v1 == 32 && step > 0)
             {
                 for (UInt32 i = 0; i < csize; i++)
-                    curve[i * step] = (ushort)metadata.ReadInt16();
-                for (int i = 0; i < _max; i++)
+                    curve[i * step] = metadata.ReadUInt16();
+                for (int i = 0; i < max; i++)
                     curve[i] = (ushort)((curve[i - i % step] * (step - i % step) + curve[i - i % step + step] * (i % step)) / step);
                 metadata.Position = (562);
                 split = metadata.ReadUInt16();
             }
             else if (v0 != 70 && csize <= 0x4001)
             {
-                for (UInt32 i = 0; i < csize; i++)
+                for (int i = 0; i < csize; i++)
                 {
                     curve[i] = metadata.ReadUInt16();
                 }
-                _max = (int)csize;
+                max = csize;
             }
             InitTable(huffSelect);
 
-            mRaw.whitePoint = curve[_max - 1];
+            mRaw.whitePoint = curve[max - 1];
             mRaw.blackLevel = curve[0];
-            mRaw.SetTable(curve, _max, true);
+            mRaw.SetTable(curve, max, true);
 
-
-            UInt32 x, y;
             BitPumpMSB bits = new BitPumpMSB(ref input, offset, size);
-            UInt32 pitch = w;
-
-            int pLeft1 = 0;
-            int pLeft2 = 0;
-            UInt32 cw = w / 2;
+            int pLeft1 = 0, pLeft2 = 0;
             UInt32 random = bits.peekBits(24);
-
-            for (y = 0; y < h; y++)
+            for (int y = 0; y < mRaw.dim.height; y++)
             {
                 if (split != 0 && (y == split))
                 {
@@ -119,10 +111,10 @@ namespace RawNet
                 pUp2[y & 1] += HuffDecodeNikon(bits);
                 pLeft1 = pUp1[y & 1];
                 pLeft2 = pUp2[y & 1];
-                uint dest = y * pitch;
+                int dest = y * mRaw.dim.width;
                 mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
                 mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
-                for (x = 1; x < cw; x++)
+                for (int x = 1; x < mRaw.dim.width / 2; x++)
                 {
                     bits.checkPos();
                     pLeft1 += HuffDecodeNikon(bits);
@@ -131,7 +123,7 @@ namespace RawNet
                     mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
                 }
             }
-            mRaw.SetTable(curve, _max, false);
+            mRaw.SetTable(curve, max, false);
         }
 
         /*
@@ -188,13 +180,8 @@ namespace RawNet
                 }
 
                 if (l > 16)
-                {
                     throw new RawDecoderException("Corrupt JPEG data: bad Huffman code:" + l);
-                }
-                else
-                {
-                    rv = (int)dctbl1.huffval[dctbl1.valptr[l] + (code - dctbl1.minCode[l])];
-                }
+                rv = (int)dctbl1.huffval[dctbl1.valptr[l] + (code - dctbl1.minCode[l])];
             }
 
             if (rv == 16)

@@ -9,6 +9,7 @@ namespace RawEditor
         {
             Dictionary<string, string> exif = new Dictionary<string, string>();
             exif.Add("File", raw.metadata.FileNameComplete);
+            exif.Add("Parsing time", raw.metadata.ParsingTimeAsString());
             if (raw.metadata.make != null && raw.metadata.make.Trim() != "")
                 exif.Add("Maker", raw.metadata.make);
             if (raw.metadata.model != null && raw.metadata.model.Trim() != "")
@@ -40,6 +41,11 @@ namespace RawEditor
                 exif.Add("lattitude", raw.metadata.gps.LattitudeToString());
                 exif.Add("altitude", raw.metadata.gps.AltitudeToString());
             }
+
+            //more metadata
+            exif.Add("Black level", "" + raw.blackLevel);
+            exif.Add("White level", "" + raw.whitePoint);
+            exif.Add("Color depth", "" + raw.ColorDepth);
 
             return exif;
         }

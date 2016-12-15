@@ -37,6 +37,7 @@
             <uap:DisplayName>Raw photo editor</uap:DisplayName>
             <uap:Logo>Assets\StoreLogo.png</uap:Logo>
             <uap:InfoTip>Photo</uap:InfoTip>
+            <uap:EditFlags OpenIsSafe="true" />
             <uap:SupportedFileTypes>
               <uap:FileType ContentType="image/jpeg">.jpg</uap:FileType>
               <uap:FileType ContentType="image/nikon">.nef</uap:FileType>

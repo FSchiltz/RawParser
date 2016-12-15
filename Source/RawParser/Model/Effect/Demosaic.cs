@@ -42,9 +42,9 @@ namespace RawEditor
             image.rawData = deflated;
         }
 
-        private static void AHD(RawImage image, ushort[] deflated)
+        private unsafe static void AHD(RawImage image, ushort[] deflated)
         {
-            throw new NotImplementedException();
+
         }
 
         private static void Bicubic(RawImage image, ushort[] deflated)

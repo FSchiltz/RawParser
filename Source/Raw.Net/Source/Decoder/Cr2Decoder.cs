@@ -21,7 +21,7 @@ namespace RawNet
         {
         }
 
-        protected override Thumbnail DecodeThumbInternal()
+        public override Thumbnail DecodeThumb()
         {
             //find the preview ifd (ifd1 for thumb)(IFD0 is better, bigger preview buut too big and slow for now)
             IFD preview = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)[0];
@@ -43,7 +43,7 @@ namespace RawNet
             return temp;
         }
 
-        protected override void DecodeRawInternal()
+        public override void DecodeRaw()
         {
             if (hints.ContainsKey("old_format"))
             {
@@ -289,7 +289,7 @@ namespace RawNet
                 SRawInterpolate();
         }
 
-        protected override void DecodeMetadataInternal()
+        public override void DecodeMetadata()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
 
@@ -409,7 +409,7 @@ namespace RawNet
             rawImage.metadata.wbCoeffs[1] = rawImage.metadata.wbCoeffs[1] / rawImage.metadata.wbCoeffs[1];
         }
 
-        override protected void SetMetadata(string model)
+        protected void SetMetadata(string model)
         {
             for (int i = 0; i < canon.GetLength(0); i++)
             {
