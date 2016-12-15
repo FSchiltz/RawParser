@@ -50,13 +50,14 @@ namespace RawNet
         }
 
         public int GetRemainSize() { return (int)(BaseStream.Length - Position); }
+
         public override double ReadDouble()
         {
-            byte[] part1 = base.ReadBytes(4);
-            byte[] part2 = base.ReadBytes(4);
-            double d1 = BitConverter.ToInt32(part1, 0);
-            double d2 = BitConverter.ToInt32(part2, 0);
-            return d1 / d2;
+            /* byte[] part1 = ; (4);
+             byte[] part2 = base.ReadBytes(4);
+             double d1 = BitConverter.ToInt32(part1, 0);
+             double d2 = BitConverter.ToInt32(part2, 0);*/
+            return base.ReadInt32() / (double)base.ReadInt32();
         }
 
         public ushort ReadUshortFromArray(ref byte[] array, int offset)
@@ -179,16 +180,20 @@ namespace RawNet
             temp[1] = base.ReadByte();
             temp[0] = base.ReadByte();
             return BitConverter.ToUInt16(temp, 0);
+            //return (ushort)(ReadByte() | ReadByte() << 8);
         }
 
         public override uint ReadUInt32()
         {
+
             byte[] temp = new byte[4];
             temp[3] = base.ReadByte();
             temp[2] = base.ReadByte();
             temp[1] = base.ReadByte();
             temp[0] = base.ReadByte();
             return BitConverter.ToUInt32(temp, 0);
+
+            // return (uint)(ReadByte() | ReadByte() << 8 | ReadByte() << 16 | ReadByte() << 24);
         }
 
         public override short ReadInt16()
@@ -197,20 +202,25 @@ namespace RawNet
             temp[1] = base.ReadByte();
             temp[0] = base.ReadByte();
             return BitConverter.ToInt16(temp, 0);
+            //return (short)(ReadByte() | ReadByte() << 8);
         }
 
         public override int ReadInt32()
         {
+
             byte[] temp = new byte[4];
             temp[3] = base.ReadByte();
             temp[2] = base.ReadByte();
             temp[1] = base.ReadByte();
             temp[0] = base.ReadByte();
             return BitConverter.ToInt32(temp, 0);
+
+            // return ReadByte() | ReadByte() << 8 | ReadByte() << 16 | ReadByte() << 24;
         }
 
         public override double ReadDouble()
         {
+            /*
             byte[] part1 = new byte[4];
             part1[3] = base.ReadByte();
             part1[2] = base.ReadByte();
@@ -224,7 +234,9 @@ namespace RawNet
             part2[0] = base.ReadByte();
             double d1 = BitConverter.ToInt32(part1, 0);
             double d2 = BitConverter.ToInt32(part2, 0);
-            return d1 / d2;
+            return d1 / d2;*/
+
+            return ReadInt32() / (double)ReadInt32();
         }
 
         public new ushort ReadUshortFromArray(ref byte[] array, int offset)

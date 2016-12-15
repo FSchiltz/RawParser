@@ -4,15 +4,14 @@ namespace RawNet
 {
     internal class PentaxMakernote : Makernote
     {
-        public PentaxMakernote(byte[] data)
+        public PentaxMakernote(byte[] data, int offset, int parentOffset)
         {
             TIFFBinaryReader buffer;
-            if (data[0] == 0x4D && data[1] == 0x4D)
+            if (data[offset] == 0x4D && data[offset + 1] == 0x4D)
             {
                 buffer = new TIFFBinaryReaderRE(data);
-                //TODO see if need to move
             }
-            else if (data[0] == 0x49 && data[1] == 0x49)
+            else if (data[offset] == 0x49 && data[offset + 1] == 0x49)
             {
                 buffer = new TIFFBinaryReaderRE(data);
             }
@@ -20,26 +19,11 @@ namespace RawNet
             {
                 throw new RawDecoderException("Makernote endianess unknown " + data[0]);
             }
-            buffer.BaseStream.Position += 2;
-            buffer.ReadUInt16();
-            uint TIFFoffset = buffer.ReadUInt32();
-            buffer.BaseStream.Position = TIFFoffset;
+            buffer.BaseStream.Position += (offset + 2);
+            relativeOffset = -parentOffset;
             //offset are from the start of the tag
-            tagNumber = buffer.ReadUInt16();
-
-            for (int i = 0; i < tagNumber; i++)
-            {
-                long tagPos = buffer.BaseStream.Position;
-                Tag temp = new Tag(buffer, (int)tagPos + 6);
-                if (!tags.ContainsKey(temp.TagId))
-                {
-                    tags.Add(temp.TagId, temp);
-                }
-                else
-                {
-                    Debug.WriteLine("tags already exist");
-                }
-            }
+            Parse(buffer);
+            
             buffer.Dispose();
         }
     }

@@ -128,7 +128,7 @@ namespace RawNet
             dataOffset = 0;
             if (((dataCount * GetTypeSize(dataType) > 4)))
             {
-                dataOffset = (uint)(fileStream.ReadUInt32());
+                dataOffset = (fileStream.ReadUInt32());
             }
             //Get the tag data
             data = new Object[dataCount];

@@ -229,7 +229,6 @@ namespace RawEditor
             {
                 try
                 {
-                    var watch = Stopwatch.StartNew();
                     Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
 
                     //Does not improve speed
@@ -239,6 +238,7 @@ namespace RawEditor
                     stream = new MemoryStream(data);
                     stream.Position = 0;*/
 
+                    var watch = Stopwatch.StartNew();
                     RawDecoder decoder = RawParser.GetDecoder(ref stream, file.FileType);
                     thumbnail = decoder.DecodeThumb();
                     if (thumbnail != null)
@@ -263,6 +263,9 @@ namespace RawEditor
                     raw.metadata.FileName = file.DisplayName;
                     raw.metadata.FileNameComplete = file.Name;
 
+                    watch.Stop();
+                    raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
+                    Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
                     stream.Dispose();
                     file = null;
                     decoder = null;
@@ -291,9 +294,6 @@ namespace RawEditor
                     EnableEditingControlAsync(true);
                     //dispose
                     file = null;
-                    watch.Stop();
-                    raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
-                    Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
                 }
                 catch (FormatException e)
                 {

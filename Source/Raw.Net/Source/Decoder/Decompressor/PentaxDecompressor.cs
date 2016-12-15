@@ -31,6 +31,7 @@ namespace RawNet
                         stream = new TIFFBinaryReaderRE(t.GetByteArray());
 
                     UInt32 depth = (uint)(stream.ReadUInt16() + 12) & 0xf;
+
                     stream.ReadBytes(12);
                     UInt32[] v0 = new UInt32[16];
                     UInt32[] v1 = new UInt32[16];
