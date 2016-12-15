@@ -148,7 +148,7 @@
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\Exception\ExceptionDisplay.cs" />
+    <Compile Include="View\UIHelper\ExceptionDisplay.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="View\Pages\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>

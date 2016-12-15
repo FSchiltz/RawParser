@@ -28,7 +28,6 @@ namespace RawNet
 
         public ColorFilterArray()
         {
-            Size = new Point2D(0, 0);
         }
 
         public ColorFilterArray(ColorFilterArray other)

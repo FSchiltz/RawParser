@@ -12,6 +12,14 @@ namespace RawNet
             return x;
         }
 
+        static public uint Clampbits(uint x, int n)
+        {
+            uint _y_temp = x >> n;
+            if ((_y_temp != 0))
+                x = ~_y_temp >> (32 - n);
+            return x;
+        }
+
         static public int[] ConvertByteToInt(byte[] array)
         {
             int bytePerInt = sizeof(int);

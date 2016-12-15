@@ -16,11 +16,9 @@ namespace RawNet
 
     internal class NefDecoder : TiffDecoder
     {
-        public NefDecoder(ref Stream file) : base(ref file)
-        {
-        }
+        public NefDecoder(ref Stream file) : base(ref file) { }
 
-        protected override Thumbnail DecodeThumbInternal()
+        public override Thumbnail DecodeThumb()
         {
             try
             {
@@ -56,10 +54,9 @@ namespace RawNet
             }
         }
 
-        protected override void DecodeRawInternal()
+        public override void DecodeRaw()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.CFAPATTERN);
-
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Decoder: No image data found");
 
@@ -111,11 +108,8 @@ namespace RawNet
             if (34713 != compression)
                 throw new RawDecoderException("NEF Decoder: Unsupported compression");
 
-            UInt32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-            UInt32 height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-            UInt32 bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
-            rawImage.ColorDepth = (ushort)bitPerPixel;
-            rawImage.dim = new Point2D((int)width, (int)height);
+            rawImage.ColorDepth = raw.GetEntry(TagType.BITSPERSAMPLE).GetUShort(0);
+            rawImage.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetInt(0));
 
             data = ifd.GetIFDsWithTag((TagType)0x8c);
 
@@ -142,7 +136,7 @@ namespace RawNet
                 else
                     metastream = new TIFFBinaryReader(meta.data, meta.dataType);
 
-                decompressor.DecompressNikon(metastream, width, height, bitPerPixel, offsets.GetUInt(0), counts.GetUInt(0));
+                decompressor.DecompressNikon(metastream, offsets.GetUInt(0), counts.GetUInt(0));
                 metastream.Dispose();
             }
             catch (IOException e)
@@ -425,15 +419,12 @@ namespace RawNet
             return mode;
         }
 
-        override protected void DecodeMetadataInternal()
+        public override void DecodeMetadata()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
 
             if (data.Count == 0)
                 throw new RawDecoderException("NEF Meta Decoder: Model name not found");
-
-            uint white = rawImage.whitePoint;
-            int black = rawImage.blackLevel;
 
             string model = data[0].GetEntry(TagType.MODEL).DataAsString;
             if (model.Contains("NIKON")) model = model.Substring(6);
@@ -615,11 +606,11 @@ namespace RawNet
                 rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
-            if (white != 65536)
-                rawImage.whitePoint = white;
-            //hints.TryGetValue("nikon_override_auto_black", out string k);
-            if (black >= 0)//&& k == null)
-                rawImage.blackLevel = black;
+            if (rawImage.whitePoint > (1 << rawImage.ColorDepth) - 1)
+                rawImage.whitePoint = (uint)((1 << rawImage.ColorDepth) - 1);
+            hints.TryGetValue("nikon_override_auto_black", out string k);
+            if (!(rawImage.blackLevel >= 0 && k == null))
+                rawImage.blackLevel = Int32.Parse(k);
 
             //more exifs
             var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
@@ -633,6 +624,20 @@ namespace RawNet
             var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
             if (time != null) rawImage.metadata.timeTake = time.DataAsString;
             if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
+
+            //GPS data
+            var gpsTag = ifd.GetEntry((TagType)0x0039);
+            if (gpsTag != null)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    byte[] info = new byte[4];
+                    stream.Read(info, 0, 4);
+                    //read the encoding
+                    int encoding = stream.ReadByte();
+                    //the data are in 70 bytes at index 9
+                }
+            }
         }
 
         // DecodeNikonYUY2 decodes 12 bit data in an YUY2-like pattern (2 Luma, 1 Chroma per 2 pixels).
@@ -690,13 +695,13 @@ namespace RawNet
 
             UInt16 tmp = 0;
             ushort[] tmpch = new ushort[2];
-            for (UInt32 y = 0; y < h; y++)
+            for (int y = 0; y < h; y++)
             {
                 uint a1 = input.ReadByte();
                 uint a2 = input.ReadByte();
                 uint a3 = input.ReadByte();
                 UInt32 random = a1 + (a2 << 8) + (a3 << 16);
-                for (UInt32 x = 0; x < w * 3; x += 6)
+                for (int x = 0; x < w * 3; x += 6)
                 {
                     input.Position -= 3;
                     UInt32 g1 = input.ReadByte();
@@ -813,7 +818,7 @@ namespace RawNet
         /*
          * set specific metadata
          */
-        protected override void SetMetadata(string model)
+        protected void SetMetadata(string model)
         {
             switch (model.Trim())
             {

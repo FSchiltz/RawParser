@@ -44,41 +44,18 @@ namespace RawNet
             FujiRotate = true;
         }
 
-        public void DecodeRaw()
-        {
-            try
-            {
-                DecodeRawInternal();
-                //if (!uncorrectedRawValues) mRaw.scaleValues();               
-            }
-            catch (RawDecoderException)
-            {
-                throw;
-            }
-            catch (IOException e)
-            {
-                throw new RawDecoderException(e.Message);
-            }
-        }
-
         /*
          * return a byte[] containing an JPEG image or null if the file doesn't have a thumbnail
          */
-        public Thumbnail DecodeThumb()
-        {
-            try
-            {
-                return DecodeThumbInternal();
-            }
-            catch (RawDecoderException e)
-            {
-                throw new RawDecoderException(e.Message);
-            }
-            catch (IOException e)
-            {
-                throw new RawDecoderException(e.Message);
-            }
-        }
+        public virtual Thumbnail DecodeThumb() { return null; }
+
+        /* Attempt to decode the image */
+        /* A RawDecoderException will be thrown if the image cannot be decoded, */
+        /* and there will not be any data in the mRaw image. */
+        /* This function must be overridden by actual decoders. */
+        public abstract void DecodeRaw();
+
+        public abstract void DecodeMetadata();
 
         /** 
          * Check if the decoder can decode the image from this camera 
@@ -295,9 +272,9 @@ namespace RawNet
             }
 
             UInt32 random = 0;
-            for (UInt32 y = 0; y < h; y++)
+            for (int y = 0; y < h; y++)
             {
-                for (UInt32 x = 0; x < w; x += 1)
+                for (int x = 0; x < w; x += 1)
                 {
                     rawImage.SetWithLookUp(input.ReadByte(), ref rawImage.rawData, x, ref random);
                     input.Position++;
@@ -623,32 +600,6 @@ namespace RawNet
                     rawImage.rawData[y * pitch + x] = (ushort)(((g2 << 8) | g1) >> 4);
                 }
             }
-        }
-
-        protected virtual void SetMetadata(string model) { }
-
-        public void DecodeMetadata()
-        {
-            try
-            {
-                DecodeMetadataInternal();
-            }
-            catch (RawDecoderException)
-            {
-                throw;
-            }
-            catch (IOException e)
-            {
-                throw new RawDecoderException(e.Message);
-            }
-        }
-
-        /* Attempt to decode the image */
-        /* A RawDecoderException will be thrown if the image cannot be decoded, */
-        /* and there will not be any data in the mRaw image. */
-        /* This function must be overridden by actual decoders. */
-        protected abstract void DecodeRawInternal();
-        protected virtual Thumbnail DecodeThumbInternal() { return null; }
-        protected abstract void DecodeMetadataInternal();
+        }        
     }
 }

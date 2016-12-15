@@ -46,7 +46,7 @@ namespace RawNet
                 mFixLjpeg = false;
         }
 
-        protected override void DecodeMetadataInternal()
+        public override void DecodeMetadata()
         {
             // Set the make and model
             var t = ifd.GetEntryRecursive(TagType.MAKE);
@@ -206,7 +206,7 @@ namespace RawNet
                 DecodeBlackLevels(raw);
         }
 
-        protected override void DecodeRawInternal()
+        public override void DecodeRaw()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.COMPRESSION);
 
@@ -676,7 +676,7 @@ namespace RawNet
             }
         }
 
-        protected override Thumbnail DecodeThumbInternal()
+        public override Thumbnail DecodeThumb()
         {
             //find the preview IFD (usually the first if any)
             try

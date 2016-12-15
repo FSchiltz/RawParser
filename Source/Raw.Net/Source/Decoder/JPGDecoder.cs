@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using Windows.Foundation;
 using Windows.Graphics.Imaging;
 
 namespace RawNet
@@ -23,11 +24,9 @@ namespace RawNet
     {
         BitmapPropertiesView meta;
 
-        public JPGDecoder(ref Stream file) : base(ref file)
-        {
-        }
+        public JPGDecoder(ref Stream file) : base(ref file) { }
 
-        protected override void DecodeMetadataInternal()
+        public  override void DecodeMetadata()
         {
             //fill useless metadata
             rawImage.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
@@ -42,13 +41,12 @@ namespace RawNet
             }
         }
 
-        protected override void DecodeRawInternal()
+        public override void DecodeRaw()
         {
             rawImage.ColorDepth = 8;
             rawImage.cpp = 3;
             rawImage.bpp = 8;
             var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, stream.AsRandomAccessStream()).AsTask();
-
             decoder.Wait();
 
             var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
@@ -57,7 +55,7 @@ namespace RawNet
             var image = bitmapasync.Result;
             using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))
             {
-                using (var reference = buffer.CreateReference())
+                using (IMemoryBufferReference reference = buffer.CreateReference())
                 {
                     BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
                     rawImage.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);
@@ -65,7 +63,6 @@ namespace RawNet
                     unsafe
                     {
                         ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-
                         for (int y = 0; y < rawImage.dim.height; y++)
                         {
                             int realY = y * rawImage.dim.width * 3;
@@ -82,7 +79,7 @@ namespace RawNet
                         }
                     }
                 }
-            }
+            }            
         }
     }
 }

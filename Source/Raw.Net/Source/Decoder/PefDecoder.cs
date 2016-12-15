@@ -9,7 +9,7 @@ namespace RawNet
     {
         public PefDecoder(ref Stream stream) : base(ref stream) { }
 
-        protected override void DecodeRawInternal()
+        public override void DecodeRaw()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.STRIPOFFSETS);
             if (data.Count == 0)
@@ -60,7 +60,7 @@ namespace RawNet
             }
         }
 
-        protected override void DecodeMetadataInternal()
+        public override void DecodeMetadata()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
 
@@ -124,7 +124,7 @@ namespace RawNet
             }
         }
 
-        protected override void SetMetadata(string model)
+        protected void SetMetadata(string model)
         {
             if (rawImage.dim.height == 2624 && rawImage.dim.width == 3936)    /* Pentax K10D */
             {

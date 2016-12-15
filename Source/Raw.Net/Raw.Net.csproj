@@ -154,7 +154,6 @@
     <Compile Include="Source\Format\Image\ColorFilterArray.cs" />
     <Compile Include="Source\Format\Image\FactorValue.cs" />
     <Compile Include="Source\Format\Image\ImageMetadata.cs" />
-    <Compile Include="Source\Decoder\JpegHelper.cs" />
     <Compile Include="Source\Format\Image\RawImage.cs" />
     <Compile Include="Source\Format\Image\TableLookUp.cs" />
     <Compile Include="Source\Format\Image\Thumbnail.cs" />

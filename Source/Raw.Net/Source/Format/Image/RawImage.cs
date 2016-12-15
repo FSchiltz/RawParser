@@ -109,7 +109,7 @@ namespace RawNet
         // You must supply the destination where the value should be written, and a pointer to
         // a value that will be used to store a random counter that can be reused between calls.
         // this needs to be inline to speed up tight decompressor loops
-        internal void SetWithLookUp(UInt16 value, ref ushort[] dst, uint offset, ref uint random)
+        internal void SetWithLookUp(UInt16 value, ref ushort[] dst, int offset, ref uint random)
         {
             if (table == null)
             {

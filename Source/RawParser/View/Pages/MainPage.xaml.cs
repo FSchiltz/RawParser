@@ -9,7 +9,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using RawEditor.View.Exception;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using RawEditor.View.UIHelper;
@@ -22,8 +21,7 @@ using System.Runtime.InteropServices;
 
 namespace RawEditor
 {
-
-    // Using the COM interface IMemoryBufferByteAccess allows us to access the underlying byte array in an AudioFrame
+    // Using the COM interface IMemoryBufferByteAccess allows us to access the underlying byte array
     [ComImport]
     [Guid("5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -140,14 +138,14 @@ namespace RawEditor
         //Always call in the UI thread
         private async void EmptyImageAsync()
         {
+
+            //empty the previous image data
+            raw = null;
             await CoreApplication.MainView.CoreWindow.Dispatcher
                     .RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        //empty the previous image data
-                        raw = null;
                         //empty the image display
                         ImageBox.Source = null;
-                        ImageBox.UpdateLayout();
                         //empty the exif data
                         exifDisplay.ItemsSource = null;
                         //empty the histogram
@@ -294,6 +292,7 @@ namespace RawEditor
                     //dispose
                     file = null;
                     watch.Stop();
+                    raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
                     Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
                 }
                 catch (FormatException e)

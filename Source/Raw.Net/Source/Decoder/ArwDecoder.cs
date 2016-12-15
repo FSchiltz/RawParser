@@ -14,7 +14,7 @@ namespace RawNet
             shiftDownScale = 0;
         }
 
-        protected override Thumbnail DecodeThumbInternal()
+        public override Thumbnail DecodeThumb()
         {
             //find the preview ifd Preview is in the rootIFD (smaller preview in subiFD use those)
             List<IFD> possible = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT);
@@ -36,7 +36,7 @@ namespace RawNet
             return temp;
         }
 
-        protected override void DecodeRawInternal()
+        public override void DecodeRaw()
         {
             IFD raw = null;
             List<IFD> data = ifd.GetIFDsWithTag(TagType.STRIPOFFSETS);
@@ -283,14 +283,14 @@ namespace RawNet
                 BitPumpPlain bits = new BitPumpPlain(ref reader);
                 //todo add parralel (parrallel.For not working because onlyone bits so not thread safe;
                 //set one bits pump per row (may be slower)
-                for (UInt32 y = 0; y < rawImage.dim.height; y++)
+                for (uint y = 0; y < rawImage.dim.height; y++)
                 {
                     // Realign
                     bits.setAbsoluteOffset((uint)(rawImage.dim.width * 8 * y) >> 3);
-                    UInt32 random = bits.peekBits(24);
+                    uint random = bits.peekBits(24);
 
                     // Process 32 pixels (16x2) per loop.
-                    for (Int32 x = 0; x < rawImage.dim.width - 30;)
+                    for (uint x = 0; x < rawImage.dim.width - 30;)
                     {
                         bits.checkPos();
                         int _max = (int)bits.getBits(11);
@@ -310,13 +310,12 @@ namespace RawNet
                                 if (p > 0x7ff)
                                     p = 0x7ff;
                             }
-                            rawImage.SetWithLookUp((ushort)(p << 1), ref rawImage.rawData, (uint)((y * rawImage.dim.width) + x + i * 2), ref random);
+                            rawImage.SetWithLookUp((ushort)(p << 1), ref rawImage.rawData, (int)((y * rawImage.dim.width) + x + i * 2), ref random);
 
                         }
-                        x += (x & 1) != 0 ? 31 : 1;  // Skip to next 32 pixels
+                        x += (x & 1) != 0 ? (uint)31 : 1;  // Skip to next 32 pixels
                     }
                 }
-
             }
             else if (bpp == 12)
             {
@@ -336,12 +335,12 @@ namespace RawNet
                             if (input.GetRemainSize() < (w * h * 3 / 2))
                                 h = (uint)input.GetRemainSize() / (w * 3 / 2) - 1;
 
-                            for (UInt32 y = 0; y < h; y++)
+                            for (uint y = 0; y < h; y++)
                             {
                                 byte* temp = &data[y * pitch];
 
                                 UInt16* dest = (UInt16*)temp;
-                                for (UInt32 x = 0; x < w; x += 2)
+                                for (uint x = 0; x < w; x += 2)
                                 {
                                     UInt32 g1 = *(t2++);
                                     UInt32 g2 = *(t2++);
@@ -355,13 +354,13 @@ namespace RawNet
                     }
                 }
                 // Shift scales, since black and white are the same as compressed precision
-                shiftDownScale = 2;
+                //shiftDownScale = 2;
             }
             else
                 throw new RawDecoderException("Unsupported bit depth");
         }
 
-        protected override void DecodeMetadataInternal()
+        public override void DecodeMetadata()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
 
@@ -385,8 +384,8 @@ namespace RawNet
                 rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
-            rawImage.whitePoint >>= shiftDownScale;
-            rawImage.blackLevel >>= shiftDownScale;
+            /* rawImage.whitePoint >>= shiftDownScale;
+             rawImage.blackLevel >>= shiftDownScale;*/
 
             // Set the whitebalance
             if (model == "DSLR-A100")
@@ -453,7 +452,7 @@ namespace RawNet
             if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
         }
 
-        protected override void SetMetadata(string model)
+        protected void SetMetadata(string model)
         {
             if (rawImage.dim.width > 3888)
             {
