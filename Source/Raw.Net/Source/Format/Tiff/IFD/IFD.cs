@@ -77,7 +77,7 @@ namespace RawNet
                         try
                         {
                             Common.ConvertArray(ref temp.data, out byte[] dest);
-                            Makernote makernote = ParseMakerNote(dest, endian, temp.dataOffset);
+                            Makernote makernote = ParseMakerNote(dest, endian, (int)temp.dataOffset);
                             if (makernote != null) subIFD.Add(makernote);
                         }
                         catch (RawDecoderException)
@@ -129,16 +129,15 @@ namespace RawNet
 
         /* This will attempt to parse makernotes and return it as an IFD */
         //makernote should be selfcontained
-        Makernote ParseMakerNote(byte[] data, Endianness parentEndian, uint parentOffset)
+        Makernote ParseMakerNote(byte[] data, Endianness parentEndian, int parentOffset)
         {
             uint offset = 0;
-            //reader.Position = off;
-            //byte[] data = reader.ReadBytes(100);
 
             // Pentax makernote starts with AOC\0 - If it's there, skip it
             if (data[0] == 0x41 && data[1] == 0x4f && data[2] == 0x43 && data[3] == 0)
             {
-                data = data.Skip(4).ToArray();
+                return new PentaxMakernote(data, 4, parentOffset);
+                //data = data.Skip(4).ToArray();
                 //offset += 4;
             }
 
@@ -146,7 +145,7 @@ namespace RawNet
             if (data[0] == 0x50 && data[1] == 0x45
                 && data[2] == 0x4e && data[3] == 0x54 && data[4] == 0x41 && data[5] == 0x58)
             {
-                return new PentaxMakernote(data.Skip(8).ToArray());
+                return new PentaxMakernote(data, 8, parentOffset);
                 /*
                 mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
                 parent_end = getTiffEndianness(data.Skip(8).ToArray());

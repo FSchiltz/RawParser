@@ -85,6 +85,8 @@ namespace RawNet
             var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
             if (time != null) rawImage.metadata.timeTake = time.DataAsString;
             if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
+            
+            rawImage.ColorDepth = raw.GetEntryRecursive(TagType.BITSPERSAMPLE).GetUShort(0);
 
             SetMetadata(model);
 
@@ -120,7 +122,12 @@ namespace RawNet
                     rawImage.metadata.wbCoeffs[0] = wb.GetInt(0);
                     rawImage.metadata.wbCoeffs[1] = wb.GetInt(1);
                     rawImage.metadata.wbCoeffs[2] = wb.GetInt(3);
+
+                    rawImage.metadata.wbCoeffs[0] /= rawImage.metadata.wbCoeffs[1];
+                    rawImage.metadata.wbCoeffs[2] /= rawImage.metadata.wbCoeffs[1];
+                    rawImage.metadata.wbCoeffs[1] /= rawImage.metadata.wbCoeffs[1];
                 }
+
             }
         }
 
