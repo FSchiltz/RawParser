@@ -351,14 +351,14 @@ namespace RawNet
             {
                 for (UInt32 x = 0; x < w; x++)
                 {
-                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * rawImage.dim.width)] = (ushort)inputMSB.getBits(12);
+                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * rawImage.dim.width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
             for (y = (uint)offset.height; y < h; y++)
             {
                 for (UInt32 x = 0; x < w; x++)
                 {
-                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + (y * 2 + 1) * rawImage.dim.width)] = (ushort)inputMSB.getBits(12);
+                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + (y * 2 + 1) * rawImage.dim.width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
         }

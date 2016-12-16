@@ -11,7 +11,7 @@ namespace RawEditor.View.UIHelper
     class Histogram
     {
         //TODO simplify if memory saver mode
-        public static async void Create(int[] value, ushort colorDepth, uint height, uint width, Canvas histogramCanvas)
+        public static async void CreateAsync(int[] value, ushort colorDepth, uint height, uint width, Canvas histogramCanvas)
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher
                      .RunAsync(CoreDispatcherPriority.Normal, () =>

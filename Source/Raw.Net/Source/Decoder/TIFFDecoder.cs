@@ -69,6 +69,7 @@ namespace RawNet
                 if (!ifd.tags.TryGetValue((TagType)0x0115, out var samplesPerPixel)) throw new FormatException("File not correct");
                 int height = imageHeightTag.GetInt(0);
                 int width = imageWidthTag.GetInt(0);
+                rawImage.isCFA = false;
                 rawImage.dim = new Point2D(width, height);
                 rawImage.uncroppedDim = rawImage.dim;
                 //suppose that image are always 8,8,8 or 16,16,16
