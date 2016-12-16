@@ -43,6 +43,8 @@ namespace RawNet
         public uint dataCount;
         public uint dataOffset;
         public object[] data;
+        internal int parent_offset;
+
         public string DataAsString
         {
             get
@@ -120,11 +122,10 @@ namespace RawNet
 
         public Tag(TIFFBinaryReader fileStream, int baseOffset)
         {
+            parent_offset = baseOffset;
             TagId = (TagType)fileStream.ReadUInt16();
-
             dataType = (TiffDataType)fileStream.ReadUInt16();
             dataCount = fileStream.ReadUInt32();
-
             dataOffset = 0;
             if (((dataCount * GetTypeSize(dataType) > 4)))
             {
@@ -272,7 +273,7 @@ namespace RawNet
 
         internal int GetInt(int pos) { return Convert.ToInt32(data[pos]); }
 
-        internal uint GetUInt(uint pos) { return Convert.ToUInt32(data[pos]); }
+        internal uint GetUInt(int pos) { return Convert.ToUInt32(data[pos]); }
 
         internal double GetDouble(int pos) { return Convert.ToDouble(data[pos]); }
 

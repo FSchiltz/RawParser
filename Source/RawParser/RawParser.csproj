@@ -140,8 +140,6 @@
     <Compile Include="Model\Effect\ImageEffect.cs" />
     <Compile Include="Model\Encoder\SaveHelper.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
-    <Compile Include="View\UIHelper\PortraitOrLandscapeTrigger.cs" />
-    <Compile Include="View\UIHelper\UIImageHelper.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>

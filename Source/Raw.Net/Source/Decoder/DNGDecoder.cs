@@ -11,11 +11,11 @@ namespace RawNet
 
     class DngStrip
     {
-        public DngStrip() { h = offset = count = offsetY = 0; }
-        public UInt32 h;
-        public UInt32 offset; // Offset in bytes
-        public UInt32 count;
-        public UInt32 offsetY;
+        public DngStrip() { offset = count = offsetY = 0; h = 0; }
+        public int h;
+        public uint offset; // Offset in bytes
+        public uint count;
+        public uint offsetY;
     };
 
     internal class DngDecoder : TiffDecoder
@@ -105,7 +105,7 @@ namespace RawNet
 
             Point2D top = rawImage.offset;
 
-            for (UInt32 i = 0; i < nrects; i++)
+            for (int i = 0; i < nrects; i++)
             {
                 Point2D topleft = new Point2D(rects[i * 4 + 1], rects[i * 4]);
                 Point2D bottomright = new Point2D(rects[i * 4 + 3], rects[i * 4 + 2]);
@@ -239,11 +239,11 @@ namespace RawNet
             }*/
 
             IFD raw = data[0];
-            UInt32 sample_format = 1;
-            UInt32 bps = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+            int sample_format = 1;
+            int bps = raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
 
             if (raw.tags.ContainsKey(TagType.SAMPLEFORMAT))
-                sample_format = raw.GetEntry(TagType.SAMPLEFORMAT).GetUInt(0);
+                sample_format = raw.GetEntry(TagType.SAMPLEFORMAT).GetInt(0);
 
             if (sample_format != 1)
                 throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported.");
@@ -299,7 +299,7 @@ namespace RawNet
                     {
                         for (int x = 0; x < cfaSize.width; x++)
                         {
-                            UInt32 c1 = Convert.ToUInt32(cPat[x + y * cfaSize.width]);
+                            int c1 = Convert.ToInt32(cPat[x + y * cfaSize.width]);
                             CFAColor c2;
                             switch (c1)
                             {
@@ -331,25 +331,25 @@ namespace RawNet
                 {  // Uncompressed.
                     try
                     {
-                        UInt32 cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                        uint cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
                         if (cpp > 4)
                             throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
                         rawImage.cpp = cpp;
 
                         Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
                         Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
-                        UInt32 yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
-                        UInt32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-                        UInt32 height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
+                        int yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetInt(0);
+                        int width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
+                        int height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
 
                         if (counts.dataCount != offsets.dataCount)
                         {
                             throw new RawDecoderException("DNG Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
                         }
 
-                        UInt32 offY = 0;
+                        uint offY = 0;
                         List<DngStrip> slices = new List<DngStrip>();
-                        for (UInt32 s = 0; s < offsets.dataCount; s++)
+                        for (int s = 0; s < offsets.dataCount; s++)
                         {
                             DngStrip slice = new DngStrip()
                             {
@@ -358,11 +358,11 @@ namespace RawNet
                                 offsetY = offY
                             };
                             if (offY + yPerSlice > height)
-                                slice.h = height - offY;
+                                slice.h = (int)(height - offY);
                             else
                                 slice.h = yPerSlice;
 
-                            offY += yPerSlice;
+                            offY += (uint)yPerSlice;
 
                             if (reader.IsValid(slice.offset, slice.count)) // Only decode if size is valid
                                 slices.Add(slice);
@@ -412,14 +412,14 @@ namespace RawNet
                         DngDecoderSlices slices = new DngDecoderSlices(reader, rawImage, compression);
                         if (raw.tags.ContainsKey(TagType.TILEOFFSETS))
                         {
-                            UInt32 tilew = raw.GetEntry(TagType.TILEWIDTH).GetUInt(0);
-                            UInt32 tileh = raw.GetEntry(TagType.TILELENGTH).GetUInt(0);
+                            int tilew = raw.GetEntry(TagType.TILEWIDTH).GetInt(0);
+                            int tileh = raw.GetEntry(TagType.TILELENGTH).GetInt(0);
                             if (tilew == 0 || tileh == 0)
                                 throw new RawDecoderException("DNG Decoder: Invalid tile size");
 
-                            UInt32 tilesX = (uint)(rawImage.dim.width + tilew - 1) / tilew;
-                            UInt32 tilesY = (uint)(rawImage.dim.height + tileh - 1) / tileh;
-                            UInt32 nTiles = tilesX * tilesY;
+                            int tilesX = (rawImage.dim.width + tilew - 1) / tilew;
+                            int tilesY = (rawImage.dim.height + tileh - 1) / tileh;
+                            int nTiles = tilesX * tilesY;
 
                             Tag offsets = raw.GetEntry(TagType.TILEOFFSETS);
                             Tag counts = raw.GetEntry(TagType.TILEBYTECOUNTS);
@@ -428,11 +428,11 @@ namespace RawNet
 
                             slices.FixLjpeg = mFixLjpeg;
 
-                            for (UInt32 y = 0; y < tilesY; y++)
+                            for (int y = 0; y < tilesY; y++)
                             {
-                                for (UInt32 x = 0; x < tilesX; x++)
+                                for (int x = 0; x < tilesX; x++)
                                 {
-                                    DngSliceElement e = new DngSliceElement(offsets.GetUInt(x + y * tilesX), counts.GetUInt(x + y * tilesX), tilew * x, tileh * y)
+                                    DngSliceElement e = new DngSliceElement(offsets.GetUInt(x + y * tilesX), counts.GetUInt(x + y * tilesX), (uint)(tilew * x), (uint)(tileh * y))
                                     {
                                         mUseBigtable = tilew * tileh > 1024 * 1024
                                     };
@@ -445,18 +445,18 @@ namespace RawNet
                             Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
                             Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
 
-                            UInt32 yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+                            uint yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
 
                             if (counts.dataCount != offsets.dataCount)
                             {
                                 throw new RawDecoderException("DNG Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", stips:" + offsets.dataCount);
                             }
 
-                            if (yPerSlice == 0 || yPerSlice > (UInt32)rawImage.dim.height)
+                            if (yPerSlice == 0 || yPerSlice > rawImage.dim.height)
                                 throw new RawDecoderException("DNG Decoder: Invalid y per slice");
 
-                            UInt32 offY = 0;
-                            for (UInt32 s = 0; s < counts.dataCount; s++)
+                            uint offY = 0;
+                            for (int s = 0; s < counts.dataCount; s++)
                             {
                                 DngSliceElement e = new DngSliceElement(offsets.GetUInt(s), counts.GetUInt(s), 0, offY)
                                 {
@@ -468,7 +468,7 @@ namespace RawNet
                                     slices.AddSlice(e);
                             }
                         }
-                        UInt32 nSlices = (uint)slices.slices.Count;
+                        int nSlices = slices.slices.Count;
                         if (nSlices == 0)
                             throw new RawDecoderException("DNG Decoder: No valid slices found.");
 
@@ -497,7 +497,7 @@ namespace RawNet
             {
                 if (as_shot_neutral.dataCount == 3)
                 {
-                    for (UInt32 i = 0; i < 3; i++)
+                    for (int i = 0; i < 3; i++)
                         rawImage.metadata.wbCoeffs[i] = 1.0f / Convert.ToSingle(as_shot_neutral.data[i]);
                 }
             }
@@ -513,7 +513,7 @@ namespace RawNet
                         rawImage.metadata.wbCoeffs[2] = 1 - rawImage.metadata.wbCoeffs[0] - rawImage.metadata.wbCoeffs[1];
 
                         float[] d65_white = { 0.950456F, 1, 1.088754F };
-                        for (UInt32 i = 0; i < 3; i++)
+                        for (int i = 0; i < 3; i++)
                             rawImage.metadata.wbCoeffs[i] /= d65_white[i];
                     }
                 }
@@ -593,7 +593,7 @@ namespace RawNet
             Tag lintable = raw.GetEntry(TagType.LINEARIZATIONTABLE);
             if (lintable != null)
             {
-                UInt32 len = lintable.dataCount;
+                uint len = lintable.dataCount;
                 lintable.GetShortArray(out ushort[] table, (int)len);
                 rawImage.SetTable(table, (int)len, true);
 
@@ -697,7 +697,7 @@ namespace RawNet
                     if (thumbIFD != null)
                     {
                         //there is a thumbnail
-                        UInt32 bps = thumbIFD.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+                        uint bps = thumbIFD.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
                         Point2D dim = new Point2D()
                         {
                             width = thumbIFD.GetEntry(TagType.IMAGEWIDTH).GetInt(0),
@@ -709,14 +709,14 @@ namespace RawNet
                         if (compression == 1)
                         {
                             // Uncompressed
-                            UInt32 cpp = thumbIFD.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                            uint cpp = thumbIFD.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
                             if (cpp > 4)
                                 throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
 
                             Tag offsets = thumbIFD.GetEntry(TagType.STRIPOFFSETS);
                             Tag counts = thumbIFD.GetEntry(TagType.STRIPBYTECOUNTS);
-                            UInt32 yPerSlice = thumbIFD.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
-                            
+                            uint yPerSlice = thumbIFD.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+
                             reader.BaseStream.Position = offsets.GetInt(0);
 
                             Thumbnail thumb = new Thumbnail()

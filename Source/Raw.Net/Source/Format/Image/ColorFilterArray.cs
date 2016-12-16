@@ -45,7 +45,7 @@ namespace RawNet
             return ((filters) >> ((((row) << 1 & 14) + ((col) & 1)) << 1) & 3);
         }
 
-        public ColorFilterArray(UInt32 filters)
+        public ColorFilterArray(uint filters)
         {
             Size = new Point2D(8, 2);
             cfa = null;
@@ -82,11 +82,11 @@ namespace RawNet
                 throw new RawDecoderException("ColorFilterArray:setSize Unable to allocate memory");
         }
 
-        public CFAColor GetColorAt(UInt32 x, UInt32 y)
+        public CFAColor GetColorAt(uint x, uint y)
         {
             if (cfa == null)
                 throw new RawDecoderException("ColorFilterArray:getColorAt: No CFA size set");
-            if (x >= (UInt32)Size.width || y >= (UInt32)Size.height)
+            if (x >= (uint)Size.width || y >= (uint)Size.height)
             {
                 x = (uint)(x % Size.width);
                 y = (uint)(y % Size.height);
@@ -171,7 +171,7 @@ namespace RawNet
             cfa[pos.width + pos.height * Size.width] = c;
         }
 
-        protected UInt32 GetDcrawFilter()
+        protected uint GetDcrawFilter()
         {
             //dcraw magic
             if (Size.width == 6 && Size.height == 6)
@@ -183,12 +183,12 @@ namespace RawNet
             if (Math.Log(Size.width, 2) % 1 == 0)
                 return 1;
 
-            UInt32 ret = 0;
+            uint ret = 0;
             for (int x = 0; x < 8; x++)
             {
                 for (int y = 0; y < 2; y++)
                 {
-                    UInt32 c = ToDcrawColor(GetColorAt((uint)x, (uint)y));
+                    uint c = ToDcrawColor(GetColorAt((uint)x, (uint)y));
                     int g = (x >> 1) * 8;
                     ret |= c << ((x & 1) * 2 + y * 4 + g);
                 }
@@ -196,7 +196,7 @@ namespace RawNet
             return ret;
         }
 
-        protected static CFAColor ToRawspeedColor(UInt32 dcrawColor)
+        protected static CFAColor ToRawspeedColor(uint dcrawColor)
         {
             switch (dcrawColor)
             {
@@ -208,7 +208,7 @@ namespace RawNet
             return CFAColor.UNKNOWN;
         }
 
-        protected static UInt32 ToDcrawColor(CFAColor c)
+        protected static uint ToDcrawColor(CFAColor c)
         {
             switch (c)
             {

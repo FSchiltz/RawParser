@@ -216,7 +216,7 @@ namespace RawNet
             List<NefSlice> slices = new List<NefSlice>();
             UInt32 offY = 0;
 
-            for (UInt32 s = 0; s < nslices; s++)
+            for (int s = 0; s < nslices; s++)
             {
                 NefSlice slice = new NefSlice()
                 {
@@ -292,7 +292,7 @@ namespace RawNet
 
         void ReadCoolpixMangledRaw(ref TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
-            UInt32 outPitch = rawImage.pitch;
+            // UInt32 outPitch = rawImage.pitch;
             UInt32 w = (uint)size.width;
             UInt32 h = (uint)size.height;
             UInt32 cpp = rawImage.cpp;
@@ -318,14 +318,14 @@ namespace RawNet
                 for (UInt32 x = 0; x < w; x++)
                 {
                     //TODO fix X
-                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + y * outPitch)] = (ushort)inputMSB.getBits(12);
+                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + y * rawImage.dim.width)] = (ushort)inputMSB.getBits(12);
                 }
             }
         }
 
         void ReadCoolpixSplitRaw(ref TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
-            UInt32 outPitch = rawImage.pitch;
+            //UInt32 outPitch = rawImage.pitch;
             UInt32 w = (uint)size.width;
             UInt32 h = (uint)size.height;
             UInt32 cpp = rawImage.cpp;
@@ -351,14 +351,14 @@ namespace RawNet
             {
                 for (UInt32 x = 0; x < w; x++)
                 {
-                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * outPitch)] = (ushort)inputMSB.getBits(12);
+                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * rawImage.dim.width)] = (ushort)inputMSB.getBits(12);
                 }
             }
             for (y = (uint)offset.height; y < h; y++)
             {
                 for (UInt32 x = 0; x < w; x++)
                 {
-                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + (y * 2 + 1) * outPitch)] = (ushort)inputMSB.getBits(12);
+                    rawImage.rawData[x + (offset.width * sizeof(UInt16) * cpp + (y * 2 + 1) * rawImage.dim.width)] = (ushort)inputMSB.getBits(12);
                 }
             }
         }
@@ -374,10 +374,10 @@ namespace RawNet
 
             UInt32 offset = rawIFD.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
             // Hardcode the sizes as at least the width is not correctly reported
-            uint w = 3040;
-            uint h = 2024;
+            int w = 3040;
+            int h = 2024;
             rawImage.ColorDepth = 12;
-            rawImage.dim = new Point2D((int)w, (int)h);
+            rawImage.dim = new Point2D(w, h);
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset);
             Decode12BitRawBEWithControl(ref input, w, h);
         }
@@ -648,7 +648,7 @@ namespace RawNet
         {
             if (w < 6) throw new IOException("NEF: got a " + w + " wide sNEF, aborting");
 
-            UInt32 pitch = rawImage.pitch;
+            //UInt32 pitch = rawImage.pitch;
             if (input.GetRemainSize() < (w * h * 3))
             {
                 if ((UInt32)input.GetRemainSize() > w * 3)
@@ -739,26 +739,26 @@ namespace RawNet
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 + 1.370705 * cr), 12), ref tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.rawData[x + (y * pitch)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.rawData[x + (y * rawImage.dim.width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
 
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 - 0.337633 * cb - 0.698001 * cr), 12), ref rawImage.rawData, x + 1, ref random);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 + 1.732446 * cb), 12), ref tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.rawData[x + 2 + (y * pitch)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.rawData[x + 2 + (y * rawImage.dim.width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 + 1.370705 * cr2), 12), ref tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.rawData[x + 3 + (y * pitch)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.rawData[x + 3 + (y * rawImage.dim.width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
 
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 - 0.337633 * cb2 - 0.698001 * cr2), 12), ref rawImage.rawData, x + 4, ref random);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 + 1.732446 * cb2), 12), ref tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.rawData[x + 5 + (y * pitch)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.rawData[x + 5 + (y * rawImage.dim.width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                 }
             }
             rawImage.table = (null);

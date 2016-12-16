@@ -69,19 +69,19 @@ namespace RawNet
             if (dataAsString == "FUJIFILM")
             {
                 // First IFD typically JPEG and EXIF
-                UInt32 first_ifd = (uint)(data[87] | (data[86] << 8) | (data[85] << 16) | (data[84] << 24));
+                uint first_ifd = (uint)(data[87] | (data[86] << 8) | (data[85] << 16) | (data[84] << 24));
                 first_ifd += 12;
                 if (stream.Length <= first_ifd)
                   throw new RawDecoderException("File too small (FUJI first IFD)");
 
                 // RAW IFD on newer, pointer to raw data on older models, so we try parsing first
                 // And adds it as data if parsin fails
-                UInt32 second_ifd = (UInt32)(data[103] | (data[102] << 8) | (data[101] << 16) | (data[100] << 24));
+                uint second_ifd = (uint)(data[103] | (data[102] << 8) | (data[101] << 16) | (data[100] << 24));
                 if (stream.Length <= second_ifd)
                   second_ifd = 0;
 
                 // RAW information IFD on older
-                UInt32 third_ifd = (uint)(data[95] | (data[94] << 8) | (data[93] << 16) | (data[92] << 24));
+                uint third_ifd = (uint)(data[95] | (data[94] << 8) | (data[93] << 16) | (data[92] << 24));
                 if (stream.Length <= third_ifd)
                   third_ifd = 0;
 
@@ -133,7 +133,7 @@ namespace RawNet
                         entry.setData(&second_ifd, 4);
                         new_ifd.mEntry[entry.tag] = entry;
                         entry = new TiffEntry(FUJI_STRIPBYTECOUNTS, TIFF_LONG, 1);
-                        UInt32 max_size = Math.Math.Min((put.getSize() - second_ifd;
+                        uint max_size = Math.Math.Min((put.getSize() - second_ifd;
                         entry.setData(&max_size, 4);
                         new_ifd.mEntry[entry.tag] = entry;
                     }
@@ -204,7 +204,6 @@ namespace RawNet
             throw new FormatException("No decoder found. Sorry.");
         }
 
-
         public static RawDecoder GetDecoder(ref Stream stream, string fileType)
         {
             switch (fileType.ToUpper())
@@ -223,7 +222,10 @@ namespace RawNet
                     return new PefDecoder(ref stream);
                 case ".DNG":
                     return new DngDecoder(ref stream);
-
+                case ".ORF":
+                    return new OrfDecoder(ref stream);
+                case ".RAW":
+                    return new Rw2Decoder(ref stream);
                 //other raw format
                 case ".JPG":
                 case ".JPEG":
@@ -250,17 +252,17 @@ namespace RawNet
         /* Parse FUJI information */
         /* It is a simpler form of Tiff IFD, so we add them as TiffEntries */
         /*
-        void RawParser::ParseFuji(UInt32 offset, TiffIFD* target_ifd)
+        void RawParser::ParseFuji(uint offset, TiffIFD* target_ifd)
         {
             try
             {
                 ByteStreamSwap bytes(Math.Math.Min((put, offset);
-                UInt32 entries = bytes.GetUInt(0);
+                uint entries = bytes.GetUInt(0);
 
                 if (entries > 255)
                     ThrowTPE("ParseFuji: Too many entries");
 
-                for (UInt32 i = 0; i < entries; i++)
+                for (int i = 0; i < entries; i++)
                 {
                     UInt16 tag = bytes.GetShort(0);
                     UInt16 length = bytes.GetShort(0);

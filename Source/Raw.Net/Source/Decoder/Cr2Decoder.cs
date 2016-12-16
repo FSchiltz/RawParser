@@ -7,10 +7,10 @@ namespace RawNet
 {
     class Cr2Slice
     {
-        public UInt32 w;
-        public UInt32 h;
-        public UInt32 offset;
-        public UInt32 count;
+        public int w;
+        public int h;
+        public uint offset;
+        public uint count;
     };
 
     internal class Cr2Decoder : TiffDecoder
@@ -47,7 +47,7 @@ namespace RawNet
         {
             if (hints.ContainsKey("old_format"))
             {
-                UInt32 off = 0;
+                uint off = 0;
                 var t = ifd.GetEntryRecursive((TagType)0x81);
                 if (t != null)
                     off = t.GetUInt(0);
@@ -67,8 +67,8 @@ namespace RawNet
 
                 var b = new TIFFBinaryReader(reader.BaseStream, off + 41);
 
-                UInt32 height = (uint)b.ReadInt16();
-                UInt32 width = (uint)b.ReadInt16();
+                int height = b.ReadInt16();
+                int width = b.ReadInt16();
 
                 // Every two lines can be encoded as a single line, probably to try and get
                 // better compression by getting the same RGBG sequence in every line
@@ -87,7 +87,7 @@ namespace RawNet
                 LJpegPlain l = new LJpegPlain(reader, rawImage);
                 try
                 {
-                    l.StartDecoder(off, (uint)(reader.BaseStream.Length - off), 0, 0);                    
+                    l.StartDecoder(off, (uint)(reader.BaseStream.Length - off), 0, 0);
                 }
                 catch (IOException e)
                 {
@@ -107,9 +107,9 @@ namespace RawNet
                     procRaw.metadata = rawImage.metadata;
                     //procRaw.copyErrorsFrom(rawImage);
 
-                    for (UInt32 y = 0; y < height; y++)
+                    for (int y = 0; y < height; y++)
                     {
-                        for (UInt32 x = 0; x < width; x++)
+                        for (int x = 0; x < width; x++)
                             procRaw.rawData[x] = rawImage.rawData[((y % 2 == 0) ? 0 : width) + x];
                     }
                     rawImage = procRaw;
@@ -122,7 +122,7 @@ namespace RawNet
                     if (curve.dataType == TiffDataType.SHORT && curve.dataCount == 4096)
                     {
                         Tag linearization = ifd.GetEntryRecursive((TagType)0x123);
-                        UInt32 len = linearization.dataCount;
+                        uint len = linearization.dataCount;
                         linearization.GetShortArray(out var table, (int)len);
 
                         rawImage.SetTable(table, 4096, true);
@@ -157,7 +157,7 @@ namespace RawNet
                 Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
                 Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
                 // Iterate through all slices
-                for (UInt32 s = 0; s < offsets.dataCount; s++)
+                for (int s = 0; s < offsets.dataCount; s++)
                 {
                     Cr2Slice slice = new Cr2Slice()
                     {
@@ -167,7 +167,7 @@ namespace RawNet
                     SOFInfo sof = new SOFInfo();
                     LJpegPlain l = new LJpegPlain(reader, rawImage);
                     l.GetSOF(ref sof, slice.offset, slice.count);
-                    slice.w = sof.w * sof.cps;
+                    slice.w = (int)(sof.w * sof.cps);
                     slice.h = sof.h;
                     if (sof.cps == 4 && slice.w > slice.h * 4)
                     {
@@ -252,7 +252,7 @@ namespace RawNet
             {
                 s_width.Add((int)slices[0].w);
             }
-            UInt32 offY = 0;
+            uint offY = 0;
 
             if (s_width.Count > 15)
                 throw new RawDecoderException("CR2 Decoder: No more than 15 slices supported");
@@ -282,7 +282,7 @@ namespace RawNet
                     // Let's try to ignore this - it might be truncated data, so something might be useful.
                     rawImage.errors.Add(e.Message);
                 }
-                offY += slice.w;
+                offY += (uint)slice.w;
             }
 
             if (rawImage.metadata.subsampling.width > 1 || rawImage.metadata.subsampling.height > 1)
@@ -521,7 +521,7 @@ namespace RawNet
             {
                 return 0;
             }
-            UInt32 model_id = ifd.GetEntryRecursive((TagType)0x10).GetUInt(0);
+            uint model_id = ifd.GetEntryRecursive((TagType)0x10).GetUInt(0);
             if (model_id >= 0x80000281 || model_id == 0x80000218 || (hints.ContainsKey("force_new_sraw_hue")))
                 return ((rawImage.metadata.subsampling.height * rawImage.metadata.subsampling.width) - 1) >> 1;
 

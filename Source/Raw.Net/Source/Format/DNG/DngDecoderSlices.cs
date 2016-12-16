@@ -7,7 +7,7 @@ namespace RawNet
 
     internal class DngSliceElement
     {
-        public DngSliceElement(UInt32 off, UInt32 count, UInt32 offsetX, UInt32 offsetY)
+        public DngSliceElement(uint off, uint count, uint offsetX, uint offsetY)
         {
             byteOffset = (off);
             byteCount = (count);
@@ -16,10 +16,10 @@ namespace RawNet
             mUseBigtable = (false);
         }
 
-        public UInt32 byteOffset;
-        public UInt32 byteCount;
-        public UInt32 offX;
-        public UInt32 offY;
+        public uint byteOffset;
+        public uint byteCount;
+        public uint offX;
+        public uint offY;
         public bool mUseBigtable;
     };
 

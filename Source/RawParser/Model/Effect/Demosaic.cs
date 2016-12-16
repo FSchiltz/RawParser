@@ -22,19 +22,19 @@ namespace RawEditor
             switch (algo)
             {
                 case DemosAlgorithm.AHD:
-                    Demosaic.AHD(image, deflated);
+                    AHD(image, deflated);
                     break;
                 //break;
                 case DemosAlgorithm.Bicubic:
-                    Demosaic.Bicubic(image, deflated);
+                    Bicubic(image, deflated);
                     break;
                 case DemosAlgorithm.Spline:
                 //break;
                 case DemosAlgorithm.Bilinear:
-                    Demosaic.Bilinear(image, deflated);
+                    Bilinear(image, deflated);
                     break;
                 case DemosAlgorithm.Deflate:
-                    Demosaic.Deflate(image, deflated);
+                    Deflate(image, deflated);
                     break;
             }
             //set correct dim

@@ -10,8 +10,31 @@ using Windows.UI.Core;
 
 namespace RawEditor
 {
-    public static class SaveHelper
+    public static class FormatHelper
     {
+        public static List<string> ReadSupportedFormat
+        {
+            get
+            {
+                var temp = new List<string>();
+                temp.Add(".tiff");
+                temp.Add(".tif");
+                temp.Add(".jpg");
+                temp.Add(".jpeg");
+                temp.Add(".png");
+
+                //raw
+                temp.Add(".nef");
+                temp.Add(".dng");
+                temp.Add(".cr2");
+                temp.Add(".pef");
+                temp.Add(".arw");
+                temp.Add(".raw");
+                temp.Add(".orf");
+                return temp;
+            }
+        }
+
         public static Dictionary<string, List<string>> SaveSupportedFormat
         {
             get

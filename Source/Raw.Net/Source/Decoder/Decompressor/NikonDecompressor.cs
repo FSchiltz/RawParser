@@ -23,37 +23,37 @@ namespace RawNet
 
         public NikonDecompressor(TIFFBinaryReader file, RawImage img) : base(file, img)
         {
-            for (UInt32 i = 0; i < 0x8000; i++)
+            for (int i = 0; i < 0x8000; i++)
             {
                 curve[i] = (ushort)i;
             }
         }
 
-        public void InitTable(UInt32 huffSelect)
+        public void InitTable(uint huffSelect)
         {
             HuffmanTable dctbl1 = huff[0];
-            UInt32 acc = 0;
-            for (UInt32 i = 0; i < 16; i++)
+            uint acc = 0;
+            for (int i = 0; i < 16; i++)
             {
                 dctbl1.bits[i + 1] = nikon_tree[huffSelect][i];
                 acc += dctbl1.bits[i + 1];
             }
             dctbl1.bits[0] = 0;
 
-            for (UInt32 i = 0; i < acc; i++)
+            for (int i = 0; i < acc; i++)
             {
                 dctbl1.huffval[i] = nikon_tree[huffSelect][i + 16];
             }
             CreateHuffmanTable(dctbl1);
         }
 
-        public void DecompressNikon(TIFFBinaryReader metadata, UInt32 offset, UInt32 size)
+        public void DecompressNikon(TIFFBinaryReader metadata, uint offset, uint size)
         {
             metadata.Position = 0;
             byte v0 = metadata.ReadByte();
             byte v1 = metadata.ReadByte();
-            UInt32 huffSelect = 0;
-            UInt32 split = 0;
+            uint huffSelect = 0;
+            uint split = 0;
             int[] pUp1 = new int[2];
             int[] pUp2 = new int[2];
             UseBigtable = true;
@@ -77,7 +77,7 @@ namespace RawNet
                 step = max / (csize - 1);
             if (v0 == 68 && v1 == 32 && step > 0)
             {
-                for (UInt32 i = 0; i < csize; i++)
+                for (int i = 0; i < csize; i++)
                     curve[i * step] = metadata.ReadUInt16();
                 for (int i = 0; i < max; i++)
                     curve[i] = (ushort)((curve[i - i % step] * (step - i % step) + curve[i - i % step + step] * (i % step)) / step);
@@ -100,7 +100,7 @@ namespace RawNet
 
             BitPumpMSB bits = new BitPumpMSB(ref input, offset, size);
             int pLeft1 = 0, pLeft2 = 0;
-            UInt32 random = bits.peekBits(24);
+            uint random = bits.peekBits(24);
             for (int y = 0; y < mRaw.dim.height; y++)
             {
                 if (split != 0 && (y == split))

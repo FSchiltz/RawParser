@@ -54,11 +54,11 @@ namespace RawNet
                     if (data.Count == 0)
                         throw new RawDecoderException("ARW: A100 format, couldn't find offset");
                     raw = data[0];
-                    UInt32 offset = raw.GetEntry(TagType.SUBIFDS).GetUInt(0);
-                    UInt32 w = 3881;
-                    UInt32 h = 2608;
+                    uint offset = raw.GetEntry(TagType.SUBIFDS).GetUInt(0);
+                    int w = 3881;
+                    int h = 2608;
 
-                    rawImage.dim = new Point2D((int)w, (int)h);
+                    rawImage.dim = new Point2D(w, h);
                     rawImage.Init();
                     reader = new TIFFBinaryReader(reader.BaseStream, offset);
 
@@ -82,21 +82,21 @@ namespace RawNet
                         throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
                     raw = data[0];
 
-                    UInt32 w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-                    UInt32 h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-                    UInt32 len = w * h * 2;
+                    int w = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
+                    int h = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+                    uint len = (uint)(w * h * 2);
 
                     // Constants taken from dcraw
-                    UInt32 offtemp = 862144;
-                    UInt32 key_off = 200896;
-                    UInt32 head_off = 164600;
+                    uint offtemp = 862144;
+                    uint key_off = 200896;
+                    uint head_off = 164600;
 
                     // Replicate the dcraw contortions to get the "decryption" key
                     base.reader.Position = key_off; ;
-                    UInt32 offset = (uint)base.reader.ReadByte() * 4;
+                    int offset = base.reader.ReadByte() * 4;
                     base.reader.Position = key_off + offset;
                     byte[] d = base.reader.ReadBytes(4);
-                    UInt32 key = (((uint)(d[0]) << 24) | ((uint)(d[1]) << 16) | ((uint)(d[2]) << 8) | (uint)(d[3]));
+                    uint key = (((uint)(d[0]) << 24) | ((uint)(d[1]) << 16) | ((uint)(d[2]) << 8) | d[3]);
                     base.reader.Position = head_off;
                     byte[] head = base.reader.ReadBytes(40);
 
@@ -112,7 +112,7 @@ namespace RawNet
                     SonyDecrypt(imageData, len / 4, key);
 
                     // And now decode as a normal 16bit raw
-                    rawImage.dim = new Point2D((int)w, (int)h);
+                    rawImage.dim = new Point2D(w, h);
                     rawImage.Init();
                     TIFFBinaryReader reader = new TIFFBinaryReader(imageData, len);
                     Decode16BitRawBEunpacked(reader, w, h);
@@ -155,9 +155,9 @@ namespace RawNet
             {
                 throw new RawDecoderException("ARW Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:%u " + offsets.dataCount);
             }
-            UInt32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-            UInt32 height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-            UInt32 bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+            int width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
+            int height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+            int bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
             rawImage.ColorDepth = (ushort)bitPerPixel;
             // Sony E-550 marks compressed 8bpp ARW with 12 bit per pixel
             // this makes the compression detect it as a ARW v1.
@@ -184,23 +184,23 @@ namespace RawNet
 
             UInt16[] curve = new UInt16[0x4001];
             Tag c = raw.GetEntry(TagType.SONY_CURVE);
-            UInt32[] sony_curve = { 0, 0, 0, 0, 0, 4095 };
+            uint[] sony_curve = { 0, 0, 0, 0, 0, 4095 };
 
-            for (Int32 i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
                 sony_curve[i + 1] = (uint)(c.GetShort(i) >> 2) & 0xfff;
 
-            for (Int32 i = 0; i < 0x4001; i++)
+            for (int i = 0; i < 0x4001; i++)
                 curve[i] = (ushort)i;
 
-            for (UInt32 i = 0; i < 5; i++)
-                for (UInt32 j = sony_curve[i] + 1; j <= sony_curve[i + 1]; j++)
-                    curve[j] = (ushort)(curve[j - 1] + (1 << (int)i));
+            for (int i = 0; i < 5; i++)
+                for (uint j = sony_curve[i] + 1; j <= sony_curve[i + 1]; j++)
+                    curve[j] = (ushort)(curve[j - 1] + (1 << i));
 
 
             rawImage.SetTable(curve, 0x4000, true);
 
-            UInt32 c2 = counts.GetUInt(0);
-            UInt32 off = offsets.GetUInt(0);
+            uint c2 = counts.GetUInt(0);
+            uint off = offsets.GetUInt(0);
 
             if (!reader.IsValid(off))
                 throw new RawDecoderException("Sony ARW decoder: Data offset after EOF, file probably truncated");
@@ -230,11 +230,11 @@ namespace RawNet
 
         void DecodeUncompressed(IFD raw)
         {
-            UInt32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-            UInt32 height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-            UInt32 off = raw.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
+            int width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
+            int height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+            uint off = raw.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
 
-            rawImage.dim = new Point2D((int)width, (int)height);
+            rawImage.dim = new Point2D(width, height);
             rawImage.Init();
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, off);
 
@@ -244,21 +244,21 @@ namespace RawNet
                 Decode16BitRawUnpacked(input, width, height);
         }
 
-        unsafe void DecodeARW(ref TIFFBinaryReader input, UInt32 w, UInt32 h)
+        unsafe void DecodeARW(ref TIFFBinaryReader input, int w, int h)
         {
             BitPumpMSB bits = new BitPumpMSB(ref input);
             fixed (UInt16* dest = rawImage.rawData)
             {
-                UInt32 pitch = rawImage.pitch / sizeof(UInt16);
+                //uint pitch = rawImage.pitch / sizeof(UInt16);
                 int sum = 0;
-                for (UInt32 x = w; (x--) != 0;)
+                for (int x = w; (x--) != 0;)
                 {
-                    for (UInt32 y = 0; y < h + 1; y += 2)
+                    for (int y = 0; y < h + 1; y += 2)
                     {
                         bits.checkPos();
                         bits.fill();
                         if (y == h) y = 1;
-                        UInt32 len = 4 - bits.getBitsNoFill(2);
+                        uint len = 4 - bits.getBitsNoFill(2);
                         if (len == 3 && bits.getBitNoFill() != 0) len = 0;
                         if (len == 4)
                             while (len < 17 && bits.getBitNoFill() == 0) len++;
@@ -267,13 +267,13 @@ namespace RawNet
                             diff -= (uint)(1 << (int)len) - 1;
                         sum += (int)diff;
                         // Debug.Assert((sum >> 12) == 0);
-                        if (y < h) dest[x + y * pitch] = (ushort)sum;
+                        if (y < h) dest[x + y * rawImage.dim.width] = (ushort)sum;
                     }
                 }
             }
         }
 
-        void DecodeARW2(ref TIFFBinaryReader input, UInt32 w, UInt32 h, UInt32 bpp)
+        void DecodeARW2(ref TIFFBinaryReader input, int w, int h, int bpp)
         {
             input.Position = 0;
             if (bpp == 8)
@@ -321,35 +321,27 @@ namespace RawNet
             {
                 unsafe
                 {
-                    fixed (ushort* dataShort = rawImage.rawData)
+                    byte[] inputTempArray = input.ReadBytes((int)input.BaseStream.Length);
+                    fixed (byte* inputTemp = inputTempArray)
                     {
-                        byte* data = ((byte*)dataShort);
-                        UInt32 pitch = rawImage.pitch;
-                        byte[] inputTempArray = input.ReadBytes((int)input.BaseStream.Length);
-                        fixed (byte* inputTemp = inputTempArray)
+                        byte* t2 = inputTemp;
+                        if (input.GetRemainSize() < (w * 3 / 2))
+                            throw new RawDecoderException("Sony Decoder: Image data section too small, file probably truncated");
+
+                        if (input.GetRemainSize() < (w * h * 3 / 2))
+                            h = input.GetRemainSize() / (w * 3 / 2) - 1;
+
+                        for (uint y = 0; y < h; y++)
                         {
-                            byte* t2 = inputTemp;
-                            if (input.GetRemainSize() < (w * 3 / 2))
-                                throw new RawDecoderException("Sony Decoder: Image data section too small, file probably truncated");
-
-                            if (input.GetRemainSize() < (w * h * 3 / 2))
-                                h = (uint)input.GetRemainSize() / (w * 3 / 2) - 1;
-
-                            for (uint y = 0; y < h; y++)
+                            for (uint x = 0; x < w; x += 2)
                             {
-                                byte* temp = &data[y * pitch];
-
-                                UInt16* dest = (UInt16*)temp;
-                                for (uint x = 0; x < w; x += 2)
-                                {
-                                    UInt32 g1 = *(t2++);
-                                    UInt32 g2 = *(t2++);
-                                    dest[x] = (ushort)(g1 | ((g2 & 0xf) << 8));
-                                    UInt32 g3 = *(t2++);
-                                    dest[x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
-                                }
-
+                                uint g1 = *(t2++);
+                                uint g2 = *(t2++);
+                                rawImage.rawData[y * rawImage.dim.width + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                                uint g3 = *(t2++);
+                                rawImage.rawData[y * rawImage.dim.width + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                             }
+
                         }
                     }
                 }
@@ -395,26 +387,26 @@ namespace RawNet
                 if (priv != null)
                 {
                     byte[] offdata = priv.GetByteArray();
-                    UInt32 off = ((uint)(offdata[3] << 24) | (uint)(offdata[2] << 16) |
-                            (uint)(offdata[1] << 8) | (uint)offdata[0]);
-                    UInt32 length = (uint)reader.BaseStream.Length - off;
+                    uint off = ((uint)(offdata[3] << 24) | (uint)(offdata[2] << 16) |
+                            (uint)(offdata[1] << 8) | offdata[0]);
+                    uint length = (uint)reader.BaseStream.Length - off;
                     reader.BaseStream.Position = off;
                     byte[] stringdata = reader.ReadBytes((int)length);
                     Int32 currpos = 8;
                     while (currpos + 20 < length)
                     {
-                        UInt32 tag = (((uint)(stringdata[currpos]) << 24) | ((uint)(stringdata[currpos + 1]) << 16) | ((uint)(stringdata[currpos + 2]) << 8) |
-                            (uint)(stringdata[currpos + 3]));
-                        UInt32 len = ((uint)(stringdata[currpos + 4 + 3] << 24) | (uint)(stringdata[currpos + 4 + 2] << 16) |
-                            (uint)(stringdata[currpos + 4 + 1] << 8) | (uint)stringdata[currpos + 4]);
+                        uint tag = (((uint)(stringdata[currpos]) << 24) | ((uint)(stringdata[currpos + 1]) << 16) | ((uint)(stringdata[currpos + 2]) << 8) |
+                            stringdata[currpos + 3]);
+                        uint len = ((uint)(stringdata[currpos + 4 + 3] << 24) | (uint)(stringdata[currpos + 4 + 2] << 16) |
+                            (uint)(stringdata[currpos + 4 + 1] << 8) | stringdata[currpos + 4]);
 
                         if (tag == 0x574247)
                         { /* WBG */
                             UInt16[] tmp = new UInt16[4];
-                            for (UInt32 i = 0; i < 4; i++)
-                                tmp[i] = (ushort)(((int)stringdata[(currpos + 12 + i * 2) + 1] << 8) | (int)stringdata[currpos + 12 + i * 2]);
+                            for (int i = 0; i < 4; i++)
+                                tmp[i] = (ushort)(stringdata[(currpos + 12 + i * 2) + 1] << 8 | stringdata[currpos + 12 + i * 2]);
 
-                            rawImage.metadata.wbCoeffs[0] = (float)tmp[0]/tmp[1];
+                            rawImage.metadata.wbCoeffs[0] = (float)tmp[0] / tmp[1];
                             rawImage.metadata.wbCoeffs[1] = (float)tmp[1] / tmp[1];
                             rawImage.metadata.wbCoeffs[2] = (float)tmp[3] / tmp[1];
                             break;
@@ -517,12 +509,12 @@ namespace RawNet
             }
         }
 
-        unsafe static void SonyDecrypt(byte[] ifpData, UInt32 len, UInt32 key)
+        unsafe static void SonyDecrypt(byte[] ifpData, uint len, uint key)
         {
             fixed (byte* temp = ifpData)
             {
-                UInt32* buffer = (UInt32*)temp;
-                UInt32* pad = stackalloc UInt32[128];
+                uint* buffer = (uint*)temp;
+                uint* pad = stackalloc uint[128];
 
                 // Initialize the decryption pad from the key
                 for (int p = 0; p < 4; p++)
@@ -538,7 +530,7 @@ namespace RawNet
                 for (int p = 0; p < 127; p++)
                 {
                     pad[p] = ((((uint)((byte*)&pad[p])[0]) << 24) | (((uint)((byte*)&pad[p])[1]) << 16) |
-                        (((uint)((byte*)&pad[p])[2]) << 8) | ((uint)((byte*)&pad[p])[3]));
+                        (((uint)((byte*)&pad[p])[2]) << 8) | ((byte*)&pad[p])[3]);
                 }
                 int p2 = 127;
                 // Decrypt the buffer in place using the pad
@@ -558,7 +550,7 @@ namespace RawNet
             if (priv != null)
             {
                 byte[] data = priv.GetByteArray();
-                UInt32 off = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | ((uint)(data)[0]));
+                uint off = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | (data)[0]);
                 IFD sony_private;
                 sony_private = new IFD(reader, off, ifd.endian);
 
@@ -569,9 +561,9 @@ namespace RawNet
                     throw new RawDecoderException("ARW: couldn't find the correct metadata for WB decoding");
 
                 off = sony_offset.GetUInt(0);
-                UInt32 len = sony_length.GetUInt(0);
+                uint len = sony_length.GetUInt(0);
                 data = sony_key.GetByteArray();
-                UInt32 key = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | ((uint)(data)[0]));
+                uint key = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | (data)[0]);
                 reader.BaseStream.Position = off;
                 byte[] ifp_data = reader.ReadBytes((int)len);
                 SonyDecrypt(ifp_data, len / 4, key);
