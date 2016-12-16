@@ -143,8 +143,11 @@
     <Compile Include="Source\Decoder\DngDecoder.cs" />
     <Compile Include="Source\Decoder\JPGDecoder.cs" />
     <Compile Include="Source\Decoder\NEFDecoder.cs" />
+    <Compile Include="Source\Decoder\OrfDecoder.cs" />
+    <Compile Include="Source\Decoder\Decompressor\PanaBitpump.cs" />
     <Compile Include="Source\Decoder\PefDecoder.cs" />
     <Compile Include="Source\Decoder\RawDecoder.cs" />
+    <Compile Include="Source\Decoder\Rw2Decoder.cs" />
     <Compile Include="Source\Decoder\TIFFDecoder.cs" />
     <Compile Include="Source\Exception\RawDecoderException.cs" />
     <Compile Include="Source\Format\Ciff\CiffTag.cs" />

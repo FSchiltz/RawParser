@@ -8,7 +8,7 @@ namespace RawNet
         BitPumpMSB pentaxBits;
         public PentaxDecompressor(TIFFBinaryReader file, RawImage img) : base(file, img) { }
 
-        public void DecodePentax(IFD root, UInt32 offset, UInt32 size)
+        public void DecodePentax(IFD root, uint offset, uint size)
         {
             // Prepare huffmann table              0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 = 16 entries
             byte[] pentax_tree =  { 0, 2, 3, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0,
@@ -30,34 +30,34 @@ namespace RawNet
                     else
                         stream = new TIFFBinaryReaderRE(t.GetByteArray());
 
-                    UInt32 depth = (uint)(stream.ReadUInt16() + 12) & 0xf;
+                    int depth = (stream.ReadUInt16() + 12) & 0xf;
 
                     stream.ReadBytes(12);
-                    UInt32[] v0 = new UInt32[16];
-                    UInt32[] v1 = new UInt32[16];
-                    UInt32[] v2 = new UInt32[16];
-                    for (UInt32 i = 0; i < depth; i++)
+                    uint[] v0 = new uint[16];
+                    uint[] v1 = new uint[16];
+                    uint[] v2 = new uint[16];
+                    for (int i = 0; i < depth; i++)
                         v0[i] = stream.ReadUInt16();
 
-                    for (UInt32 i = 0; i < depth; i++)
+                    for (int i = 0; i < depth; i++)
                         v1[i] = stream.ReadByte();
 
                     /* Reset bits */
-                    for (UInt32 i = 0; i < 17; i++)
+                    for (int i = 0; i < 17; i++)
                         dctbl1.bits[i] = 0;
 
                     /* Calculate codes and store bitcounts */
-                    for (UInt32 c = 0; c < depth; c++)
+                    for (int c = 0; c < depth; c++)
                     {
                         v2[c] = v0[c] >> (int)(12 - v1[c]);
                         dctbl1.bits[v1[c]]++;
                     }
                     /* Find smallest */
-                    for (UInt32 i = 0; i < depth; i++)
+                    for (int i = 0; i < depth; i++)
                     {
-                        UInt32 sm_val = 0xfffffff;
-                        UInt32 sm_num = 0xff;
-                        for (UInt32 j = 0; j < depth; j++)
+                        uint sm_val = 0xfffffff;
+                        uint sm_num = 0xff;
+                        for (uint j = 0; j < depth; j++)
                         {
                             if (v2[j] <= sm_val)
                             {
@@ -78,14 +78,14 @@ namespace RawNet
             else
             {
                 /* Initialize with legacy data */
-                UInt32 acc = 0;
-                for (UInt32 i = 0; i < 16; i++)
+                uint acc = 0;
+                for (int i = 0; i < 16; i++)
                 {
                     dctbl1.bits[i + 1] = pentax_tree[i];
                     acc += dctbl1.bits[i + 1];
                 }
                 dctbl1.bits[0] = 0;
-                for (UInt32 i = 0; i < acc; i++)
+                for (int i = 0; i < acc; i++)
                 {
                     dctbl1.huffval[i] = pentax_tree[i + 16];
                 }
@@ -97,26 +97,25 @@ namespace RawNet
             pentaxBits = new BitPumpMSB(ref input, offset, size);
             unsafe
             {
-                fixed (ushort* tt = mRaw.rawData)
-                {
-                    byte* draw = (byte*)tt;
-                    UInt16* dest;
-                    Int32 w = mRaw.dim.width;
-                    Int32 h = mRaw.dim.height;
-                    int[] pUp1 = { 0, 0 };
-                    int[] pUp2 = { 0, 0 };
-                    int pLeft1 = 0;
-                    int pLeft2 = 0;
 
-                    for (UInt32 y = 0; y < h; y++)
+                Int32 w = mRaw.dim.width;
+                Int32 h = mRaw.dim.height;
+                int[] pUp1 = { 0, 0 };
+                int[] pUp2 = { 0, 0 };
+                int pLeft1 = 0;
+                int pLeft2 = 0;
+
+                for (int y = 0; y < h; y++)
+                {
+                    pentaxBits.checkPos();
+                    fixed (UInt16* dest = &mRaw.rawData[y * mRaw.dim.width])
                     {
-                        pentaxBits.checkPos();
-                        dest = (UInt16*)&draw[y * mRaw.pitch];  // Adjust destination
+                        // Adjust destination
                         pUp1[y & 1] += HuffDecodePentax();
                         pUp2[y & 1] += HuffDecodePentax();
                         dest[0] = (ushort)(pLeft1 = pUp1[y & 1]);
                         dest[1] = (ushort)(pLeft2 = pUp2[y & 1]);
-                        for (UInt32 x = 2; x < w; x += 2)
+                        for (int x = 2; x < w; x += 2)
                         {
                             pLeft1 += HuffDecodePentax();
                             pLeft2 += HuffDecodePentax();

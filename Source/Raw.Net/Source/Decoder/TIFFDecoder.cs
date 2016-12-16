@@ -36,7 +36,7 @@ namespace RawNet
                 throw new RawDecoderException("Not a TIFF file (ID)");
             }
 
-            UInt32 nextIFD;
+            uint nextIFD;
             reader.Position = 4;
             nextIFD = reader.ReadUInt32();
             ifd = new IFD(reader, nextIFD, endian, 0);
@@ -67,9 +67,9 @@ namespace RawNet
             {
                 if (!ifd.tags.TryGetValue((TagType)0x0102, out var bitPerSampleTag)) throw new FormatException("File not correct");
                 if (!ifd.tags.TryGetValue((TagType)0x0115, out var samplesPerPixel)) throw new FormatException("File not correct");
-                uint height = Convert.ToUInt32(imageHeightTag.data[0]);
-                uint width = Convert.ToUInt32(imageWidthTag.data[0]);
-                rawImage.dim = new Point2D((int)width, (int)height);
+                int height = imageHeightTag.GetInt(0);
+                int width = imageWidthTag.GetInt(0);
+                rawImage.dim = new Point2D(width, height);
                 rawImage.uncroppedDim = rawImage.dim;
                 //suppose that image are always 8,8,8 or 16,16,16
                 ushort colorDepth = (ushort)bitPerSampleTag.data[0];

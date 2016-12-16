@@ -105,18 +105,11 @@ namespace RawEditor
                     ViewMode = PickerViewMode.Thumbnail,
                     SuggestedStartLocation = PickerLocationId.ComputerFolder
                 };
-                filePicker.FileTypeFilter.Add(".tiff");
-                filePicker.FileTypeFilter.Add(".tif");
-                filePicker.FileTypeFilter.Add(".jpg");
-                filePicker.FileTypeFilter.Add(".jpeg");
-                filePicker.FileTypeFilter.Add(".png");
-
-                //raw
-                filePicker.FileTypeFilter.Add(".nef");
-                filePicker.FileTypeFilter.Add(".dng");
-                filePicker.FileTypeFilter.Add(".cr2");
-                filePicker.FileTypeFilter.Add(".pef");
-                filePicker.FileTypeFilter.Add(".arw");
+                // Dropdown of file types the user can open
+                foreach (string format in FormatHelper.ReadSupportedFormat)
+                {
+                    filePicker.FileTypeFilter.Add(format);
+                }                
                 StorageFile file = await filePicker.PickSingleFileAsync();
                 if (file != null)
                 {
@@ -129,6 +122,7 @@ namespace RawEditor
                     catch (Exception ex)
                     {
                         ExceptionDisplay.DisplayAsync(ex.Message + ex.StackTrace);
+                        raw = null;
                         ImageSelected = false;
                     }
                 }
@@ -138,7 +132,6 @@ namespace RawEditor
         //Always call in the UI thread
         private async void EmptyImageAsync()
         {
-
             //empty the previous image data
             raw = null;
             await CoreApplication.MainView.CoreWindow.Dispatcher
@@ -186,9 +179,9 @@ namespace RawEditor
                 rValue = (int)(r * 255);
                 bValue = (int)(b * 255);
                 gValue = (int)(g * 255);
-               /* if (rValue > 510) rValue = 765;
-                if (bValue > 510) bValue = 765;
-                if (gValue > 510) gValue = 765;*/
+                /* if (rValue > 510) rValue = 765;
+                 if (bValue > 510) bValue = 765;
+                 if (gValue > 510) gValue = 765;*/
 
             }
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -391,7 +384,7 @@ namespace RawEditor
                     SuggestedFileName = raw.metadata.FileName
                 };
                 // Dropdown of file types the user can save the file as
-                foreach (KeyValuePair<string, List<string>> format in SaveHelper.SaveSupportedFormat)
+                foreach (KeyValuePair<string, List<string>> format in FormatHelper.SaveSupportedFormat)
                 {
                     savePicker.FileTypeChoices.Add(format.Key, format.Value);
                 }
@@ -416,7 +409,7 @@ namespace RawEditor
                     ApplyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
                     try
                     {
-                        SaveHelper.SaveAsync(file, bitmap);
+                        FormatHelper.SaveAsync(file, bitmap);
                     }
                     catch (IOException ex)
                     {

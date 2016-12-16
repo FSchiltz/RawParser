@@ -17,7 +17,7 @@ namespace RawNet
             // We temporarily swap width and height for cropping.
             if (CanonFlipDim)
             {
-                UInt32 w = frame.w;
+                int w = frame.w;
                 frame.w = frame.h;
                 frame.h = w;
             }
@@ -25,13 +25,13 @@ namespace RawNet
             // If image attempts to decode beyond the image bounds, strip it.
             if ((frame.w * frame.cps + offX * mRaw.cpp) > mRaw.dim.width * mRaw.cpp)
                 skipX = (uint)(((frame.w * frame.cps + offX * mRaw.cpp) - mRaw.dim.width * mRaw.cpp) / frame.cps);
-            if (frame.h + offY > (UInt32)mRaw.dim.height)
+            if (frame.h + offY > (uint)mRaw.dim.height)
                 skipY = (uint)(frame.h + offY - mRaw.dim.height);
 
             // Swap back (see above)
             if (CanonFlipDim)
             {
-                UInt32 w = frame.w;
+                int w = frame.w;
                 frame.w = frame.h;
                 frame.h = w;
             }
@@ -46,7 +46,7 @@ namespace RawNet
             if (0 == frame.h || 0 == frame.w)
                 throw new RawDecoderException("decodeScan: Image width or height set to zero");
 
-            for (UInt32 i = 0; i < frame.cps; i++)
+            for (int i = 0; i < frame.cps; i++)
             {
                 if (frame.CompInfo[i].superH != 1 || frame.CompInfo[i].superV != 1)
                 {
@@ -93,7 +93,7 @@ namespace RawNet
             {
                 if (CanonFlipDim)
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot flip non subsampled images.");
-                if (mRaw.dim.height * mRaw.pitch >= 1 << 28)
+                if (mRaw.dim.height * mRaw.dim.width >= 1 << 28)
                 {
                     DecodeScanLeftGeneric();
                     return;
@@ -129,25 +129,25 @@ namespace RawNet
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
             //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
 
-            UInt32 comps = frame.cps;  // Components
+            uint comps = frame.cps;  // Components
             HuffmanTable[] dctbl = new HuffmanTable[4];   // Tables for up to 4 components
             UInt16* predict;         // Prediction pointer
                                      /* Fast access to supersampling component settings
                                      * this is the number of components in a given block.
                                      */
-            UInt32[] samplesH = new UInt32[4];
-            UInt32[] samplesV = new uint[4];
+            uint[] samplesH = new uint[4];
+            uint[] samplesV = new uint[4];
 
             fixed (ushort* d = mRaw.rawData)
             {
                 //TODO remove this hack
                 byte* draw = (byte*)d;
-                UInt32 maxSuperH = 1;
-                UInt32 maxSuperV = 1;
-                UInt32[] samplesComp = new UInt32[4]; // How many samples per group does this component have
-                UInt32 pixGroup = 0;   // How many pixels per group.
+                uint maxSuperH = 1;
+                uint maxSuperV = 1;
+                uint[] samplesComp = new uint[4]; // How many samples per group does this component have
+                uint pixGroup = 0;   // How many pixels per group.
 
-                for (UInt32 i = 0; i < comps; i++)
+                for (int i = 0; i < comps; i++)
                 {
                     dctbl[i] = huff[frame.CompInfo[i].dcTblNo];
                     samplesH[i] = frame.CompInfo[i].superH;
@@ -170,11 +170,11 @@ namespace RawNet
                 UInt16** imagePos = stackalloc UInt16*[(slices + 1)];
                 int* sliceWidth = stackalloc int[(slices + 1)];
 
-                UInt32 t_y = 0;
-                UInt32 t_x = 0;
-                UInt32 t_s = 0;
-                UInt32 slice = 0;
-                UInt32 pitch_s = mRaw.pitch / 2;  // Pitch in shorts 
+                uint t_y = 0;
+                uint t_x = 0;
+                uint t_s = 0;
+                uint slice = 0;
+                int pitch_s = mRaw.dim.width / 2;  // Pitch in shorts 
 
                 int* slice_width = stackalloc int[slices];
 
@@ -193,7 +193,7 @@ namespace RawNet
 
                 for (slice = 0; slice < slices; slice++)
                 {
-                    imagePos[slice] = (UInt16*)&draw[(t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)];
+                    imagePos[slice] = (UInt16*)&draw[(t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.dim.width)];
                     sliceWidth[slice] = slice_width[t_s];
                     t_y += maxSuperV;
                     if (t_y >= (frame.h - skipY))
@@ -205,7 +205,7 @@ namespace RawNet
                 slice_width = null;
 
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                fixed (ushort* t = &mRaw.rawData[mRaw.pitch * mRaw.dim.height])
+                fixed (ushort* t = &mRaw.rawData[mRaw.dim.width * mRaw.dim.height])
                 {
                     if (imagePos[slices - 1] >= t)
                     {
@@ -221,16 +221,16 @@ namespace RawNet
 
                 // Always points to next slice
                 slice = 1;
-                UInt32 pixInSlice = (uint)sliceWidth[0];
+                uint pixInSlice = (uint)sliceWidth[0];
 
                 // Initialize predictors and decode one group.
-                UInt32 x = 0;
+                uint x = 0;
                 predict = dest;
-                for (UInt32 i = 0; i < comps; i++)
+                for (int i = 0; i < comps; i++)
                 {
-                    for (UInt32 y2 = 0; y2 < samplesV[i]; y2++)
+                    for (int y2 = 0; y2 < samplesV[i]; y2++)
                     {
-                        for (UInt32 x2 = 0; x2 < samplesH[i]; x2++)
+                        for (int x2 = 0; x2 < samplesH[i]; x2++)
                         {
                             // First pixel is not predicted, all other are.
                             if (y2 == 0 && x2 == 0)
@@ -256,7 +256,7 @@ namespace RawNet
                 x = maxSuperH;
                 pixInSlice -= maxSuperH;
 
-                UInt32 cw = (frame.w - skipX);
+                uint cw = (uint)(frame.w - skipX);
                 for (Int32 y = 0; y < (frame.h - skipY); y += (int)maxSuperV)
                 {
                     for (; x < cw; x += maxSuperH)
@@ -294,9 +294,9 @@ namespace RawNet
 
                     if (skipX != 0)
                     {
-                        for (UInt32 sx = 0; sx < skipX; sx++)
+                        for (int sx = 0; sx < skipX; sx++)
                         {
-                            for (UInt32 i = 0; i < comps; i++)
+                            for (int i = 0; i < comps; i++)
                             {
                                 HuffDecode(ref dctbl[i]);
                             }
@@ -304,7 +304,7 @@ namespace RawNet
                     }
 
                     // Update predictors
-                    for (UInt32 i = 0; i < comps; i++)
+                    for (int i = 0; i < comps; i++)
                     {
                         p[i] = predict[i];
                         // Ensure, that there is a slice shift at new line
@@ -351,18 +351,18 @@ namespace RawNet
                 //TODO remove this hack
                 byte* draw = (byte*)d;
                 // Fix for Canon 6D mRaw, which has flipped width & height
-                UInt32 real_h = CanonFlipDim ? frame.w : frame.h;
+                int real_h = CanonFlipDim ? frame.w : frame.h;
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(real_h - skipY) / 2;
 
                 uint* offset = stackalloc uint[(slices + 1)];
 
-                UInt32 t_y = 0;
-                UInt32 t_x = 0;
-                UInt32 t_s = 0;
-                UInt32 slice = 0;
-                UInt32 pitch_s = mRaw.pitch / 2;  // Pitch in shorts
+                uint t_y = 0;
+                uint t_x = 0;
+                uint t_s = 0;
+                uint slice = 0;
+                int pitch_s = mRaw.dim.width / 2;  // Pitch in shorts
 
                 int* slice_width = stackalloc int[slices];
 
@@ -372,7 +372,7 @@ namespace RawNet
 
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * (uint)mRaw.dim.width)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                     t_y += 2;
                     if (t_y >= (real_h - skipY))
@@ -383,7 +383,7 @@ namespace RawNet
                 }
 
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.dim.width * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -398,10 +398,10 @@ namespace RawNet
 
                 // Always points to next slice
                 slice = 1;
-                UInt32 pixInSlice = (uint)slice_width[0];
+                uint pixInSlice = (uint)slice_width[0];
 
                 // Initialize predictors and decode one group.
-                UInt32 x = 0;
+                uint x = 0;
                 int p1;
                 int p2;
                 int p3;
@@ -423,8 +423,8 @@ namespace RawNet
                 x = 2;
                 pixInSlice -= 2;
 
-                UInt32 cw = (frame.w - skipX);
-                for (UInt32 y = 0; y < (frame.h - skipY); y += 2)
+                long cw = frame.w - skipX;
+                for (int y = 0; y < (frame.h - skipY); y += 2)
                 {
                     for (; x < cw; x += 2)
                     {
@@ -433,10 +433,10 @@ namespace RawNet
                         { // Next slice
                             if (slice > slices)
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
-                            UInt32 o = offset[slice++];
+                            uint o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
                                                                     //_ASSERTE((o & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
+                            if ((o & 0x0fffffff) > mRaw.dim.width * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             pixInSlice = (uint)slice_width[o >> 28];
 
@@ -507,12 +507,12 @@ namespace RawNet
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
 
-                uint* offset = stackalloc UInt32[(slices + 1)];
+                uint* offset = stackalloc uint[(slices + 1)];
 
-                UInt32 t_y = 0;
-                UInt32 t_x = 0;
-                UInt32 t_s = 0;
-                UInt32 slice = 0;
+                uint t_y = 0;
+                uint t_x = 0;
+                uint t_s = 0;
+                uint slice = 0;
                 int* slice_width = stackalloc int[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
@@ -521,7 +521,7 @@ namespace RawNet
 
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * (uint)mRaw.dim.width)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                     t_y++;
                     if (t_y >= (frame.h - skipY))
@@ -530,7 +530,7 @@ namespace RawNet
                         t_x += (uint)slice_width[t_s++];
                     }
                 }
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.dim.width * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -545,10 +545,10 @@ namespace RawNet
 
                 // Always points to next slice
                 slice = 1;
-                UInt32 pixInSlice = (uint)slice_width[0];
+                uint pixInSlice = (uint)slice_width[0];
 
                 // Initialize predictors and decode one group.
-                UInt32 x = 0;
+                uint x = 0;
                 int p1;
                 int p2;
                 int p3;
@@ -569,8 +569,8 @@ namespace RawNet
                 x = 2;
                 pixInSlice -= 2;
 
-                UInt32 cw = (frame.w - skipX);
-                for (UInt32 y = 0; y < (frame.h - skipY); y++)
+                long cw = frame.w - skipX;
+                for (int y = 0; y < (frame.h - skipY); y++)
                 {
                     for (; x < cw; x += 2)
                     {
@@ -579,9 +579,9 @@ namespace RawNet
                         { // Next slice
                             if (slice > slices)
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
-                            UInt32 o = offset[slice++];
+                            uint o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
+                            if ((o & 0x0fffffff) > mRaw.dim.width * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             pixInSlice = (uint)slice_width[o >> 28];
 
@@ -631,16 +631,16 @@ namespace RawNet
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
-                uint[] offset = new UInt32[(slices + 1)];
+                uint[] offset = new uint[(slices + 1)];
 
-                UInt32 t_y = 0;
-                UInt32 t_x = 0;
-                UInt32 t_s = 0;
-                UInt32 slice = 0;
-                UInt32 cw = (frame.w - skipX);
+                uint t_y = 0;
+                uint t_x = 0;
+                uint t_s = 0;
+                uint slice = 0;
+                long cw = frame.w - skipX;
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * (uint)mRaw.dim.width)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                     t_y++;
                     if (t_y == (frame.h - skipY))
@@ -650,7 +650,7 @@ namespace RawNet
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.dim.width * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -676,10 +676,10 @@ namespace RawNet
                 *dest++ = (ushort)p2;
 
                 slice = 1;    // Always points to next slice
-                UInt32 pixInSlice = (uint)slice_width[0] - 1;  // Skip first pixel
+                uint pixInSlice = (uint)slice_width[0] - 1;  // Skip first pixel
 
-                UInt32 x = 1;                            // Skip first pixels on first line.
-                for (UInt32 y = 0; y < (frame.h - skipY); y++)
+                int x = 1;                            // Skip first pixels on first line.
+                for (int y = 0; y < (frame.h - skipY); y++)
                 {
                     for (; x < cw; x++)
                     {
@@ -697,9 +697,9 @@ namespace RawNet
                         { // Next slice
                             if (slice > slices)
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
-                            UInt32 o = offset[slice++];
+                            uint o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
+                            if ((o & 0x0fffffff) > mRaw.dim.width * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             pixInSlice = (uint)slice_width[o >> 28];
                         }
@@ -707,7 +707,7 @@ namespace RawNet
 
                     if (skipX != 0)
                     {
-                        for (UInt32 i = 0; i < skipX; i++)
+                        for (int i = 0; i < skipX; i++)
                         {
                             HuffDecode(ref dctbl1);
                             HuffDecode(ref dctbl2);
@@ -737,15 +737,15 @@ namespace RawNet
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)(frame.h - skipY);
-                uint* offset = stackalloc UInt32[(slices + 1)];
+                uint* offset = stackalloc uint[(slices + 1)];
 
-                UInt32 t_y = 0;
-                UInt32 t_x = 0;
-                UInt32 t_s = 0;
-                UInt32 slice = 0;
+                uint t_y = 0;
+                uint t_x = 0;
+                uint t_s = 0;
+                uint slice = 0;
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * (uint)mRaw.dim.width)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                     t_y++;
                     if (t_y == (frame.h - skipY))
@@ -755,7 +755,7 @@ namespace RawNet
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.dim.width * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -785,12 +785,11 @@ namespace RawNet
                 *dest++ = (ushort)p3;
 
                 slice = 1;
-                UInt32 pixInSlice = (uint)slice_width[0] - 1;
+                uint pixInSlice = (uint)slice_width[0] - 1;
 
-                UInt32 cw = (frame.w - skipX);
-                UInt32 x = 1;                            // Skip first pixels on first line.
-
-                for (UInt32 y = 0; y < (frame.h - skipY); y++)
+                long cw = frame.w - skipX;
+                uint x = 1;                           // Skip first pixels on first line.
+                for (int y = 0; y < (frame.h - skipY); y++)
                 {
                     for (; x < cw; x++)
                     {
@@ -807,9 +806,9 @@ namespace RawNet
                         { // Next slice
                             if (slice > slices)
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
-                            UInt32 o = offset[slice++];
+                            uint o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
+                            if ((o & 0x0fffffff) > mRaw.dim.width * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             //_ASSERTE((o >> 28) < slicesW.Count);
                             pixInSlice = (uint)slice_width[o >> 28];
@@ -818,7 +817,7 @@ namespace RawNet
 
                     if (skipX != 0)
                     {
-                        for (UInt32 i = 0; i < skipX; i++)
+                        for (int i = 0; i < skipX; i++)
                         {
                             HuffDecode(ref dctbl1);
                             HuffDecode(ref dctbl2);
@@ -857,16 +856,16 @@ namespace RawNet
                 byte* draw = (byte*)d;
 
                 //Prepare slices (for CR2)
-                Int32 slices = slicesW.Count * (int)(frame.h - skipY);
-                uint* offset = stackalloc UInt32[(slices + 1)];
+                int slices = slicesW.Count * (int)(frame.h - skipY);
+                uint* offset = stackalloc uint[(slices + 1)];
 
-                UInt32 t_y = 0;
-                UInt32 t_x = 0;
-                UInt32 t_s = 0;
-                UInt32 slice = 0;
+                uint t_y = 0;
+                uint t_x = 0;
+                uint t_s = 0;
+                uint slice = 0;
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * mRaw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * mRaw.bpp + ((offY + t_y) * (uint)mRaw.dim.width)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < mRaw.pitch * mRaw.dim.y);
                     t_y++;
                     if (t_y == (frame.h - skipY))
@@ -876,7 +875,7 @@ namespace RawNet
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.pitch * mRaw.dim.height)
+                if ((offset[slices - 1] & 0x0fffffff) >= mRaw.dim.width * mRaw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }
@@ -908,15 +907,15 @@ namespace RawNet
                 *dest++ = (ushort)p4;
 
                 slice = 1;
-                UInt32 pixInSlice = (uint)slice_width[0] - 1;
+                uint pixInSlice = (uint)slice_width[0] - 1;
 
-                UInt32 cw = (frame.w - skipX);
-                UInt32 x = 1;                            // Skip first pixels on first line.
+                long cw = frame.w - skipX;
+                uint x = 1;                            // Skip first pixels on first line.
 
                 if (CanonDoubleHeight)
-                    skipY = frame.h >> 1;
+                    skipY = (uint)(frame.h >> 1);
 
-                for (UInt32 y = 0; y < (frame.h - skipY); y++)
+                for (int y = 0; y < (frame.h - skipY); y++)
                 {
                     for (; x < cw; x++)
                     {
@@ -936,16 +935,16 @@ namespace RawNet
                         { // Next slice
                             if (slice > slices)
                                 throw new RawDecoderException("decodeScanLeft: Ran out of slices");
-                            UInt32 o = offset[slice++];
+                            uint o = offset[slice++];
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
-                            if ((o & 0x0fffffff) > mRaw.pitch * mRaw.dim.height)
+                            if ((o & 0x0fffffff) > mRaw.dim.width * mRaw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             pixInSlice = (uint)slice_width[o >> 28];
                         }
                     }
                     if (skipX != 0)
                     {
-                        for (UInt32 i = 0; i < skipX; i++)
+                        for (int i = 0; i < skipX; i++)
                         {
                             HuffDecode(ref dctbl1);
                             HuffDecode(ref dctbl2);

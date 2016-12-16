@@ -48,7 +48,7 @@ namespace RawNet
 
         // How many pixels far down the left edge and far up the right edge the image 
         // corners are when the image is rotated 45 degrees in Fuji rotated sensors.
-        public UInt32 fujiRotationPos;
+        public uint fujiRotationPos;
 
         public Point2D subsampling = new Point2D();
         public string make;
@@ -77,10 +77,7 @@ namespace RawNet
             isoSpeed = 0;
             pixelAspectRatio = 1;
             fujiRotationPos = 0;
-            wbCoeffs[0] = 1;
-            wbCoeffs[1] = 1;
-            wbCoeffs[2] = 1;
-            wbCoeffs[3] = 1;
+            wbCoeffs[0] = wbCoeffs[1] = wbCoeffs[2] = wbCoeffs[3] = 1;
         }
 
         public string ExposureAsString()

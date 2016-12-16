@@ -3,41 +3,41 @@ using System.IO;
 
 namespace RawNet
 {
-    // Note: Allocated buffer MUST be at least size+sizeof(UInt32) large.
+    // Note: Allocated buffer MUST be at least size+sizeof(int) large.
     internal class BitPumpMSB32
     {
         int BITS_PER_LONG_LONG = (8 * sizeof(UInt64));
         int MIN_GET_BITS;   /* max value for long getBuffer */
-        public UInt32 getOffset() { return off - (mLeft >> 3); }
+        public uint getOffset() { return off - (mLeft >> 3); }
         public void checkPos() { if (mStuffed > 3) throw new IOException("Out of buffer read"); }       // Check if we have a valid position
 
         // Fill the buffer with at least 24 bits
         void fill() { if (mLeft < MIN_GET_BITS) _fill(); }
 
-        public UInt32 getBit()
+        public uint getBit()
         {
             if (mLeft == 0) _fill();
 
-            return (UInt32)((mCurr >> (int)(--mLeft)) & 1);
+            return (uint)((mCurr >> (int)(--mLeft)) & 1);
         }
 
-        public UInt32 getBitNoFill()
+        public uint getBitNoFill()
         {
-            return (UInt32)((mCurr >> (int)(--mLeft)) & 1);
+            return (uint)((mCurr >> (int)(--mLeft)) & 1);
         }
 
-        public UInt32 getBits(UInt32 nbits)
+        public uint getBits(uint nbits)
         {
             if (mLeft < nbits)
             {
                 _fill();
             }
-            return (UInt32)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
+            return (uint)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
         }
 
-        public UInt32 getBitsNoFill(UInt32 nbits)
+        public uint getBitsNoFill(uint nbits)
         {
-            return (UInt32)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
+            return (uint)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
         }
 
         public void skipBits(uint nbits)
@@ -52,37 +52,37 @@ namespace RawNet
             }
         }
 
-        public UInt32 peekByteNoFill()
+        public uint peekByteNoFill()
         {
-            return (UInt32)((mCurr >> (int)(mLeft - 8)) & 0xff);
+            return (uint)((mCurr >> (int)(mLeft - 8)) & 0xff);
         }
 
-        public void skipBitsNoFill(UInt32 nbits)
+        public void skipBitsNoFill(uint nbits)
         {
             mLeft -= nbits;
         }
 
         byte[] buffer;
-        UInt32 size;            // This if the end of buffer.
-        UInt32 mLeft;
+        uint size;            // This if the end of buffer.
+        uint mLeft;
         UInt64 mCurr;
-        UInt32 off;                  // Offset in bytes
-        UInt32 mStuffed;
+        uint off;                  // Offset in bytes
+        uint mStuffed;
 
 
         /*** Used for entropy encoded sections, for now only Nikon Coolpix ***/
         public BitPumpMSB32(ref TIFFBinaryReader s)
         {
             s.Read(buffer, (int)s.Position, (int)s.BaseStream.Length);
-            size = (uint)(s.GetRemainSize() + sizeof(UInt32));
+            size = (uint)(s.GetRemainSize() + sizeof(uint));
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
             init();
         }
 
-        public BitPumpMSB32(byte[] _buffer, UInt32 _size)
+        public BitPumpMSB32(byte[] _buffer, uint _size)
         {
             buffer = (_buffer);
-            size = (_size + sizeof(UInt32));
+            size = (_size + sizeof(uint));
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
             init();
         }
@@ -95,7 +95,7 @@ namespace RawNet
 
         public void _fill()
         {
-            UInt32 c, c2, c3, c4;
+            uint c, c2, c3, c4;
             if ((off + 4) > size)
             {
                 while (off < size)
@@ -122,7 +122,7 @@ namespace RawNet
             mLeft += 32;
         }
 
-        public UInt32 getBitsSafe(uint nbits)
+        public uint getBitsSafe(uint nbits)
         {
             if (nbits > MIN_GET_BITS)
                 throw new IOException("Too many bits requested");
@@ -132,7 +132,7 @@ namespace RawNet
                 _fill();
                 checkPos();
             }
-            return (UInt32)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
+            return (uint)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
         }
 
         public void setAbsoluteOffset(uint offset)

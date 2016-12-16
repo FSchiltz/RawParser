@@ -83,16 +83,16 @@ namespace RawNet
         * These values are fixed over the whole image.
         * They are read from the SOF marker.
         */
-        public UInt32 componentId;     /* identifier for this component (0..255) */
-        public UInt32 componentIndex;  /* its index in SOF or cPtr.compInfo[]   */
+        public uint componentId;     /* identifier for this component (0..255) */
+        public uint componentIndex;  /* its index in SOF or cPtr.compInfo[]   */
 
         /*
         * Huffman table selector (0..3). The value may vary
         * between scans. It is read from the SOS marker.
         */
-        public UInt32 dcTblNo;
-        public UInt32 superH; // Horizontal Supersampling
-        public UInt32 superV; // Vertical Supersampling
+        public uint dcTblNo;
+        public uint superH; // Horizontal Supersampling
+        public uint superV; // Vertical Supersampling
     };
 
     /*
@@ -107,8 +107,8 @@ namespace RawNet
         * These two fields directly represent the contents of a JPEG DHT
         * marker
         */
-        public UInt32[] bits = new uint[17];
-        public UInt32[] huffval = new uint[256];
+        public uint[] bits = new uint[17];
+        public uint[] huffval = new uint[256];
 
         /*
         * The remaining fields are computed from the above to allow more
@@ -119,28 +119,28 @@ namespace RawNet
         public UInt16[] minCode = new UInt16[17];
         public int[] maxcode = new int[18];
         public short[] valptr = new short[17];
-        public UInt32[] numbits = new UInt32[256];
+        public uint[] numbits = new uint[256];
         public int[] bigTable;
         public bool Initialized { get; set; }
 
         public HuffmanTable()
         {
             //init to maxvalue
-            bits = Enumerable.Repeat<uint>(UInt32.MaxValue, 17).ToArray();
-            huffval = Enumerable.Repeat<uint>(UInt32.MaxValue, 256).ToArray();
+            bits = Enumerable.Repeat<uint>(uint.MaxValue, 17).ToArray();
+            huffval = Enumerable.Repeat<uint>(uint.MaxValue, 256).ToArray();
             minCode = Enumerable.Repeat(UInt16.MaxValue, 17).ToArray();
             maxcode = Enumerable.Repeat<int>(Int32.MinValue, 18).ToArray();
             valptr = Enumerable.Repeat<short>(Int16.MaxValue, 17).ToArray();
-            //numbits = Enumerable.Repeat<uint>(UInt32.MaxValue, 256).ToArray();
+            //numbits = Enumerable.Repeat<uint>(uint.MaxValue, 256).ToArray();
         }
     };
 
     internal class SOFInfo
     {
-        public UInt32 w;   // Width
-        public UInt32 h;    // Height
-        public UInt32 cps;  // Components
-        public UInt32 prec;  // Precision
+        public int w;   // Width
+        public int h;    // Height
+        public uint cps;  // Components
+        public uint prec;  // Precision
         public JpegComponentInfo[] CompInfo { get; set; } = new JpegComponentInfo[4];
         public bool Initialized { get; set; }
     };
@@ -162,10 +162,10 @@ namespace RawNet
 
         public SOFInfo frame = new SOFInfo();
         public List<int> slicesW = new List<int>(1);
-        public UInt32 pred;
-        public UInt32 Pt;
-        public UInt32 offX, offY;  // Offset into image where decoding should start
-        public UInt32 skipX, skipY;   // Tile is larger than output, skip these border pixels
+        public uint pred;
+        public uint Pt;
+        public uint offX, offY;  // Offset into image where decoding should start
+        public uint skipX, skipY;   // Tile is larger than output, skip these border pixels
         public HuffmanTable[] huff = new HuffmanTable[4] { new HuffmanTable(), new HuffmanTable(), new HuffmanTable(), new HuffmanTable() };
 
         /*
@@ -203,7 +203,7 @@ namespace RawNet
         * ON AN "AS IS" BASIS, AND CORNELL UNIVERSITY HAS NO OBLIGATION TO
         * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
         */
-        public UInt32[] bitMask = {  0xffffffff, 0x7fffffff,
+        public uint[] bitMask = {  0xffffffff, 0x7fffffff,
                            0x3fffffff, 0x1fffffff,
                            0x0fffffff, 0x07ffffff,
                            0x03ffffff, 0x01ffffff,
@@ -238,7 +238,7 @@ namespace RawNet
             CanonDoubleHeight = false;
         }
 
-        public void GetSOF(ref SOFInfo sof, UInt32 offset, UInt32 size)
+        public void GetSOF(ref SOFInfo sof, uint offset, uint size)
         {
             if (!input.IsValid(offset, size))
                 throw new RawDecoderException("getSOF: Start offset plus size is longer than file. Truncated file.");
@@ -274,7 +274,7 @@ namespace RawNet
             }
         }
 
-        public void StartDecoder(UInt32 offset, UInt32 size, UInt32 offsetX, UInt32 offsetY)
+        public void StartDecoder(uint offset, uint size, uint offsetX, uint offsetY)
         {
             if (!input.IsValid(offset, size))
                 throw new RawDecoderException("startDecoder: Start offset plus size is longer than file. Truncated file.");
@@ -350,10 +350,10 @@ namespace RawNet
 
         public void ParseSOF(ref SOFInfo sof)
         {
-            UInt32 headerLength = (uint)input.ReadInt16();
+            uint headerLength = input.ReadUInt16();
             sof.prec = input.ReadByte();
-            sof.h = (uint)input.ReadInt16();
-            sof.w = (uint)input.ReadInt16();
+            sof.h = input.ReadInt16();
+            sof.w = input.ReadInt16();
 
             sof.cps = input.ReadByte();
 
@@ -366,13 +366,13 @@ namespace RawNet
             if (headerLength != 8 + sof.cps * 3)
                 throw new RawDecoderException("LJpegDecompressor: Header size mismatch.");
 
-            for (UInt32 i = 0; i < sof.cps; i++)
+            for (int i = 0; i < sof.cps; i++)
             {
                 sof.CompInfo[i].componentId = input.ReadByte();
-                UInt32 subs = input.ReadByte();
+                uint subs = input.ReadByte();
                 frame.CompInfo[i].superV = subs & 0xf;
                 frame.CompInfo[i].superH = subs >> 4;
-                UInt32 Tq = input.ReadByte();
+                uint Tq = input.ReadByte();
                 if (Tq != 0)
                     throw new RawDecoderException("LJpegDecompressor: Quantized components not supported.");
             }
@@ -385,15 +385,15 @@ namespace RawNet
                 throw new RawDecoderException("parseSOS: Frame not yet initialized (SOF Marker not parsed)");
 
             input.ReadInt16();
-            UInt32 soscps = input.ReadByte();
+            uint soscps = input.ReadByte();
             if (frame.cps != soscps)
                 throw new RawDecoderException("parseSOS: Component number mismatch.");
 
-            for (UInt32 i = 0; i < frame.cps; i++)
+            for (int i = 0; i < frame.cps; i++)
             {
-                UInt32 cs = input.ReadByte();
+                uint cs = input.ReadByte();
 
-                UInt32 count = 0;  // Find the correct component
+                uint count = 0;  // Find the correct component
                 while (frame.CompInfo[count].componentId != cs)
                 {
                     if (count >= frame.cps)
@@ -401,8 +401,8 @@ namespace RawNet
                     count++;
                 }
 
-                UInt32 b1 = input.ReadByte();
-                UInt32 td = b1 >> 4;
+                uint b1 = input.ReadByte();
+                uint td = b1 >> 4;
                 if (td > 3)
                     throw new RawDecoderException("parseSOS: Invalid Huffman table selection");
                 if (!huff[td].Initialized)
@@ -420,7 +420,7 @@ namespace RawNet
                 throw new RawDecoderException("parseSOS: Invalid predictor mode.");
 
             input.ReadBytes(1);                    // Se + Ah Not used in LJPEG
-            UInt32 b = input.ReadByte();
+            uint b = input.ReadByte();
             Pt = b & 0xf;        // Point Transform            
 
             bits = new BitPumpJPEG(ref input);
@@ -430,25 +430,25 @@ namespace RawNet
 
         public void ParseDHT()
         {
-            UInt32 headerLength = (uint)input.ReadInt16() - 2; // Subtract myself
+            uint headerLength = (uint)input.ReadInt16() - 2; // Subtract myself
             while (headerLength != 0)
             {
-                UInt32 b = input.ReadByte();
-                UInt32 Tc = (b >> 4);
+                uint b = input.ReadByte();
+                uint Tc = (b >> 4);
                 if (Tc != 0)
                     throw new RawDecoderException("parseDHT: Unsupported Table class.");
 
-                UInt32 Th = b & 0xf;
+                uint Th = b & 0xf;
                 if (Th > 3)
                     throw new RawDecoderException("parseDHT: Invalid huffman table destination id.");
 
-                UInt32 acc = 0;
+                uint acc = 0;
                 HuffmanTable t = huff[Th];
 
                 if (t.Initialized)
                     throw new RawDecoderException("parseDHT: Duplicate table definition");
 
-                for (UInt32 i = 0; i < 16; i++)
+                for (int i = 0; i < 16; i++)
                 {
                     t.bits[i + 1] = input.ReadByte();
                     acc += t.bits[i + 1];
@@ -461,7 +461,7 @@ namespace RawNet
                 if (headerLength < 1 + 16 + acc)
                     throw new RawDecoderException("parseDHT: Invalid DHT table length.");
 
-                for (UInt32 i = 0; i < acc; i++)
+                for (int i = 0; i < acc; i++)
                 {
                     t.huffval[i] = input.ReadByte();
                 }
@@ -620,21 +620,21 @@ namespace RawNet
          ************************************/
         public void CreateBigTable(ref HuffmanTable htbl)
         {
-            UInt32 bits = 14;      // HuffDecode functions must be changed, if this is modified.
-            UInt32 size = (uint)(1 << (int)(bits));
+            uint bits = 14;      // HuffDecode functions must be changed, if this is modified.
+            uint size = (uint)(1 << (int)(bits));
             int rv = 0;
             int temp;
-            UInt32 l;
+            uint l;
 
             if (htbl.bigTable == null)
                 htbl.bigTable = new int[size];
             if (htbl.bigTable == null)
                 throw new RawDecoderException("Out of memory, failed to allocate " + size * sizeof(int) + " bytes");
-            for (UInt32 i = 0; i < size; i++)
+            for (uint i = 0; i < size; i++)
             {
                 UInt16 input = (ushort)((int)i << 2); // Calculate input value
                 int code = input >> 8;   // Get 8 bits
-                UInt32 val = htbl.numbits[code];
+                uint val = htbl.numbits[code];
                 l = val & 15;
                 if (l != 0)
                 {
@@ -716,7 +716,7 @@ namespace RawNet
             int rv;
             int temp;
             int code, val;
-            UInt32 l;
+            uint l;
             /**
              * First attempt to do complete decode, by using the first 14 bits
              */
