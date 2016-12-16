@@ -109,7 +109,7 @@ namespace RawEditor
                 foreach (string format in FormatHelper.ReadSupportedFormat)
                 {
                     filePicker.FileTypeFilter.Add(format);
-                }                
+                }
                 StorageFile file = await filePicker.PickSingleFileAsync();
                 if (file != null)
                 {
@@ -260,7 +260,7 @@ namespace RawEditor
                     file = null;
                     decoder = null;
                     DisplayExif();
-                    if (raw.cfa != null && raw.cpp == 1)
+                    if (raw.isCFA)
                     {
                         //get the algo from the settings
                         DemosAlgorithm algo;
@@ -458,9 +458,9 @@ namespace RawEditor
                 x = (float)(ImageDisplay.ActualHeight / (h * relativeBorder));
             }
             if (x < 0.1) x = 0.1f;
-            else if (x > 1) x = 1;
+            else if (x > 10) x = 10;
             ImageDisplay.MinZoomFactor = 0.1f;
-            ImageDisplay.MaxZoomFactor = x + 10;
+            ImageDisplay.MaxZoomFactor = 10;
             ImageDisplay.ChangeView(null, null, x);
 
         }
@@ -478,7 +478,7 @@ namespace RawEditor
                 });
                 int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
                 DisplayImage(bitmap, reset);
-                Histogram.Create(value, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width, histogramCanvas);
+                Histogram.CreateAsync(value, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width, histogramCanvas);
             });
         }
 

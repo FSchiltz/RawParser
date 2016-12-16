@@ -98,8 +98,8 @@ namespace RawNet
             unsafe
             {
 
-                Int32 w = mRaw.dim.width;
-                Int32 h = mRaw.dim.height;
+                Int32 w = raw.dim.width;
+                Int32 h = raw.dim.height;
                 int[] pUp1 = { 0, 0 };
                 int[] pUp2 = { 0, 0 };
                 int pLeft1 = 0;
@@ -107,8 +107,8 @@ namespace RawNet
 
                 for (int y = 0; y < h; y++)
                 {
-                    pentaxBits.checkPos();
-                    fixed (UInt16* dest = &mRaw.rawData[y * mRaw.dim.width])
+                    pentaxBits.CheckPos();
+                    fixed (UInt16* dest = &raw.rawData[y * raw.dim.width])
                     {
                         // Adjust destination
                         pUp1[y & 1] += HuffDecodePentax();
@@ -157,31 +157,31 @@ namespace RawNet
             * table lookup to get its value.  It's more than 8 bits about
             * 3-4% of the time.
             */
-            pentaxBits.fill();
-            code = pentaxBits.peekBitsNoFill(14);
+            pentaxBits.FillCheck();
+            code = pentaxBits.PeekBitsNoFill(14);
             val = dctbl1.bigTable[code];
             if ((val & 0xff) != 0xff)
             {
-                pentaxBits.skipBitsNoFill((uint)(val & 0xff));
+                pentaxBits.SkipBitsNoFill((uint)(val & 0xff));
                 return val >> 8;
             }
 
             rv = 0;
-            code = pentaxBits.peekByteNoFill();
+            code = pentaxBits.PeekByteNoFill();
             val = (int)dctbl1.numbits[code];
             l = (uint)val & 15;
             if (l != 0)
             {
-                pentaxBits.skipBitsNoFill(l);
+                pentaxBits.SkipBitsNoFill(l);
                 rv = val >> 4;
             }
             else
             {
-                pentaxBits.skipBits(8);
+                pentaxBits.SkipBits(8);
                 l = 8;
                 while (code > dctbl1.maxcode[l])
                 {
-                    temp = pentaxBits.getBitNoFill();
+                    temp = pentaxBits.GetBitNoFill();
                     code = (code << 1) | temp;
                     l++;
                 }
@@ -210,7 +210,7 @@ namespace RawNet
 
             if (rv != 0)
             {
-                int x = (int)pentaxBits.getBits((uint)rv);
+                int x = (int)pentaxBits.GetBits((uint)rv);
                 if ((x & (1 << (rv - 1))) == 0)
                     x -= (1 << rv) - 1;
                 return x;

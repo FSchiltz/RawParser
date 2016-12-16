@@ -195,13 +195,13 @@ namespace RawNet
                     w *= (int)cpp;
                     for (; y < h; y++)
                     {
-                        bits.checkPos();
+                        bits.CheckPos();
                         for (uint x = 0; x < w; x++)
                         {
-                            uint b = bits.getBits((uint)bitPerPixel);
+                            uint b = bits.GetBits((uint)bitPerPixel);
                             rawImage.rawData[x + (offset.width * cpp + y * rawImage.dim.width * cpp)] = (ushort)b;
                         }
-                        bits.skipBits(skipBits);
+                        bits.SkipBits(skipBits);
                     }
                 }
                 else if (BitOrder.Jpeg16 == order)

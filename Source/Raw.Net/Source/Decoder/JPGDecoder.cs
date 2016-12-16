@@ -46,6 +46,7 @@ namespace RawNet
             rawImage.ColorDepth = 8;
             rawImage.cpp = 3;
             rawImage.bpp = 8;
+            rawImage.isCFA = false;
             var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, stream.AsRandomAccessStream()).AsTask();
             decoder.Wait();
 

@@ -64,14 +64,14 @@ namespace RawNet
                 metadata.ReadBytes(2110);
 
             if (v0 == 70) huffSelect = 2;
-            if (mRaw.ColorDepth == 14) huffSelect += 3;
+            if (raw.ColorDepth == 14) huffSelect += 3;
 
             pUp1[0] = metadata.ReadInt16();
             pUp1[1] = metadata.ReadInt16();
             pUp2[0] = metadata.ReadInt16();
             pUp2[1] = metadata.ReadInt16();
 
-            int max = 1 << mRaw.ColorDepth & 0x7fff;
+            int max = 1 << raw.ColorDepth & 0x7fff;
             int step = 0, csize = metadata.ReadUInt16();
             if (csize > 1)
                 step = max / (csize - 1);
@@ -94,14 +94,14 @@ namespace RawNet
             }
             InitTable(huffSelect);
 
-            mRaw.whitePoint = curve[max - 1];
-            mRaw.blackLevel = curve[0];
-            mRaw.SetTable(curve, max, true);
+            raw.whitePoint = curve[max - 1];
+            raw.blackLevel = curve[0];
+            raw.SetTable(curve, max, true);
 
             BitPumpMSB bits = new BitPumpMSB(ref input, offset, size);
             int pLeft1 = 0, pLeft2 = 0;
-            uint random = bits.peekBits(24);
-            for (int y = 0; y < mRaw.dim.height; y++)
+            uint random = bits.PeekBits(24);
+            for (int y = 0; y < raw.dim.height; y++)
             {
                 if (split != 0 && (y == split))
                 {
@@ -111,19 +111,19 @@ namespace RawNet
                 pUp2[y & 1] += HuffDecodeNikon(bits);
                 pLeft1 = pUp1[y & 1];
                 pLeft2 = pUp2[y & 1];
-                int dest = y * mRaw.dim.width;
-                mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
-                mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
-                for (int x = 1; x < mRaw.dim.width / 2; x++)
+                int dest = y * raw.dim.width;
+                raw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), ref raw.rawData, dest++, ref random);
+                raw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), ref raw.rawData, dest++, ref random);
+                for (int x = 1; x < raw.dim.width / 2; x++)
                 {
-                    bits.checkPos();
+                    bits.CheckPos();
                     pLeft1 += HuffDecodeNikon(bits);
                     pLeft2 += HuffDecodeNikon(bits);
-                    mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), ref mRaw.rawData, dest++, ref random);
-                    mRaw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), ref mRaw.rawData, dest++, ref random);
+                    raw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), ref raw.rawData, dest++, ref random);
+                    raw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), ref raw.rawData, dest++, ref random);
                 }
             }
-            mRaw.SetTable(curve, max, false);
+            raw.SetTable(curve, max, false);
         }
 
         /*
@@ -150,31 +150,31 @@ namespace RawNet
 
             HuffmanTable dctbl1 = huff[0];
 
-            bits.fill();
-            code = (int)bits.peekBitsNoFill(14);
+            bits.FillCheck();
+            code = (int)bits.PeekBitsNoFill(14);
             val = dctbl1.bigTable[code];
             if ((val & 0xff) != 0xff)
             {
-                bits.skipBitsNoFill((uint)val & 0xff);
+                bits.SkipBitsNoFill((uint)val & 0xff);
                 return val >> 8;
             }
 
             rv = 0;
-            code = (int)bits.peekByteNoFill();
+            code = (int)bits.PeekByteNoFill();
             val = (int)dctbl1.numbits[code];
             l = val & 15;
             if (l != 0)
             {
-                bits.skipBitsNoFill((uint)l);
+                bits.SkipBitsNoFill((uint)l);
                 rv = val >> 4;
             }
             else
             {
-                bits.skipBits(8);
+                bits.SkipBits(8);
                 l = 8;
                 while (code > dctbl1.maxcode[l])
                 {
-                    temp = (int)bits.getBitNoFill();
+                    temp = (int)bits.GetBitNoFill();
                     code = (code << 1) | temp;
                     l++;
                 }
@@ -193,7 +193,7 @@ namespace RawNet
             */
             Int32 len = rv & 15;
             Int32 shl = rv >> 4;
-            int diff = (int)((bits.getBits((uint)(len - shl)) << 1) + 1) << shl >> 1;
+            int diff = (int)((bits.GetBits((uint)(len - shl)) << 1) + 1) << shl >> 1;
             if ((diff & (1 << (len - 1))) == 0)
             {
                 //TODO optimise

@@ -255,14 +255,14 @@ namespace RawNet
                 {
                     for (int y = 0; y < h + 1; y += 2)
                     {
-                        bits.checkPos();
-                        bits.fill();
+                        bits.CheckPos();
+                        bits.FillCheck();
                         if (y == h) y = 1;
-                        uint len = 4 - bits.getBitsNoFill(2);
-                        if (len == 3 && bits.getBitNoFill() != 0) len = 0;
+                        uint len = 4 - bits.GetBitsNoFill(2);
+                        if (len == 3 && bits.GetBitNoFill() != 0) len = 0;
                         if (len == 4)
-                            while (len < 17 && bits.getBitNoFill() == 0) len++;
-                        uint diff = bits.getBits(len);
+                            while (len < 17 && bits.GetBitNoFill() == 0) len++;
+                        uint diff = bits.GetBits(len);
                         if (len != 0 && (diff & (1 << (int)(len - 1))) == 0)
                             diff -= (uint)(1 << (int)len) - 1;
                         sum += (int)diff;

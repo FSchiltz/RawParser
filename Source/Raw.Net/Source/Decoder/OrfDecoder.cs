@@ -139,15 +139,15 @@ namespace RawNet
                     bool border = true;
                     for (int x = 0; x < w; x++)
                     {
-                        bits.checkPos();
-                        bits.fill();
+                        bits.CheckPos();
+                        bits.FillCheck();
 
                         if (acarry0[2] < 3) i = 2;
                         else i = 0;
 
                         for (nbits = 2 + i; (UInt16)acarry0[0] >> (nbits + i) != 0; nbits++) ;
 
-                        uint b = bits.peekBitsNoFill(15);
+                        uint b = bits.PeekBitsNoFill(15);
                         sign = (int)(b >> 14) * -1;
                         low = (int)(b >> 12) & 3;
                         high = bittable[b & 4095];
@@ -155,15 +155,15 @@ namespace RawNet
                         // Skip bytes used above or read bits
                         if (high == 12)
                         {
-                            bits.skipBitsNoFill(15);
-                            high = (int)bits.getBits((uint)(16 - nbits)) >> 1;
+                            bits.SkipBitsNoFill(15);
+                            high = (int)bits.GetBits((uint)(16 - nbits)) >> 1;
                         }
                         else
                         {
-                            bits.skipBitsNoFill((uint)high + 1 + 3);
+                            bits.SkipBitsNoFill((uint)high + 1 + 3);
                         }
 
-                        acarry0[0] = (high << nbits) | bits.getBits((uint)nbits);
+                        acarry0[0] = (high << nbits) | bits.GetBits((uint)nbits);
                         diff = (int)((acarry0[0] ^ sign) + acarry0[1]);
                         acarry0[1] = (diff * 3 + acarry0[1]) >> 5;
                         acarry0[2] = acarry0[0] > 16 ? 0 : acarry0[2] + 1;
@@ -210,11 +210,11 @@ namespace RawNet
 
                         // ODD PIXELS
                         x += 1;
-                        bits.fill();
+                        bits.FillCheck();
                         if (acarry1[2] < 3) i = 2;
                         else i = 0;
                         for (nbits = 2 + i; (UInt16)acarry1[0] >> (nbits + i) != 0; nbits++) ;
-                        b = bits.peekBitsNoFill(15);
+                        b = bits.PeekBitsNoFill(15);
                         sign = (int)(b >> 14) * -1;
                         low = (int)(b >> 12) & 3;
                         high = bittable[b & 4095];
@@ -222,15 +222,15 @@ namespace RawNet
                         // Skip bytes used above or read bits
                         if (high == 12)
                         {
-                            bits.skipBitsNoFill(15);
-                            high = (int)bits.getBits((uint)(16 - nbits)) >> 1;
+                            bits.SkipBitsNoFill(15);
+                            high = (int)bits.GetBits((uint)(16 - nbits)) >> 1;
                         }
                         else
                         {
-                            bits.skipBitsNoFill((uint)high + 1 + 3);
+                            bits.SkipBitsNoFill((uint)high + 1 + 3);
                         }
 
-                        acarry1[0] = (high << nbits) | bits.getBits((uint)nbits);
+                        acarry1[0] = (high << nbits) | bits.GetBits((uint)nbits);
                         diff = (int)((acarry1[0] ^ sign) + acarry1[1]);
                         acarry1[1] = (diff * 3 + acarry1[1]) >> 5;
                         acarry1[2] = acarry1[0] > 16 ? 0 : acarry1[2] + 1;

@@ -158,7 +158,7 @@ namespace RawNet
 
         public TIFFBinaryReader input;
         public BitPumpJPEG bits;
-        public RawImage mRaw;
+        public RawImage raw;
 
         public SOFInfo frame = new SOFInfo();
         public List<int> slicesW = new List<int>(1);
@@ -223,7 +223,7 @@ namespace RawNet
 
         public LJpegDecompressor(TIFFBinaryReader file, RawImage img)
         {
-            mRaw = (img);
+            raw = (img);
             input = file;
             skipX = skipY = 0;
             for (int i = 0; i < 4; i++)
@@ -278,9 +278,9 @@ namespace RawNet
         {
             if (!input.IsValid(offset, size))
                 throw new RawDecoderException("startDecoder: Start offset plus size is longer than file. Truncated file.");
-            if ((int)offsetX >= mRaw.dim.width)
+            if ((int)offsetX >= raw.dim.width)
                 throw new RawDecoderException("startDecoder: X offset outside of image");
-            if ((int)offsetY >= mRaw.dim.height)
+            if ((int)offsetY >= raw.dim.height)
                 throw new RawDecoderException("startDecoder: Y offset outside of image");
             offX = offsetX;
             offY = offsetY;

@@ -23,7 +23,7 @@ namespace RawNet
         public uint cpp, bpp, whitePoint;
         public int[] blackLevelSeparate = new int[4];
         public List<String> errors = new List<string>();
-        internal bool isCFA;
+        public bool isCFA = true;
         internal TableLookUp table;
         public ColorFilterArray UncroppedCfa;
 
