@@ -42,13 +42,14 @@ namespace RawEditor
         public Thumbnail thumbnail;
         private uint displayMutex = 0;
         private bool userAppliedModif = false;
+        public Queue<List<HistoryObject>> history = new Queue<List<HistoryObject>>();
 
         public MainPage()
         {
             InitializeComponent(); var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel * 1.2;
             ViewDim = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
-            this.NavigationCacheMode = NavigationCacheMode.Required;
+            NavigationCacheMode = NavigationCacheMode.Required;
             /*if (null == metadata)
             {
                 try
@@ -140,7 +141,7 @@ namespace RawEditor
                         //empty the image display
                         ImageBox.Source = null;
                         //empty the exif data
-                        exifDisplay.ItemsSource = null;
+                        ExifDisplay.ItemsSource = null;
                         //empty the histogram
                         EnableEditingControlAsync(false);
                         //free the histogram
@@ -207,6 +208,9 @@ namespace RawEditor
                      //brightnessSlider.IsEnabled = v;
                      saturationSlider.IsEnabled = v;
                      saveButton.IsEnabled = v;
+                     ZoomSlider.IsEnabled = v;
+                     RotateLeftButton.IsEnabled = v;
+                     RotateRightButton.IsEnabled = v;
                  });
         }
 
@@ -215,6 +219,7 @@ namespace RawEditor
             //Add a loading screen
             DisplayLoad();
             EmptyImageAsync();
+            ImageSelected = true;
             Task.Run(async () =>
             {
                 try
@@ -366,10 +371,10 @@ namespace RawEditor
             if (raw != null && raw.metadata != null)
             {
                 //create a list from the metadata object
-                Dictionary<string, string> exif = ExifDisplay.ParseExif(ref raw);
+                Dictionary<string, string> exif = ExifHelper.ParseExif(ref raw);
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    exifDisplay.ItemsSource = exif;
+                    ExifDisplay.ItemsSource = exif;
                 }).AsTask().Wait();
             }
         }
@@ -404,7 +409,14 @@ namespace RawEditor
                     //Needs to run in UI thread
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.width, raw.dim.height);
+                        if (raw.rotation == 1 || raw.rotation == 3)
+                        {
+                            bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.height, raw.dim.width);
+                        }
+                        else
+                        {
+                            bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.width, raw.dim.height);
+                        }
                     }).AsTask().Wait();
                     ApplyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
                     try
@@ -460,9 +472,9 @@ namespace RawEditor
             if (x < 0.1) x = 0.1f;
             else if (x > 10) x = 10;
             ImageDisplay.MinZoomFactor = 0.1f;
-            ImageDisplay.MaxZoomFactor = 10;
+            ImageDisplay.MaxZoomFactor = 2;
             ImageDisplay.ChangeView(null, null, x);
-
+            ZoomSlider.Value = x;
         }
 
         private void UpdatePreview(bool reset)
@@ -474,7 +486,14 @@ namespace RawEditor
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.width, raw.previewDim.height);
+                    if (raw.rotation == 1 || raw.rotation == 3)
+                    {
+                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.height, raw.previewDim.width);
+                    }
+                    else
+                    {
+                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.width, raw.previewDim.height);
+                    }
                 });
                 int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
                 DisplayImage(bitmap, reset);
@@ -510,8 +529,7 @@ namespace RawEditor
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
-
-            //get the softwarebitmap buffer
+            effect.rotation = raw.rotation;
             return effect.ApplyModification(image, dim, colorDepth, ref bitmap);
         }
 
@@ -591,6 +609,30 @@ namespace RawEditor
         {
             ResetControlsAsync();
             UpdatePreview(false);
+        }
+
+        private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            ImageDisplay.ChangeView(null, null, (float)e.NewValue);
+        }
+
+        private void RotateRightButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            raw.rotation++;
+            raw.rotation = raw.rotation % 4;
+            UpdatePreview(false);
+        }
+
+        private void RotateLeftButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            if (raw.rotation == 0) raw.rotation = 3;
+            else raw.rotation--;
+            UpdatePreview(false);
+        }
+
+        private void ImageDisplay_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            ZoomSlider.Value = ImageDisplay.ZoomFactor;
         }
     }
 }

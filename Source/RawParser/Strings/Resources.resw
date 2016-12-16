@@ -159,6 +159,9 @@
   <data name="Histogram.Text" xml:space="preserve">
     <value>Histogram</value>
   </data>
+  <data name="History.Header" xml:space="preserve">
+    <value>History</value>
+  </data>
   <data name="Issue.Text" xml:space="preserve">
     <value>This app is currently work in progress. To report issue, go to</value>
   </data>

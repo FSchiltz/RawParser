@@ -420,6 +420,11 @@ namespace RawNet
                 }
             });
         }
+
+        public void Rotate(bool v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

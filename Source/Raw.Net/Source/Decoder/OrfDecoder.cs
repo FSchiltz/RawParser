@@ -163,7 +163,7 @@ namespace RawNet
                             bits.SkipBitsNoFill((uint)high + 1 + 3);
                         }
 
-                        acarry0[0] = (high << nbits) | bits.GetBits((uint)nbits);
+                        acarry0[0] = (uint)(high << nbits) | bits.GetBits((uint)nbits);
                         diff = (int)((acarry0[0] ^ sign) + acarry0[1]);
                         acarry0[1] = (diff * 3 + acarry0[1]) >> 5;
                         acarry0[2] = acarry0[0] > 16 ? 0 : acarry0[2] + 1;
@@ -230,7 +230,7 @@ namespace RawNet
                             bits.SkipBitsNoFill((uint)high + 1 + 3);
                         }
 
-                        acarry1[0] = (high << nbits) | bits.GetBits((uint)nbits);
+                        acarry1[0] = (uint)(high << nbits) | bits.GetBits((uint)nbits);
                         diff = (int)((acarry1[0] ^ sign) + acarry1[1]);
                         acarry1[1] = (diff * 3 + acarry1[1]) >> 5;
                         acarry1[2] = acarry1[0] > 16 ? 0 : acarry1[2] + 1;

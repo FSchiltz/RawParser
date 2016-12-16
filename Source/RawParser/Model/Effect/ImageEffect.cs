@@ -3,6 +3,7 @@ using RawNet;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
+using System;
 
 namespace RawEditor
 {
@@ -25,6 +26,7 @@ namespace RawEditor
         public double rMul;
         public double gMul;
         public double bMul;
+        internal int rotation;
 
         internal double[] CreateCurve()
         {
@@ -145,8 +147,6 @@ namespace RawEditor
                         mul[2] = (float)(bMul / 255);
                     }
 
-
-
                     //interpolate with spline
                     //double[] contrastCurve = Balance.contrast_curve(shadow, hightlight, 1 << colorDepth);
                     double[] contrastCurve = CreateCurve();
@@ -160,15 +160,31 @@ namespace RawEditor
                     Parallel.For(0, dim.height, y =>
                    {
                        int realY = y * dim.width * 3;
-                       int bufferY = y * dim.width * 4 + +bufferLayout.StartIndex;
+                       int bufferY = y * dim.width * 4 + bufferLayout.StartIndex;
                        for (int x = 0; x < dim.width; x++)
                        {
                            int realPix = realY + (3 * x);
-                           int bufferPix = bufferY + (4 * x);
+                           int bufferPix;
+                           switch (rotation)
+                           {
+                               //dest_buffer[c][m - r - 1] = source_buffer[r][c];
+                               case 2:
+                                   bufferPix = (dim.height - y - 1) * dim.width + dim.width - x - 1;
+                                   break;
+                               case 3:
+                                   bufferPix = (dim.width - x - 1) * dim.height + y;
+                                   break;
+                               case 1:
+                                   bufferPix = x * dim.height + dim.height - y - 1;
+                                   break;
+                               default:
+                                   bufferPix = y * dim.width + x;
+                                   break;
+
+                           }
+                           bufferPix = bufferPix * 4 + bufferLayout.StartIndex;
                            //get the RGB value
-                           double red = image[realPix],
-                          green = image[realPix + 1],
-                          blue = image[realPix + 2];
+                           double red = image[realPix], green = image[realPix + 1], blue = image[realPix + 2];
 
                            //convert to linear rgb (not needed, the raw should be in linear already)
                            /*Balance.sRGBToRGB(ref red, maxValue - 1);
@@ -210,10 +226,6 @@ namespace RawEditor
                            //set transparency to 255 else image will be blank
                            temp[bufferPix + 3] = 255;
                            //change gamma from curve 
-                           /*
-                           image[i * 3] = (ushort)gammaCurve[(int)red];
-                           image[(i * 3) + 1] = (ushort)gammaCurve[(int)green];
-                           image[(i * 3) + 2] = (ushort)gammaCurve[(int)blue];*/
                        }
                    });
                 }
