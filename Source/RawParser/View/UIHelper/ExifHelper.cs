@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RawEditor
 {
-    static class ExifDisplay
+    static class ExifHelper
     {
         public static Dictionary<string, string> ParseExif(ref RawImage raw)
         {

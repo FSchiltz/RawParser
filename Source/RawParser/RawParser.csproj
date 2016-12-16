@@ -139,6 +139,7 @@
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Effect\ImageEffect.cs" />
     <Compile Include="Model\Encoder\SaveHelper.cs" />
+    <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
@@ -149,7 +150,7 @@
     <Compile Include="View\Pages\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\UIHelper\ExifDisplay.cs" />
+    <Compile Include="View\UIHelper\ExifHelper.cs" />
     <Compile Include="View\UIHelper\Histogram.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -11,17 +11,16 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
-
             <AppBarButton IsEnabled="False" 
-                x:Name="rotateLeftButton" 
+                x:Name="RotateLeftButton" 
                           Icon="Undo"
                           x:Uid="RotateLeft" 
-                          VerticalAlignment="Top" FontSize="12" Width="48"/>
+                          VerticalAlignment="Top" FontSize="12" Width="48" Tapped="RotateLeftButton_Tapped"/>
             <AppBarButton IsEnabled="False" 
-                          x:Name="rotateRightButton" 
+                          x:Name="RotateRightButton" 
                           Icon="Redo"
                           x:Uid="RotateRight" 
-                          VerticalAlignment="Top" FontSize="12" Width="48"/>
+                          VerticalAlignment="Top" FontSize="12" Width="48" Tapped="RotateRightButton_Tapped"/>
             <AppBarSeparator/>
             <AppBarButton x:Name="ImageChooseButton" 
                           Icon="BrowsePhotos"
@@ -121,7 +120,6 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-
         <Grid x:Name="MainGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -137,12 +135,13 @@
                           RelativePanel.AlignTopWithPanel="True" 
                           RelativePanel.AlignLeftWithPanel="True"  
                           HorizontalContentAlignment="Stretch" 
-                          VerticalContentAlignment="Stretch">
+                          VerticalContentAlignment="Stretch" ViewChanged="ImageDisplay_ViewChanged" >
                 <ScrollViewer.Background>
                     <SolidColorBrush Color="#19FFFFFF"/>
                 </ScrollViewer.Background>
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
+            <Slider  x:Name="ZoomSlider" IsEnabled="False" Value="1" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1" Canvas.ZIndex="999" Margin="10,0,0,10" ValueChanged="Slider_ValueChanged" Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom"/>
             <Grid x:Name="PivotGrid" 
                   RelativePanel.AlignRightWithPanel="True" 
                   RelativePanel.AlignBottomWithPanel="True" >
@@ -196,28 +195,44 @@
 -->
                                 <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                                 <TextBlock Foreground="Black" FontSize="16" x:Uid="ContrastBalance"/>
-                                <!--
-                                <TextBlock FontSize="12">Gamma</TextBlock>
-                                <Slider x:Name="gammaSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="6" Minimum="0.01" LargeChange="1" SmallChange="0.1" Value="1" IsEnabled="False" StepFrequency="0.01"/>
-                               -->
+
                                 <TextBlock FontSize="12" x:Uid="Contrast"/>
                                 <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="13" LargeChange="1" Value="10" Minimum="7" StepFrequency="0.01" IsEnabled="False" />
                                 <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                             </StackPanel>
                         </ScrollViewer>
                     </PivotItem>
-                    <!--<PivotItem x:Uid="Tools">
+                    <!-- <PivotItem x:Uid="Tools">
                         <StackPanel Background="#FFF0F0F0">
+                            <Button>Save Thumbnail</Button>
                         </StackPanel>
                     </PivotItem>
                     <PivotItem x:Uid="Presets">
                         <GridView Background="White" ></GridView>
-                    </PivotItem> -->
+                    </PivotItem>-->
+                    <PivotItem x:Uid="History">
+                        <ScrollViewer VerticalContentAlignment="Stretch">
+                            <ListView  x:Name="HistoryDisplay" VerticalAlignment="Top" HorizontalAlignment="Left" >
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Key}" TextWrapping="Wrap" Margin="0,0,5,0" HorizontalAlignment="Left" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </ScrollViewer>
+                    </PivotItem>
                     <PivotItem x:Uid="Exifs">
                         <ScrollViewer VerticalContentAlignment="Stretch">
                             <StackPanel>
                                 <TextBlock x:Uid="ExifsData"/>
-                                <ListView  x:Name="exifDisplay" VerticalAlignment="Top" HorizontalAlignment="Left" >
+                                <ListView  x:Name="ExifDisplay" VerticalAlignment="Top" HorizontalAlignment="Left" >
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
                                             <Grid>

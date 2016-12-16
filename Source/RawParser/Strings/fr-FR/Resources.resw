@@ -159,6 +159,9 @@
   <data name="Histogram.Text" xml:space="preserve">
     <value>Histogramme</value>
   </data>
+  <data name="History.Header" xml:space="preserve">
+    <value>Historique</value>
+  </data>
   <data name="Issue.Text" xml:space="preserve">
     <value>Cette application est une version de test. Pour signaler un problème:</value>
   </data>
@@ -166,7 +169,7 @@
     <value>Mentions légales:</value>
   </data>
   <data name="OpenImage.Label" xml:space="preserve">
-    <value>Ouvir une image</value>
+    <value>Ouvrir une image</value>
   </data>
   <data name="Presets.Header" xml:space="preserve">
     <value>Presets</value>
