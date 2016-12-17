@@ -296,35 +296,15 @@ namespace RawNet
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Meta Decoder: Model name not found");
 
-            string make = data[0].GetEntry(TagType.MAKE).DataAsString;
-            string model = data[0].GetEntry(TagType.MODEL).DataAsString;
-            string mode = "";
+            base.DecodeMetadata();
 
+            string mode = "";
             if (rawImage.metadata.subsampling.height == 2 && rawImage.metadata.subsampling.width == 2)
                 mode = "sRaw1";
 
             if (rawImage.metadata.subsampling.height == 1 && rawImage.metadata.subsampling.width == 2)
                 mode = "sRaw2";
-
-            rawImage.metadata.make = make;
-            rawImage.metadata.model = model;
             rawImage.metadata.mode = mode;
-
-            //more exifs
-            var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (isoTag != null)
-                rawImage.metadata.isoSpeed = isoTag.GetInt(0);
-            var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
-            var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
-            var t = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
-            if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
-            if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
-
-            var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
-            var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
-            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
-            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
 
             // Fetch the white balance
             try
@@ -391,7 +371,7 @@ namespace RawNet
             }
             //setMetaData(metaData, make, model, mode);
 
-            SetMetadata(model);
+            SetMetadata(rawImage.metadata.model);
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)

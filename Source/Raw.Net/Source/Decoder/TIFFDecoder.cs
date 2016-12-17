@@ -180,6 +180,10 @@ namespace RawNet
 
         public override void DecodeMetadata()
         {
+            if (rawImage.ColorDepth == 0)
+            {
+                rawImage.ColorDepth = ifd.GetEntryRecursive(TagType.BITSPERSAMPLE).GetUShort(0);
+            }
             var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.GetInt(0);
             var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
@@ -202,6 +206,49 @@ namespace RawNet
                 model = model.Trim();
                 rawImage.metadata.make = make;
                 rawImage.metadata.model = model;
+            }
+
+            //rotation
+            var rotateTag = ifd.GetEntryRecursive(TagType.ORIENTATION);
+            if (rotateTag == null)
+            {
+                rotateTag = ifd.GetEntryRecursive((TagType)0xbc02);
+                if (rotateTag != null)
+                {
+                    switch (rotateTag.GetUShort(0))
+                    {
+                        case 3:
+                        case 2:
+                            rawImage.rotation = 2;
+                            break;
+                        case 4:
+                        case 6:
+                            rawImage.rotation = 1;
+                            break;
+                        case 7:
+                        case 5:
+                            rawImage.rotation = 3;
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                switch (rotateTag.GetUShort(0))
+                {
+                    case 3:
+                    case 2:
+                        rawImage.rotation = 2;
+                        break;
+                    case 6:
+                    case 5:
+                        rawImage.rotation = 1;
+                        break;
+                    case 8:
+                    case 7:
+                        rawImage.rotation = 3;
+                        break;
+                }
             }
         }
     }

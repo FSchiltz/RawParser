@@ -62,33 +62,9 @@ namespace RawNet
 
         public override void DecodeMetadata()
         {
-            List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
+            base.DecodeMetadata();            
 
-            if (data.Count == 0)
-                throw new RawDecoderException("PEF Meta Decoder: Model name found");
-
-            IFD raw = data[0];
-
-            string model = raw.GetEntry(TagType.MODEL).DataAsString;
-            rawImage.metadata.make = raw.GetEntry(TagType.MAKE).DataAsString;
-            rawImage.metadata.model = model;
-
-            //more exifs
-            var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
-            var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
-            var t = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
-            if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
-            if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
-
-            var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
-            var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
-            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
-            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
-            
-            rawImage.ColorDepth = raw.GetEntryRecursive(TagType.BITSPERSAMPLE).GetUShort(0);
-
-            SetMetadata(model);
+            SetMetadata(rawImage.metadata.model);
 
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);

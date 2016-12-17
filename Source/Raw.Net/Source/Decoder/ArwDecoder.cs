@@ -354,15 +354,11 @@ namespace RawNet
 
         public override void DecodeMetadata()
         {
-            List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
-
-            if (data.Count == 0)
+            base.DecodeMetadata();
+            if (rawImage.metadata.model == null)
                 throw new RawDecoderException("ARW Meta Decoder: Model name found");
-            if (!data[0].tags.ContainsKey(TagType.MAKE))
+            if (rawImage.metadata.make == null)
                 throw new RawDecoderException("ARW Decoder: Make name not found");
-
-            string make = data[0].GetEntry(TagType.MAKE).DataAsString;
-            string model = data[0].GetEntry(TagType.MODEL).DataAsString;
 
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
@@ -380,7 +376,7 @@ namespace RawNet
              rawImage.blackLevel >>= shiftDownScale;*/
 
             // Set the whitebalance
-            if (model == "DSLR-A100")
+            if (rawImage.metadata.model == "DSLR-A100")
             { // Handle the MRW style WB of the A100
 
                 Tag priv = ifd.GetEntryRecursive(TagType.DNGPRIVATEDATA);
@@ -427,21 +423,7 @@ namespace RawNet
                     // We caught an exception reading WB, just ignore it
                 }
             }
-            rawImage.metadata.make = make;
-            rawImage.metadata.model = model;
-            SetMetadata(model);
-
-            var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
-            var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
-            var t = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
-            if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
-            if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
-
-            var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
-            var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
-            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
-            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
+            SetMetadata(rawImage.metadata.model);
         }
 
         protected void SetMetadata(string model)

@@ -20,7 +20,7 @@ namespace RawNet
         public ushort ColorDepth { get; set; }
 
         public ImageMetadata metadata = new ImageMetadata();
-        public uint cpp, bpp, whitePoint;
+        public uint cpp, bpp, whitePoint, pitch;
         public int[] blackLevelSeparate = new int[4];
         public List<String> errors = new List<string>();
         public bool isCFA = true;
@@ -43,7 +43,7 @@ namespace RawNet
                 throw new RawDecoderException("RawImageData: Dimension of one sides is less than 1 - cannot allocate image.");
             if (rawData != null)
                 throw new RawDecoderException("RawImageData: Duplicate data allocation in createData.");
-           // pitch = (uint)(((dim.width * bpp) + 15) / 16) * 16;
+            pitch = (uint)(((dim.width * bpp) + 15) / 16) * 16;
             rawData = new ushort[dim.width * dim.height * cpp];
             if (rawData == null)
                 throw new RawDecoderException("RawImageData::createData: Memory Allocation failed.");

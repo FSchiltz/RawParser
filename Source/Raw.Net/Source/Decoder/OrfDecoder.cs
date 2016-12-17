@@ -277,21 +277,11 @@ namespace RawNet
 
         public override void DecodeMetadata()
         {
-            int iso = 0;
             rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
-            List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
-
-            if (data.Count == 0)
+            base.DecodeMetadata();
+            if (rawImage.metadata.model == null)
                 throw new RawDecoderException("ORF Meta Decoder: Model name found");
-
-            string make = data[0].GetEntry(TagType.MAKE).DataAsString;
-            string model = data[0].GetEntry(TagType.MODEL).DataAsString;
-
-            var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (isoTag != null)
-                iso = isoTag.GetInt(0);
-
-            SetMetaData(model);
+            SetMetaData(rawImage.metadata.model);
 
             var rMul = ifd.GetEntryRecursive(TagType.OLYMPUSREDMULTIPLIER);
             var bMul = ifd.GetEntryRecursive(TagType.OLYMPUSBLUEMULTIPLIER);

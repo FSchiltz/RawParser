@@ -235,38 +235,28 @@ namespace RawNet
             }*/
         }
 
-
         public override void DecodeMetadata()
         {
             rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
-            List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
 
-            if (data.Count == 0)
+            base.DecodeMetadata();
+
+            if (rawImage.metadata.model == null)
                 throw new RawDecoderException("RW2 Meta Decoder: Model name not found");
-            if (data[0].GetEntry(TagType.MAKE) == null)
+            if (rawImage.metadata.make == null)
                 throw new RawDecoderException("RW2 Support: Make name not found");
 
-            string make = data[0].GetEntry(TagType.MAKE).DataAsString;
-            string model = data[0].GetEntry(TagType.MODEL).DataAsString;
             string mode = GuessMode();
 
-            SetMetadata(model);
-            rawImage.metadata.make = make;
-            rawImage.metadata.model = model;
+            SetMetadata(rawImage.metadata.model);
             rawImage.metadata.mode = mode;
 
-            //more exifs
-            var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
-            var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
-            var t = ifd.GetEntryRecursive(TagType.PANASONIC_ISO_SPEED);
-            if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
-            if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
-            if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
-
-            var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
-            var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
-            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
-            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
+            //panasonic iso is in a special tag
+            if (rawImage.metadata.isoSpeed == 0)
+            {
+                var t = ifd.GetEntryRecursive(TagType.PANASONIC_ISO_SPEED);
+                if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
+            }
 
         }
 
