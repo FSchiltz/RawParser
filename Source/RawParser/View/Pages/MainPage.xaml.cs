@@ -388,12 +388,11 @@ namespace RawEditor
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
                     SuggestedFileName = raw.metadata.FileName
                 };
-                // Dropdown of file types the user can save the file as
-                savePicker.FileTypeChoices.Add("Images", FormatHelper.SaveSupportedFormat);
-                /*foreach (KeyValuePair<string, List<string>> format in FormatHelper.SaveSupportedFormat)
+                
+                foreach (KeyValuePair<string, List<string>> format in FormatHelper.SaveSupportedFormat)
                 {
                     savePicker.FileTypeChoices.Add(format.Key, format.Value);
-                }*/
+                }
                 var t = savePicker.PickSaveFileAsync().AsTask();
                 t.Wait();
                 StorageFile file = t.Result;
