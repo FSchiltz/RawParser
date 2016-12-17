@@ -18,8 +18,6 @@ using RawNet;
 using System.Diagnostics;
 using Windows.Graphics.Display;
 using System.Runtime.InteropServices;
-using System.ServiceModel.Channels;
-using Windows.UI.Xaml.Data;
 using System.Collections.ObjectModel;
 
 namespace RawEditor
@@ -464,17 +462,17 @@ namespace RawEditor
         private void SetScrollProperty(int w, int h)
         {
             float x = 0;
-            double relativeBorder = 1 + SettingStorage.ImageBoxBorder;
-            if (w > h)
+            double relativeBorder = SettingStorage.ImageBoxBorder;
+            if (w / h > ImageDisplay.ActualWidth / ImageDisplay.ActualHeight)
             {
-                x = (float)(ImageDisplay.ActualWidth / (w * relativeBorder));
+                x = (float)(ImageDisplay.ActualWidth / (w * (1 + relativeBorder)));
             }
             else
             {
-                x = (float)(ImageDisplay.ActualHeight / (h * relativeBorder));
+                x = (float)(ImageDisplay.ActualHeight / (h * (1 + relativeBorder)));
             }
             if (x < 0.1) x = 0.1f;
-            else if (x > 10) x = 10;
+            else if (x > 1) x = (float)(1 - relativeBorder);
             ImageDisplay.MinZoomFactor = 0.1f;
             ImageDisplay.MaxZoomFactor = 2;
             ImageDisplay.ChangeView(null, null, x);
@@ -625,11 +623,11 @@ namespace RawEditor
 
         private void RotateRightButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            var t = new HistoryObject() { oldValue = raw.rotation , target = EffectObject.rotate};
+            var t = new HistoryObject() { oldValue = raw.rotation, target = EffectObject.rotate };
             raw.rotation++;
             raw.rotation = raw.rotation % 4;
             t.value = raw.rotation;
-            history.Add( t);
+            history.Add(t);
             UpdatePreview(false);
         }
 

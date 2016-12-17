@@ -1,5 +1,4 @@
 ﻿using MathNet.Numerics;
-using MathNet.Numerics.Interpolation;
 
 namespace RawEditor.Effect
 {
