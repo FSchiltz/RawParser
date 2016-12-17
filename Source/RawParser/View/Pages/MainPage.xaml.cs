@@ -379,7 +379,7 @@ namespace RawEditor
             }
         }
 
-        private void SaveButtonClick(object sender, RoutedEventArgs e)
+        private async void SaveButtonClickAsync(object sender, RoutedEventArgs e)
         {
             if (raw?.rawData != null)
             {
@@ -388,14 +388,12 @@ namespace RawEditor
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
                     SuggestedFileName = raw.metadata.FileName
                 };
-                
+
                 foreach (KeyValuePair<string, List<string>> format in FormatHelper.SaveSupportedFormat)
-                {
-                    savePicker.FileTypeChoices.Add(format.Key, format.Value);
-                }
-                var t = savePicker.PickSaveFileAsync().AsTask();
-                t.Wait();
-                StorageFile file = t.Result;
+                 {
+                     savePicker.FileTypeChoices.Add(format.Key, format.Value);
+                 }
+                StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
 
                 DisplayLoad();
