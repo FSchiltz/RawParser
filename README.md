@@ -28,7 +28,7 @@ Support for Xbox and hololens could be added if someone can test them.
 - Presets
 - Import and export of preset 
 - Better demosaic algorithms
-- Support for crop and rotation of image (part of the code is already there)
+- Support for crop (part of the code is already there)
 
 ## File support:
 ### input:
@@ -37,10 +37,13 @@ Support for Xbox and hololens could be added if someone can test them.
   - Jpeg
   - Png 
   - DNG (uncompressed and Ljpeg)
+  - Pef (pentax raw)
+  - orf (olympus raw)
+  - raw (panasonic raw)
+  - cr2 (canon raw)
   
 ### output:
   - Tiff
-  - PPM (for testing but the only export format that produce the correct color for now)
   - Jpeg
   - PNG
 
@@ -48,7 +51,7 @@ Support for Xbox and hololens could be added if someone can test them.
 ### From the store (recommended)
 The app is available at [this address]
 (https://www.microsoft.com/store/apps/9pfwlj4lxftf)
-If you hav ealready insatlledot from the appx directly,please uninstall before insatlling from the store.
+If you have already installed directly from the appx, please uninstall before installing from the store.
 
 ### Sideloading
 You need to activate the developper mode and download the .appxbundle file and open it from the file explorer on your device (on phone the installation will be done in the background).
