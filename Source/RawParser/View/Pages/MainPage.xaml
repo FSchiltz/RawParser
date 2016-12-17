@@ -30,7 +30,7 @@
             <AppBarButton x:Name="saveButton" 
                           Icon="SaveLocal"
                           x:Uid="Save" 
-                          Click="SaveButtonClick"
+                          Click="SaveButtonClickAsync"
                           VerticalAlignment="Top"
                           IsEnabled="False"/>
             <AppBarButton IsEnabled="False" 
@@ -141,7 +141,9 @@
                 </ScrollViewer.Background>
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
-            <Slider  x:Name="ZoomSlider" IsEnabled="False" Value="1" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1" Canvas.ZIndex="999" Margin="10,0,0,10" ValueChanged="Slider_ValueChanged" Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom"/>
+            <Slider  x:Name="ZoomSlider" IsEnabled="False" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1"
+                     Canvas.ZIndex="999" Margin="10,0,0,10" ValueChanged="Slider_ValueChanged" 
+                     Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom"/>
             <Grid x:Name="PivotGrid" 
                   RelativePanel.AlignRightWithPanel="True" 
                   RelativePanel.AlignBottomWithPanel="True" >
@@ -212,7 +214,7 @@
                     </PivotItem>-->
                     <PivotItem x:Uid="History">
                         <ScrollViewer VerticalContentAlignment="Stretch">
-                            <ListView  x:Name="HistoryDisplay" VerticalAlignment="Top" HorizontalAlignment="Left" >
+                            <ListView ItemsSource="{x:Bind history}" x:Name="HistoryDisplay" VerticalAlignment="Top" HorizontalAlignment="Left" >
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid>
@@ -220,8 +222,8 @@
                                                 <ColumnDefinition />
                                                 <ColumnDefinition />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Key}" TextWrapping="Wrap" Margin="0,0,5,0" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Column="0" Text="{Binding Target}" TextWrapping="Wrap" Margin="0,0,5,0" HorizontalAlignment="Left" />
+                                            <TextBlock Grid.Column="1" Text="{Binding ValueAsString}" TextWrapping="Wrap" HorizontalAlignment="Right" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>

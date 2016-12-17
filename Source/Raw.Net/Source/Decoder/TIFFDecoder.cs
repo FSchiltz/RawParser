@@ -190,6 +190,14 @@ namespace RawNet
             var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
             if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
             if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
+            if (rawImage.whitePoint == 0)
+            {
+                Tag whitelevel = ifd.GetEntryRecursive(TagType.WHITELEVEL);
+                if (whitelevel != null)
+                {
+                    rawImage.whitePoint = whitelevel.GetUInt(0);
+                }
+            }
 
             var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
             var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);

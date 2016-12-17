@@ -582,7 +582,6 @@ namespace RawNet
             // Default white level is (2 ** BitsPerSample) - 1
             rawImage.whitePoint = (uint)(1 >> raw.GetEntry(TagType.BITSPERSAMPLE).GetShort(0)) - 1;
 
-
             Tag whitelevel = raw.GetEntry(TagType.WHITELEVEL);
             if (whitelevel != null)
             {

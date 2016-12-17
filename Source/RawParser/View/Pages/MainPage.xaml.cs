@@ -18,6 +18,9 @@ using RawNet;
 using System.Diagnostics;
 using Windows.Graphics.Display;
 using System.Runtime.InteropServices;
+using System.ServiceModel.Channels;
+using Windows.UI.Xaml.Data;
+using System.Collections.ObjectModel;
 
 namespace RawEditor
 {
@@ -42,7 +45,8 @@ namespace RawEditor
         public Thumbnail thumbnail;
         private uint displayMutex = 0;
         private bool userAppliedModif = false;
-        public Queue<List<HistoryObject>> history = new Queue<List<HistoryObject>>();
+        public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
+
 
         public MainPage()
         {
@@ -50,6 +54,7 @@ namespace RawEditor
             var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel * 1.2;
             ViewDim = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
             NavigationCacheMode = NavigationCacheMode.Required;
+            //HistoryDisplay.ItemsSource = history;
             /*if (null == metadata)
             {
                 try
@@ -135,6 +140,7 @@ namespace RawEditor
         {
             //empty the previous image data
             raw = null;
+            history.Clear();
             await CoreApplication.MainView.CoreWindow.Dispatcher
                     .RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -390,9 +396,9 @@ namespace RawEditor
                 };
 
                 foreach (KeyValuePair<string, List<string>> format in FormatHelper.SaveSupportedFormat)
-                 {
-                     savePicker.FileTypeChoices.Add(format.Key, format.Value);
-                 }
+                {
+                    savePicker.FileTypeChoices.Add(format.Key, format.Value);
+                }
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
 
@@ -566,6 +572,7 @@ namespace RawEditor
             if (raw?.previewData != null)
             {
                 cameraWB = false;
+                history.Add(new HistoryObject() { oldValue = 0, value = colorTempSlider.Value, target = EffectObject.red });
                 cameraWBCheck.IsEnabled = true;
                 EnableResetAsync();
                 UpdatePreview(false);
@@ -598,6 +605,7 @@ namespace RawEditor
         {
             if (raw?.previewData != null)
             {
+                history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.saturation });
                 EnableResetAsync();
                 UpdatePreview(false);
             }
@@ -605,6 +613,7 @@ namespace RawEditor
 
         private void ResetButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+            history.Add(new HistoryObject() { oldValue = 0, value = 1, target = EffectObject.reset });
             ResetControlsAsync();
             UpdatePreview(false);
         }
@@ -616,15 +625,21 @@ namespace RawEditor
 
         private void RotateRightButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+            var t = new HistoryObject() { oldValue = raw.rotation , target = EffectObject.rotate};
             raw.rotation++;
             raw.rotation = raw.rotation % 4;
+            t.value = raw.rotation;
+            history.Add( t);
             UpdatePreview(false);
         }
 
         private void RotateLeftButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+            var t = new HistoryObject() { oldValue = raw.rotation, target = EffectObject.rotate };
             if (raw.rotation == 0) raw.rotation = 3;
             else raw.rotation--;
+            t.value = raw.rotation;
+            history.Add(t);
             UpdatePreview(false);
         }
 
