@@ -23,6 +23,7 @@ namespace RawNet
         protected static char[] nikon_v3_signature = {
           'N', 'i', 'k', 'o', 'n', (char)0x0,(char) 0x2
         };
+        private bool parseSubIFD = true;
 
         public IFD() { }
 
@@ -50,71 +51,80 @@ namespace RawNet
                 Tag temp = new Tag(fileStream, relativeOffset);
 
                 //Special tag
-                switch (temp.TagId)
-                {
-                    case TagType.DNGPRIVATEDATA:
-                        try
-                        {
-                            IFD maker_ifd = ParseDngPrivateData(temp);
-                            if (maker_ifd != null)
+                if (parseSubIFD)
+                    switch (temp.TagId)
+                    {
+                        case TagType.DNGPRIVATEDATA:
+                            try
                             {
-                                subIFD.Add(maker_ifd);
-                                temp.data = null;
+                                IFD maker_ifd = ParseDngPrivateData(temp);
+                                if (maker_ifd != null)
+                                {
+                                    subIFD.Add(maker_ifd);
+                                    temp.data = null;
+                                }
                             }
-                        }
-                        catch (RawDecoderException)
-                        { // Unparsable private data are added as entries
+                            catch (RawDecoderException)
+                            { // Unparsable private data are added as entries
 
-                        }
-                        catch (IOException)
-                        { // Unparsable private data are added as entries
+                            }
+                            catch (IOException)
+                            { // Unparsable private data are added as entries
 
-                        }
+                            }
 
-                        break;
-                    case TagType.MAKERNOTE:
-                    case TagType.MAKERNOTE_ALT:
-                        try
-                        {
-                            Common.ConvertArray(ref temp.data, out byte[] dest);
-                            Makernote makernote = ParseMakerNote(dest, endian, (int)temp.dataOffset);
-                            if (makernote != null) subIFD.Add(makernote);
-                        }
-                        catch (RawDecoderException)
-                        { // Unparsable makernotes are added as entries
-
-                        }
-                        catch (IOException)
-                        { // Unparsable makernotes are added as entries
-
-                        }
-                        break;
-                    case TagType.FUJI_RAW_IFD:
-                        if (temp.dataType == TiffDataType.OFFSET) // FUJI - correct type
-                            temp.dataType = TiffDataType.LONG;
-                        goto case TagType.SUBIFDS;
-                    case TagType.SUBIFDS:
-                    case TagType.EXIFIFDPOINTER:
-                    case TagType.NIKONTHUMB:
-                        long p = fileStream.Position;
-                        try
-                        {
-                            for (Int32 k = 0; k < temp.dataCount; k++)
+                            break;
+                        case TagType.MAKERNOTE:
+                        case TagType.MAKERNOTE_ALT:
+                            try
                             {
-                                subIFD.Add(new IFD(fileStream, Convert.ToUInt32(temp.data[k]), endian, Depth));
+                                Common.ConvertArray(ref temp.data, out byte[] dest);
+                                Makernote makernote = ParseMakerNote(dest, endian, (int)temp.dataOffset);
+                                if (makernote != null) subIFD.Add(makernote);
                             }
-                        }
-                        catch (RawDecoderException)
-                        { // Unparsable subifds are added as entries
+                            catch (RawDecoderException)
+                            { // Unparsable makernotes are added as entries
 
-                        }
-                        catch (IOException)
-                        { // Unparsable subifds are added as entries
+                            }
+                            catch (IOException)
+                            { // Unparsable makernotes are added as entries
 
-                        }
-                        fileStream.BaseStream.Position = p;
-                        break;
-                }
+                            }
+                            break;
+                        case TagType.FUJI_RAW_IFD:
+                            if (temp.dataType == TiffDataType.OFFSET) // FUJI - correct type
+                                temp.dataType = TiffDataType.LONG;
+                            goto case TagType.SUBIFDS;
+                        case TagType.NIKONTHUMB:
+                            if (temp.GetUInt(0) >= fileStream.BaseStream.Length)
+                            {
+                                parseSubIFD = false;
+                                //some nikon makernote are not self contained
+                                break;
+                            }
+                            goto case TagType.SUBIFDS;
+                        case TagType.SUBIFDS:
+                        case TagType.EXIFIFDPOINTER:
+
+                            long p = fileStream.Position;
+                            try
+                            {
+                                for (Int32 k = 0; k < temp.dataCount; k++)
+                                {
+                                    subIFD.Add(new IFD(fileStream, Convert.ToUInt32(temp.data[k]), endian, Depth));
+                                }
+                            }
+                            catch (RawDecoderException)
+                            { // Unparsable subifds are added as entries
+
+                            }
+                            catch (IOException)
+                            { // Unparsable subifds are added as entries
+
+                            }
+                            fileStream.BaseStream.Position = p;
+                            break;
+                    }
 
                 if (!tags.ContainsKey(temp.TagId))
                 {

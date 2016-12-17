@@ -48,42 +48,18 @@ namespace RawNet
 
         public override void DecodeMetadata()
         {
-            // Set the make and model
-            var t = ifd.GetEntryRecursive(TagType.MAKE);
-            var t2 = ifd.GetEntryRecursive(TagType.MODEL);
-            if (t != null && t != null)
+            base.DecodeMetadata();
+
+            //get cfa
+            var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
+            if (cfa == null)
             {
-                string make = t.DataAsString;
-                string model = t2.DataAsString;
-                make = make.Trim();
-                model = model.Trim();
-                rawImage.metadata.make = make;
-                rawImage.metadata.model = model;
-
-                //get cfa
-                var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
-                if (cfa == null)
-                {
-                    Debug.WriteLine("CFA pattern is not found");
-                    rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
-                }
-                else
-                {
-                    rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
-                }
-
-                //more exifs
-                var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
-                var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
-                var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-                if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.GetInt(0);
-                if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
-                if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
-
-                var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
-                var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
-                if (time != null) rawImage.metadata.timeTake = time.DataAsString;
-                if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
+                Debug.WriteLine("CFA pattern is not found");
+                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            }
+            else
+            {
+                rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
         }
 

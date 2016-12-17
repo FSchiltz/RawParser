@@ -421,17 +421,12 @@ namespace RawNet
 
         public override void DecodeMetadata()
         {
-            List<IFD> data = ifd.GetIFDsWithTag(TagType.MODEL);
-
-            if (data.Count == 0)
+            base.DecodeMetadata();
+            if (rawImage.metadata.model == null)
                 throw new RawDecoderException("NEF Meta Decoder: Model name not found");
-
-            string model = data[0].GetEntry(TagType.MODEL).DataAsString;
-            if (model.Contains("NIKON")) model = model.Substring(6);
-
-            if (!data[0].tags.TryGetValue(TagType.MAKE, out Tag makeTag))
+            if (rawImage.metadata.make == null)
                 throw new RawDecoderException("NEF Support: Make name not found");
-            string make = makeTag.DataAsString;
+            if (rawImage.metadata.model.Contains("NIKON")) rawImage.metadata.model = rawImage.metadata.model.Substring(6);
 
             // Read the whitebalance
             // We use this for the D50 and D2X whacky WB "encryption"
@@ -589,9 +584,7 @@ namespace RawNet
             }
 
             string mode = GetMode();
-            SetMetadata(model);
-            rawImage.metadata.make = make;
-            rawImage.metadata.model = model;
+            SetMetadata(rawImage.metadata.model);
             rawImage.metadata.mode = mode;
 
             //get cfa
@@ -611,19 +604,6 @@ namespace RawNet
             hints.TryGetValue("nikon_override_auto_black", out string k);
             if (!(rawImage.blackLevel >= 0 && k == null))
                 rawImage.blackLevel = Int32.Parse(k);
-
-            //more exifs
-            var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
-            var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
-            var t = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
-            if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
-            if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
-
-            var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
-            var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
-            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
-            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
 
             //GPS data
             var gpsTag = ifd.GetEntry((TagType)0x0039);

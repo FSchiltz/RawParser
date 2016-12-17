@@ -35,15 +35,17 @@ namespace RawEditor
             }
         }
 
-        public static Dictionary<string, List<string>> SaveSupportedFormat
+        public static List<string> SaveSupportedFormat
         {
             get
             {
-                var temp = new Dictionary<string, List<string>>();
-                temp.Add("Jpeg image file", new List<string>() { ".jpg", ".jpeg" });
-                temp.Add("PNG image file", new List<string>() { ".png" });
-                temp.Add("TIFF image file", new List<string>() { ".tiff", ".tif" });
-                temp.Add("BitMap image file", new List<string>() { ".bmp" });
+                var temp = new List<string>();
+                temp.Add(".jpg");
+                temp.Add(".jpeg");
+                temp.Add(".png");
+                temp.Add(".tiff");
+                temp.Add(".tif");
+                temp.Add(".bmp");
                 return temp;
             }
         }
