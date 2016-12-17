@@ -16,22 +16,22 @@ namespace RawEditor
         {
             get
             {
-                var temp = new List<string>();
-                temp.Add(".tiff");
-                temp.Add(".tif");
-                temp.Add(".jpg");
-                temp.Add(".jpeg");
-                temp.Add(".png");
+                return new List<string>() {
+                    ".tiff",
+                    ".tif",
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
 
-                //raw
-                temp.Add(".nef");
-                temp.Add(".dng");
-                temp.Add(".cr2");
-                temp.Add(".pef");
-                temp.Add(".arw");
-                temp.Add(".raw");
-                temp.Add(".orf");
-                return temp;
+                    //raw
+                    ".nef",
+                    ".dng",
+                    ".cr2",
+                    ".pef",
+                    ".arw",
+                    ".raw",
+                    ".orf"
+                };
             }
         }
 
@@ -39,14 +39,14 @@ namespace RawEditor
         {
             get
             {
-                var temp = new List<string>();
-                temp.Add(".jpg");
-                temp.Add(".jpeg");
-                temp.Add(".png");
-                temp.Add(".tiff");
-                temp.Add(".tif");
-                temp.Add(".bmp");
-                return temp;
+                return new List<string>() {
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+                    ".tiff",
+                    ".tif",
+                    ".bmp"
+                };
             }
         }
 
@@ -82,8 +82,8 @@ namespace RawEditor
                     //Needs to run in the UI thread because fuck performance
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    //Do some UI-code that must be run on the UI thread.
-                    encoder.SetSoftwareBitmap(bitmap);
+                //Do some UI-code that must be run on the UI thread.
+                encoder.SetSoftwareBitmap(bitmap);
                 });
                     await encoder.FlushAsync();
                     encoder = null;
@@ -100,8 +100,8 @@ namespace RawEditor
                     //Needs to run in the UI thread because fuck performance
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    //Do some UI-code that must be run on the UI thread.
-                    encoder.SetSoftwareBitmap(bitmap);
+                //Do some UI-code that must be run on the UI thread.
+                encoder.SetSoftwareBitmap(bitmap);
                 });
                     await encoder.FlushAsync();
                     encoder = null;
@@ -124,8 +124,8 @@ namespace RawEditor
                     //Needs to run in the UI thread because fuck performance
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    //Do some UI-code that must be run on the UI thread.
-                    encoder.SetSoftwareBitmap(bitmap);
+                //Do some UI-code that must be run on the UI thread.
+                encoder.SetSoftwareBitmap(bitmap);
                 });
                     await encoder.FlushAsync();
                     encoder = null;
