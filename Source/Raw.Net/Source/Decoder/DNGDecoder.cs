@@ -547,21 +547,19 @@ namespace RawNet
 
 
             // Apply stage 1 opcodes
-            if (ApplyStage1DngOpcodes)
+            var opcodes = ifd.GetEntryRecursive(TagType.OPCODELIST1);
+            if (opcodes != null)
             {
-                if (raw.tags.ContainsKey(TagType.OPCODELIST1))
+                // Apply stage 1 codes
+                try
                 {
-                    // Apply stage 1 codes
-                    try
-                    {
-                        //DngOpcodes codes = new DngOpcodes(raw.getEntry(TagType.OPCODELIST1));
-                        //mRaw = codes.applyOpCodes(mRaw);
-                    }
-                    catch (RawDecoderException e)
-                    {
-                        // We push back errors from the opcode parser, since the image may still be usable
-                        rawImage.errors.Add(e.Message);
-                    }
+                    //DngOpcodes codes = new DngOpcodes();
+                    //rawImage = codes.applyOpCodes(rawImage);
+                }
+                catch (RawDecoderException e)
+                {
+                    // We push back errors from the opcode parser, since the image may still be usable
+                    rawImage.errors.Add(e.Message);
                 }
             }
 
@@ -592,14 +590,10 @@ namespace RawNet
             SetBlack(raw);
 
             //convert to linear value
-            //*
-            //TODO optimize (super slow)
             double maxVal = Math.Pow(2, rawImage.ColorDepth);
             double coeff = maxVal / (rawImage.whitePoint - rawImage.blackLevelSeparate[0]);
             Parallel.For(rawImage.offset.height, rawImage.dim.height + rawImage.offset.height, y =>
-            //for (int y = mRaw.mOffset.y; y < mRaw.dim.y + mRaw.mOffset.y; y++)
             {
-                //int offset = ((y % 2) * 2);
                 int realY = y * rawImage.dim.width;
                 for (int x = rawImage.offset.width; x < rawImage.dim.width + rawImage.offset.width; x++)
                 {
