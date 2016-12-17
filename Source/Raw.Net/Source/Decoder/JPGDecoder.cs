@@ -30,6 +30,7 @@ namespace RawNet
         {
             //fill useless metadata
             rawImage.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
+            rawImage.whitePoint = (uint)byte.MaxValue;
             /*List<string> list = new List<string>
             {
                 "/app1/ifd/{ushort=271}"
