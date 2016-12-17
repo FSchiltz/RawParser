@@ -30,7 +30,7 @@ namespace RawNet
         {
             //fill useless metadata
             rawImage.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
-            List<string> list = new List<string>
+            /*List<string> list = new List<string>
             {
                 "/app1/ifd/{ushort=271}"
             };
@@ -38,9 +38,9 @@ namespace RawNet
             metaList.AsTask().Wait();
             if (metaList.GetResults() != null)
             {
-                metaList.GetResults().TryGetValue("", out var make);
+                metaList.GetResults().TryGetValue("/app1/ifd/{ushort=271}", out var make);
                 rawImage.metadata.make = make?.Value.ToString();
-            }
+            }*/
         }
 
         public override void DecodeRaw()
