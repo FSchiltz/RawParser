@@ -30,8 +30,10 @@ namespace RawNet
         {
             //fill useless metadata
             rawImage.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
-            List<string> list = new List<string>();
-            list.Add("/app1/ifd/{ushort=271}");
+            List<string> list = new List<string>
+            {
+                "/app1/ifd/{ushort=271}"
+            };
             var metaList = meta.GetPropertiesAsync(list);
             metaList.AsTask().Wait();
             if (metaList.GetResults() != null)
