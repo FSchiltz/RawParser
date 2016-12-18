@@ -45,7 +45,7 @@ namespace RawEditor
             //more metadata
             exif.Add("Black level", "" + raw.blackLevel);
             exif.Add("White level", "" + raw.whitePoint);
-            exif.Add("Color depth", "" + raw.ColorDepth +"bits");
+            exif.Add("Color depth", "" + raw.ColorDepth +" bits");
 
             return exif;
         }
