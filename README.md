@@ -41,6 +41,7 @@ Support for Xbox and hololens could be added if someone can test them.
   - orf (olympus raw)
   - raw (panasonic raw)
   - cr2 (canon raw)
+  - SRW (sony raw)
   
 ### output:
   - Tiff
