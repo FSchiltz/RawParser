@@ -6,17 +6,51 @@ It's made from my own work, from dcraw.c(https://www.cybercom.net/~dcoffin/dcraw
 
 ## How to use
 ###Setup
+Just add the folder src to your project and include the namespace RawNet
 ###Open the image
+To opne and image, call the function:
+```
+public static RawDecoder GetDecoder(ref Stream stream, string fileType)
+```
+Where stream is any Stream object supported by the C# framework opened over the file and fileType is the extension of the file starting with a dot (it's not case sensitive).
+example:
+```
+RawDecoder decoder = RawParser.GetDecoder(ref stream, file.FileType);
+```
 ###Get and display the thumbnail
+To get the thumbnailobject representing the thumbnail of the file, call the DecodeThumb() function of the opened decoder. It will return null if the file doesn't contain any thumbnail or if it's not yet supported. If thethumbnail is not null, call the GetSoftwareBitmap() function of the thumbanil to return a bitmap object that can be used inside the application.
+example:
+```
+thumbnail = decoder.DecodeThumb();
+if (thumbnail != null)
+{
+      DisplayImage(thumbnail.GetSoftwareBitmap());        
+}
+```
+
 ###Reading the raw
-###
+To read the raw image call the function DecodeRaw() of the decoder. This will fill the rawImage field of the decoder with the image.
+It's recommended to call DecodeMetadata() before to fill the image with usefull information but it's not needed if you only want to extract the raw value.
+```
+decoder.DecodeRaw();
+decoder.DecodeMetadata();
+RawImage raw = decoder.rawImage;
+```
+The image may need further processing like debayerisation and color correction depending on the file format.
 
 ##Camera supported
-For now, only some Nikon, uncompressed TIFF and JPEG format
+- Sony srw
+- Nikon Nef (only rgb files)
+- Canon cr2
+- Panasonic raw
+- Olympus raw
+- DNG
+- Tiff
+- JPEG
+- PNG
 
 ##TODO
-- add more camera
-- Demosaic algorithm
+- add more cameras
 - Correct color from camer to other color space
 - Get the correct Exif with the correct value
 
