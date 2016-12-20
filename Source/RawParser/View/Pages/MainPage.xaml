@@ -11,11 +11,19 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
+            <AppBarButton x:Name="FeedbackButton" 
+                          FontFamily="Segoe MDL2 Assets" 
+                          Content="&#xE939;" 
+                          FontSize="26" 
+                          Visibility="Visible"  
+                          Tapped="FeedbackButton_TappedAsync" Margin="12,0,0,0"/>
             <AppBarButton IsEnabled="False" 
                 x:Name="RotateLeftButton" 
                           Icon="Undo"
                           x:Uid="RotateLeft" 
-                          VerticalAlignment="Top" FontSize="12" Width="48" Tapped="RotateLeftButton_Tapped"/>
+                          VerticalAlignment="Top" 
+                          FontSize="12" Width="48" 
+                          Tapped="RotateLeftButton_Tapped"/>
             <AppBarButton IsEnabled="False" 
                           x:Name="RotateRightButton" 
                           Icon="Redo"

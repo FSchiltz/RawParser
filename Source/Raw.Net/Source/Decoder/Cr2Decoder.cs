@@ -17,9 +17,7 @@ namespace RawNet
     {
         int[] sraw_coeffs = new int[3];
 
-        public Cr2Decoder(ref Stream file) : base(ref file)
-        {
-        }
+        public Cr2Decoder(ref Stream file) : base(ref file) { }
 
         public override Thumbnail DecodeThumb()
         {
@@ -309,56 +307,66 @@ namespace RawNet
             // Fetch the white balance
             try
             {
-                Tag wb = ifd.GetEntryRecursive(TagType.CANONCOLORDATA);
+                Tag wb = ifd.GetEntryRecursive((TagType)0x0a9);
                 if (wb != null)
                 {
-                    // this entry is a big table, and different cameras store used WB in
-                    // different parts, so find the offset, starting with the most common one
-                    int offset = 126;
+                    //try to use this as white balance
 
-                    hints.TryGetValue("wb_offset", out var s);
-                    // replace it with a hint if it exists
-                    if (s != null)
-                    {
-
-                        offset = Int32.Parse(s);
-
-                    }
-
-                    offset /= 2;
-                    rawImage.metadata.wbCoeffs[0] = Convert.ToSingle(wb.data[offset + 0]);
-                    rawImage.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[offset + 1]);
-                    rawImage.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[offset + 3]);
+                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0);
+                    rawImage.metadata.wbCoeffs[1] = wb.GetFloat(1);
+                    rawImage.metadata.wbCoeffs[2] = wb.GetFloat(3);
                 }
                 else
                 {
-                    data = null;
-                    data = ifd.GetIFDsWithTag(TagType.MODEL);
-
-                    Tag shot_info = ifd.GetEntryRecursive(TagType.CANONSHOTINFO);
-                    Tag g9_wb = ifd.GetEntryRecursive(TagType.CANONPOWERSHOTG9WB);
-                    if (shot_info != null && g9_wb != null)
+                    wb = ifd.GetEntryRecursive(TagType.CANONCOLORDATA);
+                    if (wb != null)
                     {
-                        UInt16 wb_index = Convert.ToUInt16(shot_info.data[7]);
-                        int wb_offset = (wb_index < 18) ? "012347800000005896"[wb_index] - '0' : 0;
-                        wb_offset = wb_offset * 8 + 2;
+                        // this entry is a big table, and different cameras store used WB in
+                        // different parts, so find the offset, starting with the most common one
+                        int offset = 126;
 
-                        rawImage.metadata.wbCoeffs[0] = g9_wb.GetInt(wb_offset + 1);
-                        rawImage.metadata.wbCoeffs[1] = (g9_wb.GetInt(wb_offset + 0) + (float)g9_wb.GetInt(wb_offset + 3)) / 2.0f;
-                        rawImage.metadata.wbCoeffs[2] = g9_wb.GetInt(wb_offset + 2);
+                        hints.TryGetValue("wb_offset", out var s);
+                        // replace it with a hint if it exists
+                        if (s != null)
+                        {
+                            offset = Int32.Parse(s);
+                        }
+
+                        offset /= 2;
+                        rawImage.metadata.wbCoeffs[0] = Convert.ToSingle(wb.data[offset + 0]);
+                        rawImage.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[offset + 1]);
+                        rawImage.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[offset + 3]);
                     }
                     else
                     {
-                        // WB for the old 1D and 1DS
-                        wb = null;
-                        wb = ifd.GetEntryRecursive((TagType)0xa4);
-                        if (wb != null)
+                        data = null;
+                        data = ifd.GetIFDsWithTag(TagType.MODEL);
+
+                        Tag shot_info = ifd.GetEntryRecursive(TagType.CANONSHOTINFO);
+                        Tag g9_wb = ifd.GetEntryRecursive(TagType.CANONPOWERSHOTG9WB);
+                        if (shot_info != null && g9_wb != null)
                         {
-                            if (wb.dataCount >= 3)
+                            UInt16 wb_index = Convert.ToUInt16(shot_info.data[7]);
+                            int wb_offset = (wb_index < 18) ? "012347800000005896"[wb_index] - '0' : 0;
+                            wb_offset = wb_offset * 8 + 2;
+
+                            rawImage.metadata.wbCoeffs[0] = g9_wb.GetInt(wb_offset + 1);
+                            rawImage.metadata.wbCoeffs[1] = (g9_wb.GetInt(wb_offset + 0) + (float)g9_wb.GetInt(wb_offset + 3)) / 2.0f;
+                            rawImage.metadata.wbCoeffs[2] = g9_wb.GetInt(wb_offset + 2);
+                        }
+                        else
+                        {
+                            // WB for the old 1D and 1DS
+                            wb = null;
+                            wb = ifd.GetEntryRecursive((TagType)0xa4);
+                            if (wb != null)
                             {
-                                rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0);
-                                rawImage.metadata.wbCoeffs[1] = wb.GetFloat(1);
-                                rawImage.metadata.wbCoeffs[2] = wb.GetFloat(2);
+                                if (wb.dataCount >= 3)
+                                {
+                                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0);
+                                    rawImage.metadata.wbCoeffs[1] = wb.GetFloat(1);
+                                    rawImage.metadata.wbCoeffs[2] = wb.GetFloat(2);
+                                }
                             }
                         }
                     }

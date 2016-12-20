@@ -19,6 +19,7 @@ using System.Diagnostics;
 using Windows.Graphics.Display;
 using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
+using Microsoft.Services.Store.Engagement;
 
 namespace RawEditor
 {
@@ -44,13 +45,22 @@ namespace RawEditor
         private uint displayMutex = 0;
         private bool userAppliedModif = false;
         public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
-
-
+        private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
+#if DEBUG
+        string debug = " Debug";
+#else
+        string debug =  "";
+#endif
         public MainPage()
         {
-            InitializeComponent(); var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+            InitializeComponent();
+            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel * 1.2;
             ViewDim = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
+            if (StoreServicesFeedbackLauncher.IsSupported())
+            {
+                FeedbackButton.Visibility = Visibility.Visible;
+            }
             NavigationCacheMode = NavigationCacheMode.Required;
             //HistoryDisplay.ItemsSource = history;
             /*if (null == metadata)
@@ -292,6 +302,8 @@ namespace RawEditor
                     SetWBAsync();
                     EnableEditingControlAsync(true);
                     //dispose
+                    //send an event with file extension, camera model and maker 
+                    logger.Log("SuccessOpening " + file?.FileType + " " + raw?.metadata?.make + " " + raw?.metadata?.model + debug);
                     file = null;
                 }
                 catch (FormatException e)
@@ -300,6 +312,8 @@ namespace RawEditor
                     EmptyImageAsync();
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     var str = loader.GetString("ExceptionText");
+                    //send an event with file extension and camer modeland maker if any                   
+                    logger.Log("FailOpening " + file?.FileType + " " + raw?.metadata?.make + " " + raw?.metadata?.model + debug);
                     Debug.WriteLine(e.Message);
                     ExceptionDisplay.DisplayAsync(str);
                 }
@@ -410,16 +424,16 @@ namespace RawEditor
                     SoftwareBitmap bitmap = null;
                     //Needs to run in UI thread
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        if (raw.rotation == 1 || raw.rotation == 3)
-                        {
-                            bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.height, raw.dim.width);
-                        }
-                        else
-                        {
-                            bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.width, raw.dim.height);
-                        }
-                    }).AsTask().Wait();
+            {
+                if (raw.rotation == 1 || raw.rotation == 3)
+                {
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.height, raw.dim.width);
+                }
+                else
+                {
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.width, raw.dim.height);
+                }
+            }).AsTask().Wait();
                     ApplyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
                     try
                     {
@@ -487,16 +501,16 @@ namespace RawEditor
                 SoftwareBitmap bitmap = null;
                 //Needs to run in UI thread
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    if (raw.rotation == 1 || raw.rotation == 3)
-                    {
-                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.height, raw.previewDim.width);
-                    }
-                    else
-                    {
-                        bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.width, raw.previewDim.height);
-                    }
-                });
+        {
+            if (raw.rotation == 1 || raw.rotation == 3)
+            {
+                bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.height, raw.previewDim.width);
+            }
+            else
+            {
+                bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.width, raw.previewDim.height);
+            }
+        });
                 int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
                 DisplayImage(bitmap, reset);
                 Histogram.CreateAsync(value, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width, histogramCanvas);
@@ -644,6 +658,12 @@ namespace RawEditor
         private void ImageDisplay_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
             ZoomSlider.Value = ImageDisplay.ZoomFactor;
+        }
+
+        private async void FeedbackButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            var launcher = StoreServicesFeedbackLauncher.GetDefault();
+            await launcher.LaunchAsync();
         }
     }
 }
