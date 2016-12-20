@@ -6,107 +6,59 @@ namespace RawNet
 
     class DngOpcode
     {
-        public DngOpcode()
-        {
-            host = Common.GetHostEndianness();
-        }
+        public DngOpcode() { }
 
         /* Will be called exactly once, when input changes */
         /* Can be used for preparing pre-calculated values, etc */
-        public virtual RawImage createOutput(RawImage input) { return input; }
+        public virtual RawImage CreateOutput(RawImage input) { return input; }
 
         /* Will be called for actual processing */
         /* If multiThreaded is true, it will be called several times, */
         /* otherwise only once */
         /* Properties of out will not have changed from createOutput */
-        public virtual void apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY) { };
+        public virtual void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY) { }
 
-        public Rectangle2D mAoi;
-        int mFlags;
+        public Rectangle2D Aoi;
+        public int mFlags;
         public enum Flags
         {
             MultiThreaded = 1,
             PureLookup = 2
         };
-
-        Endianness host;
-
-        int getLong(byte[] ptr)
-        {
-            if (host == Endianness.big)
-                return ptr;
-            return (int)ptr[0] << 24 | (int)ptr[1] << 16 | (int)ptr[2] << 8 | (int)ptr[3];
-        }
-        UInt32 getULong(byte[] ptr)
-        {
-            if (host == Endianness.big)
-                return ptr;
-            return (UInt32)ptr[0] << 24 | (UInt32)ptr[1] << 16 | (UInt32)ptr[2] << 8 | (UInt32)ptr[3];
-        }
-        double getDouble(byte[] ptr)
-        {
-            if (host == Endianness.big)
-                return ptr;
-            double ret;
-            byte[] tmp = ret;
-            for (int i = 0; i < 8; i++)
-                tmp[i] = ptr[7 - i];
-            return ret;
-        }
-        float getFloat(byte[] ptr)
-        {
-            if (host == Endianness.big)
-                return ptr;
-            float ret;
-            byte[] tmp = ret;
-            for (int i = 0; i < 4; i++)
-                tmp[i] = ptr[3 - i];
-            return ret;
-        }
-        UInt16 getUshort(byte[] ptr)
-        {
-            if (host == Endianness.big)
-                return (ushort)(ptr[1] << 8 | ptr[0]);
-            return (ushort)(ptr[0] << 8 | ptr[1]);
-        }
-
     };
 
 
     class DngOpcodes
     {
         List<DngOpcode> mOpcodes;
-        Endianness host;
         UInt32 getULong(byte[] ptr)
         {
-            if (host == Endianness.big)
-                return (UInt32)ptr[1] << 24 | (UInt32)ptr[2] << 16 | (UInt32)ptr[3] << 8 | (UInt32)ptr[4];
-            return (UInt32)ptr[0] << 24 | (UInt32)ptr[1] << 16 | (UInt32)ptr[2] << 8 | (UInt32)ptr[3];
+            return (UInt32)ptr[1] << 24 | (UInt32)ptr[2] << 16 | (UInt32)ptr[3] << 8 | (UInt32)ptr[4];
+            //return (UInt32)ptr[0] << 24 | (UInt32)ptr[1] << 16 | (UInt32)ptr[2] << 8 | (UInt32)ptr[3];
         }
 
-        public DngOpcodes(Tag entry)
+        unsafe public DngOpcodes(Tag entry)
         {
-            host = Common.GetHostEndianness();
-            byte[] data = entry.GetByteArray();
+            TIFFBinaryReader reader = new TIFFBinaryReaderRE(entry.GetByteArray());
+
             UInt32 entry_size = entry.dataCount;
 
             if (entry_size < 20)
                 throw new RawDecoderException("DngOpcodes: Not enough bytes to read a single opcode");
 
-            UInt32 opcode_count = getULong(&data[0]);
-            int bytes_used = 4;
+            UInt32 opcode_count = reader.ReadUInt32();
+            uint bytes_used = 4;
             for (UInt32 i = 0; i < opcode_count; i++)
             {
-                if ((int)entry_size - bytes_used < 16)
-
-                    throw new RawDecoderException("DngOpcodes: Not enough bytes to read a new opcode");
-
-                UInt32 code = getULong(&data[bytes_used]);
-                //UInt32 version = getULong(&data[bytes_used+4]);
-                UInt32 flags = getULong(&data[bytes_used + 8]);
-                UInt32 expected_size = getULong(&data[bytes_used + 12]);
+                //if ((int)entry_size - bytes_used < 16)
+                // throw new RawDecoderException("DngOpcodes: Not enough bytes to read a new opcode");
+                reader.BaseStream.Position = bytes_used;
+                UInt32 code = reader.ReadUInt32();
+                UInt32 version = reader.ReadUInt32();
+                UInt32 flags = reader.ReadUInt32();
+                UInt32 expected_size = reader.ReadUInt32();
                 bytes_used += 16;
-                UInt32 opcode_used = 0;
+                int opcode_used = 0;
                 switch (code)
                 {
                     /*
@@ -117,13 +69,16 @@ namespace RawNet
                         mOpcodes.Add(new OpcodeFixBadPixelsList(&data[bytes_used], entry_size - bytes_used, &opcode_used));
                         break;*/
                     case 6:
-                        mOpcodes.Add(new OpcodeTrimBounds(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                        mOpcodes.Add(new OpcodeTrimBounds(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
                         break;
                     case 7:
-                        mOpcodes.Add(new OpcodeMapTable(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                        mOpcodes.Add(new OpcodeMapTable(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
                         break;
                     case 8:
-                        mOpcodes.Add(new OpcodeMapPolynomial(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                        mOpcodes.Add(new OpcodeMapPolynomial(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
+                        break;
+                    case 9:
+                        mOpcodes.Add(new OpcodeGainMap(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
                         break;
                     /*
                 case 10:
@@ -140,32 +95,32 @@ namespace RawNet
                     break;*/
                     default:
                         // Throw Error if not marked as optional
-                        if (!(flags & 1))
-                            throw new RawDecoderException("DngOpcodes: Unsupported Opcode: %d", code);
+                        /*if ((flags & 1) == 0)
+                            throw new RawDecoderException("DngOpcodes: Unsupported Opcode: " + code);*/
                         break;
                 }
-                if (opcode_used != expected_size)
-                    throw new RawDecoderException("DngOpcodes: Inconsistent length of opcode");
-                bytes_used += (int)opcode_used;
+                //if (opcode_used != expected_size)
+                //throw new RawDecoderException("DngOpcodes: Inconsistent length of opcode");
+                bytes_used += (uint)opcode_used;
             }
         }
 
 
         /* TODO: Apply in separate threads */
-        public RawImage applyOpCodes(RawImage img)
+        public RawImage ApplyOpCodes(RawImage img)
         {
             int codes = mOpcodes.Count;
             for (int i = 0; i < codes; i++)
             {
                 DngOpcode code = mOpcodes[i];
-                RawImage img_out = code.createOutput(img);
-                Rectangle2D fullImage = new Rectangle2D(0, 0, img.dim.x, img.dim.y);
+                RawImage img_out = code.CreateOutput(img);
+                Rectangle2D fullImage = new Rectangle2D(0, 0, img.dim.width, img.dim.height);
 
-                if (!code.mAoi.IsThisInside(ref fullImage))
+                if (!code.Aoi.IsThisInside(ref fullImage))
                     throw new RawDecoderException("DngOpcodes: Area of interest not inside image!");
-                if (code.mAoi.HasPositiveArea())
+                if (code.Aoi.HasPositiveArea())
                 {
-                    code.apply(img, img_out, (uint)code.mAoi.GetTop(), (uint)code.mAoi.GetBottom());
+                    code.Apply(img, img_out, (uint)code.Aoi.GetTop(), (uint)code.Aoi.GetBottom());
                     img = img_out;
                 }
             }
@@ -198,21 +153,22 @@ namespace RawNet
         UInt64 mTop, mLeft, mBottom, mRight;
         /***************** OpcodeTrimBounds   ****************/
 
-        OpcodeTrimBounds(byte[] parameters, UInt32 param_max_bytes, UInt32* bytes_used)
+        public OpcodeTrimBounds(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref Int32 bytes_used, uint offset)
         {
             if (param_max_bytes < 16)
-                throw new RawDecoderException("OpcodeTrimBounds: Not enough data to read parameters, only %u bytes left.", param_max_bytes);
-            mTop = getLong(&parameters[0]);
-            mLeft = getLong(&parameters[4]);
-            mBottom = getLong(&parameters[8]);
-            mRight = getLong(&parameters[12]);
-            *bytes_used = 16;
+                throw new RawDecoderException("OpcodeTrimBounds: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+            mTop = parameters.ReadUInt16();
+            mLeft = parameters.ReadUInt16();
+            mBottom = parameters.ReadUInt16();
+            mRight = parameters.ReadUInt16();
+            bytes_used = 16;
         }
 
-        void apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
+        public override void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
         {
-            Rectangle2D crop = new Rectangle2D(mLeft, mTop, mRight - mLeft, mBottom - mTop);
-            output.subFrame(crop);
+            Rectangle2D crop = new Rectangle2D((int)mLeft, (int)mTop, (int)(mRight - mLeft), (int)(mBottom - mTop));
+            output.offset = crop.GetTopLeft();
+            output.dim = crop.GetBottomRight();
         }
 
     };
@@ -223,22 +179,26 @@ namespace RawNet
         UInt16[] mLookup = new UInt16[65536];
         /***************** OpcodeMapTable   ****************/
 
-        unsafe OpcodeMapTable(byte[] parameters, UInt32 param_max_bytes, UInt32* bytes_used)
+        public OpcodeMapTable(TIFFBinaryReader parameters, ulong param_max_bytes, ref Int32 bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
-                throw new RawDecoderException("OpcodeMapTable: Not enough data to read parameters, only %u bytes left.", param_max_bytes);
-            mAoi.setAbsolute(getLong(&parameters[4]), getLong(&parameters[0]), getLong(&parameters[12]), getLong(&parameters[8]));
-            mFirstPlane = getLong(&parameters[16]);
-            mPlanes = getLong(&parameters[20]);
-            mRowPitch = getLong(&parameters[24]);
-            mColPitch = getLong(&parameters[28]);
+                throw new RawDecoderException("OpcodeMapTable: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+            int h1 = (int)parameters.ReadUInt32();
+            int w1 = (int)parameters.ReadUInt32();
+            int h2 = (int)parameters.ReadUInt32();
+            int w2 = (int)parameters.ReadUInt32();
+            Aoi.SetAbsolute(w1, h1, w2, h2);
+            mFirstPlane = parameters.ReadUInt32();
+            mPlanes = parameters.ReadUInt32();
+            mRowPitch = parameters.ReadUInt32();
+            mColPitch = parameters.ReadUInt32();
             if (mPlanes == 0)
                 throw new RawDecoderException("OpcodeMapPolynomial: Zero planes");
             if (mRowPitch == 0 || mColPitch == 0)
                 throw new RawDecoderException("OpcodeMapPolynomial: Invalid Pitch");
 
-            int tablesize = getLong(&parameters[32]);
-            *bytes_used = 36;
+            int tablesize = (int)parameters.ReadUInt32();
+            bytes_used = 36;
 
             if (tablesize <= 0)
                 throw new RawDecoderException("OpcodeMapTable: Table size must be positive");
@@ -246,20 +206,20 @@ namespace RawNet
                 throw new RawDecoderException("OpcodeMapTable: A map with more than 65536 entries not allowed");
 
             if (param_max_bytes < 36 + ((UInt64)tablesize * 2))
-                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only %u bytes left.", param_max_bytes);
+                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
 
             for (int i = 0; i <= 65535; i++)
             {
-                int location = Math.Math.Min(((tablesize - 1, i);
-                mLookup[i] = getUshort(&parameters[36 + 2 * location]);
+                int location = Math.Min(tablesize - 1, i);
+                parameters.BaseStream.Position = 36 + 2 * location + offset;
+                mLookup[i] = parameters.ReadUInt16();
             }
 
-            *bytes_used += tablesize * 2;
-            mFlags = MultiThreaded | PureLookup;
+            bytes_used += tablesize * 2;
+            mFlags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
-
-        public override RawImage createOutput(RawImage input)
+        public override RawImage CreateOutput(RawImage input)
         {
             if (mFirstPlane > input.cpp)
                 throw new RawDecoderException("OpcodeMapTable: Not that many planes in actual image");
@@ -270,24 +230,27 @@ namespace RawNet
             return input;
         }
 
-        public unsafe override void apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
         {
             uint cpp = output.cpp;
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
-                UInt16* src = (UInt16*)output.getData(mAoi.GetLeft(), y);
-                // Add offset, so this is always first plane
-                src += mFirstPlane;
-                for (UInt64 x = 0; x < (UInt64)mAoi.GetWidth(); x += mColPitch)
+                fixed (UInt16* t = &output.rawData[(int)y * output.dim.width + Aoi.GetLeft()])
                 {
-                    for (UInt64 p = 0; p < mPlanes; p++)
+                    var src = t;
+                    // Add offset, so this is always first plane
+                    src += mFirstPlane;
+                    for (UInt64 x = 0; x < (UInt64)Aoi.GetWidth(); x += mColPitch)
                     {
-                        src[x * cpp + p] = mLookup[src[x * cpp + p]];
+                        for (UInt64 p = 0; p < mPlanes; p++)
+                        {
+                            src[x * cpp + p] = mLookup[src[x * cpp + p]];
+                        }
                     }
                 }
             }
         }
-    };
+    }
 
     class OpcodeMapPolynomial : DngOpcode
     {
@@ -295,34 +258,40 @@ namespace RawNet
         UInt64 mFirstPlane, mPlanes, mRowPitch, mColPitch, mDegree;
         double[] mCoefficient = new double[9];
         UInt16[] mLookup = new UInt16[65536];
-        OpcodeMapPolynomial(byte[] parameters, UInt32 param_max_bytes, UInt32* bytes_used)
+        public OpcodeMapPolynomial(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
-                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only %u bytes left.", param_max_bytes);
-            mAoi.setAbsolute(getLong(&parameters[4]), getLong(&parameters[0]), getLong(&parameters[12]), getLong(&parameters[8]));
-            mFirstPlane = getLong(&parameters[16]);
-            mPlanes = getLong(&parameters[20]);
-            mRowPitch = getLong(&parameters[24]);
-            mColPitch = getLong(&parameters[28]);
+                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+            int h1 = (int)parameters.ReadUInt32();
+            int w1 = (int)parameters.ReadUInt32();
+            int h2 = (int)parameters.ReadUInt32();
+            int w2 = (int)parameters.ReadUInt32();
+            Aoi.SetAbsolute(w1, h1, w2, h2);
+            mFirstPlane = parameters.ReadUInt32();
+            mPlanes = parameters.ReadUInt32();
+            mRowPitch = parameters.ReadUInt32();
+            mColPitch = parameters.ReadUInt32();
             if (mPlanes == 0)
                 throw new RawDecoderException("OpcodeMapPolynomial: Zero planes");
             if (mRowPitch == 0 || mColPitch == 0)
                 throw new RawDecoderException("OpcodeMapPolynomial: Invalid Pitch");
 
-            mDegree = getLong(&parameters[32]);
-            *bytes_used = 36;
+            mDegree = parameters.ReadUInt32();
+            bytes_used = 36;
             if (mDegree > 8)
                 throw new RawDecoderException("OpcodeMapPolynomial: A polynomial with more than 8 degrees not allowed");
             if (param_max_bytes < 36 + (mDegree * 8))
-                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only %u bytes left.", param_max_bytes);
+                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
             for (UInt64 i = 0; i <= mDegree; i++)
-                mCoefficient[i] = getDouble(&parameters[36 + 8 * i]);
-            *bytes_used += 8 * mDegree + 8;
-            mFlags = MultiThreaded | PureLookup;
+            {
+                parameters.BaseStream.Position = (long)(36 + 8 * i) + offset;
+                mCoefficient[i] = Convert.ToDouble(parameters.ReadBytes(8));
+            }
+            bytes_used += (int)(8 * mDegree + 8);
+            mFlags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
-
-        RawImage createOutput(RawImage input)
+        public override RawImage CreateOutput(RawImage input)
         {
             if (mFirstPlane > input.cpp)
                 throw new RawDecoderException("OpcodeMapPolynomial: Not that many planes in actual image");
@@ -342,19 +311,120 @@ namespace RawNet
             return input;
         }
 
-        public unsafe override void apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
         {
             uint cpp = output.cpp;
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
-                UInt16* src = (UInt16*)out.getData(mAoi.GetLeft(), y);
-                // Add offset, so this is always first plane
-                src += mFirstPlane;
-                for (UInt64 x = 0; x < (UInt64)mAoi.GetWidth(); x += mColPitch)
+                fixed (UInt16* t = &output.rawData[(int)y * output.dim.width + Aoi.GetLeft()])
                 {
-                    for (UInt64 p = 0; p < mPlanes; p++)
+                    var src = t;
+                    // Add offset, so this is always first plane
+                    src += mFirstPlane;
+                    for (UInt64 x = 0; x < (UInt64)Aoi.GetWidth(); x += mColPitch)
                     {
-                        src[x * cpp + p] = mLookup[src[x * cpp + p]];
+                        for (UInt64 p = 0; p < mPlanes; p++)
+                        {
+                            src[x * cpp + p] = mLookup[src[x * cpp + p]];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    class OpcodeGainMap : DngOpcode
+    {
+        UInt64 firstPlane, planes, rowPitch, colPitch, mapPointsV, mapPointsH, mapPlanes;
+        double mapSpacingV, mapSpacingH, mapOriginV, mapOriginH;
+        double[,,] gain;
+        //double[] coefficient = new double[9];
+        //UInt16[] lookup = new UInt16[65536];
+
+        public OpcodeGainMap(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
+        {
+            if (param_max_bytes < 36)
+                throw new RawDecoderException("OpcodeGainMap: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+            int h1 = (int)parameters.ReadUInt32();
+            int w1 = (int)parameters.ReadUInt32();
+            int h2 = (int)parameters.ReadUInt32();
+            int w2 = (int)parameters.ReadUInt32();
+            Aoi.SetAbsolute(w1, h1, w2, h2);
+            firstPlane = parameters.ReadUInt32();
+            planes = parameters.ReadUInt32();
+            rowPitch = parameters.ReadUInt32();
+            colPitch = parameters.ReadUInt32();
+            if (planes == 0)
+                throw new RawDecoderException("OpcodeGainMap: Zero planes");
+            if (rowPitch == 0 || colPitch == 0)
+                throw new RawDecoderException("OpcodeGainMap: Invalid Pitch");
+
+            mapPointsV = parameters.ReadUInt32();
+            mapPointsH = parameters.ReadUInt32();
+            mapSpacingV = Convert.ToDouble(parameters.ReadBytes(8)) * h2;
+            mapSpacingH = Convert.ToDouble(parameters.ReadBytes(8)) * w2;
+            mapOriginV = Convert.ToDouble(parameters.ReadBytes(8));
+            mapOriginH = Convert.ToDouble(parameters.ReadBytes(8));
+            mapPlanes = parameters.ReadUInt32();
+            gain = new double[mapPointsV, mapPointsH, mapPlanes];
+            bytes_used = 76;
+            if (param_max_bytes < 36 + (mapPointsV * mapPointsH * mapPlanes * 8))
+                throw new RawDecoderException("OpcodeGainMap: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+            for (UInt64 i = 0; i < mapPointsV; i++)
+            {
+                for (UInt64 j = 0; j < mapPointsH; j++)
+                {
+                    for (UInt64 k = 0; k < mapPlanes; k++)
+                    {
+                        gain[i, j, k] = Convert.ToDouble(parameters.ReadBytes(8));
+                    }
+                }
+            }
+            bytes_used += (int)(8 * mapPointsV * mapPointsH * mapPlanes);
+            mFlags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
+        }
+
+        public override RawImage CreateOutput(RawImage input)
+        {
+            if (firstPlane > input.cpp)
+                throw new RawDecoderException("OpcodeGainMap: Not that many planes in actual image");
+
+            if (firstPlane + planes > input.cpp)
+                throw new RawDecoderException("OpcodeGainMap: Not that many planes in actual image");
+
+            /*
+            // Create lookup
+            for (int i = 0; i < 65536; i++)
+            {
+                double in_val = i / 65536.0;
+                double val = coefficient[0];
+                for (UInt64 j = 1; j <= degree; j++)
+                    val += coefficient[j] * Math.Pow(in_val, j);
+                lookup[i] = (ushort)Common.Clampbits((int)(val * 65535.5), 16);
+            }*/
+            return input;
+        }
+
+        public unsafe override void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
+        {
+            uint cpp = output.cpp;
+            for (UInt64 y = startY; y < endY; y += rowPitch)
+            {
+                int realY = (y - startY) ;
+                fixed (UInt16* t = &output.rawData[(int)y * output.dim.width + Aoi.GetLeft()])
+                {
+                    var src = t;
+                    // Add offset, so this is always first plane
+                    src += firstPlane;
+                    for (UInt64 x = 0; x < (UInt64)Aoi.GetWidth(); x += colPitch)
+                    {
+                        for (UInt64 p = 0; p < planes; p++)
+                        {
+                            //if outside the bound, last pixel or first
+
+
+                            src[x * cpp + p] = (ushort)(src[x * cpp + p] * gain[y - startY, x, p]);
+                        }
                     }
                 }
             }

@@ -553,8 +553,8 @@ namespace RawNet
                 // Apply stage 1 codes
                 try
                 {
-                    //DngOpcodes codes = new DngOpcodes();
-                    //rawImage = codes.applyOpCodes(rawImage);
+                    //DngOpcodes codes = new DngOpcodes(opcodes);
+                    //rawImage = codes.ApplyOpCodes(rawImage);
                 }
                 catch (RawDecoderException e)
                 {
@@ -618,10 +618,11 @@ namespace RawNet
                 }
             });
             //*/
+
+            /*
             // Apply opcodes to lossy DNG 
-            if (compression == 0x884c)
+            //if (compression == 0x884c)
             {
-                /*
                 if (raw.tags.ContainsKey(TagType.OPCODELIST2))
                 {
                     // We must apply black/white scaling
@@ -641,7 +642,23 @@ namespace RawNet
                     mRaw.blackLevel = 0;
                     mRaw.blackLevelSeparate[0] = mRaw.blackLevelSeparate[1] = mRaw.blackLevelSeparate[2] = mRaw.blackLevelSeparate[3] = 0;
                     mRaw.whitePoint = 65535;
-                }*/
+                }
+                
+            }*/
+            var opcodes2 = ifd.GetEntryRecursive(TagType.OPCODELIST2);
+            if (opcodes2 != null)
+            {
+                // Apply stage 2 codes
+                try
+                {
+                   // DngOpcodes codes = new DngOpcodes(opcodes2);
+                    //rawImage = codes.ApplyOpCodes(rawImage);
+                }
+                catch (RawDecoderException e)
+                {
+                    // We push back errors from the opcode parser, since the image may still be usable
+                    rawImage.errors.Add(e.Message);
+                }
             }
         }
 
