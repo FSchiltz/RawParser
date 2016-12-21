@@ -1,42 +1,95 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Diagnostics;
+using System.Linq;
 using Windows.ApplicationModel.Core;
+using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Shapes;
 
-namespace RawEditor.View.UIHelper
+namespace RawEditor
 {
-    class Histogram
+    public struct HistoRaw
     {
+        public int[] red;
+        public int[] blue;
+        public int[] green;
+        public int[] luma;
+    }
+
+    public class Histogram
+    {
+        public PointCollection PointsL { get; set; }
+        public PointCollection PointsR { get; set; }
+        public PointCollection PointsG { get; set; }
+        public PointCollection PointsB { get; set; }
+
         //TODO simplify if memory saver mode
-        public static async void CreateAsync(int[] value, ushort colorDepth, uint height, uint width, Canvas histogramCanvas)
+        public async void FillAsync(HistoRaw value, ushort colorDepth, uint height, uint width)
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher
-                     .RunAsync(CoreDispatcherPriority.Normal, () =>
-                     {
-                         histogramCanvas.Children.Clear();
-                     });
-            for (int i = 0; i < value.Length; i++)
+            ClearAsync();
+            //smooth the histogramm
+            value.luma = SmoothHistogram(value.luma);
+            value.red = SmoothHistogram(value.red);
+            value.green = SmoothHistogram(value.green);
+            value.blue = SmoothHistogram(value.blue);
+            //create a collection point
+            int max = value.luma.Max();
+            // first point (lower-left corner)
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                Line line = null;
-                await CoreApplication.MainView.CoreWindow.Dispatcher
-                     .RunAsync(CoreDispatcherPriority.Normal, () =>
-                     {
-                         int widthstep = (int)(value.Length / histogramCanvas.ActualWidth);
-                         value[i] = (int)(value[i] / ((height * width) / (256 * 10)));
-                         line = new Line();
-                         line.Stroke = new SolidColorBrush(Colors.Black);
-                         line.StrokeThickness = 1;
+                PointsL.Add(new Point(0, max));
+                PointsR.Add(new Point(0, max));
+                PointsG.Add(new Point(0, max));
+                PointsB.Add(new Point(0, max));
+                // middle points
+                for (int i = 0; i < value.luma.Length; i++)
+                {
+                    PointsL.Add(new Point(i, max - value.luma[i]));
+                    PointsR.Add(new Point(i, max - value.red[i]));
+                    PointsG.Add(new Point(i, max - value.green[i]));
+                    PointsB.Add(new Point(i, max - value.blue[i]));
+                }
+                // last point (lower-right corner)
+                PointsL.Add(new Point(value.luma.Length - 1, max));
+                PointsR.Add(new Point(value.luma.Length - 1, max));
+                PointsG.Add(new Point(value.luma.Length - 1, max));
+                PointsB.Add(new Point(value.luma.Length - 1, max));
+            });
+        }
 
-                         line.X1 = line.X2 = (i * widthstep);
-                         line.Y1 = histogramCanvas.Height;
-                         line.Y2 = (int)(histogramCanvas.Height - value[i]);
+        public async void ClearAsync()
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PointsL = new PointCollection();
+                PointsR = new PointCollection();
+                PointsG = new PointCollection();
+                PointsB = new PointCollection();
+            });
+        }
 
-                         histogramCanvas.Children.Add(line);
-                     });
+        public Histogram() { }
+
+        private int[] SmoothHistogram(int[] originalValues)
+        {
+            int[] smoothedValues = new int[originalValues.Length];
+            double[] mask = new double[] { 0.25, 0.5, 0.25 };
+
+            for (int bin = 1; bin < originalValues.Length - 1; bin++)
+            {
+                double smoothedValue = 0;
+                for (int i = 0; i < mask.Length; i++)
+                {
+                    smoothedValue += originalValues[bin - 1 + i] * mask[i];
+                }
+                smoothedValues[bin] = (int)smoothedValue;
             }
+            return smoothedValues;
         }
     }
 }

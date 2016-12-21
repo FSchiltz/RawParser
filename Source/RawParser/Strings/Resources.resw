@@ -132,6 +132,9 @@
   <data name="ContrastBalance.Text" xml:space="preserve">
     <value>Contrast balance</value>
   </data>
+  <data name="Crop.Label" xml:space="preserve">
+    <value>Crop</value>
+  </data>
   <data name="Demos.Text" xml:space="preserve">
     <value>Demosaicing algorythm</value>
   </data>
@@ -140,6 +143,9 @@
   </data>
   <data name="Display.Text" xml:space="preserve">
     <value>Display</value>
+  </data>
+  <data name="DisplayHeader.Header" xml:space="preserve">
+    <value>Display Options</value>
   </data>
   <data name="ExceptionText" xml:space="preserve">
     <value>The file is not in a supported format, please send feedback to the github</value>
@@ -168,6 +174,9 @@
   <data name="Legal.Text" xml:space="preserve">
     <value>Legal:</value>
   </data>
+  <data name="LegalHeader.Header" xml:space="preserve">
+    <value>Contact and Legal</value>
+  </data>
   <data name="OpenImage.Label" xml:space="preserve">
     <value>Open an Image</value>
   </data>
@@ -175,7 +184,7 @@
     <value>Presets</value>
   </data>
   <data name="Privacy.Content" xml:space="preserve">
-    <value>Privacy policy:</value>
+    <value>Privacy policy</value>
   </data>
   <data name="ProcessingHeader.Header" xml:space="preserve">
     <value>Processing</value>
