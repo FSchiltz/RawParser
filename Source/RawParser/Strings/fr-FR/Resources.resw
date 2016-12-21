@@ -132,6 +132,9 @@
   <data name="ContrastBalance.Text" xml:space="preserve">
     <value>Correction du contraste</value>
   </data>
+  <data name="Crop.Label" xml:space="preserve">
+    <value>Crop</value>
+  </data>
   <data name="Demos.Text" xml:space="preserve">
     <value>Algorithme de dématriçage</value>
   </data>
@@ -140,6 +143,9 @@
   </data>
   <data name="Display.Text" xml:space="preserve">
     <value>Affichage</value>
+  </data>
+  <data name="DisplayHeader.Header" xml:space="preserve">
+    <value>Options d'affichage</value>
   </data>
   <data name="ExceptionText" xml:space="preserve">
     <value>L'image n'est pas un format supporté, vous pouvez laisser une issue sur le github.</value>
@@ -166,7 +172,10 @@
     <value>Cette application est une version de test. Pour signaler un problème:</value>
   </data>
   <data name="Legal.Text" xml:space="preserve">
-    <value>Mentions légales:</value>
+    <value>Mentions légales</value>
+  </data>
+  <data name="LegalHeader.Header" xml:space="preserve">
+    <value>Contact et informations légales</value>
   </data>
   <data name="OpenImage.Label" xml:space="preserve">
     <value>Ouvrir une image</value>

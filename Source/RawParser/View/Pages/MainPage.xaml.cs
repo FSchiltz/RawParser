@@ -11,12 +11,10 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
-using RawEditor.View.UIHelper;
 using Windows.UI.ViewManagement;
 using Windows.Foundation;
 using RawNet;
 using System.Diagnostics;
-using Windows.Graphics.Display;
 using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using Microsoft.Services.Store.Engagement;
@@ -41,46 +39,20 @@ namespace RawEditor
     {
         public RawImage raw;
         public bool ImageSelected { set; get; }
-        public Size ViewDim;//for auto preview
         bool cameraWB = true;
         public Thumbnail thumbnail;
         private uint displayMutex = 0;
         private bool userAppliedModif = false;
         public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
-#if DEBUG
-        string debug = " Debug";
-#else
-        string debug =  "";
-#endif
         public MainPage()
         {
             InitializeComponent();
-            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel * 1.2;
-            ViewDim = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
             if (StoreServicesFeedbackLauncher.IsSupported())
             {
                 FeedbackButton.Visibility = Visibility.Visible;
             }
             NavigationCacheMode = NavigationCacheMode.Required;
-            //HistoryDisplay.ItemsSource = history;
-            /*if (null == metadata)
-            {
-                try
-                {
-                    StorageFolder installationFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
-                    var f = StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/Data/cameras.xml")).AsTask();
-                    f.Wait();
-                    var t = f.Result.OpenStreamForReadAsync();
-                    t.Wait();
-                    metadata = new CameraMetaData(t.Result);
-                }
-                catch (CameraMetadataException e)
-                {
-                    ExceptionDisplay.display(e.Message);
-                }
-            }*/
 
             NavigationCacheMode = NavigationCacheMode.Enabled;
             ImageSelected = false;
@@ -94,7 +66,7 @@ namespace RawEditor
             {
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    progressDisplay.Visibility = Visibility.Visible;
+                    ProgressDisplay.Visibility = Visibility.Visible;
                 });
             }
         }
@@ -107,7 +79,7 @@ namespace RawEditor
                 displayMutex = 0;
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    progressDisplay.Visibility = Visibility.Collapsed;
+                    ProgressDisplay.Visibility = Visibility.Collapsed;
                 });
             }
         }
@@ -151,39 +123,39 @@ namespace RawEditor
             //empty the previous image data
             raw = null;
             history.Clear();
-            await CoreApplication.MainView.CoreWindow.Dispatcher
-                    .RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        //empty the image display
-                        ImageBox.Source = null;
-                        //empty the exif data
-                        ExifDisplay.ItemsSource = null;
-                        //empty the histogram
-                        EnableEditingControlAsync(false);
-                        //free the histogram
-                        histogramCanvas.Children.Clear();
-                        //set back editing control to default value
-                        ResetControlsAsync();
-                    });
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                //empty the image display
+                ImageBox.Source = null;
+                //empty the exif data
+                ExifDisplay.ItemsSource = null;
+                //empty the histogram
+                EnableEditingControlAsync(false);
+                //set back editing control to default value
+                ResetControlsAsync();
+                LumaHisto.Points = null;
+                RedHisto.Points = null;
+                GreenHisto.Points = null;
+                BlueHisto.Points = null;
+            });
         }
 
         private async void ResetControlsAsync()
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher
-                   .RunAsync(CoreDispatcherPriority.Normal, () =>
-                   {
-                       exposureSlider.Value = 0;
-                       ShadowSlider.Value = 0;
-                       HighLightSlider.Value = 0;
-                       //gammaSlider.IsEnabled = v;
-                       contrastSlider.Value = 10;
-                       //brightnessSlider.IsEnabled = v;
-                       saturationSlider.Value = 0;
-                       ResetButton.IsEnabled = false;
-                       userAppliedModif = false;
-                       //set white balance if any
-                       SetWBAsync();
-                   });
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                exposureSlider.Value = 0;
+                ShadowSlider.Value = 0;
+                HighLightSlider.Value = 0;
+                //gammaSlider.IsEnabled = v;
+                contrastSlider.Value = 10;
+                //brightnessSlider.IsEnabled = v;
+                saturationSlider.Value = 0;
+                ResetButton.IsEnabled = false;
+                userAppliedModif = false;
+                //set white balance if any
+                SetWBAsync();
+            });
         }
 
         private async void SetWBAsync()
@@ -274,6 +246,7 @@ namespace RawEditor
                     raw = decoder.rawImage;
                     raw.metadata.FileName = file.DisplayName;
                     raw.metadata.FileNameComplete = file.Name;
+                    raw.metadata.FileExtension = file.FileType;
 
                     watch.Stop();
                     raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
@@ -305,19 +278,26 @@ namespace RawEditor
                     SetWBAsync();
                     EnableEditingControlAsync(true);
                     //dispose
-                    //send an event with file extension, camera model and maker 
-                    logger.Log("SuccessOpening " + file?.FileType + " " + raw?.metadata?.make + " " + raw?.metadata?.model + debug);
+#if !DEBUG
+                    //send an event with file extension, camera model and make
+                    logger.Log("SuccessOpening " + raw?.metadata?.FileExtension + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
+#endif
                     file = null;
                 }
                 catch (FormatException e)
                 {
                     raw = null;
                     EmptyImageAsync();
+#if DEBUG
+                    Debug.WriteLine(e.Message);
+#else
+                    
+                    //send an event with file extension and camer model and make if any                   
+                    logger.Log("FailOpening " + file?.FileType + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
+                    
+#endif
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     var str = loader.GetString("ExceptionText");
-                    //send an event with file extension and camer modeland maker if any                   
-                    logger.Log("FailOpening " + file?.FileType + " " + raw?.metadata?.make + " " + raw?.metadata?.model + debug);
-                    Debug.WriteLine(e.Message);
                     ExceptionDisplay.DisplayAsync(str);
                 }
                 StopLoadDisplay();
@@ -336,11 +316,11 @@ namespace RawEditor
             {
                 if (raw.dim.height > raw.dim.width)
                 {
-                    previewFactor = (int)(raw.dim.height / ViewDim.Height);
+                    previewFactor = (int)(raw.dim.height / ImageDisplay.ViewportHeight);
                 }
                 else
                 {
-                    previewFactor = (int)(raw.dim.width / ViewDim.Width);
+                    previewFactor = (int)(raw.dim.width / ImageDisplay.ViewportWidth);
                 }
                 int start = 1;
                 for (; previewFactor > (start << 1); start <<= 1) ;
@@ -420,7 +400,7 @@ namespace RawEditor
                 DisplayLoad();
                 var task = Task.Run(async () =>
                 {
-                    var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.ColorDepth);
+                    var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.ColorDepth, false);
                     try
                     {
                         FormatHelper.SaveAsync(file, result.Item2);
@@ -480,19 +460,28 @@ namespace RawEditor
 
         private void UpdatePreview(bool reset)
         {
-            //display the histogram                    
+            //display the histogram                  
             Task.Run(async () =>
             {
-                var result = await ApplyUserModifAsync(raw.previewData, raw.previewDim, raw.ColorDepth);
+                var result = await ApplyUserModifAsync(raw.previewData, raw.previewDim, raw.ColorDepth, true);
                 DisplayImage(result.Item2, reset);
-                Histogram.CreateAsync(result.Item1, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width, histogramCanvas);
+
+                var histo = new Histogram();
+                histo.FillAsync(result.Item1, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width);
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    LumaHisto.Points = histo.PointsL;
+                    RedHisto.Points = histo.PointsR;
+                    GreenHisto.Points = histo.PointsG;
+                    BlueHisto.Points = histo.PointsB;
+                });
             });
         }
 
         /**
          * Apply the change over the image preview
          */
-        async private Task<Tuple<int[], SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, ushort colorDepth)
+        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, ushort colorDepth, bool histo)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -503,8 +492,6 @@ namespace RawEditor
                 effect.gMul = colorTintSlider.Value;
                 effect.bMul = colorTintBlueSlider.Value;
                 effect.contrast = contrastSlider.Value / 10;
-                //effect.gamma = gammaSlider.Value;
-                //effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
                 effect.shadow = ShadowSlider.Value * 2;
                 effect.hightlight = HighLightSlider.Value * 3;
                 effect.saturation = 1 + saturationSlider.Value / 100;
@@ -527,9 +514,8 @@ namespace RawEditor
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, dim.width, dim.height);
                 }
             });
-            var histo = effect.ApplyModification(image, dim, colorDepth, ref bitmap);
-
-            return Tuple.Create(histo, bitmap);
+            var tmp = effect.ApplyModification(image, dim, colorDepth, ref bitmap, histo);
+            return Tuple.Create(tmp, bitmap);
         }
 
         #region WBSlider
@@ -632,7 +618,6 @@ namespace RawEditor
         {
             try
             {
-
                 DataRequest request = args.Request;
                 request.Data.Properties.Title = "Share image";
                 request.Data.Properties.Description = "";
@@ -640,7 +625,7 @@ namespace RawEditor
                 //TODO regionalise text
                 //generate the bitmap
                 DisplayLoad();
-                var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.ColorDepth);
+                var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.ColorDepth, false);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -656,12 +641,26 @@ namespace RawEditor
 
                 request.Data.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
                 deferal.Complete();
-
             }
             catch (Exception e)
             {
                 ExceptionDisplay.DisplayAsync(e.Message);
             }
+        }
+
+        private void ReportButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            Windows.System.Launcher.LaunchUriAsync(new Uri(@"https://github.com/arimhan/RawParser/issues"));
+        }
+
+        private void GitterButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            Windows.System.Launcher.LaunchUriAsync(new Uri(@"https://gitter.im/RawParser/Lobby"));
+        }
+
+        private void CropButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+
         }
     }
 }

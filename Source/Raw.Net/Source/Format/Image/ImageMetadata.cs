@@ -32,6 +32,7 @@ namespace RawNet
         public string FileName { get; set; }
         public string FileNameComplete { get; set; }
         public long ParsingTime { get; set; }
+        public string FileExtension { get; set; }
 
         public string ParsingTimeAsString()
         {
