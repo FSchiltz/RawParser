@@ -156,6 +156,10 @@ namespace RawEditor
                 //set white balance if any
                 SetWBAsync();
             });
+            if (raw != null)
+            {
+                UpdatePreview(false);
+            }
         }
 
         private async void SetWBAsync()
@@ -567,7 +571,6 @@ namespace RawEditor
         {
             history.Add(new HistoryObject() { oldValue = 0, value = 1, target = EffectObject.reset });
             ResetControlsAsync();
-            UpdatePreview(false);
         }
 
         private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
