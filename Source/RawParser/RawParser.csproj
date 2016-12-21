@@ -145,6 +145,9 @@
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\UIHelper\CropUIHelper.xaml.cs">
+      <DependentUpon>CropUIHelper.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\UIHelper\ExceptionDisplay.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="View\Pages\SettingsView.xaml.cs">
@@ -220,6 +223,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="View\Pages\SettingsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\UIHelper\CropUIHelper.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

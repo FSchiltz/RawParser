@@ -154,6 +154,10 @@ namespace RawEditor
                 ResetButton.IsEnabled = false;
                 userAppliedModif = false;
                 //set white balance if any
+                TopSlider.Value = 0;
+                BottomSlider.Value = 100;
+                LeftSlider.Value = 0;
+                RightSlider.Value = 100;
                 SetWBAsync();
             });
             if (raw != null)
@@ -195,15 +199,18 @@ namespace RawEditor
                      exposureSlider.IsEnabled = v;
                      ShadowSlider.IsEnabled = v;
                      HighLightSlider.IsEnabled = v;
-                     //gammaSlider.IsEnabled = v;
                      contrastSlider.IsEnabled = v;
-                     //brightnessSlider.IsEnabled = v;
                      saturationSlider.IsEnabled = v;
                      SaveButton.IsEnabled = v;
                      ZoomSlider.IsEnabled = v;
                      RotateLeftButton.IsEnabled = v;
                      RotateRightButton.IsEnabled = v;
                      ShareButton.IsEnabled = v;
+                     // CropButton.IsEnabled = v;
+                     TopSlider.IsEnabled = v;
+                     BottomSlider.IsEnabled = v;
+                     LeftSlider.IsEnabled = v;
+                     RightSlider.IsEnabled = v;
                  });
         }
 
@@ -404,7 +411,7 @@ namespace RawEditor
                 DisplayLoad();
                 var task = Task.Run(async () =>
                 {
-                    var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.ColorDepth, false);
+                    var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.offset, raw.uncroppedDim, raw.ColorDepth, false);
                     try
                     {
                         FormatHelper.SaveAsync(file, result.Item2);
@@ -467,7 +474,7 @@ namespace RawEditor
             //display the histogram                  
             Task.Run(async () =>
             {
-                var result = await ApplyUserModifAsync(raw.previewData, raw.previewDim, raw.ColorDepth, true);
+                var result = await ApplyUserModifAsync(raw.previewData, raw.previewDim, raw.previewOffset, raw.uncroppedPreviewDim, raw.ColorDepth, true);
                 DisplayImage(result.Item2, reset);
 
                 var histo = new Histogram();
@@ -485,7 +492,7 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
-        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, ushort colorDepth, bool histo)
+        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, Point2D offset, Point2D uncrop, ushort colorDepth, bool histo)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -499,6 +506,15 @@ namespace RawEditor
                 effect.shadow = ShadowSlider.Value * 2;
                 effect.hightlight = HighLightSlider.Value * 3;
                 effect.saturation = 1 + saturationSlider.Value / 100;
+                raw.offset = new Point2D((int)(raw.uncroppedDim.width * (LeftSlider.Value / 100)), (int)(raw.uncroppedDim.height * (TopSlider.Value / 100)));
+                raw.dim = new Point2D((int)(raw.uncroppedDim.width * (RightSlider.Value / 100))- raw.offset.width,
+                    (int)(raw.uncroppedDim.height * (BottomSlider.Value / 100)) - raw.offset.height);
+
+                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * (LeftSlider.Value / 100)),
+                    (int)(raw.uncroppedPreviewDim.height * (TopSlider.Value / 100)));
+                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * (RightSlider.Value / 100))- raw.previewOffset.width,
+                    (int)(raw.uncroppedPreviewDim.height * (BottomSlider.Value / 100))- raw.previewOffset.height);
+
             });
             effect.mul = raw.metadata.wbCoeffs;
             effect.cameraWB = cameraWB;
@@ -518,7 +534,7 @@ namespace RawEditor
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, dim.width, dim.height);
                 }
             });
-            var tmp = effect.ApplyModification(image, dim, colorDepth, ref bitmap, histo);
+            var tmp = effect.ApplyModification(image, dim, offset, uncrop, colorDepth, ref bitmap, histo);
             return Tuple.Create(tmp, bitmap);
         }
 
@@ -628,7 +644,7 @@ namespace RawEditor
                 //TODO regionalise text
                 //generate the bitmap
                 DisplayLoad();
-                var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.ColorDepth, false);
+                var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.offset, raw.uncroppedDim, raw.ColorDepth, false);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -663,7 +679,37 @@ namespace RawEditor
 
         private void CropButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+            EnableEditingControlAsync(false);
+            //display the crop UI
+            CropUI.Visibility = Visibility.Visible;
+            //display the accept and reset button
+            CropReject.Visibility = Visibility.Visible;
+            CropAccept.Visibility = Visibility.Visible;
+            //wait for accept or reset pressed
+        }
 
+        private void CropReject_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            HideCropUI();
+        }
+
+        private void CropAccept_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            //hide Crop UI
+            HideCropUI();
+            raw.offset = new Point2D((int)(CropUI.Left * raw.dim.width), (int)(CropUI.Top * raw.dim.height));
+            raw.dim = new Point2D((int)(CropUI.Right * raw.dim.width), (int)(CropUI.Bottom * raw.dim.height));
+            raw.previewDim = new Point2D((int)(CropUI.Right * raw.previewDim.width), (int)(CropUI.Bottom * raw.previewDim.height));
+            raw.previewOffset = new Point2D((int)(CropUI.Left * raw.previewOffset.width), (int)(CropUI.Top * raw.previewOffset.height));
+            UpdatePreview(true);
+        }
+
+        private void HideCropUI()
+        {
+            CropUI.Visibility = Visibility.Collapsed;
+            CropReject.Visibility = Visibility.Collapsed;
+            CropAccept.Visibility = Visibility.Collapsed;
+            EnableEditingControlAsync(true);
         }
     }
 }

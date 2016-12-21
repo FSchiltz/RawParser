@@ -11,7 +11,7 @@ namespace RawNet
     {
         public ushort[] previewData, rawData;
 
-        public Point2D dim, offset = new Point2D(), previewDim, previewOffset = new Point2D(), uncroppedDim;
+        public Point2D dim, offset = new Point2D(), previewDim, previewOffset = new Point2D(), uncroppedDim, uncroppedPreviewDim;
         public ColorFilterArray cfa = new ColorFilterArray();
         public double[] camMul, black, curve;
         public int rotation = 0, blackLevel, saturation, dark;
@@ -378,6 +378,7 @@ namespace RawNet
         public void CreatePreview(int previewFactor)
         {
             previewDim = new Point2D(dim.width / previewFactor, dim.height / previewFactor);
+            uncroppedPreviewDim = new Point2D(dim.width / previewFactor, dim.height / previewFactor);
             Debug.WriteLine("Preview of size w:" + previewDim.width + "y:" + previewDim.height);
             previewData = new ushort[previewDim.height * previewDim.width * cpp];
             int doubleFactor = previewFactor * previewFactor;
