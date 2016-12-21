@@ -54,7 +54,7 @@ namespace RawEditor
             return Curve.CubicSpline(xCurve, yCurve);
         }
 
-        public unsafe HistoRaw ApplyModification(ushort[] image, Point2D dim, int colorDepth, ref SoftwareBitmap bitmap, bool histo)
+        public unsafe HistoRaw ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, ref SoftwareBitmap bitmap, bool histo)
         {
             HistoRaw value = new HistoRaw();
             if (histo)
@@ -82,11 +82,11 @@ namespace RawEditor
                     double[] contrastCurve = CreateCurve();
                     Parallel.For(0, dim.height, y =>
                     {
-                        int realY = y * dim.width * 3;
+                        int realY = (y+off.height) * uncrop.width * 3 ;
                         int bufferY = y * dim.width * 4 + bufferLayout.StartIndex;
                         for (int x = 0; x < dim.width; x++)
                         {
-                            int realPix = realY + (3 * x);
+                            int realPix = realY + (3 * (x+off.width));
                             int bufferPix;
                             switch (rotation)
                             {
