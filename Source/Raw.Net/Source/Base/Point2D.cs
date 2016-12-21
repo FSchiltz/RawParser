@@ -54,5 +54,12 @@ namespace RawNet
         }
         public bool IsThisInside(Point2D otherPoint) { return (width <= otherPoint.width && height <= otherPoint.height); }
         public Point2D GetSmallest(Point2D otherPoint) { return new Point2D(Math.Min(width, otherPoint.width), Math.Min(height, otherPoint.height)); }
+
+        public void Flip()
+        {
+            var tmp = width;
+            width = height;
+            height = tmp;
+        }
     };
 }

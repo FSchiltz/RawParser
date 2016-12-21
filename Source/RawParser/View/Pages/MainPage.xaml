@@ -35,17 +35,17 @@
                           x:Uid="OpenImage" 
                           Click="ImageChooseClickAsync"
                           VerticalAlignment="Top" FontSize="12" Width="40"/>
-            <AppBarButton x:Name="saveButton" 
+            <AppBarButton x:Name="SaveButton" 
                           Icon="SaveLocal"
                           x:Uid="Save" 
                           Click="SaveButtonClickAsync"
                           VerticalAlignment="Top"
                           IsEnabled="False"/>
             <AppBarButton IsEnabled="False" 
-                          x:Name="shareButton" 
+                          x:Name="ShareButton" 
                           Icon="Link"
                           x:Uid="Share" 
-                          VerticalAlignment="Top"/>
+                          VerticalAlignment="Top" Tapped="ShareButton_Tapped"/>
 
             <AppBarButton x:Name="settingsButton"  
                           Icon="Setting" x:Uid="Setting" 

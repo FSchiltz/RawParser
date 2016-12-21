@@ -56,15 +56,14 @@ namespace RawEditor
             {
                 using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
                 {
-                    int[] t = new int[3];
                     BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
-                    var x = encoder.BitmapProperties;
+                    //var x = encoder.BitmapProperties;
 
                     //Needs to run in the UI thread because fuck performance
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    encoder.SetSoftwareBitmap(bitmap);
-                });
+                    {
+                        encoder.SetSoftwareBitmap(bitmap);
+                    });
                     await encoder.FlushAsync();
                     encoder = null;
                     bitmap.Dispose();

@@ -20,6 +20,8 @@ using Windows.Graphics.Display;
 using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using Microsoft.Services.Store.Engagement;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage.Streams;
 
 namespace RawEditor
 {
@@ -221,10 +223,11 @@ namespace RawEditor
                      contrastSlider.IsEnabled = v;
                      //brightnessSlider.IsEnabled = v;
                      saturationSlider.IsEnabled = v;
-                     saveButton.IsEnabled = v;
+                     SaveButton.IsEnabled = v;
                      ZoomSlider.IsEnabled = v;
                      RotateLeftButton.IsEnabled = v;
                      RotateRightButton.IsEnabled = v;
+                     ShareButton.IsEnabled = v;
                  });
         }
 
@@ -415,35 +418,17 @@ namespace RawEditor
                 if (file == null) return;
 
                 DisplayLoad();
-
-                var exposure = exposureSlider.Value;
-                int temperature = (int)colorTempSlider.Value;
-                var temp = (int)colorTempSlider.Value;
-                var task = Task.Run(() =>
+                var task = Task.Run(async () =>
                 {
-                    SoftwareBitmap bitmap = null;
-                    //Needs to run in UI thread
-                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                if (raw.rotation == 1 || raw.rotation == 3)
-                {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.height, raw.dim.width);
-                }
-                else
-                {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.dim.width, raw.dim.height);
-                }
-            }).AsTask().Wait();
-                    ApplyUserModif(ref raw.rawData, raw.dim, raw.ColorDepth, ref bitmap);
+                    var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.ColorDepth);
                     try
                     {
-                        FormatHelper.SaveAsync(file, bitmap);
+                        FormatHelper.SaveAsync(file, result.Item2);
                     }
                     catch (IOException ex)
                     {
                         ExceptionDisplay.DisplayAsync(ex.Message);
                     }
-
                     StopLoadDisplay();
                 });
             }
@@ -458,16 +443,16 @@ namespace RawEditor
                     using (image)
                     {
                         await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                                {
-                                    //Do some UI-code that must be run on the UI thread.
-                                    //display the image preview
-                                    ImageBox.Source = null;
-                                    WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                                    image.CopyToBuffer(bitmap.PixelBuffer);
-                                    ImageBox.Source = bitmap;
-                                    if (reset)
-                                        SetScrollProperty(bitmap.PixelWidth, bitmap.PixelHeight);
-                                });
+                        {
+                            //Do some UI-code that must be run on the UI thread.
+                            //display the image preview
+                            ImageBox.Source = null;
+                            WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                            image.CopyToBuffer(bitmap.PixelBuffer);
+                            ImageBox.Source = bitmap;
+                            if (reset)
+                                SetScrollProperty(bitmap.PixelWidth, bitmap.PixelHeight);
+                        });
                     }
                 });
             }
@@ -498,84 +483,53 @@ namespace RawEditor
             //display the histogram                    
             Task.Run(async () =>
             {
-                SoftwareBitmap bitmap = null;
-                //Needs to run in UI thread
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-        {
-            if (raw.rotation == 1 || raw.rotation == 3)
-            {
-                bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.height, raw.previewDim.width);
-            }
-            else
-            {
-                bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, raw.previewDim.width, raw.previewDim.height);
-            }
-        });
-                int[] value = ApplyUserModif(ref raw.previewData, raw.previewDim, raw.ColorDepth, ref bitmap);
-                DisplayImage(bitmap, reset);
-                Histogram.CreateAsync(value, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width, histogramCanvas);
+                var result = await ApplyUserModifAsync(raw.previewData, raw.previewDim, raw.ColorDepth);
+                DisplayImage(result.Item2, reset);
+                Histogram.CreateAsync(result.Item1, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width, histogramCanvas);
             });
         }
 
         /**
          * Apply the change over the image preview
          */
-        private int[] ApplyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth, ref SoftwareBitmap bitmap)
+        async private Task<Tuple<int[], SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, ushort colorDepth)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
-            Task t = Task.Run(async () =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    effect.exposure = exposureSlider.Value;
-                    effect.rMul = colorTempSlider.Value;
-                    effect.gMul = colorTintSlider.Value;
-                    effect.bMul = colorTintBlueSlider.Value;
-                    effect.contrast = contrastSlider.Value / 10;
-                    //effect.gamma = gammaSlider.Value;
-                    //effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
-                    effect.shadow = ShadowSlider.Value * 2;
-                    effect.hightlight = HighLightSlider.Value * 3;
-                    effect.saturation = 1 + saturationSlider.Value / 100;
-                });
+                effect.exposure = exposureSlider.Value;
+                effect.rMul = colorTempSlider.Value;
+                effect.gMul = colorTintSlider.Value;
+                effect.bMul = colorTintBlueSlider.Value;
+                effect.contrast = contrastSlider.Value / 10;
+                //effect.gamma = gammaSlider.Value;
+                //effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);
+                effect.shadow = ShadowSlider.Value * 2;
+                effect.hightlight = HighLightSlider.Value * 3;
+                effect.saturation = 1 + saturationSlider.Value / 100;
             });
-            t.Wait();
             effect.mul = raw.metadata.wbCoeffs;
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
             effect.rotation = raw.rotation;
-            return effect.ApplyModification(image, dim, colorDepth, ref bitmap);
-        }
-
-        private void ApplyUserModif(ref ushort[] image, Point2D dim, ushort colorDepth)
-        {
-            ImageEffect effect = new ImageEffect();
-            //get all the value 
-            Task t = Task.Run(async () =>
+            SoftwareBitmap bitmap = null;
+            //Needs to run in UI thread
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                if (raw.rotation == 1 || raw.rotation == 3)
                 {
-                    effect.exposure = exposureSlider.Value;
-                    effect.rMul = colorTempSlider.Value;
-                    effect.gMul = colorTintSlider.Value;
-                    effect.bMul = colorTintBlueSlider.Value;
-                    effect.contrast = contrastSlider.Value / 10;
-                    /*
-                    effect.gamma = gammaSlider.Value;
-                    effect.brightness = (1 << colorDepth) * (brightnessSlider.Value / 100);*/
-                    effect.shadow = ShadowSlider.Value;
-                    effect.hightlight = HighLightSlider.Value;
-                    effect.saturation = 1 + saturationSlider.Value / 100;
-                });
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, dim.height, dim.width);
+                }
+                else
+                {
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, dim.width, dim.height);
+                }
             });
-            t.Wait();
-            effect.mul = raw.metadata.wbCoeffs;
-            effect.cameraWB = cameraWB;
-            effect.exposure = Math.Pow(2, effect.exposure);
-            effect.camCurve = raw.curve;
-            effect.ApplyModification(image, dim, colorDepth);
+            var histo = effect.ApplyModification(image, dim, colorDepth, ref bitmap);
+
+            return Tuple.Create(histo, bitmap);
         }
 
         #region WBSlider
@@ -664,6 +618,50 @@ namespace RawEditor
         {
             var launcher = StoreServicesFeedbackLauncher.GetDefault();
             await launcher.LaunchAsync();
+        }
+
+        private void ShareButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            DataTransferManager manager = DataTransferManager.GetForCurrentView();
+            manager.DataRequested += DataTransferManager_DataRequestedAsync;
+
+            DataTransferManager.ShowShareUI();
+        }
+
+        private async void DataTransferManager_DataRequestedAsync(DataTransferManager manager, DataRequestedEventArgs args)
+        {
+            try
+            {
+
+                DataRequest request = args.Request;
+                request.Data.Properties.Title = "Share image";
+                request.Data.Properties.Description = "";
+                var deferal = request.GetDeferral();
+                //TODO regionalise text
+                //generate the bitmap
+                DisplayLoad();
+                var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.ColorDepth);
+                InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
+                BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+
+                //Needs to run in the UI thread because fuck performance
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    encoder.SetSoftwareBitmap(result.Item2);
+                });
+                await encoder.FlushAsync();
+                encoder = null;
+                result.Item2.Dispose();
+                StopLoadDisplay();
+
+                request.Data.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
+                deferal.Complete();
+
+            }
+            catch (Exception e)
+            {
+                ExceptionDisplay.DisplayAsync(e.Message);
+            }
         }
     }
 }
