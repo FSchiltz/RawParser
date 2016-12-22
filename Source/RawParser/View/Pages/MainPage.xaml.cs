@@ -699,13 +699,29 @@ namespace RawEditor
             double left = CropUI.Left;
             double right = CropUI.Right;
             double bottom = CropUI.Bottom;
-            if (raw.rotation == 1 || raw.rotation == 3)
+            if (raw.rotation == 1)
             {
-                raw.offset = new Point2D((int)(raw.uncroppedDim.height * top), (int)(raw.uncroppedDim.width * left));
-                raw.dim = new Point2D((int)(raw.uncroppedDim.height * bottom), (int)(raw.uncroppedDim.width * right));
+                raw.offset = new Point2D((int)(raw.uncroppedDim.width * top), (int)(raw.uncroppedDim.height * right));
+                raw.dim = new Point2D((int)(raw.uncroppedDim.width * bottom), (int)(raw.uncroppedDim.height * left));
 
-                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.height * top), (int)(raw.uncroppedPreviewDim.width * left));
-                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.height * bottom), (int)(raw.uncroppedPreviewDim.width * right));
+                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * top), (int)(raw.uncroppedPreviewDim.height * right));
+                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * bottom), (int)(raw.uncroppedPreviewDim.height * left));
+            }
+            else if (raw.rotation == 2)
+            {
+                raw.offset = new Point2D((int)(raw.uncroppedDim.width * left), (int)(raw.uncroppedDim.height * top));
+                raw.dim = new Point2D((int)(raw.uncroppedDim.width * right), (int)(raw.uncroppedDim.height * bottom));
+
+                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * left), (int)(raw.uncroppedPreviewDim.height * top));
+                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * right), (int)(raw.uncroppedPreviewDim.height * bottom));
+            }
+            else if (raw.rotation == 3)
+            {
+                raw.offset = new Point2D((int)(raw.uncroppedDim.width * bottom), (int)(raw.uncroppedDim.height * left));
+                raw.dim = new Point2D((int)(raw.uncroppedDim.width * top), (int)(raw.uncroppedDim.height * right));
+
+                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * bottom), (int)(raw.uncroppedPreviewDim.height * left));
+                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * top), (int)(raw.uncroppedPreviewDim.height * right));
             }
             else
             {
