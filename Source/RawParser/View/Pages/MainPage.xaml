@@ -27,11 +27,11 @@
                           Icon="Redo"
                           x:Uid="RotateRight" 
                           Tapped="RotateRightButton_Tapped"/>
-            <!--<AppBarButton IsEnabled="False" 
+            <AppBarButton IsEnabled="False" 
                           x:Name="CropButton" 
                           Icon="Crop"
                           x:Uid="Crop" 
-                          Tapped="CropButton_Tapped"/>-->
+                          Tapped="CropButton_Tapped"/>
             <AppBarSeparator/>
             <AppBarButton x:Name="ImageChooseButton"
                           Icon="BrowsePhotos"
@@ -123,7 +123,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition/>
-            </Grid.RowDefinitions>
+            </Grid.RowDefinitions>          
             <ScrollViewer x:Name="ImageDisplay" ZoomMode="Enabled"                                                 
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto" 
@@ -134,20 +134,21 @@
                 <ScrollViewer.Background>
                     <SolidColorBrush Color="#19FFFFFF"/>
                 </ScrollViewer.Background>
-                <Grid>
-                    <Image x:Name="ImageBox"/>
-                    <uihelper:CropUIHelper x:Name="CropUI" Visibility="Collapsed"></uihelper:CropUIHelper>
-                </Grid>
+                <Image x:Name="ImageBox"/>
             </ScrollViewer>
             <Slider  x:Name="ZoomSlider" IsEnabled="False" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1"
                      Canvas.ZIndex="999" Margin="10,0,0,10" ValueChanged="Slider_ValueChanged" 
                      Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom"/>
-            <Button x:Name="CropAccept" Visibility="Collapsed" VerticalAlignment="Bottom" HorizontalAlignment="Right" Background="{ThemeResource ButtonForeground}" Tapped="CropAccept_Tapped" Margin="0,0,10,10">
-                <SymbolIcon Symbol="Accept" Width="40" Height="40" Foreground="{ThemeResource AppBarBorderThemeBrush}"></SymbolIcon>
-            </Button>
-            <Button x:Name="CropReject" Visibility="Collapsed" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,80,10" Background="{ThemeResource ButtonForeground}" Tapped="CropReject_Tapped">
-                <SymbolIcon Symbol="Clear" Foreground="{ThemeResource AppBarBorderThemeBrush}" Width="40" Height="40"/>
-            </Button>
+
+            <Grid x:Name="CropGrid" Visibility="Collapsed" >
+                <uihelper:CropUIHelper x:Name="CropUI"></uihelper:CropUIHelper>
+                <Button x:Name="CropAccept" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="{ThemeResource ButtonForeground}" Tapped="CropAccept_Tapped" Margin="0,0,10,10">
+                    <SymbolIcon Symbol="Accept" Width="20" Height="20" Foreground="{ThemeResource AppBarBorderThemeBrush}"></SymbolIcon>
+                </Button>
+                <Button x:Name="CropReject" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,100,10" Background="{ThemeResource ButtonForeground}" Tapped="CropReject_Tapped">
+                    <SymbolIcon Symbol="Clear" Foreground="{ThemeResource AppBarBorderThemeBrush}" Width="20" Height="20"/>
+                </Button>
+            </Grid>            
             <Pivot x:Name="PivotGrid" RelativePanel.AlignRightWithPanel="True" 
                   RelativePanel.AlignBottomWithPanel="True">
                 <PivotItem x:Uid="ProcessingHeader">
@@ -200,14 +201,14 @@
                             <TextBlock FontSize="12" x:Uid="Contrast"/>
                             <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="13" LargeChange="1" Value="10" Minimum="7" StepFrequency="0.01" IsEnabled="False" />
                             <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
-
+                            <!--
                             <TextBlock FontSize="12" >Crop</TextBlock>
                             <Grid Width="250" Height="250">
                                 <Slider Height="200" x:Name="TopSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="100" LargeChange="10" Value="0" Minimum="0"  IsEnabled="False" Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left" IsDirectionReversed="True" Margin="0,50,0,0" />
                                 <Slider Height="200" x:Name="BottomSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="100" LargeChange="10" Value="100" Minimum="1"  IsEnabled="False" Orientation="Vertical" VerticalAlignment="Bottom" HorizontalAlignment="Right" IsDirectionReversed="True" Margin="0,0,0,50" />
                                 <Slider Width="200" x:Name="LeftSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="100" LargeChange="10" Value="0" Minimum="0" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Top" />
                                 <Slider Width="200" x:Name="RightSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="100" LargeChange="10" Value="100" Minimum="1" IsEnabled="False" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                            </Grid>
+                            </Grid>-->
                             <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                         </StackPanel>
                     </ScrollViewer>

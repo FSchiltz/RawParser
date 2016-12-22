@@ -147,17 +147,19 @@ namespace RawEditor
                 exposureSlider.Value = 0;
                 ShadowSlider.Value = 0;
                 HighLightSlider.Value = 0;
-                //gammaSlider.IsEnabled = v;
                 contrastSlider.Value = 10;
-                //brightnessSlider.IsEnabled = v;
                 saturationSlider.Value = 0;
                 ResetButton.IsEnabled = false;
                 userAppliedModif = false;
-                //set white balance if any
-                TopSlider.Value = 0;
-                BottomSlider.Value = 100;
-                LeftSlider.Value = 0;
-                RightSlider.Value = 100;
+                CropUI.ResetCrop();
+                if (raw != null)
+                {
+                    raw.offset = new Point2D(0, 0);
+                    raw.dim = new Point2D(raw.uncroppedDim.width, raw.uncroppedDim.height);
+                    raw.previewOffset = new Point2D(0, 0);
+                    raw.previewDim = new Point2D(raw.uncroppedPreviewDim.width, raw.uncroppedPreviewDim.height);
+                    raw.rotation = raw.originalRotation;
+                }
                 SetWBAsync();
             });
             if (raw != null)
@@ -206,11 +208,7 @@ namespace RawEditor
                      RotateLeftButton.IsEnabled = v;
                      RotateRightButton.IsEnabled = v;
                      ShareButton.IsEnabled = v;
-                     // CropButton.IsEnabled = v;
-                     TopSlider.IsEnabled = v;
-                     BottomSlider.IsEnabled = v;
-                     LeftSlider.IsEnabled = v;
-                     RightSlider.IsEnabled = v;
+                     CropButton.IsEnabled = v;
                  });
         }
 
@@ -506,22 +504,15 @@ namespace RawEditor
                 effect.shadow = ShadowSlider.Value * 2;
                 effect.hightlight = HighLightSlider.Value * 3;
                 effect.saturation = 1 + saturationSlider.Value / 100;
-                raw.offset = new Point2D((int)(raw.uncroppedDim.width * (LeftSlider.Value / 100)), (int)(raw.uncroppedDim.height * (TopSlider.Value / 100)));
-                raw.dim = new Point2D((int)(raw.uncroppedDim.width * (RightSlider.Value / 100))- raw.offset.width,
-                    (int)(raw.uncroppedDim.height * (BottomSlider.Value / 100)) - raw.offset.height);
-
-                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * (LeftSlider.Value / 100)),
-                    (int)(raw.uncroppedPreviewDim.height * (TopSlider.Value / 100)));
-                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * (RightSlider.Value / 100))- raw.previewOffset.width,
-                    (int)(raw.uncroppedPreviewDim.height * (BottomSlider.Value / 100))- raw.previewOffset.height);
-
             });
+
             effect.mul = raw.metadata.wbCoeffs;
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
             effect.rotation = raw.rotation;
             SoftwareBitmap bitmap = null;
+
             //Needs to run in UI thread
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -601,6 +592,7 @@ namespace RawEditor
             raw.rotation = raw.rotation % 4;
             t.value = raw.rotation;
             history.Add(t);
+            EnableResetAsync();
             UpdatePreview(false);
         }
 
@@ -611,6 +603,7 @@ namespace RawEditor
             else raw.rotation--;
             t.value = raw.rotation;
             history.Add(t);
+            EnableResetAsync();
             UpdatePreview(false);
         }
 
@@ -681,11 +674,16 @@ namespace RawEditor
         {
             EnableEditingControlAsync(false);
             //display the crop UI
-            CropUI.Visibility = Visibility.Visible;
-            //display the accept and reset button
-            CropReject.Visibility = Visibility.Visible;
-            CropAccept.Visibility = Visibility.Visible;
+            CropGrid.Visibility = Visibility.Visible;
             //wait for accept or reset pressed
+            if (raw.rotation == 1 || raw.rotation == 3)
+            {
+                CropUI.SetSize(raw.uncroppedPreviewDim.height, raw.uncroppedPreviewDim.width);
+            }
+            else
+            {
+                CropUI.SetSize(raw.uncroppedPreviewDim.width, raw.uncroppedPreviewDim.height);
+            }
         }
 
         private void CropReject_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -697,18 +695,35 @@ namespace RawEditor
         {
             //hide Crop UI
             HideCropUI();
-            raw.offset = new Point2D((int)(CropUI.Left * raw.dim.width), (int)(CropUI.Top * raw.dim.height));
-            raw.dim = new Point2D((int)(CropUI.Right * raw.dim.width), (int)(CropUI.Bottom * raw.dim.height));
-            raw.previewDim = new Point2D((int)(CropUI.Right * raw.previewDim.width), (int)(CropUI.Bottom * raw.previewDim.height));
-            raw.previewOffset = new Point2D((int)(CropUI.Left * raw.previewOffset.width), (int)(CropUI.Top * raw.previewOffset.height));
+            double top = CropUI.Top;
+            double left = CropUI.Left;
+            double right = CropUI.Right;
+            double bottom = CropUI.Bottom;
+            if (raw.rotation == 1 || raw.rotation == 3)
+            {
+                raw.offset = new Point2D((int)(raw.uncroppedDim.height * top), (int)(raw.uncroppedDim.width * left));
+                raw.dim = new Point2D((int)(raw.uncroppedDim.height * bottom), (int)(raw.uncroppedDim.width * right));
+
+                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.height * top), (int)(raw.uncroppedPreviewDim.width * left));
+                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.height * bottom), (int)(raw.uncroppedPreviewDim.width * right));
+            }
+            else
+            {
+                raw.offset = new Point2D((int)(raw.uncroppedDim.width * left), (int)(raw.uncroppedDim.height * top));
+                raw.dim = new Point2D((int)(raw.uncroppedDim.width * right), (int)(raw.uncroppedDim.height * bottom));
+
+                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * left), (int)(raw.uncroppedPreviewDim.height * top));
+                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * right), (int)(raw.uncroppedPreviewDim.height * bottom));
+            }
             UpdatePreview(true);
+            var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
+            history.Add(t);
+            EnableResetAsync();
         }
 
         private void HideCropUI()
         {
-            CropUI.Visibility = Visibility.Collapsed;
-            CropReject.Visibility = Visibility.Collapsed;
-            CropAccept.Visibility = Visibility.Collapsed;
+            CropGrid.Visibility = Visibility.Collapsed;
             EnableEditingControlAsync(true);
         }
     }

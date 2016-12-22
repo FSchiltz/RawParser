@@ -9,7 +9,8 @@
         shadow, hightlight,
         rotate,
         zoom,
-        saturation
+        saturation,
+        crop
     }
     public class HistoryObject
     {

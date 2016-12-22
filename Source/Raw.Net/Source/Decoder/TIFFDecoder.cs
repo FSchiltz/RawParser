@@ -258,6 +258,7 @@ namespace RawNet
                         break;
                 }
             }
+            rawImage.originalRotation = rawImage.rotation;
         }
     }
 }

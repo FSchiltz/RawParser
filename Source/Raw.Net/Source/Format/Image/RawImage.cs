@@ -26,6 +26,7 @@ namespace RawNet
         public bool isCFA = true;
         internal TableLookUp table;
         public ColorFilterArray UncroppedCfa;
+        public int originalRotation;
 
         public RawImage()
         {
