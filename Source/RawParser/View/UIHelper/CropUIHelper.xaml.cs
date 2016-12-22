@@ -19,20 +19,25 @@ namespace RawEditor.View.UIHelper
 {
     public sealed partial class CropUIHelper : UserControl
     {
-        public double Top { get; set; } = 0.2;
-        public double Left { get; set; } = 0.2;
-        public double Bottom { get; set; } = 0.8;
-        public double Right { get; set; } = 0.8;
+        public double Top { get; set; } = 0;
+        public double Left { get; set; } = 0;
+        public double Bottom { get; set; } = 1;
+        public double Right { get; set; } = 1;
+        private bool isTopDragging = false;
+        private bool isRightDragging = false;
+        private Point topClickPos = new Point(0, 0), rightClickPos = new Point(0, 0);       
+
         public CropUIHelper()
         {
             this.InitializeComponent();
             ResetCrop();
         }
 
-        public void SetSize()
+        public void SetSize(int w, int h)
         {
             //set the size
-            
+            CropZone.Height = h - 1;
+            CropZone.Width = w - 1;
             //reset crop
             ResetCrop();
         }
@@ -40,6 +45,93 @@ namespace RawEditor.View.UIHelper
         public void ResetCrop()
         {
             //move the four ellipse to the correct position
+            Top = Left = 0;
+            Bottom = Right = 1;
+            CropSelection.Width = CropZone.Width;
+            CropSelection.Height = CropZone.Height;
+            Canvas.SetLeft(CropSelection, 0);
+            Canvas.SetTop(CropSelection, 0);
+            MoveEllipse();
+        }
+
+        public void MoveEllipse()
+        {
+            double controlSize = (RightControl.Height / 2);
+            Canvas.SetLeft(TopControl, Left * CropZone.Width - controlSize);
+            //Canvas.SetLeft(LeftControl, Left * CropZone.Width);
+            Canvas.SetLeft(RightControl, Right * CropZone.Width - controlSize);
+            //Canvas.SetLeft(RightControl, Right * CropZone.Width);
+            Canvas.SetTop(TopControl, Top * CropZone.Height - controlSize);
+            //Canvas.SetTop(LeftControl, Bottom * CropZone.Height);
+            Canvas.SetTop(RightControl, Bottom * CropZone.Height - controlSize);
+            //Canvas.SetTop(RightControl, Top * CropZone.Height);
+        }
+
+        private void TopControl_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            isTopDragging = true;
+            e.Handled = true;
+        }
+
+
+        private void RightControl_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            isRightDragging = true;
+            e.Handled = true;
+        }
+
+        private void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            if (isTopDragging)
+            {
+                Point currentPosition = e.GetCurrentPoint(CropZone).Position;
+                double controlSize = (RightControl.Height / 2);
+                //currentPosition.X = currentPosition.X - relative.X;
+                //currentPosition.Y = currentPosition.Y - relative.Y;
+                //check if not outside bound
+                if (currentPosition.Y >= 0 && currentPosition.Y < Canvas.GetTop(RightControl))
+                {
+                    Canvas.SetTop(TopControl, currentPosition.Y - controlSize);
+                    CropSelection.Height = Canvas.GetTop(RightControl) - currentPosition.Y + controlSize;
+                    Canvas.SetTop(CropSelection, currentPosition.Y);
+                }
+                if (currentPosition.X >= 0 && currentPosition.X < Canvas.GetLeft(RightControl))
+                {
+                    Canvas.SetLeft(TopControl, currentPosition.X - controlSize);
+                    CropSelection.Width = Canvas.GetLeft(RightControl) - currentPosition.X + controlSize;
+                    Canvas.SetLeft(CropSelection, currentPosition.X);
+                }
+            }
+            else if (isRightDragging)
+            {
+                Point currentPosition = e.GetCurrentPoint(CropZone).Position;
+                Point relative = e.GetCurrentPoint(RightControl).Position;
+                double controlSize = (RightControl.Height / 2);
+                //currentPosition.X -= relative.X;
+                //currentPosition.Y -= relative.Y;*/
+                if ((int)currentPosition.Y <= CropZone.Height && (int)currentPosition.Y > Canvas.GetTop(TopControl))
+                {
+                    Canvas.SetTop(RightControl, currentPosition.Y - controlSize);
+                    CropSelection.Height = currentPosition.Y - Canvas.GetTop(TopControl) - controlSize;
+                }
+                if ((int)currentPosition.X <= CropZone.Width && (int)currentPosition.X > Canvas.GetLeft(TopControl))
+                {
+                    Canvas.SetLeft(RightControl, currentPosition.X - controlSize);
+                    CropSelection.Width = currentPosition.X - Canvas.GetLeft(TopControl) - controlSize;
+                }
+            }
+            e.Handled = true;
+        }
+
+        private void Canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            isTopDragging = false;
+            isRightDragging = false;
+            double controlSize = (RightControl.Height / 2);
+            Top = (Canvas.GetTop(TopControl) + controlSize) / CropZone.Height;
+            Left = (Canvas.GetLeft(TopControl) + controlSize) / CropZone.Width;
+            Bottom = ((Canvas.GetTop(RightControl) + controlSize) / CropZone.Height) - Top;
+            Right = ((Canvas.GetLeft(RightControl) + controlSize) / CropZone.Width) - Left;
         }
     }
 }
