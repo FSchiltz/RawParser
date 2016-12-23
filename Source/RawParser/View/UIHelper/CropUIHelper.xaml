@@ -10,9 +10,9 @@
     d:DesignWidth="400">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" PointerMoved="Canvas_PointerMoved" PointerReleased="Canvas_PointerReleased" >
-        <Image x:Name="Thumb" ></Image>
-        <Canvas x:Name="CropZone" Background="#66000000">
-            <Canvas x:Name="CropSelection" Background="#CCEA1515" ></Canvas>
+        <Image x:Name="Thumb"  ></Image>
+        <Canvas x:Name="CropZone" FocusVisualPrimaryBrush="{ThemeResource ContentDialogBorderThemeBrush}">
+            <Canvas x:Name="CropSelection" Background="#CCBBBBBB" ></Canvas>
             <Ellipse x:Name="TopControl" Fill="#FFECECEC" Stroke="#FF0E0E0E" Width="30" Height="30" PointerPressed="TopControl_PointerPressed" IsDoubleTapEnabled="False" IsRightTapEnabled="False"/>
             <Ellipse x:Name="RightControl" Fill="#FFECECEC" Stroke="#FF0E0E0E" Width="30" Height="30" PointerPressed="RightControl_PointerPressed"></Ellipse>
         </Canvas>
