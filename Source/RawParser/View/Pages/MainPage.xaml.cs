@@ -289,7 +289,7 @@ namespace RawEditor
                     //dispose
 #if !DEBUG
                     //send an event with file extension, camera model and make
-                    logger.Log("SuccessOpening " + raw?.metadata?.FileExtension + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
+                    logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
 #endif
                     file = null;
                 }
@@ -302,7 +302,7 @@ namespace RawEditor
 #else
                     
                     //send an event with file extension and camer model and make if any                   
-                    logger.Log("FailOpening " + file?.FileType + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
+                    logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
                     
 #endif
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
@@ -676,14 +676,19 @@ namespace RawEditor
             //display the crop UI
             CropGrid.Visibility = Visibility.Visible;
             //wait for accept or reset pressed
+            double factor = ImageDisplay.ActualHeight / (raw.uncroppedPreviewDim.height+160);
+            int h, w;
             if (raw.rotation == 1 || raw.rotation == 3)
             {
-                CropUI.SetSize(raw.uncroppedPreviewDim.height, raw.uncroppedPreviewDim.width);
+                h = (int)(raw.uncroppedPreviewDim.width * factor);
+                w = (int)(raw.uncroppedPreviewDim.height * factor);
             }
             else
             {
-                CropUI.SetSize(raw.uncroppedPreviewDim.width, raw.uncroppedPreviewDim.height);
+                h = (int)(raw.uncroppedPreviewDim.height * factor);
+                w = (int)(raw.uncroppedPreviewDim.width * factor);
             }
+            CropUI.SetSize(w, h);
         }
 
         private void CropReject_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
