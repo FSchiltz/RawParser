@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Imaging;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
@@ -25,7 +29,7 @@ namespace RawEditor.View.UIHelper
         public double Right { get; set; } = 1;
         private bool isTopDragging = false;
         private bool isRightDragging = false;
-        private Point topClickPos = new Point(0, 0), rightClickPos = new Point(0, 0);       
+        private Point topClickPos = new Point(0, 0), rightClickPos = new Point(0, 0);
 
         public CropUIHelper()
         {
@@ -34,10 +38,12 @@ namespace RawEditor.View.UIHelper
         }
 
         public void SetSize(int w, int h)
-        {
+        {            
             //set the size
-            CropZone.Height = h - 1;
-            CropZone.Width = w - 1;
+            CropZone.Height = (h - 1);
+            CropZone.Width = (w - 1);
+            Thumb.Height = CropZone.Height;
+            Thumb.Width = CropZone.Width;
             //reset crop
             ResetCrop();
         }
@@ -132,6 +138,20 @@ namespace RawEditor.View.UIHelper
             Left = (Canvas.GetLeft(TopControl) + controlSize) / CropZone.Width;
             Bottom = ((Canvas.GetTop(RightControl) + controlSize) / CropZone.Height) - Top;
             Right = ((Canvas.GetLeft(RightControl) + controlSize) / CropZone.Width) - Left;
+        }
+
+        public void SetThumbAsync(SoftwareBitmap image)
+        {
+            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                //Do some UI-code that must be run on the UI thread.
+                //display the image preview
+                Thumb.Source = null;
+                WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                image.CopyToBuffer(bitmap.PixelBuffer);
+                image.Dispose();
+                Thumb.Source = bitmap;
+            });
         }
     }
 }

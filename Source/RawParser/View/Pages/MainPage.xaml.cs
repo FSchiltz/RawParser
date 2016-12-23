@@ -438,6 +438,7 @@ namespace RawEditor
                             ImageBox.Source = null;
                             WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                             image.CopyToBuffer(bitmap.PixelBuffer);
+                            image.Dispose();
                             ImageBox.Source = bitmap;
                             if (reset)
                                 SetScrollProperty(bitmap.PixelWidth, bitmap.PixelHeight);
@@ -670,13 +671,21 @@ namespace RawEditor
             Windows.System.Launcher.LaunchUriAsync(new Uri(@"https://gitter.im/RawParser/Lobby"));
         }
 
-        private void CropButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private async void CropButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             EnableEditingControlAsync(false);
             //display the crop UI
             CropGrid.Visibility = Visibility.Visible;
             //wait for accept or reset pressed
-            double factor = ImageDisplay.ActualHeight / (raw.uncroppedPreviewDim.height+160);
+            double factor;
+            if (raw.uncroppedPreviewDim.width > raw.uncroppedPreviewDim.height)
+            {
+                factor   = ImageDisplay.ActualWidth / (raw.uncroppedPreviewDim.width + 160);
+            }
+            else
+            {
+                factor   = ImageDisplay.ActualHeight / (raw.uncroppedPreviewDim.height + 160);
+            }
             int h, w;
             if (raw.rotation == 1 || raw.rotation == 3)
             {
@@ -689,6 +698,10 @@ namespace RawEditor
                 w = (int)(raw.uncroppedPreviewDim.width * factor);
             }
             CropUI.SetSize(w, h);
+            //create a preview of the image
+            var result = await ApplyUserModifAsync(raw.previewData, raw.uncroppedPreviewDim, new Point2D(0,0), raw.uncroppedPreviewDim, raw.ColorDepth, false);
+            //display the preview
+            CropUI.SetThumbAsync(result.Item2);
         }
 
         private void CropReject_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)

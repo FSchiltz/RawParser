@@ -31,7 +31,7 @@
                           x:Name="CropButton" 
                           Icon="Crop"
                           x:Uid="Crop" 
-                          Tapped="CropButton_Tapped"/>
+                          Tapped="CropButton_TappedAsync"/>
             <AppBarSeparator/>
             <AppBarButton x:Name="ImageChooseButton"
                           Icon="BrowsePhotos"
