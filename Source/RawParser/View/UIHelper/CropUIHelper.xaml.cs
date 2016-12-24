@@ -34,16 +34,16 @@ namespace RawEditor.View.UIHelper
         public CropUIHelper()
         {
             this.InitializeComponent();
-            ResetCrop();
+            // ResetCrop();
         }
 
         public void SetSize(int w, int h)
-        {            
+        {
             //set the size
-            CropZone.Height = (h - 1);
-            CropZone.Width = (w - 1);
-            Thumb.Height = CropZone.Height;
-            Thumb.Width = CropZone.Width;
+            CropZone.Height = CropSelection.Height = (h - 1);
+            CropZone.Width = CropSelection.Width = (w - 1);
+            Thumb.Height = Thumb2.Height = CropZone.Height;
+            Thumb.Width = Thumb2.Width = CropZone.Width;
             //reset crop
             ResetCrop();
         }
@@ -53,10 +53,10 @@ namespace RawEditor.View.UIHelper
             //move the four ellipse to the correct position
             Top = Left = 0;
             Bottom = Right = 1;
-            CropSelection.Width = CropZone.Width;
-            CropSelection.Height = CropZone.Height;
-            Canvas.SetLeft(CropSelection, 0);
-            Canvas.SetTop(CropSelection, 0);
+            CropSelection.Clip = new RectangleGeometry()
+            {
+                Rect = new Rect(0, 0, CropZone.Width, CropZone.Height)
+            };
             MoveEllipse();
         }
 
@@ -98,14 +98,25 @@ namespace RawEditor.View.UIHelper
                 if (currentPosition.Y >= 0 && currentPosition.Y < Canvas.GetTop(RightControl))
                 {
                     Canvas.SetTop(TopControl, currentPosition.Y - controlSize);
-                    CropSelection.Height = Canvas.GetTop(RightControl) - currentPosition.Y + controlSize;
-                    Canvas.SetTop(CropSelection, currentPosition.Y);
+                    CropSelection.Clip = new RectangleGeometry()
+                    {
+                        Rect = new Rect(CropSelection.Clip.Rect.Left, currentPosition.Y, CropSelection.Clip.Rect.Width,
+                        Canvas.GetTop(RightControl) - currentPosition.Y + controlSize)
+                    };
                 }
+
                 if (currentPosition.X >= 0 && currentPosition.X < Canvas.GetLeft(RightControl))
                 {
                     Canvas.SetLeft(TopControl, currentPosition.X - controlSize);
-                    CropSelection.Width = Canvas.GetLeft(RightControl) - currentPosition.X + controlSize;
-                    Canvas.SetLeft(CropSelection, currentPosition.X);
+                    if (currentPosition.Y >= 0 && currentPosition.Y < Canvas.GetTop(RightControl))
+                    {
+                        Canvas.SetTop(TopControl, currentPosition.Y - controlSize);
+                        CropSelection.Clip = new RectangleGeometry()
+                        {
+                            Rect = new Rect(currentPosition.X, CropSelection.Clip.Rect.Top,
+                            Canvas.GetLeft(RightControl) - currentPosition.X + controlSize, CropSelection.Clip.Rect.Height)
+                        };
+                    }
                 }
             }
             else if (isRightDragging)
@@ -118,12 +129,20 @@ namespace RawEditor.View.UIHelper
                 if ((int)currentPosition.Y <= CropZone.Height && (int)currentPosition.Y > Canvas.GetTop(TopControl))
                 {
                     Canvas.SetTop(RightControl, currentPosition.Y - controlSize);
-                    CropSelection.Height = currentPosition.Y - Canvas.GetTop(TopControl) - controlSize;
+                    CropSelection.Clip = new RectangleGeometry()
+                    {
+                        Rect = new Rect(CropSelection.Clip.Rect.Left, CropSelection.Clip.Rect.Top,
+                            CropSelection.Clip.Rect.Width, currentPosition.Y - Canvas.GetTop(TopControl) - controlSize)
+                    };
                 }
                 if ((int)currentPosition.X <= CropZone.Width && (int)currentPosition.X > Canvas.GetLeft(TopControl))
                 {
                     Canvas.SetLeft(RightControl, currentPosition.X - controlSize);
-                    CropSelection.Width = currentPosition.X - Canvas.GetLeft(TopControl) - controlSize;
+                    CropSelection.Clip = new RectangleGeometry()
+                    {
+                        Rect = new Rect(CropSelection.Clip.Rect.Left, CropSelection.Clip.Rect.Top,
+                            currentPosition.X - Canvas.GetLeft(TopControl) - controlSize, CropSelection.Clip.Rect.Height)
+                    };
                 }
             }
             e.Handled = true;
@@ -151,6 +170,7 @@ namespace RawEditor.View.UIHelper
                 image.CopyToBuffer(bitmap.PixelBuffer);
                 image.Dispose();
                 Thumb.Source = bitmap;
+                Thumb2.Source = bitmap;
             });
         }
     }

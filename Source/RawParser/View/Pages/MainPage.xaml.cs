@@ -526,8 +526,17 @@ namespace RawEditor
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, dim.width, dim.height);
                 }
             });
-            var tmp = effect.ApplyModification(image, dim, offset, uncrop, colorDepth, ref bitmap, histo);
-            return Tuple.Create(tmp, bitmap);
+            if (histo)
+            {
+                var tmp = effect.ApplyModification(image, dim, offset, uncrop, colorDepth, ref bitmap, histo);
+                return Tuple.Create(tmp, bitmap);
+            }
+            else
+            {
+                effect.ApplyModification(image, dim, offset, uncrop, colorDepth, ref bitmap);
+                return Tuple.Create(new HistoRaw(), bitmap);
+            }
+
         }
 
         #region WBSlider
@@ -673,33 +682,35 @@ namespace RawEditor
 
         private async void CropButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+            DisplayLoad();
             EnableEditingControlAsync(false);
             //display the crop UI
             CropGrid.Visibility = Visibility.Visible;
             //wait for accept or reset pressed
-            double factor;
-            if (raw.uncroppedPreviewDim.width > raw.uncroppedPreviewDim.height)
-            {
-                factor   = ImageDisplay.ActualWidth / (raw.uncroppedPreviewDim.width + 160);
-            }
-            else
-            {
-                factor   = ImageDisplay.ActualHeight / (raw.uncroppedPreviewDim.height + 160);
-            }
+
             int h, w;
             if (raw.rotation == 1 || raw.rotation == 3)
             {
-                h = (int)(raw.uncroppedPreviewDim.width * factor);
-                w = (int)(raw.uncroppedPreviewDim.height * factor);
+                h = raw.uncroppedPreviewDim.width;
+                w = raw.uncroppedPreviewDim.height;
             }
             else
             {
-                h = (int)(raw.uncroppedPreviewDim.height * factor);
-                w = (int)(raw.uncroppedPreviewDim.width * factor);
+                h = raw.uncroppedPreviewDim.height;
+                w = raw.uncroppedPreviewDim.width;
             }
-            CropUI.SetSize(w, h);
+            double factor;
+            if (w > h)
+            {
+                factor = ImageDisplay.ActualWidth / (w + 160);
+            }
+            else
+            {
+                factor = ImageDisplay.ActualHeight / (h + 160);
+            }
+            CropUI.SetSize((int)(w * factor), (int)(h * factor));
             //create a preview of the image
-            var result = await ApplyUserModifAsync(raw.previewData, raw.uncroppedPreviewDim, new Point2D(0,0), raw.uncroppedPreviewDim, raw.ColorDepth, false);
+            var result = await ApplyUserModifAsync(raw.previewData, raw.uncroppedPreviewDim, new Point2D(0, 0), raw.uncroppedPreviewDim, raw.ColorDepth, false);
             //display the preview
             CropUI.SetThumbAsync(result.Item2);
         }
@@ -707,6 +718,7 @@ namespace RawEditor
         private void CropReject_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             HideCropUI();
+            StopLoadDisplay();
         }
 
         private void CropAccept_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -753,6 +765,7 @@ namespace RawEditor
             var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
             history.Add(t);
             EnableResetAsync();
+            StopLoadDisplay();
         }
 
         private void HideCropUI()
