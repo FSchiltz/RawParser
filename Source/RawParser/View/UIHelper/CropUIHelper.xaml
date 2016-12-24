@@ -8,7 +8,7 @@
     d:DesignHeight="300"
     d:DesignWidth="400">
 
-    <Grid PointerMoved="Canvas_PointerMoved"  >
+    <Grid PointerMoved="Canvas_PointerMoved" PointerReleased="Canvas_PointerReleased" >
         <ScrollViewer  ZoomMode="Enabled"                                                 
                           HorizontalScrollBarVisibility="Hidden"
                           VerticalScrollBarVisibility="Hidden" 
@@ -19,8 +19,8 @@
                 <Canvas x:Name="CropSelection" >
                     <Image x:Name="Thumb"  ></Image>
                 </Canvas>
-                <Ellipse PointerReleased="Canvas_PointerReleased" x:Name="TopControl" Fill="#FFECECEC" Stroke="#FF0E0E0E" Width="30" Height="30" PointerPressed="TopControl_PointerPressed" IsDoubleTapEnabled="False" IsRightTapEnabled="False"/>
-                <Ellipse PointerReleased="Canvas_PointerReleased" x:Name="RightControl" Fill="#FFECECEC" Stroke="#FF0E0E0E" Width="30" Height="30" PointerPressed="RightControl_PointerPressed"></Ellipse>
+                <Ellipse x:Name="TopControl" Fill="#FFECECEC" Stroke="#FF0E0E0E" Width="30" Height="30" PointerPressed="TopControl_PointerPressed" IsDoubleTapEnabled="False" IsRightTapEnabled="False"/>
+                <Ellipse x:Name="RightControl" Fill="#FFECECEC" Stroke="#FF0E0E0E" Width="30" Height="30" PointerPressed="RightControl_PointerPressed"></Ellipse>
             </Canvas>
         </ScrollViewer>
     </Grid>
