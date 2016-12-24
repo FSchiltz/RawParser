@@ -137,10 +137,10 @@
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
             <Slider  x:Name="ZoomSlider" IsEnabled="False" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1"
-                     Canvas.ZIndex="999" Margin="10,0,0,10" ValueChanged="Slider_ValueChanged" 
+                     Canvas.ZIndex="3" Margin="10,0,0,10" ValueChanged="Slider_ValueChanged" 
                      Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom"/>
 
-            <Grid x:Name="CropGrid" Visibility="Collapsed" >
+            <Grid x:Name="CropGrid" Visibility="Collapsed" Canvas.ZIndex="5" Background="#FFAAAAAA" >
                 <uihelper:CropUIHelper x:Name="CropUI"></uihelper:CropUIHelper>
                 <Button x:Name="CropAccept" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="{ThemeResource ButtonForeground}" Tapped="CropAccept_Tapped" Margin="0,0,10,10">
                     <SymbolIcon Symbol="Accept" Width="20" Height="20" Foreground="{ThemeResource AppBarBorderThemeBrush}"></SymbolIcon>
