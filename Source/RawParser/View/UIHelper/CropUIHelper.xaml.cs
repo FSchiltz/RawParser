@@ -1,39 +1,68 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel.Core;
+﻿using Windows.ApplicationModel.Core;
 using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Graphics.Imaging;
 using Windows.UI.Core;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-
-// The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace RawEditor.View.UIHelper
 {
     public sealed partial class CropUIHelper : UserControl
     {
-        public double Top { get; set; } = 0;
-        public double Left { get; set; } = 0;
-        public double Bottom { get; set; } = 1;
-        public double Right { get; set; } = 1;
-        private bool isTopDragging = false;
-        private bool isRightDragging = false;
+        public double Top
+        {
+            get { return top; }
+            set
+            {
+                if (value > 1) top = 1;
+                else if (value < 0) top = 0;
+                else top = value;
+            }
+        }
+
+        public double Left
+        {
+            get { return left; }
+            set
+            {
+                if (value > 1) left = 1;
+                else if (value < 0) left = 0;
+                else left = value;
+            }
+        }
+
+        public double Bottom
+        {
+            get { return bottom; }
+            set
+            {
+                if (value > 1) bottom = 1;
+                else if (value < 0) bottom = 0;
+                else bottom = value;
+            }
+        }
+        public double Right
+        {
+            get { return right; }
+            set
+            {
+                if (value > 1) right = 1;
+                else if (value < 0) right = 0;
+                else right = value;
+            }
+        }
+
+        private bool isTopDragging = false, isRightDragging = false;
         private Point topClickPos = new Point(0, 0), rightClickPos = new Point(0, 0);
+        private double left, top, right, bottom;
 
         public CropUIHelper()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+            top = left = 0;
+            right = bottom = 1;
             // ResetCrop();
         }
 
@@ -51,8 +80,8 @@ namespace RawEditor.View.UIHelper
         public void ResetCrop()
         {
             //move the four ellipse to the correct position
-            Top = Left = 0;
-            Bottom = Right = 1;
+            top = left = 0;
+            bottom = right = 1;
             CropSelection.Clip = new RectangleGeometry()
             {
                 Rect = new Rect(0, 0, CropZone.Width, CropZone.Height)
@@ -63,13 +92,13 @@ namespace RawEditor.View.UIHelper
         public void MoveEllipse()
         {
             double controlSize = (RightControl.Height / 2);
-            Canvas.SetLeft(TopControl, Left * CropZone.Width - controlSize);
+            Canvas.SetLeft(TopControl, left * CropZone.Width - controlSize);
             //Canvas.SetLeft(LeftControl, Left * CropZone.Width);
-            Canvas.SetLeft(RightControl, Right * CropZone.Width - controlSize);
+            Canvas.SetLeft(RightControl, right * CropZone.Width - controlSize);
             //Canvas.SetLeft(RightControl, Right * CropZone.Width);
-            Canvas.SetTop(TopControl, Top * CropZone.Height - controlSize);
+            Canvas.SetTop(TopControl, top * CropZone.Height - controlSize);
             //Canvas.SetTop(LeftControl, Bottom * CropZone.Height);
-            Canvas.SetTop(RightControl, Bottom * CropZone.Height - controlSize);
+            Canvas.SetTop(RightControl, bottom * CropZone.Height - controlSize);
             //Canvas.SetTop(RightControl, Top * CropZone.Height);
         }
 
@@ -92,8 +121,6 @@ namespace RawEditor.View.UIHelper
             {
                 Point currentPosition = e.GetCurrentPoint(CropZone).Position;
                 double controlSize = (RightControl.Height / 2);
-                //currentPosition.X = currentPosition.X - relative.X;
-                //currentPosition.Y = currentPosition.Y - relative.Y;
                 //check if not outside bound
                 if (currentPosition.Y >= 0 && currentPosition.Y < Canvas.GetTop(RightControl))
                 {
@@ -124,8 +151,6 @@ namespace RawEditor.View.UIHelper
                 Point currentPosition = e.GetCurrentPoint(CropZone).Position;
                 Point relative = e.GetCurrentPoint(RightControl).Position;
                 double controlSize = (RightControl.Height / 2);
-                //currentPosition.X -= relative.X;
-                //currentPosition.Y -= relative.Y;*/
                 if ((int)currentPosition.Y <= CropZone.Height && (int)currentPosition.Y > Canvas.GetTop(TopControl))
                 {
                     Canvas.SetTop(RightControl, currentPosition.Y - controlSize);
@@ -155,8 +180,8 @@ namespace RawEditor.View.UIHelper
             double controlSize = (RightControl.Height / 2);
             Top = (Canvas.GetTop(TopControl) + controlSize) / CropZone.Height;
             Left = (Canvas.GetLeft(TopControl) + controlSize) / CropZone.Width;
-            Bottom = ((Canvas.GetTop(RightControl) + controlSize) / CropZone.Height) - Top;
-            Right = ((Canvas.GetLeft(RightControl) + controlSize) / CropZone.Width) - Left;
+            Bottom = ((Canvas.GetTop(RightControl) + controlSize) / CropZone.Height) - top;
+            Right = ((Canvas.GetLeft(RightControl) + controlSize) / CropZone.Width) - left;
         }
 
         public void SetThumbAsync(SoftwareBitmap image)

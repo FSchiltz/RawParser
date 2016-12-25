@@ -77,7 +77,7 @@ namespace RawEditor.Effect
         */
         //TODO correct
         /*
-        public static void WhiteBalance(ref ushort[] image, int colorDepth, uint h, uint w, int temp)
+        public static void WhiteBalance(ushort[] image, int colorDepth, uint h, uint w, int temp)
         {
             //TODO caclute the real value and remove transforming to 8 bit
             ushort rRefer = 0, gRefer = 0, bRefer = 0;

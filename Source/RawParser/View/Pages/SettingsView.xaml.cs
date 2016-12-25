@@ -1,4 +1,5 @@
-﻿using RawNet;
+﻿using RawEditor.Effect;
+using RawNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;

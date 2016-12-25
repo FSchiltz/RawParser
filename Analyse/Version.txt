@@ -1,7 +1,0 @@
-version 1
-	- Graphic interface
-	- Open nikon raw
-	- Demosaic
-	- Display image
-	- Display metadata
-	- Export to Jpeg uncompressed
