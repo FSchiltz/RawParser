@@ -53,7 +53,9 @@
                           Icon="Setting" x:Uid="Setting" 
                           Click="SettingClick"/>
             <CommandBar.SecondaryCommands>
-               <AppBarButton x:Name="ReportButton"  
+                <AppBarButton x:Name="FeedbackButton" 
+                          Tapped="FeedbackButton_TappedAsync" Icon="LikeDislike" Label="Send Feedback"/>
+                <AppBarButton x:Name="ReportButton"  
                           Tapped="ReportButton_Tapped" Icon="MailForward" Label="Report issue"/>
                 <AppBarButton x:Name="GitterButton"  
                           Tapped="GitterButton_Tapped" Icon="Comment" Label="Send suggestion"/>
