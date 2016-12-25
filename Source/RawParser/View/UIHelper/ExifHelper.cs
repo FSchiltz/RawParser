@@ -10,18 +10,18 @@ namespace RawEditor
             Dictionary<string, string> exif = new Dictionary<string, string>();
             exif.Add("File", raw.metadata.FileNameComplete);
             exif.Add("Parsing time", raw.metadata.ParsingTimeAsString);
-            if (raw.metadata.Make != null && raw.metadata.Make.Trim() != "")
+            if (!string.IsNullOrEmpty(raw.metadata.Make))
                 exif.Add("Maker", raw.metadata.Make);
-            if (raw.metadata.Model != null && raw.metadata.Model.Trim() != "")
+            if (!string.IsNullOrEmpty(raw.metadata.Model))
                 exif.Add("Model", raw.metadata.Model);
-            if (raw.metadata.Mode != null && raw.metadata.Mode.Trim() != "")
+            if (!string.IsNullOrEmpty(raw.metadata.Mode))
                 exif.Add("Image mode", raw.metadata.Mode);
 
             exif.Add("Size", "" + ((raw.raw.dim.width * raw.raw.dim.height) / 1000000.0).ToString("F") + " MPixels");
-            exif.Add("Width", "" + raw.raw.dim.width);
-            exif.Add("Height", "" + raw.raw.dim.height);
-            exif.Add("Uncropped height", "" + raw.metadata.RawDim.width);
-            exif.Add("Uncropped width", "" + raw.metadata.RawDim.height);
+            exif.Add("Dimension", "" + raw.raw.dim.width + " x " + raw.raw.dim.height);
+
+            exif.Add("Sensor size", "" + ((raw.metadata.RawDim.width * raw.metadata.RawDim.height) / 1000000.0).ToString("F") + " MPixels");
+            exif.Add("Sensor dimension", "" + raw.metadata.RawDim.width + " x " + raw.metadata.RawDim.height);
 
             if (raw.metadata.IsoSpeed > 0)
                 exif.Add("ISO", "" + raw.metadata.IsoSpeed);
@@ -30,9 +30,9 @@ namespace RawEditor
             if (raw.metadata.Exposure > 0)
                 exif.Add("Exposure time", "" + raw.metadata.ExposureAsString);
 
-            if (raw.metadata.TimeTake != null)
+            if (!string.IsNullOrEmpty(raw.metadata.TimeTake))
                 exif.Add("Time of capture", "" + raw.metadata.TimeTake);
-            if (raw.metadata.TimeModify != null)
+            if (!string.IsNullOrEmpty(raw.metadata.TimeModify))
                 exif.Add("Time modified", "" + raw.metadata.TimeModify);
 
             if (raw.metadata.Gps != null)

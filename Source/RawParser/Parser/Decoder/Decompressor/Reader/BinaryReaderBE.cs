@@ -9,7 +9,7 @@ namespace RawNet
         big, little, unknown
     };
 
-    public class TIFFBinaryReader : BinaryReader, IDisposable
+    public class TIFFBinaryReader : BinaryReader
     {
         private uint offset;
         public long Position
@@ -17,7 +17,6 @@ namespace RawNet
             get { return BaseStream.Position; }
             set { BaseStream.Position = value + offset; }
         }
-
 
         public TIFFBinaryReader(Stream s) : base(s, Encoding.ASCII) { }
         public TIFFBinaryReader(Stream s, Encoding e) : base(s, e) { }
