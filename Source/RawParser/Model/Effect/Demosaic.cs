@@ -39,6 +39,7 @@ namespace RawEditor
             }
             //set correct dim
             image.offset = new Point2D();
+            image.uncroppedDim = new Point2D(image.dim.width,image.dim.height);
             image.rawData = deflated;
         }
 

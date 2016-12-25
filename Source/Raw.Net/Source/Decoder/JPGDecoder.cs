@@ -29,8 +29,9 @@ namespace RawNet
         public  override void DecodeMetadata()
         {
             //fill useless metadata
-            rawImage.metadata.wbCoeffs = new float[] { 1, 1, 1, 1 };
+            rawImage.metadata.WbCoeffs = new float[] { 1, 1, 1, 1 };
             rawImage.whitePoint = (uint)byte.MaxValue;
+            rawImage.metadata.RawDim = new Point2D(rawImage.uncroppedDim.width, rawImage.uncroppedDim.height);
             /*List<string> list = new List<string>
             {
                 "/app1/ifd/{ushort=271}"

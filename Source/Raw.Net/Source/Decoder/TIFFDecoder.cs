@@ -185,11 +185,11 @@ namespace RawNet
                 rawImage.ColorDepth = ifd.GetEntryRecursive(TagType.BITSPERSAMPLE).GetUShort(0);
             }
             var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (isoTag != null) rawImage.metadata.isoSpeed = isoTag.GetInt(0);
+            if (isoTag != null) rawImage.metadata.IsoSpeed = isoTag.GetInt(0);
             var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
             var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
-            if (exposure != null) rawImage.metadata.exposure = exposure.GetFloat(0);
-            if (fn != null) rawImage.metadata.aperture = fn.GetFloat(0);
+            if (exposure != null) rawImage.metadata.Exposure = exposure.GetFloat(0);
+            if (fn != null) rawImage.metadata.Aperture = fn.GetFloat(0);
             if (rawImage.whitePoint == 0)
             {
                 Tag whitelevel = ifd.GetEntryRecursive(TagType.WHITELEVEL);
@@ -201,8 +201,8 @@ namespace RawNet
 
             var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
             var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
-            if (time != null) rawImage.metadata.timeTake = time.DataAsString;
-            if (timeModify != null) rawImage.metadata.timeModify = timeModify.DataAsString;
+            if (time != null) rawImage.metadata.TimeTake = time.DataAsString;
+            if (timeModify != null) rawImage.metadata.TimeModify = timeModify.DataAsString;
             // Set the make and model
             var t = ifd.GetEntryRecursive(TagType.MAKE);
             var t2 = ifd.GetEntryRecursive(TagType.MODEL);
@@ -212,8 +212,8 @@ namespace RawNet
                 string model = t2.DataAsString;
                 make = make.Trim();
                 model = model.Trim();
-                rawImage.metadata.make = make;
-                rawImage.metadata.model = model;
+                rawImage.metadata.Make = make;
+                rawImage.metadata.Model = model;
             }
 
             //rotation
@@ -258,7 +258,8 @@ namespace RawNet
                         break;
                 }
             }
-            rawImage.originalRotation = rawImage.rotation;
+            rawImage.metadata.OriginalRotation = rawImage.rotation;
+            rawImage.metadata.RawDim = new Point2D(rawImage.uncroppedDim.width, rawImage.uncroppedDim.height);
         }
     }
 }

@@ -279,17 +279,17 @@ namespace RawNet
         {
             rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
             base.DecodeMetadata();
-            if (rawImage.metadata.model == null)
+            if (rawImage.metadata.Model == null)
                 throw new RawDecoderException("ORF Meta Decoder: Model name found");
-            SetMetaData(rawImage.metadata.model);
+            SetMetaData(rawImage.metadata.Model);
 
             var rMul = ifd.GetEntryRecursive(TagType.OLYMPUSREDMULTIPLIER);
             var bMul = ifd.GetEntryRecursive(TagType.OLYMPUSBLUEMULTIPLIER);
             if (rMul != null && bMul != null)
             {
-                rawImage.metadata.wbCoeffs[0] = ifd.GetEntryRecursive(TagType.OLYMPUSREDMULTIPLIER).GetShort(0);
-                rawImage.metadata.wbCoeffs[1] = 256.0f;
-                rawImage.metadata.wbCoeffs[2] = ifd.GetEntryRecursive(TagType.OLYMPUSBLUEMULTIPLIER).GetShort(0);
+                rawImage.metadata.WbCoeffs[0] = ifd.GetEntryRecursive(TagType.OLYMPUSREDMULTIPLIER).GetShort(0);
+                rawImage.metadata.WbCoeffs[1] = 256.0f;
+                rawImage.metadata.WbCoeffs[2] = ifd.GetEntryRecursive(TagType.OLYMPUSBLUEMULTIPLIER).GetShort(0);
             }
             else
             {
@@ -312,9 +312,9 @@ namespace RawNet
                             }
                             if (wb.dataCount == 2 || wb.dataCount == 4)
                             {
-                                rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0);
-                                rawImage.metadata.wbCoeffs[1] = 256.0f;
-                                rawImage.metadata.wbCoeffs[2] = wb.GetFloat(1);
+                                rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0);
+                                rawImage.metadata.WbCoeffs[1] = 256.0f;
+                                rawImage.metadata.WbCoeffs[2] = wb.GetFloat(1);
                             }
                         }
 

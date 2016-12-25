@@ -135,9 +135,9 @@ namespace RawNet
             var bWBTag = raw.GetEntry((TagType)0x0026);
             if (rWBTag != null && gWBTag != null && bWBTag != null)
             {
-                rawImage.metadata.wbCoeffs[0] = rWBTag.GetShort(0);
-                rawImage.metadata.wbCoeffs[1] = gWBTag.GetShort(0);
-                rawImage.metadata.wbCoeffs[2] = bWBTag.GetShort(0);
+                rawImage.metadata.WbCoeffs[0] = rWBTag.GetShort(0);
+                rawImage.metadata.WbCoeffs[1] = gWBTag.GetShort(0);
+                rawImage.metadata.WbCoeffs[2] = bWBTag.GetShort(0);
             }
             else
             {
@@ -145,14 +145,14 @@ namespace RawNet
                 var wb2Tag = raw.GetEntry((TagType)0x0012);
                 if (wb1Tag != null && wb2Tag != null)
                 {
-                    rawImage.metadata.wbCoeffs[0] = wb1Tag.GetShort(0);
-                    rawImage.metadata.wbCoeffs[1] = 256.0f;
-                    rawImage.metadata.wbCoeffs[2] = wb2Tag.GetShort(0);
+                    rawImage.metadata.WbCoeffs[0] = wb1Tag.GetShort(0);
+                    rawImage.metadata.WbCoeffs[1] = 256.0f;
+                    rawImage.metadata.WbCoeffs[2] = wb2Tag.GetShort(0);
                 }
             }
-            rawImage.metadata.wbCoeffs[0] /= rawImage.metadata.wbCoeffs[1];
-            rawImage.metadata.wbCoeffs[2] /= rawImage.metadata.wbCoeffs[1];
-            rawImage.metadata.wbCoeffs[1] /= rawImage.metadata.wbCoeffs[1];
+            rawImage.metadata.WbCoeffs[0] /= rawImage.metadata.WbCoeffs[1];
+            rawImage.metadata.WbCoeffs[2] /= rawImage.metadata.WbCoeffs[1];
+            rawImage.metadata.WbCoeffs[1] /= rawImage.metadata.WbCoeffs[1];
         }
 
         unsafe void DecodeRw2()
@@ -241,21 +241,21 @@ namespace RawNet
 
             base.DecodeMetadata();
 
-            if (rawImage.metadata.model == null)
+            if (rawImage.metadata.Model == null)
                 throw new RawDecoderException("RW2 Meta Decoder: Model name not found");
-            if (rawImage.metadata.make == null)
+            if (rawImage.metadata.Make == null)
                 throw new RawDecoderException("RW2 Support: Make name not found");
 
             string mode = GuessMode();
 
-            SetMetadata(rawImage.metadata.model);
-            rawImage.metadata.mode = mode;
+            SetMetadata(rawImage.metadata.Model);
+            rawImage.metadata.Mode = mode;
 
             //panasonic iso is in a special tag
-            if (rawImage.metadata.isoSpeed == 0)
+            if (rawImage.metadata.IsoSpeed == 0)
             {
                 var t = ifd.GetEntryRecursive(TagType.PANASONIC_ISO_SPEED);
-                if (t != null) rawImage.metadata.isoSpeed = t.GetInt(0);
+                if (t != null) rawImage.metadata.IsoSpeed = t.GetInt(0);
             }
 
         }

@@ -166,11 +166,14 @@ namespace RawEditor.View.UIHelper
                 //Do some UI-code that must be run on the UI thread.
                 //display the image preview
                 Thumb.Source = null;
-                WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                image.CopyToBuffer(bitmap.PixelBuffer);
-                image.Dispose();
-                Thumb.Source = bitmap;
-                Thumb2.Source = bitmap;
+                if (image != null)
+                {
+                    WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                    image.CopyToBuffer(bitmap.PixelBuffer);
+                    image.Dispose();
+                    Thumb.Source = bitmap;
+                    Thumb2.Source = bitmap;
+                }
             });
         }
     }

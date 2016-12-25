@@ -64,7 +64,7 @@ namespace RawNet
         {
             base.DecodeMetadata();            
 
-            SetMetadata(rawImage.metadata.model);
+            SetMetadata(rawImage.metadata.Model);
 
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
@@ -95,13 +95,13 @@ namespace RawNet
             {
                 if (wb.dataCount == 4)
                 {
-                    rawImage.metadata.wbCoeffs[0] = wb.GetInt(0);
-                    rawImage.metadata.wbCoeffs[1] = wb.GetInt(1);
-                    rawImage.metadata.wbCoeffs[2] = wb.GetInt(3);
+                    rawImage.metadata.WbCoeffs[0] = wb.GetInt(0);
+                    rawImage.metadata.WbCoeffs[1] = wb.GetInt(1);
+                    rawImage.metadata.WbCoeffs[2] = wb.GetInt(3);
 
-                    rawImage.metadata.wbCoeffs[0] /= rawImage.metadata.wbCoeffs[1];
-                    rawImage.metadata.wbCoeffs[2] /= rawImage.metadata.wbCoeffs[1];
-                    rawImage.metadata.wbCoeffs[1] /= rawImage.metadata.wbCoeffs[1];
+                    rawImage.metadata.WbCoeffs[0] /= rawImage.metadata.WbCoeffs[1];
+                    rawImage.metadata.WbCoeffs[2] /= rawImage.metadata.WbCoeffs[1];
+                    rawImage.metadata.WbCoeffs[1] /= rawImage.metadata.WbCoeffs[1];
                 }
 
             }

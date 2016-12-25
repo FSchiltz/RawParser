@@ -474,7 +474,7 @@ namespace RawNet
                 if (as_shot_neutral.dataCount == 3)
                 {
                     for (int i = 0; i < 3; i++)
-                        rawImage.metadata.wbCoeffs[i] = 1.0f / Convert.ToSingle(as_shot_neutral.data[i]);
+                        rawImage.metadata.WbCoeffs[i] = 1.0f / Convert.ToSingle(as_shot_neutral.data[i]);
                 }
             }
             else
@@ -484,13 +484,13 @@ namespace RawNet
                 {
                     if (as_shot_white_xy.dataCount == 2)
                     {
-                        rawImage.metadata.wbCoeffs[0] = as_shot_white_xy.GetFloat(0);
-                        rawImage.metadata.wbCoeffs[1] = as_shot_white_xy.GetFloat(1);
-                        rawImage.metadata.wbCoeffs[2] = 1 - rawImage.metadata.wbCoeffs[0] - rawImage.metadata.wbCoeffs[1];
+                        rawImage.metadata.WbCoeffs[0] = as_shot_white_xy.GetFloat(0);
+                        rawImage.metadata.WbCoeffs[1] = as_shot_white_xy.GetFloat(1);
+                        rawImage.metadata.WbCoeffs[2] = 1 - rawImage.metadata.WbCoeffs[0] - rawImage.metadata.WbCoeffs[1];
 
                         float[] d65_white = { 0.950456F, 1, 1.088754F };
                         for (int i = 0; i < 3; i++)
-                            rawImage.metadata.wbCoeffs[i] /= d65_white[i];
+                            rawImage.metadata.WbCoeffs[i] /= d65_white[i];
                     }
                 }
             }

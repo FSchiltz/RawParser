@@ -283,7 +283,7 @@ namespace RawNet
                 offY += (uint)slice.w;
             }
 
-            if (rawImage.metadata.subsampling.width > 1 || rawImage.metadata.subsampling.height > 1)
+            if (rawImage.metadata.Subsampling.width > 1 || rawImage.metadata.Subsampling.height > 1)
                 SRawInterpolate();
         }
 
@@ -297,12 +297,12 @@ namespace RawNet
             base.DecodeMetadata();
 
             string mode = "";
-            if (rawImage.metadata.subsampling.height == 2 && rawImage.metadata.subsampling.width == 2)
+            if (rawImage.metadata.Subsampling.height == 2 && rawImage.metadata.Subsampling.width == 2)
                 mode = "sRaw1";
 
-            if (rawImage.metadata.subsampling.height == 1 && rawImage.metadata.subsampling.width == 2)
+            if (rawImage.metadata.Subsampling.height == 1 && rawImage.metadata.Subsampling.width == 2)
                 mode = "sRaw2";
-            rawImage.metadata.mode = mode;
+            rawImage.metadata.Mode = mode;
 
             // Fetch the white balance
             try
@@ -312,9 +312,9 @@ namespace RawNet
                 {
                     //try to use this as white balance
 
-                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0);
-                    rawImage.metadata.wbCoeffs[1] = wb.GetFloat(1);
-                    rawImage.metadata.wbCoeffs[2] = wb.GetFloat(3);
+                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0);
+                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(1);
+                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(3);
                 }
                 else
                 {
@@ -333,9 +333,9 @@ namespace RawNet
                         }
 
                         offset /= 2;
-                        rawImage.metadata.wbCoeffs[0] = Convert.ToSingle(wb.data[offset + 0]);
-                        rawImage.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[offset + 1]);
-                        rawImage.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[offset + 3]);
+                        rawImage.metadata.WbCoeffs[0] = Convert.ToSingle(wb.data[offset + 0]);
+                        rawImage.metadata.WbCoeffs[1] = Convert.ToSingle(wb.data[offset + 1]);
+                        rawImage.metadata.WbCoeffs[2] = Convert.ToSingle(wb.data[offset + 3]);
                     }
                     else
                     {
@@ -350,9 +350,9 @@ namespace RawNet
                             int wb_offset = (wb_index < 18) ? "012347800000005896"[wb_index] - '0' : 0;
                             wb_offset = wb_offset * 8 + 2;
 
-                            rawImage.metadata.wbCoeffs[0] = g9_wb.GetInt(wb_offset + 1);
-                            rawImage.metadata.wbCoeffs[1] = (g9_wb.GetInt(wb_offset + 0) + (float)g9_wb.GetInt(wb_offset + 3)) / 2.0f;
-                            rawImage.metadata.wbCoeffs[2] = g9_wb.GetInt(wb_offset + 2);
+                            rawImage.metadata.WbCoeffs[0] = g9_wb.GetInt(wb_offset + 1);
+                            rawImage.metadata.WbCoeffs[1] = (g9_wb.GetInt(wb_offset + 0) + (float)g9_wb.GetInt(wb_offset + 3)) / 2.0f;
+                            rawImage.metadata.WbCoeffs[2] = g9_wb.GetInt(wb_offset + 2);
                         }
                         else
                         {
@@ -363,9 +363,9 @@ namespace RawNet
                             {
                                 if (wb.dataCount >= 3)
                                 {
-                                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0);
-                                    rawImage.metadata.wbCoeffs[1] = wb.GetFloat(1);
-                                    rawImage.metadata.wbCoeffs[2] = wb.GetFloat(2);
+                                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0);
+                                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(1);
+                                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(2);
                                 }
                             }
                         }
@@ -379,7 +379,7 @@ namespace RawNet
             }
             //setMetaData(metaData, make, model, mode);
 
-            SetMetadata(rawImage.metadata.model);
+            SetMetadata(rawImage.metadata.Model);
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)
@@ -392,9 +392,9 @@ namespace RawNet
                 rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
-            rawImage.metadata.wbCoeffs[0] = rawImage.metadata.wbCoeffs[0] / rawImage.metadata.wbCoeffs[1];
-            rawImage.metadata.wbCoeffs[2] = rawImage.metadata.wbCoeffs[2] / rawImage.metadata.wbCoeffs[1];
-            rawImage.metadata.wbCoeffs[1] = rawImage.metadata.wbCoeffs[1] / rawImage.metadata.wbCoeffs[1];
+            rawImage.metadata.WbCoeffs[0] = rawImage.metadata.WbCoeffs[0] / rawImage.metadata.WbCoeffs[1];
+            rawImage.metadata.WbCoeffs[2] = rawImage.metadata.WbCoeffs[2] / rawImage.metadata.WbCoeffs[1];
+            rawImage.metadata.WbCoeffs[1] = rawImage.metadata.WbCoeffs[1] / rawImage.metadata.WbCoeffs[1];
         }
 
         protected void SetMetadata(string model)
@@ -463,7 +463,7 @@ namespace RawNet
                         rawImage.dim.height = 773;
                         rawImage.dim.width = 960;
                         //raw_width = 992;
-                        rawImage.metadata.pixelAspectRatio = 256 / 235.0;
+                        rawImage.metadata.PixelAspectRatio = 256 / 235.0;
                         //filters = 0x1e4e1e4e;
                         goto canon_a5;
                     case "PowerShot A50":
@@ -503,7 +503,7 @@ namespace RawNet
         int GetHue()
         {
             if (hints.ContainsKey("old_sraw_hue"))
-                return (rawImage.metadata.subsampling.height * rawImage.metadata.subsampling.width);
+                return (rawImage.metadata.Subsampling.height * rawImage.metadata.Subsampling.width);
             var tc = ifd.GetEntryRecursive((TagType)0x10);
             if (tc == null)
             {
@@ -511,9 +511,9 @@ namespace RawNet
             }
             uint model_id = ifd.GetEntryRecursive((TagType)0x10).GetUInt(0);
             if (model_id >= 0x80000281 || model_id == 0x80000218 || (hints.ContainsKey("force_new_sraw_hue")))
-                return ((rawImage.metadata.subsampling.height * rawImage.metadata.subsampling.width) - 1) >> 1;
+                return ((rawImage.metadata.Subsampling.height * rawImage.metadata.Subsampling.width) - 1) >> 1;
 
-            return (rawImage.metadata.subsampling.height * rawImage.metadata.subsampling.width);
+            return (rawImage.metadata.Subsampling.height * rawImage.metadata.Subsampling.width);
         }
 
         // Interpolate and convert sRaw data.
@@ -541,7 +541,7 @@ namespace RawNet
             bool isOldSraw = hints.ContainsKey("sraw_40d");
             bool isNewSraw = hints.ContainsKey("sraw_new");
 
-            if (rawImage.metadata.subsampling.height == 1 && rawImage.metadata.subsampling.width == 2)
+            if (rawImage.metadata.Subsampling.height == 1 && rawImage.metadata.Subsampling.width == 2)
             {
                 if (isOldSraw)
                     Interpolate_422_old(rawImage.dim.width / 2, rawImage.dim.height, 0, rawImage.dim.height);
@@ -550,7 +550,7 @@ namespace RawNet
                 else
                     Interpolate_422(rawImage.dim.width / 2, rawImage.dim.height, 0, rawImage.dim.height);
             }
-            else if (rawImage.metadata.subsampling.height == 2 && rawImage.metadata.subsampling.width == 2)
+            else if (rawImage.metadata.Subsampling.height == 2 && rawImage.metadata.Subsampling.width == 2)
             {
                 if (isNewSraw)
                     Interpolate_420_new(rawImage.dim.width / 2, rawImage.dim.height / 2, 0, rawImage.dim.height / 2);

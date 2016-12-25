@@ -422,11 +422,11 @@ namespace RawNet
         public override void DecodeMetadata()
         {
             base.DecodeMetadata();
-            if (rawImage.metadata.model == null)
+            if (rawImage.metadata.Model == null)
                 throw new RawDecoderException("NEF Meta Decoder: Model name not found");
-            if (rawImage.metadata.make == null)
+            if (rawImage.metadata.Make == null)
                 throw new RawDecoderException("NEF Support: Make name not found");
-            if (rawImage.metadata.model.Contains("NIKON")) rawImage.metadata.model = rawImage.metadata.model.Substring(6);
+            if (rawImage.metadata.Model.Contains("NIKON")) rawImage.metadata.Model = rawImage.metadata.Model.Substring(6);
 
             // Read the whitebalance
             // We use this for the D50 and D2X whacky WB "encryption"
@@ -473,11 +473,11 @@ namespace RawNet
                 Tag wb = note[0].GetEntry((TagType)12);
                 if (wb.dataCount == 4)
                 {
-                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0);
-                    rawImage.metadata.wbCoeffs[1] = Convert.ToSingle(wb.data[2]);
-                    rawImage.metadata.wbCoeffs[2] = Convert.ToSingle(wb.data[1]);
-                    if (rawImage.metadata.wbCoeffs[1] == 0.0f)
-                        rawImage.metadata.wbCoeffs[1] = 1.0f;
+                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0);
+                    rawImage.metadata.WbCoeffs[1] = Convert.ToSingle(wb.data[2]);
+                    rawImage.metadata.WbCoeffs[2] = Convert.ToSingle(wb.data[1]);
+                    if (rawImage.metadata.WbCoeffs[1] == 0.0f)
+                        rawImage.metadata.WbCoeffs[1] = 1.0f;
                 }
             }
             else
@@ -492,15 +492,15 @@ namespace RawNet
                             version = (version << 4) + Convert.ToUInt32(wb.data[i]) - '0';
                         if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == TiffDataType.UNDEFINED)
                         {
-                            rawImage.metadata.wbCoeffs[0] = wb.GetShort(36);
-                            rawImage.metadata.wbCoeffs[2] = wb.GetShort(37);
-                            rawImage.metadata.wbCoeffs[1] = wb.GetShort(38);
+                            rawImage.metadata.WbCoeffs[0] = wb.GetShort(36);
+                            rawImage.metadata.WbCoeffs[2] = wb.GetShort(37);
+                            rawImage.metadata.WbCoeffs[1] = wb.GetShort(38);
                         }
                         else if (version == 0x103 && wb.dataCount >= 26 && wb.dataType == TiffDataType.UNDEFINED)
                         {
-                            rawImage.metadata.wbCoeffs[0] = wb.GetShort(10);
-                            rawImage.metadata.wbCoeffs[1] = wb.GetShort(11);
-                            rawImage.metadata.wbCoeffs[2] = wb.GetShort(12);
+                            rawImage.metadata.WbCoeffs[0] = wb.GetShort(10);
+                            rawImage.metadata.WbCoeffs[1] = wb.GetShort(11);
+                            rawImage.metadata.WbCoeffs[2] = wb.GetShort(12);
                         }
                         else
                         {
@@ -541,9 +541,9 @@ namespace RawNet
                                         // Finally set the WB coeffs
                                         UInt32 off = (uint)((version == 0x204) ? 6 : 14);
                                         off += bitOff;
-                                        rawImage.metadata.wbCoeffs[0] = wb.Get2BE(off);
-                                        rawImage.metadata.wbCoeffs[1] = wb.Get2BE(off + 2);
-                                        rawImage.metadata.wbCoeffs[2] = wb.Get2BE(off + 6);
+                                        rawImage.metadata.WbCoeffs[0] = wb.Get2BE(off);
+                                        rawImage.metadata.WbCoeffs[1] = wb.Get2BE(off + 2);
+                                        rawImage.metadata.WbCoeffs[2] = wb.Get2BE(off + 6);
                                     }
                                 }
                             }
@@ -559,9 +559,9 @@ namespace RawNet
                         {
                             UInt32 red = (uint)wb.data[1249] | (((UInt32)wb.data[1248]) << 8);
                             UInt32 blue = (uint)wb.data[1251] | (((UInt32)wb.data[1250]) << 8);
-                            rawImage.metadata.wbCoeffs[0] = red / 256.0f;
-                            rawImage.metadata.wbCoeffs[1] = 1.0f;
-                            rawImage.metadata.wbCoeffs[2] = blue / 256.0f;
+                            rawImage.metadata.WbCoeffs[0] = red / 256.0f;
+                            rawImage.metadata.WbCoeffs[1] = 1.0f;
+                            rawImage.metadata.WbCoeffs[2] = blue / 256.0f;
                         }
                         else if (wb.DataAsString.StartsWith("NRW "))
                         {
@@ -574,9 +574,9 @@ namespace RawNet
                             if (offset != 0)
                             {
                                 //TODO check iftag is byte type
-                                rawImage.metadata.wbCoeffs[0] = wb.Get4LE(offset) << 2;
-                                rawImage.metadata.wbCoeffs[1] = wb.Get4LE(offset + 4) + wb.Get4LE(offset + 8);
-                                rawImage.metadata.wbCoeffs[2] = wb.Get4LE(offset + 12) << 2;
+                                rawImage.metadata.WbCoeffs[0] = wb.Get4LE(offset) << 2;
+                                rawImage.metadata.WbCoeffs[1] = wb.Get4LE(offset + 4) + wb.Get4LE(offset + 8);
+                                rawImage.metadata.WbCoeffs[2] = wb.Get4LE(offset + 12) << 2;
                             }
                         }
                     }
@@ -584,8 +584,8 @@ namespace RawNet
             }
 
             string mode = GetMode();
-            SetMetadata(rawImage.metadata.model);
-            rawImage.metadata.mode = mode;
+            SetMetadata(rawImage.metadata.Model);
+            rawImage.metadata.Mode = mode;
 
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
@@ -657,9 +657,9 @@ namespace RawNet
             if (wb_r == 0.0f || wb_b == 0.0f)
                 throw new RawDecoderException("NEF Decoder: Whitebalance has zero value");
 
-            rawImage.metadata.wbCoeffs[0] = wb_r;
-            rawImage.metadata.wbCoeffs[1] = 1.0f;
-            rawImage.metadata.wbCoeffs[2] = wb_b;
+            rawImage.metadata.WbCoeffs[0] = wb_r;
+            rawImage.metadata.WbCoeffs[1] = 1.0f;
+            rawImage.metadata.WbCoeffs[2] = wb_b;
 
             int inv_wb_r = (int)(1024.0 / wb_r);
             int inv_wb_b = (int)(1024.0 / wb_b);
@@ -803,8 +803,8 @@ namespace RawNet
             switch (model.Trim())
             {
                 case "D1":
-                    rawImage.metadata.wbCoeffs[0] *= 256f / 527.0f;
-                    rawImage.metadata.wbCoeffs[2] *= 256f / 317.0f;
+                    rawImage.metadata.WbCoeffs[0] *= 256f / 527.0f;
+                    rawImage.metadata.WbCoeffs[2] *= 256f / 317.0f;
                     break;
                 case "D1X":
                     rawImage.dim.width -= 4;

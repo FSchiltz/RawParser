@@ -125,6 +125,7 @@ namespace RawEditor
             history.Clear();
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                CropUI.SetThumbAsync(null);
                 //empty the image display
                 ImageBox.Source = null;
                 //empty the exif data
@@ -158,7 +159,7 @@ namespace RawEditor
                     raw.dim = new Point2D(raw.uncroppedDim.width, raw.uncroppedDim.height);
                     raw.previewOffset = new Point2D(0, 0);
                     raw.previewDim = new Point2D(raw.uncroppedPreviewDim.width, raw.uncroppedPreviewDim.height);
-                    raw.rotation = raw.originalRotation;
+                    raw.rotation = raw.metadata.OriginalRotation;
                 }
                 SetWBAsync();
             });
@@ -174,7 +175,7 @@ namespace RawEditor
             if (raw != null && raw.metadata != null)
             {
                 //calculate the coeff
-                double r = raw.metadata.wbCoeffs[0], b = raw.metadata.wbCoeffs[2], g = raw.metadata.wbCoeffs[1];
+                double r = raw.metadata.WbCoeffs[0], b = raw.metadata.WbCoeffs[2], g = raw.metadata.WbCoeffs[1];
                 rValue = (int)(r * 255);
                 bValue = (int)(b * 255);
                 gValue = (int)(g * 255);
@@ -409,14 +410,18 @@ namespace RawEditor
                 DisplayLoad();
                 var task = Task.Run(async () =>
                 {
-                    var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.offset, raw.uncroppedDim, raw.ColorDepth, false);
                     try
                     {
+                        var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.offset, raw.uncroppedDim, raw.ColorDepth, false);
                         FormatHelper.SaveAsync(file, result.Item2);
                     }
-                    catch (IOException ex)
+                    catch (Exception ex)
                     {
+#if DEBUG
                         ExceptionDisplay.DisplayAsync(ex.Message);
+#else
+                        ExceptionDisplay.DisplayAsync("An error occured while saving");
+#endif
                     }
                     StopLoadDisplay();
                 });
@@ -507,7 +512,7 @@ namespace RawEditor
                 effect.saturation = 1 + saturationSlider.Value / 100;
             });
 
-            effect.mul = raw.metadata.wbCoeffs;
+            effect.mul = raw.metadata.WbCoeffs;
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             effect.camCurve = raw.curve;
@@ -539,7 +544,7 @@ namespace RawEditor
 
         }
 
-        #region WBSlider
+#region WBSlider
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (raw?.previewData != null)
@@ -572,7 +577,7 @@ namespace RawEditor
             SetWBAsync();
             UpdatePreview(false);
         }
-        #endregion
+#endregion
 
         private void Slider_PointerCaptureLost(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
