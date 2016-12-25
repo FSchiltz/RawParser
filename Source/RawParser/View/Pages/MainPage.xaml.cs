@@ -239,16 +239,16 @@ namespace RawEditor
                     {
                         //read the thumbnail
                         Task.Run(() =>
-                    {
-                        try
                         {
-                            DisplayImage(thumbnail.GetSoftwareBitmap(), true);
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.WriteLine("Error in thumb " + e.Message);
-                        }
-                    });
+                            try
+                            {
+                                DisplayImage(thumbnail.GetSoftwareBitmap(), true);
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.WriteLine("Error in thumb " + e.Message);
+                            }
+                        });
                     }
 
                     decoder.DecodeRaw();
@@ -301,10 +301,10 @@ namespace RawEditor
 #if DEBUG
                     Debug.WriteLine(e.Message);
 #else
-                    
+
                     //send an event with file extension and camer model and make if any                   
                     logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
-                    
+
 #endif
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     var str = loader.GetString("ExceptionText");
@@ -544,7 +544,7 @@ namespace RawEditor
 
         }
 
-#region WBSlider
+        #region WBSlider
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (raw?.preview.data != null)
@@ -577,7 +577,7 @@ namespace RawEditor
             SetWBAsync();
             UpdatePreview(false);
         }
-#endregion
+        #endregion
 
         private void Slider_PointerCaptureLost(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
