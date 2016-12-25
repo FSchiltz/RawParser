@@ -9,7 +9,7 @@
     d:DesignWidth="400">
 
     <Grid PointerMoved="Canvas_PointerMoved" PointerReleased="Canvas_PointerReleased" >
-        <ScrollViewer  ZoomMode="Enabled"                                                 
+        <ScrollViewer  ZoomMode="Disabled"                                                 
                           HorizontalScrollBarVisibility="Hidden"
                           VerticalScrollBarVisibility="Hidden" 
                           HorizontalContentAlignment="Stretch" 
