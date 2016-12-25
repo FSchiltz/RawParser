@@ -42,49 +42,50 @@ namespace RawNet
         // Aspect ratio of the pixels, usually 1 but some cameras need scaling
         // <1 means the image needs to be stretched vertically, (0.5 means 2x)
         // >1 means the image needs to be stretched horizontally (2 mean 2x)
-        public double pixelAspectRatio;
+        public double PixelAspectRatio { get; set; }
 
         // White balance coefficients of the image
-        public float[] wbCoeffs = new float[4];
+        public float[] WbCoeffs { get; set; } = new float[4];
 
         // How many pixels far down the left edge and far up the right edge the image 
         // corners are when the image is rotated 45 degrees in Fuji rotated sensors.
-        public uint fujiRotationPos;
+        public uint FujiRotationPos { get; set; }
 
-        public Point2D subsampling = new Point2D();
-        public string make;
-        public string model;
-        public string mode;
+        public Point2D Subsampling { get; set; } = new Point2D();
+        public string Make { get; set; }
+        public string Model { get; set; }
+        public string Mode { get; set; }
 
         /*
         public string canonical_make;
         public string canonical_model;
         public string canonical_alias;
         public string canonical_id;*/
-        public int rotation;
-        public int isoSpeed;
-        public double exposure;
-        public double aperture;
+        public int Rotation { get; set; }
+        public int IsoSpeed { get; set; }
+        public double Exposure { get; set; }
+        public double Aperture { get; set; }
 
-        public string timeTake;
-        public string timeModify;
+        public string TimeTake { get; set; }
+        public string TimeModify { get; set; }
 
-        public GPSInfo gps;
-
+        public GPSInfo Gps { get; set; }
+        public Point2D RawDim { get; set; }
+        public int OriginalRotation { get; set; }
 
         public ImageMetadata()
         {
-            subsampling.width = subsampling.height = 1;
-            isoSpeed = 0;
-            pixelAspectRatio = 1;
-            fujiRotationPos = 0;
-            wbCoeffs[0] = wbCoeffs[1] = wbCoeffs[2] = wbCoeffs[3] = 1;
+            Subsampling.width = Subsampling.height = 1;
+            IsoSpeed = 0;
+            PixelAspectRatio = 1;
+            FujiRotationPos = 0;
+            WbCoeffs[0] = WbCoeffs[1] = WbCoeffs[2] = WbCoeffs[3] = 1;
         }
 
         public string ExposureAsString()
         {
-            if (exposure >= 1) return exposure + "s";
-            else return "1/" + (1 / exposure).ToString("F0") + "s";
+            if (Exposure >= 1) return Exposure + "s";
+            else return "1/" + (1 / Exposure).ToString("F0") + "s";
         }
     }
 }

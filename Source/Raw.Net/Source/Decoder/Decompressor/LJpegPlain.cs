@@ -162,8 +162,8 @@ namespace RawNet
                     pixGroup += samplesComp[i];
                 }
 
-                raw.metadata.subsampling.width = (int)maxSuperH;
-                raw.metadata.subsampling.height = (int)maxSuperV;
+                raw.metadata.Subsampling.width = (int)maxSuperH;
+                raw.metadata.Subsampling.height = (int)maxSuperV;
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)((frame.h - skipY) / maxSuperV);
@@ -344,8 +344,8 @@ namespace RawNet
 
             UInt16* predict;      // Prediction pointer
 
-            raw.metadata.subsampling.width = 2;
-            raw.metadata.subsampling.height = 2;
+            raw.metadata.Subsampling.width = 2;
+            raw.metadata.Subsampling.height = 2;
             fixed (ushort* d = raw.rawData)
             {
                 //TODO remove this hack
@@ -491,8 +491,8 @@ namespace RawNet
             HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
             HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
 
-            raw.metadata.subsampling.width = 2;
-            raw.metadata.subsampling.height = 1;
+            raw.metadata.Subsampling.width = 2;
+            raw.metadata.Subsampling.height = 1;
 
             UInt16* predict;      // Prediction pointer
 

@@ -355,9 +355,9 @@ namespace RawNet
         public override void DecodeMetadata()
         {
             base.DecodeMetadata();
-            if (rawImage.metadata.model == null)
+            if (rawImage.metadata.Model == null)
                 throw new RawDecoderException("ARW Meta Decoder: Model name found");
-            if (rawImage.metadata.make == null)
+            if (rawImage.metadata.Make == null)
                 throw new RawDecoderException("ARW Decoder: Make name not found");
 
             //get cfa
@@ -376,7 +376,7 @@ namespace RawNet
              rawImage.blackLevel >>= shiftDownScale;*/
 
             // Set the whitebalance
-            if (rawImage.metadata.model == "DSLR-A100")
+            if (rawImage.metadata.Model == "DSLR-A100")
             { // Handle the MRW style WB of the A100
 
                 Tag priv = ifd.GetEntryRecursive(TagType.DNGPRIVATEDATA);
@@ -402,9 +402,9 @@ namespace RawNet
                             for (int i = 0; i < 4; i++)
                                 tmp[i] = (ushort)(stringdata[(currpos + 12 + i * 2) + 1] << 8 | stringdata[currpos + 12 + i * 2]);
 
-                            rawImage.metadata.wbCoeffs[0] = (float)tmp[0] / tmp[1];
-                            rawImage.metadata.wbCoeffs[1] = (float)tmp[1] / tmp[1];
-                            rawImage.metadata.wbCoeffs[2] = (float)tmp[3] / tmp[1];
+                            rawImage.metadata.WbCoeffs[0] = (float)tmp[0] / tmp[1];
+                            rawImage.metadata.WbCoeffs[1] = (float)tmp[1] / tmp[1];
+                            rawImage.metadata.WbCoeffs[2] = (float)tmp[3] / tmp[1];
                             break;
                         }
                         currpos += (int)Math.Max(len + 8, 1); // Math.Max(,1) to make sure we make progress
@@ -423,7 +423,7 @@ namespace RawNet
                     // We caught an exception reading WB, just ignore it
                 }
             }
-            SetMetadata(rawImage.metadata.model);
+            SetMetadata(rawImage.metadata.Model);
         }
 
         protected void SetMetadata(string model)
@@ -558,18 +558,18 @@ namespace RawNet
                     Tag wb = sony_private.GetEntry(TagType.SONYGRBGLEVELS);
                     if (wb.dataCount != 4)
                         throw new RawDecoderException("ARW: WB has " + wb.dataCount + " entries instead of 4");
-                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(1) / wb.GetFloat(0);
-                    rawImage.metadata.wbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
-                    rawImage.metadata.wbCoeffs[2] = wb.GetFloat(2) / wb.GetFloat(0);
+                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(1) / wb.GetFloat(0);
+                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
+                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(2) / wb.GetFloat(0);
                 }
                 else if (sony_private.tags.ContainsKey(TagType.SONYRGGBLEVELS))
                 {
                     Tag wb = sony_private.GetEntry(TagType.SONYRGGBLEVELS);
                     if (wb.dataCount != 4)
                         throw new RawDecoderException("ARW: WB has " + wb.dataCount + " entries instead of 4");
-                    rawImage.metadata.wbCoeffs[0] = wb.GetFloat(0) / wb.GetFloat(1);
-                    rawImage.metadata.wbCoeffs[1] = wb.GetFloat(1) / wb.GetFloat(1);
-                    rawImage.metadata.wbCoeffs[2] = wb.GetFloat(3) / wb.GetFloat(1);
+                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0) / wb.GetFloat(1);
+                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(1) / wb.GetFloat(1);
+                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(3) / wb.GetFloat(1);
                 }
             }
         }

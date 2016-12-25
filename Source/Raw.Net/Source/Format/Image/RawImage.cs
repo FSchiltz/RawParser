@@ -26,7 +26,6 @@ namespace RawNet
         public bool isCFA = true;
         internal TableLookUp table;
         public ColorFilterArray UncroppedCfa;
-        public int originalRotation;
 
         public RawImage()
         {
@@ -182,7 +181,7 @@ namespace RawNet
                     blackLevel = b;
                 if (whitePoint >= 65536)
                     whitePoint = m;
-                Debug.WriteLine("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + ", Estimated white:" + whitePoint);
+                Debug.WriteLine("ISO:" + metadata.IsoSpeed + ", Estimated black:" + blackLevel + ", Estimated white:" + whitePoint);
             }
 
             /* Skip, if not needed */
