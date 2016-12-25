@@ -17,6 +17,7 @@ using RawNet;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
+using Microsoft.Services.Store.Engagement;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using RawEditor.Effect;
@@ -44,9 +45,14 @@ namespace RawEditor
         private uint displayMutex = 0;
         private bool userAppliedModif = false;
         public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
+        private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
         public MainPage()
         {
             InitializeComponent();
+            if (StoreServicesFeedbackLauncher.IsSupported())
+            {
+                FeedbackButton.Visibility = Visibility.Visible;
+            }
             NavigationCacheMode = NavigationCacheMode.Required;
 
             NavigationCacheMode = NavigationCacheMode.Enabled;
@@ -280,12 +286,10 @@ namespace RawEditor
                     SetWBAsync();
                     EnableEditingControlAsync(true);
                     //dispose
-                    /*
 #if !DEBUG
                     //send an event with file extension, camera model and make
-                    //logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
+                    logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
 #endif
-*/
                     file = null;
                 }
                 catch (FormatException e)
@@ -294,9 +298,10 @@ namespace RawEditor
                     EmptyImageAsync();
 #if DEBUG
                     Debug.WriteLine(e.Message);
-                                        
+#else
+                    
                     //send an event with file extension and camer model and make if any                   
-                    //logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
+                    logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.make + " " + raw?.metadata?.model);
                     
 #endif
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
@@ -618,6 +623,12 @@ namespace RawEditor
         private void ImageDisplay_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
             ZoomSlider.Value = ImageDisplay.ZoomFactor;
+        }
+
+        private async void FeedbackButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            var launcher = StoreServicesFeedbackLauncher.GetDefault();
+            await launcher.LaunchAsync();
         }
 
         private void ShareButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
