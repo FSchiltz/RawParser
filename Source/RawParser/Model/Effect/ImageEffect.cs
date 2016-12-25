@@ -4,10 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 
-namespace RawEditor
+namespace RawEditor.Effect
 {
-
-
     class ImageEffect
     {
         public double exposure = 0;
@@ -54,9 +52,8 @@ namespace RawEditor
             return Curve.CubicSpline(xCurve, yCurve);
         }
 
-        public unsafe HistoRaw ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, ref SoftwareBitmap bitmap)
+        public unsafe void ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap)
         {
-            HistoRaw value = new HistoRaw();
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
             {
                 using (var reference = buffer.CreateReference())
@@ -129,11 +126,10 @@ namespace RawEditor
                     });
                 }
             }
-            return value;
         }
 
 
-        public unsafe HistoRaw ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, ref SoftwareBitmap bitmap, bool histo)
+        public unsafe HistoRaw ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap, bool histo)
         {
             HistoRaw value = new HistoRaw();
             if (histo)

@@ -135,13 +135,56 @@
     <Compile Include="Model\Effect\Color.cs" />
     <Compile Include="Model\Effect\Curve.cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
-    <Compile Include="Model\Effect\Rotate.cs" />
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Effect\ImageEffect.cs" />
     <Compile Include="Model\Encoder\SaveHelper.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="Model\Effect\Balance.cs" />
+    <Compile Include="Parser\Base\Common.cs" />
+    <Compile Include="Parser\Base\Point2D.cs" />
+    <Compile Include="Parser\Base\Rectangle2D.cs" />
+    <Compile Include="Parser\Decoder\ArwDecoder.cs" />
+    <Compile Include="Parser\Decoder\Cr2Decoder.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\BitPumpJPEG.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\BitPumpMSB.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\BitPumpMSB16.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\BitPumpMSB32.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\BitPumpPlain.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\LJpegDecompressor.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\LJpegPlain.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\NikonDecompressor.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\PanaBitpump.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\PentaxDecompressor.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\Reader\BinaryReaderBE.cs" />
+    <Compile Include="Parser\Decoder\Decompressor\Reader\BitOrder.cs" />
+    <Compile Include="Parser\Decoder\DngDecoder.cs" />
+    <Compile Include="Parser\Decoder\JPGDecoder.cs" />
+    <Compile Include="Parser\Decoder\NEFDecoder.cs" />
+    <Compile Include="Parser\Decoder\OrfDecoder.cs" />
+    <Compile Include="Parser\Decoder\PefDecoder.cs" />
+    <Compile Include="Parser\Decoder\RawDecoder.cs" />
+    <Compile Include="Parser\Decoder\Rw2Decoder.cs" />
+    <Compile Include="Parser\Decoder\TIFFDecoder.cs" />
+    <Compile Include="Parser\Exception\RawDecoderException.cs" />
+    <Compile Include="Parser\Format\Ciff\CiffTag.cs" />
+    <Compile Include="Parser\Format\DNG\DngDecoderSlices.cs" />
+    <Compile Include="Parser\Format\Image\BlackArea.cs" />
+    <Compile Include="Parser\Format\Image\ColorFilterArray.cs" />
+    <Compile Include="Parser\Format\Image\FactorValue.cs" />
+    <Compile Include="Parser\Format\Image\ImageMetadata.cs" />
+    <Compile Include="Parser\Format\Image\RawImage.cs" />
+    <Compile Include="Parser\Format\Image\TableLookUp.cs" />
+    <Compile Include="Parser\Format\Image\Thumbnail.cs" />
+    <Compile Include="Parser\Format\Tiff\IFD\IFD.cs" />
+    <Compile Include="Parser\Format\Tiff\IFD\Tag.cs" />
+    <Compile Include="Parser\Format\Tiff\IFD\TagType.cs" />
+    <Compile Include="Parser\Format\Tiff\Makernote\FujiMakerNote.cs" />
+    <Compile Include="Parser\Format\Tiff\Makernote\Makernote.cs" />
+    <Compile Include="Parser\Format\Tiff\Makernote\NikonMakerNote.cs" />
+    <Compile Include="Parser\Format\Tiff\Makernote\PanasonicMakernote.cs" />
+    <Compile Include="Parser\Format\Tiff\Makernote\PentaxMakernote.cs" />
+    <Compile Include="Parser\RawParser.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -230,12 +273,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Raw.Net\Raw.Net.csproj">
-      <Project>{907a8c92-5648-4c05-9e85-93e327ba2823}</Project>
-      <Name>Raw.Net</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <SDKReference Include="Microsoft.Services.Store.Engagement, Version=10.0">

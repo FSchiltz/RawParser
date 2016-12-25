@@ -20,6 +20,7 @@ using System.Collections.ObjectModel;
 using Microsoft.Services.Store.Engagement;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
+using RawEditor.Effect;
 
 namespace RawEditor
 {
@@ -155,10 +156,10 @@ namespace RawEditor
                 CropUI.ResetCrop();
                 if (raw != null)
                 {
-                    raw.offset = new Point2D(0, 0);
-                    raw.dim = new Point2D(raw.uncroppedDim.width, raw.uncroppedDim.height);
-                    raw.previewOffset = new Point2D(0, 0);
-                    raw.previewDim = new Point2D(raw.uncroppedPreviewDim.width, raw.uncroppedPreviewDim.height);
+                    raw.raw.offset = new Point2D(0, 0);
+                    raw.raw.dim = new Point2D(raw.raw.uncroppedDim.width, raw.raw.uncroppedDim.height);
+                    raw.preview.offset = new Point2D(0, 0);
+                    raw.preview.dim = new Point2D(raw.preview.uncroppedDim.width, raw.preview.uncroppedDim.height);
                     raw.rotation = raw.metadata.OriginalRotation;
                 }
                 SetWBAsync();
@@ -179,9 +180,6 @@ namespace RawEditor
                 rValue = (int)(r * 255);
                 bValue = (int)(b * 255);
                 gValue = (int)(g * 255);
-                /* if (rValue > 510) rValue = 765;
-                 if (bValue > 510) bValue = 765;
-                 if (gValue > 510) gValue = 765;*/
 
             }
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -233,22 +231,22 @@ namespace RawEditor
                     stream.Position = 0;*/
 
                     var watch = Stopwatch.StartNew();
-                    RawDecoder decoder = RawParser.GetDecoder(ref stream, file.FileType);
+                    RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
                     thumbnail = decoder.DecodeThumb();
                     if (thumbnail != null)
                     {
                         //read the thumbnail
                         Task.Run(() =>
+                    {
+                        try
                         {
-                            try
-                            {
-                                DisplayImage(thumbnail.GetSoftwareBitmap(), true);
-                            }
-                            catch (Exception e)
-                            {
-                                Debug.WriteLine("Error in thumb " + e.Message);
-                            }
-                        });
+                            DisplayImage(thumbnail.GetSoftwareBitmap(), true);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine("Error in thumb " + e.Message);
+                        }
+                    });
                     }
 
                     decoder.DecodeRaw();
@@ -278,7 +276,7 @@ namespace RawEditor
                             Debug.WriteLine(e.Message);
                             algo = DemosAlgorithm.Deflate;
                         }
-                        Demosaic.Demos(ref raw, algo);
+                        Demosaic.Demos(raw, algo);
                     }
                     CreatePreview();
                     UpdatePreview(true);
@@ -324,13 +322,13 @@ namespace RawEditor
             int previewFactor = 0;
             if (factor == FactorValue.Auto)
             {
-                if (raw.dim.height > raw.dim.width)
+                if (raw.raw.dim.height > raw.raw.dim.width)
                 {
-                    previewFactor = (int)(raw.dim.height / ImageDisplay.ViewportHeight);
+                    previewFactor = (int)(raw.raw.dim.height / ImageDisplay.ViewportHeight);
                 }
                 else
                 {
-                    previewFactor = (int)(raw.dim.width / ImageDisplay.ViewportWidth);
+                    previewFactor = (int)(raw.raw.dim.width / ImageDisplay.ViewportWidth);
                 }
                 int start = 1;
                 for (; previewFactor > (start << 1); start <<= 1) ;
@@ -382,8 +380,8 @@ namespace RawEditor
             if (raw != null && raw.metadata != null)
             {
                 //create a list from the metadata object
-                Dictionary<string, string> exif = ExifHelper.ParseExif(ref raw);
-                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                Dictionary<string, string> exif = ExifHelper.ParseExif(raw);
+                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     ExifDisplay.ItemsSource = exif;
                 }).AsTask().Wait();
@@ -392,7 +390,7 @@ namespace RawEditor
 
         private async void SaveButtonClickAsync(object sender, RoutedEventArgs e)
         {
-            if (raw?.rawData != null)
+            if (raw?.raw.data != null)
             {
                 var savePicker = new FileSavePicker
                 {
@@ -412,7 +410,7 @@ namespace RawEditor
                 {
                     try
                     {
-                        var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.offset, raw.uncroppedDim, raw.ColorDepth, false);
+                        var result = await ApplyUserModifAsync(raw.raw.data, raw.raw.dim, raw.raw.offset, raw.raw.uncroppedDim, raw.ColorDepth, false);
                         FormatHelper.SaveAsync(file, result.Item2);
                     }
                     catch (Exception ex)
@@ -478,11 +476,11 @@ namespace RawEditor
             //display the histogram                  
             Task.Run(async () =>
             {
-                var result = await ApplyUserModifAsync(raw.previewData, raw.previewDim, raw.previewOffset, raw.uncroppedPreviewDim, raw.ColorDepth, true);
+                var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.dim, raw.preview.offset, raw.preview.uncroppedDim, raw.ColorDepth, true);
                 DisplayImage(result.Item2, reset);
 
                 var histo = new Histogram();
-                histo.FillAsync(result.Item1, raw.ColorDepth, (uint)raw.previewDim.height, (uint)raw.previewDim.width);
+                histo.FillAsync(result.Item1, raw.ColorDepth, (uint)raw.preview.dim.height, (uint)raw.preview.dim.width);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     LumaHisto.Points = histo.PointsL;
@@ -533,21 +531,21 @@ namespace RawEditor
             });
             if (histo)
             {
-                var tmp = effect.ApplyModification(image, dim, offset, uncrop, colorDepth, ref bitmap, histo);
+                var tmp = effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap, histo);
                 return Tuple.Create(tmp, bitmap);
             }
             else
             {
-                effect.ApplyModification(image, dim, offset, uncrop, colorDepth, ref bitmap);
+                effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap);
                 return Tuple.Create(new HistoRaw(), bitmap);
             }
 
         }
 
-#region WBSlider
+        #region WBSlider
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            if (raw?.previewData != null)
+            if (raw?.preview.data != null)
             {
                 cameraWB = false;
                 history.Add(new HistoryObject() { oldValue = 0, value = colorTempSlider.Value, target = EffectObject.red });
@@ -577,11 +575,11 @@ namespace RawEditor
             SetWBAsync();
             UpdatePreview(false);
         }
-#endregion
+        #endregion
 
         private void Slider_PointerCaptureLost(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            if (raw?.previewData != null)
+            if (raw?.preview.data != null)
             {
                 history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.saturation });
                 EnableResetAsync();
@@ -652,7 +650,7 @@ namespace RawEditor
                 //TODO regionalise text
                 //generate the bitmap
                 DisplayLoad();
-                var result = await ApplyUserModifAsync(raw.rawData, raw.dim, raw.offset, raw.uncroppedDim, raw.ColorDepth, false);
+                var result = await ApplyUserModifAsync(raw.raw.data, raw.raw.dim, raw.raw.offset, raw.raw.uncroppedDim, raw.ColorDepth, false);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -696,13 +694,13 @@ namespace RawEditor
             int h, w;
             if (raw.rotation == 1 || raw.rotation == 3)
             {
-                h = raw.uncroppedPreviewDim.width;
-                w = raw.uncroppedPreviewDim.height;
+                h = raw.preview.uncroppedDim.width;
+                w = raw.preview.uncroppedDim.height;
             }
             else
             {
-                h = raw.uncroppedPreviewDim.height;
-                w = raw.uncroppedPreviewDim.width;
+                h = raw.preview.uncroppedDim.height;
+                w = raw.preview.uncroppedDim.width;
             }
             double factor;
             if (w > h)
@@ -715,7 +713,7 @@ namespace RawEditor
             }
             CropUI.SetSize((int)(w * factor), (int)(h * factor));
             //create a preview of the image
-            var result = await ApplyUserModifAsync(raw.previewData, raw.uncroppedPreviewDim, new Point2D(0, 0), raw.uncroppedPreviewDim, raw.ColorDepth, false);
+            var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.uncroppedDim, new Point2D(0, 0), raw.preview.uncroppedDim, raw.ColorDepth, false);
             //display the preview
             CropUI.SetThumbAsync(result.Item2);
         }
@@ -736,35 +734,35 @@ namespace RawEditor
             double bottom = CropUI.Bottom;
             if (raw.rotation == 1)
             {
-                raw.offset = new Point2D((int)(raw.uncroppedDim.width * top), (int)(raw.uncroppedDim.height * right));
-                raw.dim = new Point2D((int)(raw.uncroppedDim.width * bottom), (int)(raw.uncroppedDim.height * left));
+                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * top), (int)(raw.raw.uncroppedDim.height * right));
+                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * bottom), (int)(raw.raw.uncroppedDim.height * left));
 
-                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * top), (int)(raw.uncroppedPreviewDim.height * right));
-                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * bottom), (int)(raw.uncroppedPreviewDim.height * left));
+                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * top), (int)(raw.preview.uncroppedDim.height * right));
+                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * bottom), (int)(raw.preview.uncroppedDim.height * left));
             }
             else if (raw.rotation == 2)
             {
-                raw.offset = new Point2D((int)(raw.uncroppedDim.width * left), (int)(raw.uncroppedDim.height * top));
-                raw.dim = new Point2D((int)(raw.uncroppedDim.width * right), (int)(raw.uncroppedDim.height * bottom));
+                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * left), (int)(raw.raw.uncroppedDim.height * top));
+                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * right), (int)(raw.raw.uncroppedDim.height * bottom));
 
-                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * left), (int)(raw.uncroppedPreviewDim.height * top));
-                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * right), (int)(raw.uncroppedPreviewDim.height * bottom));
+                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * left), (int)(raw.preview.uncroppedDim.height * top));
+                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * right), (int)(raw.preview.uncroppedDim.height * bottom));
             }
             else if (raw.rotation == 3)
             {
-                raw.offset = new Point2D((int)(raw.uncroppedDim.width * bottom), (int)(raw.uncroppedDim.height * left));
-                raw.dim = new Point2D((int)(raw.uncroppedDim.width * top), (int)(raw.uncroppedDim.height * right));
+                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * bottom), (int)(raw.raw.uncroppedDim.height * left));
+                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * top), (int)(raw.raw.uncroppedDim.height * right));
 
-                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * bottom), (int)(raw.uncroppedPreviewDim.height * left));
-                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * top), (int)(raw.uncroppedPreviewDim.height * right));
+                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * bottom), (int)(raw.preview.uncroppedDim.height * left));
+                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * top), (int)(raw.preview.uncroppedDim.height * right));
             }
             else
             {
-                raw.offset = new Point2D((int)(raw.uncroppedDim.width * left), (int)(raw.uncroppedDim.height * top));
-                raw.dim = new Point2D((int)(raw.uncroppedDim.width * right), (int)(raw.uncroppedDim.height * bottom));
+                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * left), (int)(raw.raw.uncroppedDim.height * top));
+                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * right), (int)(raw.raw.uncroppedDim.height * bottom));
 
-                raw.previewOffset = new Point2D((int)(raw.uncroppedPreviewDim.width * left), (int)(raw.uncroppedPreviewDim.height * top));
-                raw.previewDim = new Point2D((int)(raw.uncroppedPreviewDim.width * right), (int)(raw.uncroppedPreviewDim.height * bottom));
+                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * left), (int)(raw.preview.uncroppedDim.height * top));
+                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * right), (int)(raw.preview.uncroppedDim.height * bottom));
             }
             UpdatePreview(true);
             var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
