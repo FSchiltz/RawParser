@@ -214,6 +214,11 @@
                             <TextBlock Foreground="Black" FontSize="16"  x:Uid="CameraProfile"/>
                             <TextBlock FontSize="12">Vignet</TextBlock>
                             <Slider x:Name="VignetSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                            <TextBlock FontSize="12">Sharpness</TextBlock>
+                            <Slider x:Name="NoiseSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                            <TextBlock FontSize="12">Noise reduction</TextBlock>
+                            <Slider x:Name="SharpenSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+
                             <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                         </StackPanel>
                     </ScrollViewer>
