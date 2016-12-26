@@ -27,8 +27,7 @@ namespace RawNet
 
         public IFD() { }
 
-        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian) : this(fileStream, offset, endian, 0, 0) { }
-
+        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian) : this(fileStream, offset, endian, 0) { }
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(fileStream, offset, endian, depth, 0) { }
 
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset)

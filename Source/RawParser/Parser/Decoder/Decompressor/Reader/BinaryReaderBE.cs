@@ -219,22 +219,6 @@ namespace RawNet
 
         public override double ReadDouble()
         {
-            /*
-            byte[] part1 = new byte[4];
-            part1[3] = base.ReadByte();
-            part1[2] = base.ReadByte();
-            part1[1] = base.ReadByte();
-            part1[0] = base.ReadByte();
-
-            byte[] part2 = new byte[4];
-            part2[3] = base.ReadByte();
-            part2[2] = base.ReadByte();
-            part2[1] = base.ReadByte();
-            part2[0] = base.ReadByte();
-            double d1 = BitConverter.ToInt32(part1, 0);
-            double d2 = BitConverter.ToInt32(part2, 0);
-            return d1 / d2;*/
-
             return ReadInt32() / (double)ReadInt32();
         }
 
@@ -256,6 +240,26 @@ namespace RawNet
         public new short ReadshortFromArrayC(object[] array, int offset)
         {
             return BitConverter.ToInt16(new byte[2] { (byte)array[offset + 1], (byte)array[offset] }, 0);
+        }
+
+        internal float ReadFloatFP()
+        {
+            byte[] temp = new byte[4];
+            temp[3] = base.ReadByte();
+            temp[2] = base.ReadByte();
+            temp[1] = base.ReadByte();
+            temp[0] = base.ReadByte();
+            return BitConverter.ToSingle(temp, 0);
+        }
+
+        internal double ReadDoubleFP()
+        {
+            byte[] temp = new byte[8];
+            for (int i = 7; i >= 0; i--)
+            {
+                temp[i] = base.ReadByte();
+            }
+            return BitConverter.ToDouble(temp, 0);
         }
     }
 }

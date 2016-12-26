@@ -1,4 +1,6 @@
-﻿namespace RawEditor.Effect
+﻿using System;
+
+namespace RawEditor.Effect
 {
     class Luminance
     {
@@ -58,6 +60,14 @@
             red += brightness;
             green += brightness;
             blue += brightness;
+        }
+
+        internal static void Clip(ref double l)
+        {
+            if (l > 1)
+                l = 1;
+            else if (l < 0)
+                l = 0;
         }
     }
 }

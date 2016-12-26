@@ -169,6 +169,7 @@
     <Compile Include="Parser\Exception\RawDecoderException.cs" />
     <Compile Include="Parser\Format\Ciff\CiffTag.cs" />
     <Compile Include="Parser\Format\DNG\DngDecoderSlices.cs" />
+    <Compile Include="Parser\Format\DNG\DngOpcodes.cs" />
     <Compile Include="Parser\Format\Image\BlackArea.cs" />
     <Compile Include="Parser\Format\Image\ColorFilterArray.cs" />
     <Compile Include="Parser\Format\Image\FactorValue.cs" />

@@ -156,6 +156,7 @@ namespace RawEditor
                 ResetButton.IsEnabled = false;
                 userAppliedModif = false;
                 CropUI.ResetCrop();
+                VignetSlider.Value = 0;
                 if (raw != null)
                 {
                     raw.raw.offset = new Point2D(0, 0);
@@ -210,6 +211,7 @@ namespace RawEditor
                      RotateRightButton.IsEnabled = v;
                      ShareButton.IsEnabled = v;
                      CropButton.IsEnabled = v;
+                     VignetSlider.IsEnabled = v;
                  });
         }
 
@@ -510,6 +512,7 @@ namespace RawEditor
                 effect.shadow = ShadowSlider.Value * 2;
                 effect.hightlight = HighLightSlider.Value * 3;
                 effect.saturation = 1 + saturationSlider.Value / 100;
+                effect.vignet = VignetSlider.Value;
             });
 
             effect.mul = raw.metadata.WbCoeffs;

@@ -7,7 +7,6 @@ namespace RawNet
     // Note: Allocated buffer MUST be at least size+sizeof(uint) large.
     internal class BitPumpMSB
     {
-
         int BITS_PER_LONG = (8 * sizeof(uint));
         int MIN_GET_BITS; /* max value for long getBuffer */
         byte[] current_buffer;
@@ -44,7 +43,7 @@ namespace RawNet
             FillCheck();
         }
 
-        public void _fill()
+        public void Fill()
         {
             // Fill in 96 bits
             //uint[] b = Common.convertByteToUInt(current_buffer);
@@ -123,7 +122,7 @@ namespace RawNet
         // Fill the buffer with at least 24 bits
         public void FillCheck()
         {
-            if (left < 25) _fill();
+            if (left < 25) Fill();
         }
 
         //get the nbits as an int32
@@ -137,7 +136,7 @@ namespace RawNet
 
         public uint GetBit()
         {
-            if (left == 0) _fill();
+            if (left == 0) Fill();
             left--;
             uint _byte = (uint)(left >> 3);
             return (uint)(current_buffer[_byte] >> (left & 0x7)) & 1;
@@ -158,7 +157,7 @@ namespace RawNet
 
         public uint PeekBit()
         {
-            if (left == 0) _fill();
+            if (left == 0) Fill();
             return (uint)(current_buffer[(left - 1) >> 3] >> ((left - 1) & 0x7)) & 1;
         }
 
