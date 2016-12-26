@@ -16,10 +16,10 @@ namespace RawNet
         /* If multiThreaded is true, it will be called several times, */
         /* otherwise only once */
         /* Properties of out will not have changed from createOutput */
-        public virtual void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY) { }
+        public virtual void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY) { }
 
-        public Rectangle2D Aoi;
-        public int mFlags;
+        public Rectangle2D aoi = new Rectangle2D();
+        public int flags;
         public enum Flags
         {
             MultiThreaded = 1,
@@ -30,8 +30,8 @@ namespace RawNet
 
     class DngOpcodes
     {
-        List<DngOpcode> mOpcodes;
-        UInt32 getULong(byte[] ptr)
+        List<DngOpcode> opcodes = new List<DngOpcode>();
+        UInt32 GetULong(byte[] ptr)
         {
             return (UInt32)ptr[1] << 24 | (UInt32)ptr[2] << 16 | (UInt32)ptr[3] << 8 | (UInt32)ptr[4];
             //return (UInt32)ptr[0] << 24 | (UInt32)ptr[1] << 16 | (UInt32)ptr[2] << 8 | (UInt32)ptr[3];
@@ -39,7 +39,7 @@ namespace RawNet
 
         unsafe public DngOpcodes(Tag entry)
         {
-            TIFFBinaryReader reader = new TIFFBinaryReaderRE(entry.GetByteArray());
+            TIFFBinaryReaderRE reader = new TIFFBinaryReaderRE(entry.GetByteArray());
 
             UInt32 entry_size = entry.dataCount;
 
@@ -69,16 +69,16 @@ namespace RawNet
                         mOpcodes.Add(new OpcodeFixBadPixelsList(&data[bytes_used], entry_size - bytes_used, &opcode_used));
                         break;*/
                     case 6:
-                        mOpcodes.Add(new OpcodeTrimBounds(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
+                        opcodes.Add(new OpcodeTrimBounds(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
                         break;
                     case 7:
-                        mOpcodes.Add(new OpcodeMapTable(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
+                        opcodes.Add(new OpcodeMapTable(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
                         break;
                     case 8:
-                        mOpcodes.Add(new OpcodeMapPolynomial(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
+                        opcodes.Add(new OpcodeMapPolynomial(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
                         break;
                     case 9:
-                        mOpcodes.Add(new OpcodeGainMap(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
+                        opcodes.Add(new OpcodeGainMap(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
                         break;
                     /*
                 case 10:
@@ -100,7 +100,7 @@ namespace RawNet
                         break;
                 }
                 //if (opcode_used != expected_size)
-                //throw new RawDecoderException("DngOpcodes: Inconsistent length of opcode");
+                    //throw new RawDecoderException("DngOpcodes: Inconsistent length of opcode");
                 bytes_used += (uint)opcode_used;
             }
         }
@@ -109,18 +109,17 @@ namespace RawNet
         /* TODO: Apply in separate threads */
         public RawImage ApplyOpCodes(RawImage img)
         {
-            int codes = mOpcodes.Count;
+            int codes = opcodes.Count;
             for (int i = 0; i < codes; i++)
             {
-                DngOpcode code = mOpcodes[i];
-                RawImage img_out = code.CreateOutput(img);
-                Rectangle2D fullImage = new Rectangle2D(0, 0, img.dim.width, img.dim.height);
+                RawImage img_out = opcodes[i].CreateOutput(img);
+                Rectangle2D fullImage = new Rectangle2D(0, 0, img.raw.dim.width, img.raw.dim.height);
 
-                if (!code.Aoi.IsThisInside(ref fullImage))
+                if (!opcodes[i].aoi.IsThisInside(fullImage))
                     throw new RawDecoderException("DngOpcodes: Area of interest not inside image!");
-                if (code.Aoi.HasPositiveArea())
+                if (opcodes[i].aoi.HasPositiveArea())
                 {
-                    code.Apply(img, img_out, (uint)code.Aoi.GetTop(), (uint)code.Aoi.GetBottom());
+                    opcodes[i].Apply(img, ref img_out, (uint)opcodes[i].aoi.GetTop(), (uint)opcodes[i].aoi.GetBottom());
                     img = img_out;
                 }
             }
@@ -164,11 +163,11 @@ namespace RawNet
             bytes_used = 16;
         }
 
-        public override void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
+        public override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
             Rectangle2D crop = new Rectangle2D((int)mLeft, (int)mTop, (int)(mRight - mLeft), (int)(mBottom - mTop));
-            output.offset = crop.GetTopLeft();
-            output.dim = crop.GetBottomRight();
+            output.raw.offset = crop.GetTopLeft();
+            output.raw.dim = crop.GetBottomRight();
         }
 
     };
@@ -187,7 +186,7 @@ namespace RawNet
             int w1 = (int)parameters.ReadUInt32();
             int h2 = (int)parameters.ReadUInt32();
             int w2 = (int)parameters.ReadUInt32();
-            Aoi.SetAbsolute(w1, h1, w2, h2);
+            aoi.SetAbsolute(w1, h1, w2, h2);
             mFirstPlane = parameters.ReadUInt32();
             mPlanes = parameters.ReadUInt32();
             mRowPitch = parameters.ReadUInt32();
@@ -216,7 +215,7 @@ namespace RawNet
             }
 
             bytes_used += tablesize * 2;
-            mFlags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
+            flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
         public override RawImage CreateOutput(RawImage input)
@@ -230,17 +229,17 @@ namespace RawNet
             return input;
         }
 
-        public unsafe override void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
             uint cpp = output.cpp;
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
-                fixed (UInt16* t = &output.rawData[(int)y * output.dim.width + Aoi.GetLeft()])
+                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.GetLeft()])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
                     src += mFirstPlane;
-                    for (UInt64 x = 0; x < (UInt64)Aoi.GetWidth(); x += mColPitch)
+                    for (UInt64 x = 0; x < (UInt64)aoi.GetWidth(); x += mColPitch)
                     {
                         for (UInt64 p = 0; p < mPlanes; p++)
                         {
@@ -266,7 +265,7 @@ namespace RawNet
             int w1 = (int)parameters.ReadUInt32();
             int h2 = (int)parameters.ReadUInt32();
             int w2 = (int)parameters.ReadUInt32();
-            Aoi.SetAbsolute(w1, h1, w2, h2);
+            aoi.SetAbsolute(w1, h1, w2, h2);
             mFirstPlane = parameters.ReadUInt32();
             mPlanes = parameters.ReadUInt32();
             mRowPitch = parameters.ReadUInt32();
@@ -288,7 +287,7 @@ namespace RawNet
                 mCoefficient[i] = Convert.ToDouble(parameters.ReadBytes(8));
             }
             bytes_used += (int)(8 * mDegree + 8);
-            mFlags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
+            flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
         public override RawImage CreateOutput(RawImage input)
@@ -311,17 +310,17 @@ namespace RawNet
             return input;
         }
 
-        public unsafe override void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
             uint cpp = output.cpp;
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
-                fixed (UInt16* t = &output.rawData[(int)y * output.dim.width + Aoi.GetLeft()])
+                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.GetLeft()])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
                     src += mFirstPlane;
-                    for (UInt64 x = 0; x < (UInt64)Aoi.GetWidth(); x += mColPitch)
+                    for (UInt64 x = 0; x < (UInt64)aoi.GetWidth(); x += mColPitch)
                     {
                         for (UInt64 p = 0; p < mPlanes; p++)
                         {
@@ -341,7 +340,7 @@ namespace RawNet
         //double[] coefficient = new double[9];
         //UInt16[] lookup = new UInt16[65536];
 
-        public OpcodeGainMap(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
+        public OpcodeGainMap(TIFFBinaryReaderRE parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
                 throw new RawDecoderException("OpcodeGainMap: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
@@ -349,7 +348,7 @@ namespace RawNet
             int w1 = (int)parameters.ReadUInt32();
             int h2 = (int)parameters.ReadUInt32();
             int w2 = (int)parameters.ReadUInt32();
-            Aoi.SetAbsolute(w1, h1, w2, h2);
+            aoi.SetAbsolute(w1, h1, w2, h2);
             firstPlane = parameters.ReadUInt32();
             planes = parameters.ReadUInt32();
             rowPitch = parameters.ReadUInt32();
@@ -361,10 +360,10 @@ namespace RawNet
 
             mapPointsV = parameters.ReadUInt32();
             mapPointsH = parameters.ReadUInt32();
-            mapSpacingV = Convert.ToDouble(parameters.ReadBytes(8)) * h2;
-            mapSpacingH = Convert.ToDouble(parameters.ReadBytes(8)) * w2;
-            mapOriginV = Convert.ToDouble(parameters.ReadBytes(8));
-            mapOriginH = Convert.ToDouble(parameters.ReadBytes(8));
+            mapSpacingV = parameters.ReadDoubleFP() * h2;
+            mapSpacingH = parameters.ReadDoubleFP() * w2;
+            mapOriginV = parameters.ReadDoubleFP();
+            mapOriginH = parameters.ReadDoubleFP();
             mapPlanes = parameters.ReadUInt32();
             gain = new double[mapPointsV, mapPointsH, mapPlanes];
             bytes_used = 76;
@@ -376,12 +375,12 @@ namespace RawNet
                 {
                     for (UInt64 k = 0; k < mapPlanes; k++)
                     {
-                        gain[i, j, k] = Convert.ToDouble(parameters.ReadBytes(8));
+                        gain[i, j, k] = parameters.ReadFloatFP();
                     }
                 }
             }
             bytes_used += (int)(8 * mapPointsV * mapPointsH * mapPlanes);
-            mFlags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
+            flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
         public override RawImage CreateOutput(RawImage input)
@@ -405,25 +404,23 @@ namespace RawNet
             return input;
         }
 
-        public unsafe override void Apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
             uint cpp = output.cpp;
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
-                int realY = (y - startY) ;
-                fixed (UInt16* t = &output.rawData[(int)y * output.dim.width + Aoi.GetLeft()])
+                ulong realY = (y - startY);
+                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.uncroppedDim.width + aoi.GetLeft()])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
                     src += firstPlane;
-                    for (UInt64 x = 0; x < (UInt64)Aoi.GetWidth(); x += colPitch)
+                    for (UInt64 x = 0; x < (UInt64)aoi.GetWidth(); x += colPitch)
                     {
                         for (UInt64 p = 0; p < planes; p++)
                         {
                             //if outside the bound, last pixel or first
-
-
-                            src[x * cpp + p] = (ushort)(src[x * cpp + p] * gain[y - startY, x, p]);
+                            src[x] = (ushort)(src[x] * gain[(int)((y - startY) / mapSpacingV), (int)(x / mapSpacingH), 0]);
                         }
                     }
                 }

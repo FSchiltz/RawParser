@@ -1,5 +1,6 @@
 ﻿using RawEditor.Effect;
 using RawNet;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
@@ -26,6 +27,7 @@ namespace RawEditor.Effect
         public double gMul;
         public double bMul;
         internal int rotation;
+        internal double vignet;
 
         internal double[] CreateCurve()
         {
@@ -119,7 +121,7 @@ namespace RawEditor.Effect
 
                             temp[bufferPix] = (byte)((int)blue >> shift);
                             temp[bufferPix + 1] = (byte)((int)green >> shift);
-                            temp[bufferPix + 2] = (byte)((int)red >> shift);                         
+                            temp[bufferPix + 2] = (byte)((int)red >> shift);
                             //set transparency to 255 else image will be blank
                             temp[bufferPix + 3] = 255;
                         }
@@ -131,14 +133,13 @@ namespace RawEditor.Effect
 
         public unsafe HistoRaw ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap, bool histo)
         {
-            HistoRaw value = new HistoRaw();
-            if (histo)
+            HistoRaw value = new HistoRaw()
             {
-                value.luma = new int[256];
-                value.red = new int[256];
-                value.blue = new int[256];
-                value.green = new int[256];
-            }
+                luma = new int[256],
+                red = new int[256],
+                blue = new int[256],
+                green = new int[256]
+            };
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
             {
                 using (var reference = buffer.CreateReference())
@@ -157,11 +158,11 @@ namespace RawEditor.Effect
                     double[] contrastCurve = CreateCurve();
                     Parallel.For(0, dim.height, y =>
                     {
-                        int realY = (y+off.height) * uncrop.width * 3 ;
+                        int realY = (y + off.height) * uncrop.width * 3;
                         int bufferY = y * dim.width * 4 + bufferLayout.StartIndex;
                         for (int x = 0; x < dim.width; x++)
                         {
-                            int realPix = realY + (3 * (x+off.width));
+                            int realPix = realY + (3 * (x + off.width));
                             int bufferPix;
                             switch (rotation)
                             {
@@ -190,6 +191,14 @@ namespace RawEditor.Effect
                             double h = 0, s = 0, l = 0;
                             //transform to HSL value
                             Color.RgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
+                            //vignet correction
+                            int xV = (x + off.width);
+                            int yV = (y + off.height);
+
+                            //var v = Math.Abs(xV - (uncrop.width / 2.0)) / uncrop.width;
+                            l *= 1 + (vignet * Math.Sin((xV - uncrop.width / 2) / uncrop.width) + Math.Sin((yV - uncrop.height / 2) / uncrop.width));
+
+                            Luminance.Clip(ref l);
                             //change brightness from curve
                             //add saturation
                             l = contrastCurve[(uint)(l * maxValue)] / maxValue;
@@ -205,13 +214,12 @@ namespace RawEditor.Effect
                             temp[bufferPix] = (byte)((int)blue >> shift);
                             temp[bufferPix + 1] = (byte)((int)green >> shift);
                             temp[bufferPix + 2] = (byte)((int)red >> shift);
-                            if (histo)
-                            {
-                                Interlocked.Increment(ref value.red[(int)red >> shift]);
-                                Interlocked.Increment(ref value.green[(int)green >> shift]);
-                                Interlocked.Increment(ref value.blue[(int)blue >> shift]);
-                                Interlocked.Increment(ref value.luma[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
-                            }
+
+                            Interlocked.Increment(ref value.red[(int)red >> shift]);
+                            Interlocked.Increment(ref value.green[(int)green >> shift]);
+                            Interlocked.Increment(ref value.blue[(int)blue >> shift]);
+                            Interlocked.Increment(ref value.luma[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
+
                             //set transparency to 255 else image will be blank
                             temp[bufferPix + 3] = 255;
                         }

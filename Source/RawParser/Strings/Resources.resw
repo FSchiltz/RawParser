@@ -123,6 +123,9 @@
   <data name="BorderText.Text" xml:space="preserve">
     <value>Relative border around the image:</value>
   </data>
+  <data name="CameraProfile.Text" xml:space="preserve">
+    <value>Camera correction</value>
+  </data>
   <data name="ColorBalance.Text" xml:space="preserve">
     <value>Color balance</value>
   </data>

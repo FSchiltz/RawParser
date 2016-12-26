@@ -24,8 +24,7 @@ namespace RawNet
             Thumbnail temp = new Thumbnail()
             {
                 data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
-                Type = ThumbnailType.JPEG,
-                dim = new Point2D()
+                Type = ThumbnailType.JPEG
             };
             return temp;
         }
