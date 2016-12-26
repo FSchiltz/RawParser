@@ -21,6 +21,8 @@ using Microsoft.Services.Store.Engagement;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using RawEditor.Effect;
+using Windows.ApplicationModel.Store;
+using Windows.Services.Store;
 
 namespace RawEditor
 {
@@ -44,6 +46,8 @@ namespace RawEditor
         public Thumbnail thumbnail;
         private uint displayMutex = 0;
         private bool userAppliedModif = false;
+        private StoreContext context = StoreContext.GetDefault();
+        private StoreAppLicense appLicense = null;
         public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
@@ -51,6 +55,16 @@ namespace RawEditor
         public MainPage()
         {
             InitializeComponent();
+            Task.Run(async () =>
+            {
+                appLicense = await context.GetAppLicenseAsync();
+            }).Wait();
+
+            if (!appLicense.AddOnLicenses["Support"].IsActive)
+            {
+                DonateButton.Visibility = Visibility.Visible;
+            }
+
             if (StoreServicesFeedbackLauncher.IsSupported())
             {
                 FeedbackButton.Visibility = Visibility.Visible;
@@ -780,6 +794,42 @@ namespace RawEditor
         {
             CropGrid.Visibility = Visibility.Collapsed;
             EnableEditingControlAsync(true);
+        }
+
+        private async void DonateButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            DisplayLoad();
+            StorePurchaseResult result = await context.RequestPurchaseAsync("Support");
+            string extendedError = string.Empty;
+            if (result.ExtendedError != null)
+            {
+                extendedError = result.ExtendedError.Message;
+            }
+
+            switch (result.Status)
+            {
+                case StorePurchaseStatus.AlreadyPurchased:
+                    ExceptionDisplay.DisplayAsync("You already donated.");
+                    break;
+
+                case StorePurchaseStatus.Succeeded:
+                    ExceptionDisplay.DisplayAsync("The purchase was successful, thanks for your donation");
+                    break;
+
+                case StorePurchaseStatus.NotPurchased:
+                    break;
+
+                case StorePurchaseStatus.NetworkError:
+                    ExceptionDisplay.DisplayAsync("The purchase was unsuccessful due to a network error. " +
+                        "ExtendedError: " + extendedError);
+                    break;
+
+                default:
+                    ExceptionDisplay.DisplayAsync("The purchase was unsuccessful due to an unknown error. " +
+                        "ExtendedError: " + extendedError);
+                    break;
+            }
+            StopLoadDisplay();
         }
     }
 }
