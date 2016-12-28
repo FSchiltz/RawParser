@@ -534,7 +534,7 @@ namespace RawNet
                 byte[] data = priv.GetByteArray();
                 uint off = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | (data)[0]);
                 IFD sony_private;
-                sony_private = new IFD(reader, off, ifd.endian);
+                sony_private = new IFD(reader, off, ifd.endian,ifd.Depth);
 
                 Tag sony_offset = sony_private.GetEntryRecursive(TagType.SONY_OFFSET);
                 Tag sony_length = sony_private.GetEntryRecursive(TagType.SONY_LENGTH);

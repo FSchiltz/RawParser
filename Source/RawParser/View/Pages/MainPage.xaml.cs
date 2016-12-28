@@ -21,6 +21,7 @@ using Microsoft.Services.Store.Engagement;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using RawEditor.Effect;
+using Windows.System;
 
 namespace RawEditor
 {
@@ -137,6 +138,7 @@ namespace RawEditor
                 EnableEditingControlAsync(false);
                 //set back editing control to default value
                 ResetControlsAsync();
+
                 LumaHisto.Points = null;
                 RedHisto.Points = null;
                 GreenHisto.Points = null;
@@ -282,7 +284,13 @@ namespace RawEditor
                         }
                         Demosaic.Demos(raw, algo);
                     }
+
                     CreatePreview();
+                    //check if enough memory
+                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage >= (ulong)raw.preview.data.Length)
+                    {
+                        ExceptionDisplay.DisplayAsync("The image is bigger than what your device support, this application may crash. Only " + (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) + "Mb left of memory for this app to use");
+                    }
                     UpdatePreview(true);
                     thumbnail = null;
 
