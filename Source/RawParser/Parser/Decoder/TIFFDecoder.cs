@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using Windows.Foundation;
+using Windows.Graphics.Imaging;
 
 namespace RawNet
 {
@@ -169,7 +171,39 @@ namespace RawNet
                         }
                     }
                 }
-                else throw new FormatException("Compression mode " + imageCompressedTag.DataAsString + " not supported yet");
+                else
+                {
+                    var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, stream.AsRandomAccessStream()).AsTask();
+                    decoder.Wait();
+                    var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
+                    bitmapasync.Wait();
+                    
+                    using (var img = bitmapasync.Result)
+                    using (BitmapBuffer buffer = img.LockBuffer(BitmapBufferAccessMode.Write))
+                    using (IMemoryBufferReference reference = buffer.CreateReference())
+                    {
+                        BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
+                        rawImage.raw.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);
+                        rawImage.Init();
+                        unsafe
+                        {
+                            ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
+                            for (int y = 0; y < rawImage.raw.dim.height; y++)
+                            {
+                                int realY = y * rawImage.raw.dim.width * 3;
+                                int bufferY = y * rawImage.raw.dim.width * 4 + +bufferLayout.StartIndex;
+                                for (int x = 0; x < rawImage.raw.dim.width; x++)
+                                {
+                                    int realPix = realY + (3 * x);
+                                    int bufferPix = bufferY + (4 * x);
+                                    rawImage.raw.data[realPix] = temp[bufferPix + 2];
+                                    rawImage.raw.data[realPix + 1] = temp[bufferPix + 1];
+                                    rawImage.raw.data[realPix + 2] = temp[bufferPix];
+                                }
+                            }
+                        }
+                    }
+                }
                 rawImage.cpp = 3;
                 rawImage.ColorDepth = colorDepth;
                 rawImage.bpp = colorDepth;

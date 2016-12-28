@@ -265,7 +265,7 @@ namespace RawEditor
 
                     watch.Stop();
                     raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
-                    Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
+                    //Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
                     stream.Dispose();
                     file = null;
                     decoder = null;

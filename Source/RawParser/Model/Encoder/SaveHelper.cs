@@ -22,6 +22,9 @@ namespace RawEditor
                     ".jpg",
                     ".jpeg",
                     ".png",
+                    ".bmp",
+                    ".gif",
+                    ".ico",
 
                     //raw
                     ".nef",

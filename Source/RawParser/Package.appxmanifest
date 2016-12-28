@@ -46,6 +46,9 @@
               <uap:FileType ContentType="image/canon">.cr2</uap:FileType>
               <uap:FileType ContentType="image/pentax">.pef</uap:FileType>
               <uap:FileType ContentType="image/sony">.arw</uap:FileType>
+              <uap:FileType ContentType="image/icon">.ico</uap:FileType>
+              <uap:FileType ContentType="image/gif">.gif</uap:FileType>
+              <uap:FileType ContentType="image/bmp">.bmp</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>
