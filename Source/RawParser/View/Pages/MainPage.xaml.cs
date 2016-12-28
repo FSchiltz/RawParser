@@ -57,7 +57,6 @@ namespace RawEditor
                 FeedbackButton.Visibility = Visibility.Visible;
             }
             NavigationCacheMode = NavigationCacheMode.Required;
-
             NavigationCacheMode = NavigationCacheMode.Enabled;
             ImageSelected = false;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
@@ -113,7 +112,9 @@ namespace RawEditor
                     }
                     catch (Exception ex)
                     {
-                        ExceptionDisplay.DisplayAsync(ex.Message + ex.StackTrace);
+                        var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                        var str = loader.GetString("ExceptionText");
+                        ExceptionDisplay.DisplayAsync(str);
                         raw = null;
                         ImageSelected = false;
                     }
@@ -287,7 +288,7 @@ namespace RawEditor
 
                     CreatePreview();
                     //check if enough memory
-                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage >= (ulong)raw.preview.data.Length)
+                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage >= (ulong)raw.preview.data.Length || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                     {
                         ExceptionDisplay.DisplayAsync("The image is bigger than what your device support, this application may crash. Only " + (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) + "Mb left of memory for this app to use");
                     }
@@ -316,9 +317,7 @@ namespace RawEditor
                     logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 
 #endif
-                    var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
-                    var str = loader.GetString("ExceptionText");
-                    ExceptionDisplay.DisplayAsync(str);
+                    throw e;
                 }
                 StopLoadDisplay();
                 ImageSelected = false;
