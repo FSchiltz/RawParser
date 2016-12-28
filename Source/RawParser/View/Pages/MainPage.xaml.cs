@@ -102,23 +102,8 @@ namespace RawEditor
                     filePicker.FileTypeFilter.Add(format);
                 }
                 StorageFile file = await filePicker.PickSingleFileAsync();
-                if (file != null)
-                {
-                    // Application now has read/write access to the picked file
-                    try
-                    {
-                        ImageSelected = true;
-                        OpenFile(file);
-                    }
-                    catch (Exception ex)
-                    {
-                        var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
-                        var str = loader.GetString("ExceptionText");
-                        ExceptionDisplay.DisplayAsync(str);
-                        raw = null;
-                        ImageSelected = false;
-                    }
-                }
+                ImageSelected = true;
+                OpenFile(file);
             }
         }
 
@@ -127,7 +112,7 @@ namespace RawEditor
         {
             //empty the previous image data
             raw = null;
-            history.Clear();
+            history?.Clear();
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 CropUI.SetThumbAsync(null);
@@ -220,108 +205,136 @@ namespace RawEditor
 
         private void OpenFile(StorageFile file)
         {
-            //Add a loading screen
-            DisplayLoad();
-            EmptyImageAsync();
-            ImageSelected = true;
-            Task.Run(async () =>
+            if (file != null)
             {
                 try
                 {
-                    Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
-
-                    //Does not improve speed
-                    /*
-                    byte[] data = new byte[stream.Length];
-                    stream.Read(data, 0, (int)stream.Length);
-                    stream = new MemoryStream(data);
-                    stream.Position = 0;*/
-
-                    var watch = Stopwatch.StartNew();
-                    RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
-                    thumbnail = decoder.DecodeThumb();
-                    if (thumbnail != null)
+                    //Add a loading screen
+                    DisplayLoad();
+                    EmptyImageAsync();
+                    ImageSelected = true;
+                    Task.Run(async () =>
                     {
-                        //read the thumbnail
-                        Task.Run(() =>
-                        {
-                            try
-                            {
-                                DisplayImage(thumbnail.GetSoftwareBitmap(), true);
-                            }
-                            catch (Exception e)
-                            {
-                                Debug.WriteLine("Error in thumb " + e.Message);
-                            }
-                        });
-                    }
-
-                    decoder.DecodeRaw();
-                    decoder.DecodeMetadata();
-                    raw = decoder.rawImage;
-                    raw.metadata.FileName = file.DisplayName;
-                    raw.metadata.FileNameComplete = file.Name;
-                    raw.metadata.FileExtension = file.FileType;
-
-                    watch.Stop();
-                    raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
-                    //Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
-                    stream.Dispose();
-                    file = null;
-                    decoder = null;
-                    DisplayExif();
-                    if (raw.isCFA)
-                    {
-                        //get the algo from the settings
-                        DemosAlgorithm algo;
                         try
                         {
-                            algo = SettingStorage.DemosAlgo;
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.WriteLine(e.Message);
-                            algo = DemosAlgorithm.Deflate;
-                        }
-                        Demosaic.Demos(raw, algo);
-                    }
+                            Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
 
-                    CreatePreview();
-                    //check if enough memory
-                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage >= (ulong)raw.preview.data.Length || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
-                    {
-                        ExceptionDisplay.DisplayAsync("The image is bigger than what your device support, this application may crash. Only " + (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) + "Mb left of memory for this app to use");
-                    }
-                    UpdatePreview(true);
-                    thumbnail = null;
+                            //Does not improve speed
+                            /*
+                            byte[] data = new byte[stream.Length];
+                            stream.Read(data, 0, (int)stream.Length);
+                            stream = new MemoryStream(data);
+                            stream.Position = 0;*/
 
-                    //activate the editing control
-                    SetWBAsync();
-                    EnableEditingControlAsync(true);
-                    //dispose
+                            var watch = Stopwatch.StartNew();
+                            RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
+                            thumbnail = decoder.DecodeThumb();
+                            if (thumbnail != null)
+                            {
+                                //read the thumbnail
+                                Task.Run(() =>
+                                        {
+                                            try
+                                            {
+                                                DisplayImage(thumbnail.GetSoftwareBitmap(), true);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Debug.WriteLine("Error in thumb " + e.Message);
+                                            }
+                                        });
+                            }
+
+                            decoder.DecodeRaw();
+                            decoder.DecodeMetadata();
+                            raw = decoder.rawImage;
+                            raw.metadata.FileName = file.DisplayName;
+                            raw.metadata.FileNameComplete = file.Name;
+                            raw.metadata.FileExtension = file.FileType;
+                            if (raw.errors.Count > 0)
+                            {
+                                ExceptionDisplay.Display("This file is not fully supported, it may appear incorrectly");                                
+#if !DEBUG
+                                //send an event with file extension and camera model and make if any                   
+                                logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + ""+raw.errors.Count);
+#endif
+                            }
+
+                            watch.Stop();
+                            raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
+                            //Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
+                            stream.Dispose();
+                            file = null;
+                            decoder = null;
+                            DisplayExif();
+                            if (raw.isCFA)
+                            {
+                                //get the algo from the settings
+                                DemosAlgorithm algo;
+                                try
+                                {
+                                    algo = SettingStorage.DemosAlgo;
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug.WriteLine(e.Message);
+                                    algo = DemosAlgorithm.Deflate;
+                                }
+                                Demosaic.Demos(raw, algo);
+                            }
+
+                            CreatePreview();
+                            //check if enough memory
+                            if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < (ulong)raw.raw.data.Length || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
+                            {
+                                ExceptionDisplay.Display("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
+                            }
+#if DEBUG
+                            ExceptionDisplay.Display((MemoryManager.AppMemoryUsage / (1024*1024)) + "Mb used");
+#endif
+                            UpdatePreview(true);
+                            thumbnail = null;
+
+                            //activate the editing control
+                            SetWBAsync();
+                            EnableEditingControlAsync(true);
+                            //dispose
 #if !DEBUG
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
-                    file = null;
-                }
-                catch (FormatException e)
-                {
-                    raw = null;
-                    EmptyImageAsync();
+                            file = null;
+                        }
+                        catch (Exception e)
+                        {
+                            raw = null;
+                            EmptyImageAsync();
 #if DEBUG
-                    Debug.WriteLine(e.Message);
+                            Debug.WriteLine(e.Message);
 #else
 
-                    //send an event with file extension and camer model and make if any                   
+                    //send an event with file extension and camera model and make if any                   
                     logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 
 #endif
-                    throw e;
+                            var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                            var str = loader.GetString("ExceptionText");
+                            ExceptionDisplay.Display(str);
+                            raw = null;
+                            ImageSelected = false;
+                        }
+                        StopLoadDisplay();
+                        ImageSelected = false;
+                    });
                 }
-                StopLoadDisplay();
-                ImageSelected = false;
-            });
+                catch (Exception e)
+                {
+                    ExceptionDisplay.Display("Somethig wrong happened sorry. (" + e.GetType() + ")");
+#if DEBUG
+                    Debug.WriteLine(e.Message + " " + e.StackTrace);
+#endif
+                }
+            }
         }
 
         private void CreatePreview()
@@ -362,22 +375,7 @@ namespace RawEditor
                 var fileArgs = args as Windows.ApplicationModel.Activation.FileActivatedEventArgs;
                 var file = (StorageFile)fileArgs.Files[0];
                 args = null;
-                if (file != null)
-                {
-                    // Application now has read/write access to the picked file
-                    try
-                    {
-                        OpenFile(file);
-                    }
-                    catch (Exception ex)
-                    {
-                        ExceptionDisplay.DisplayAsync(ex.Message + ex.StackTrace);
-                    }
-                }
-                else
-                {
-                    ExceptionDisplay.DisplayAsync("No file selected");
-                }
+                OpenFile(file);
             }
         }
 
@@ -427,7 +425,7 @@ namespace RawEditor
                     catch (Exception ex)
                     {
 #if DEBUG
-                        ExceptionDisplay.DisplayAsync(ex.Message);
+                        ExceptionDisplay.Display(ex.Message);
 #else
                         ExceptionDisplay.DisplayAsync("An error occured while saving");
 #endif
@@ -554,7 +552,7 @@ namespace RawEditor
 
         }
 
-        #region WBSlider
+#region WBSlider
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (raw?.preview.data != null)
@@ -587,7 +585,7 @@ namespace RawEditor
             SetWBAsync();
             UpdatePreview(false);
         }
-        #endregion
+#endregion
 
         private void Slider_PointerCaptureLost(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
@@ -681,7 +679,7 @@ namespace RawEditor
             }
             catch (Exception e)
             {
-                ExceptionDisplay.DisplayAsync(e.Message);
+                ExceptionDisplay.Display(e.Message);
             }
         }
 
