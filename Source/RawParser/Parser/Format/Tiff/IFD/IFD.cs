@@ -27,18 +27,19 @@ namespace RawNet
 
         public IFD() { }
 
-        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian) : this(fileStream, offset, endian, 0) { }
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(fileStream, offset, endian, depth, 0) { }
 
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset)
         {
             this.endian = endian;
             fileStream.Position = offset;
-            this.Depth = depth;
+            Depth = depth + 1;
             this.relativeOffset = relativeOffset;
-
-            Parse(fileStream);
-            NextOffset = fileStream.ReadUInt32();
+            if (depth < 20)
+            {
+                Parse(fileStream);
+                NextOffset = fileStream.ReadUInt32();
+            }
         }
 
         protected void Parse(TIFFBinaryReader fileStream)
@@ -140,6 +141,7 @@ namespace RawNet
         //makernote should be selfcontained
         Makernote ParseMakerNote(byte[] data, Endianness parentEndian, int parentOffset)
         {
+            if (Depth + 1 < 20) return null;
             uint offset = 0;
 
             // Pentax makernote starts with AOC\0 - If it's there, skip it

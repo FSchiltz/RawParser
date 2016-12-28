@@ -299,7 +299,7 @@ namespace RawNet
                     uint offset = (uint)(img_entry.GetUInt(0) + img_entry.parent_offset - 12);
                     try
                     {
-                        IFD image_processing = new IFD(reader, offset, ifd.endian);
+                        IFD image_processing = new IFD(reader, offset, ifd.endian,ifd.Depth);
                         Tag wb = image_processing.GetEntry((TagType)0x0100);
                         // Get the WB
                         if (wb != null)
