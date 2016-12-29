@@ -13,7 +13,23 @@ namespace RawEditor.View.UIHelper
     {
         public double Top
         {
-            get { return top; }
+            get
+            {
+                if (rotation == 1)
+                {
+                    return 1 - width;
+                }
+                else if (rotation == 2)
+                {
+                    return 1 - height;
+                }
+                else if (rotation == 3)
+                {
+                    return left;
+                }
+                else
+                    return top;
+            }
             set
             {
                 if (value > 1) top = 1;
@@ -21,10 +37,21 @@ namespace RawEditor.View.UIHelper
                 else top = value;
             }
         }
-
         public double Left
         {
-            get { return left; }
+            get
+            {
+                if (rotation == 1)
+                {
+                    return top;
+                }
+                else if (rotation == 2)
+                    return 1 - width;
+                else if (rotation == 3)
+                    return 1 - height;
+                else
+                    return left;
+            }
             set
             {
                 if (value > 1) left = 1;
@@ -32,60 +59,73 @@ namespace RawEditor.View.UIHelper
                 else left = value;
             }
         }
-
         public double Bottom
         {
-            get { return bottom; }
+            get
+            {
+                if (rotation % 2 == 1)
+                    return width - left;
+                else
+                    return height - top;
+            }
             set
             {
-                if (value > 1) bottom = 1;
-                else if (value < 0) bottom = 0;
-                else bottom = value;
+                if (value > 1) height = 1;
+                else if (value < 0) height = 0;
+                else height = value;
             }
         }
         public double Right
         {
-            get { return right; }
+            get
+            {
+                if (rotation % 2 == 1)
+                    return height - top;
+                else
+                    return width - left;
+            }
             set
             {
-                if (value > 1) right = 1;
-                else if (value < 0) right = 0;
-                else right = value;
+                if (value > 1) width = 1;
+                else if (value < 0) width = 0;
+                else width = value;
             }
         }
 
+        public int rotation = 0;
         private bool isTopDragging = false, isRightDragging = false;
         private Point topClickPos = new Point(0, 0), rightClickPos = new Point(0, 0);
-        private double left, top, right, bottom;
+        private double left, top, width, height;
 
         public CropUIHelper()
         {
             InitializeComponent();
-            top = left = 0;
-            right = bottom = 1;
-            // ResetCrop();
+            ResetCrop();
         }
 
-        public void SetSize(int w, int h)
+        public void SetSize(int w, int h, int rotation)
         {
             //set the size
             CropZone.Height = CropSelection.Height = (h - 1);
             CropZone.Width = CropSelection.Width = (w - 1);
             Thumb.Height = Thumb2.Height = CropZone.Height;
             Thumb.Width = Thumb2.Width = CropZone.Width;
-            //reset crop
-            ResetCrop();
+
+            //move crop control to correct position
+            if (rotation != this.rotation)
+            {
+                ResetCrop();
+                this.rotation = rotation;
+            }
+            else { MoveEllipse(); }
+
         }
 
         public void ResetCrop()
         {
             //move the four ellipse to the correct position
             top = left = 0;
-            bottom = right = 1;
-            CropSelection.Clip = new RectangleGeometry()
-            {
-                Rect = new Rect(0, 0, CropZone.Width, CropZone.Height)
-            };
+            height = width = 1;
             MoveEllipse();
         }
 
@@ -93,13 +133,14 @@ namespace RawEditor.View.UIHelper
         {
             double controlSize = (RightControl.Height / 2);
             Canvas.SetLeft(TopControl, left * CropZone.Width - controlSize);
-            //Canvas.SetLeft(LeftControl, Left * CropZone.Width);
-            Canvas.SetLeft(RightControl, right * CropZone.Width - controlSize);
-            //Canvas.SetLeft(RightControl, Right * CropZone.Width);
             Canvas.SetTop(TopControl, top * CropZone.Height - controlSize);
-            //Canvas.SetTop(LeftControl, Bottom * CropZone.Height);
-            Canvas.SetTop(RightControl, bottom * CropZone.Height - controlSize);
-            //Canvas.SetTop(RightControl, Top * CropZone.Height);
+
+            Canvas.SetLeft(RightControl, (width) * CropZone.Width - controlSize);
+            Canvas.SetTop(RightControl, (height) * CropZone.Height - controlSize);
+            CropSelection.Clip = new RectangleGeometry()
+            {
+                Rect = new Rect(left * CropZone.Width, top * CropZone.Height, (width - left) * CropZone.Width, (height - top) * CropZone.Height)
+            };
         }
 
         private void TopControl_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -180,8 +221,8 @@ namespace RawEditor.View.UIHelper
             double controlSize = (RightControl.Height / 2);
             Top = (Canvas.GetTop(TopControl) + controlSize) / CropZone.Height;
             Left = (Canvas.GetLeft(TopControl) + controlSize) / CropZone.Width;
-            Bottom = ((Canvas.GetTop(RightControl) + controlSize) / CropZone.Height) - top;
-            Right = ((Canvas.GetLeft(RightControl) + controlSize) / CropZone.Width) - left;
+            Bottom = ((Canvas.GetTop(RightControl) + controlSize) / CropZone.Height);
+            Right = ((Canvas.GetLeft(RightControl) + controlSize) / CropZone.Width);
         }
 
         public void SetThumbAsync(SoftwareBitmap image)
@@ -190,14 +231,13 @@ namespace RawEditor.View.UIHelper
             {
                 //Do some UI-code that must be run on the UI thread.
                 //display the image preview
-                Thumb.Source = null;
+                Thumb.Source = Thumb2.Source = null;
                 if (image != null)
                 {
                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                     image.CopyToBuffer(bitmap.PixelBuffer);
                     image.Dispose();
-                    Thumb.Source = bitmap;
-                    Thumb2.Source = bitmap;
+                    Thumb.Source = Thumb2.Source = bitmap;
                 }
             });
         }

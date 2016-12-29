@@ -142,6 +142,9 @@
 
             <Grid x:Name="CropGrid" Visibility="Collapsed" Canvas.ZIndex="5" Background="#FFAAAAAA" >
                 <uihelper:CropUIHelper x:Name="CropUI"></uihelper:CropUIHelper>
+                <Button x:Name="CropUndo" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,-80,10" Background="{ThemeResource ButtonForeground}" Tapped="CropUndo_Tapped">
+                    <SymbolIcon Symbol="Refresh" Foreground="{ThemeResource AppBarBorderThemeBrush}" Width="20" Height="20"/>
+                </Button>
                 <Button x:Name="CropAccept" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="{ThemeResource ButtonForeground}" Tapped="CropAccept_Tapped" Margin="0,0,10,10">
                     <SymbolIcon Symbol="Accept" Width="20" Height="20" Foreground="{ThemeResource AppBarBorderThemeBrush}"></SymbolIcon>
                 </Button>

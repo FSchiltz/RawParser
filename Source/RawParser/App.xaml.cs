@@ -35,7 +35,7 @@ namespace RawEditor
                 RequestedTheme = ApplicationTheme.Light;
             }
         }
-#if DEBUG
+#if !DEBUG
         private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();

@@ -144,6 +144,7 @@ namespace RawEditor
                 ResetButton.IsEnabled = false;
                 userAppliedModif = false;
                 CropUI.ResetCrop();
+                CropUI.SetThumbAsync(null);
                 VignetSlider.Value = 0;
                 if (raw != null)
                 {
@@ -253,7 +254,7 @@ namespace RawEditor
                             raw.metadata.FileExtension = file.FileType;
                             if (raw.errors.Count > 0)
                             {
-                                ExceptionDisplay.Display("This file is not fully supported, it may appear incorrectly");                                
+                                ExceptionDisplay.Display("This file is not fully supported, it may appear incorrectly");
 #if !DEBUG
                                 //send an event with file extension and camera model and make if any                   
                                 logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + ""+raw.errors.Count);
@@ -290,7 +291,7 @@ namespace RawEditor
                                 ExceptionDisplay.Display("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                             }
 #if DEBUG
-                            ExceptionDisplay.Display((MemoryManager.AppMemoryUsage / (1024*1024)) + "Mb used");
+                            ExceptionDisplay.Display((MemoryManager.AppMemoryUsage / (1024 * 1024)) + "Mb used");
 #endif
                             UpdatePreview(true);
                             thumbnail = null;
@@ -441,21 +442,18 @@ namespace RawEditor
             {
                 Task.Run(async () =>
                 {
-                    using (image)
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            //Do some UI-code that must be run on the UI thread.
-                            //display the image preview
-                            ImageBox.Source = null;
-                            WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                            image.CopyToBuffer(bitmap.PixelBuffer);
-                            image.Dispose();
-                            ImageBox.Source = bitmap;
-                            if (reset)
-                                SetScrollProperty(bitmap.PixelWidth, bitmap.PixelHeight);
-                        });
-                    }
+                        //Do some UI-code that must be run on the UI thread.
+                        //display the image preview
+                        ImageBox.Source = null;
+                        WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                        image.CopyToBuffer(bitmap.PixelBuffer);
+                        image.Dispose();
+                        ImageBox.Source = bitmap;
+                        if (reset)
+                            SetScrollProperty(bitmap.PixelWidth, bitmap.PixelHeight);
+                    });
                 });
             }
         }
@@ -549,10 +547,9 @@ namespace RawEditor
                 effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap);
                 return Tuple.Create(new HistoRaw(), bitmap);
             }
-
         }
 
-#region WBSlider
+        #region WBSlider
         private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (raw?.preview.data != null)
@@ -585,7 +582,7 @@ namespace RawEditor
             SetWBAsync();
             UpdatePreview(false);
         }
-#endregion
+        #endregion
 
         private void Slider_PointerCaptureLost(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
@@ -599,8 +596,14 @@ namespace RawEditor
 
         private void ResetButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            history.Add(new HistoryObject() { oldValue = 0, value = 1, target = EffectObject.reset });
+            if (CropUI.Visibility == Visibility.Visible)
+            {
+                HideCropUI();
+                StopLoadDisplay();
+            }
             ResetControlsAsync();
+            history.Add(new HistoryObject() { oldValue = 0, value = 1, target = EffectObject.reset });
+
         }
 
         private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
@@ -645,7 +648,6 @@ namespace RawEditor
         {
             DataTransferManager manager = DataTransferManager.GetForCurrentView();
             manager.DataRequested += DataTransferManager_DataRequestedAsync;
-
             DataTransferManager.ShowShareUI();
         }
 
@@ -685,16 +687,17 @@ namespace RawEditor
 
         private void ReportButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            Windows.System.Launcher.LaunchUriAsync(new Uri(@"https://github.com/arimhan/RawParser/issues"));
+            Launcher.LaunchUriAsync(new Uri(@"https://github.com/arimhan/RawParser/issues"));
         }
 
         private void GitterButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            Windows.System.Launcher.LaunchUriAsync(new Uri(@"https://gitter.im/RawParser/Lobby"));
+            Launcher.LaunchUriAsync(new Uri(@"https://gitter.im/RawParser/Lobby"));
         }
 
         private async void CropButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+            CropUI.SetThumbAsync(null);
             DisplayLoad();
             EnableEditingControlAsync(false);
             //display the crop UI
@@ -721,7 +724,7 @@ namespace RawEditor
             {
                 factor = ImageDisplay.ActualHeight / (h + 160);
             }
-            CropUI.SetSize((int)(w * factor), (int)(h * factor));
+            CropUI.SetSize((int)(w * factor), (int)(h * factor), raw.rotation);
             //create a preview of the image
             var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.uncroppedDim, new Point2D(0, 0), raw.preview.uncroppedDim, raw.ColorDepth, false);
             //display the preview
@@ -742,38 +745,13 @@ namespace RawEditor
             double left = CropUI.Left;
             double right = CropUI.Right;
             double bottom = CropUI.Bottom;
-            if (raw.rotation == 1)
-            {
-                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * top), (int)(raw.raw.uncroppedDim.height * right));
-                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * bottom), (int)(raw.raw.uncroppedDim.height * left));
 
-                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * top), (int)(raw.preview.uncroppedDim.height * right));
-                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * bottom), (int)(raw.preview.uncroppedDim.height * left));
-            }
-            else if (raw.rotation == 2)
-            {
-                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * left), (int)(raw.raw.uncroppedDim.height * top));
-                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * right), (int)(raw.raw.uncroppedDim.height * bottom));
+            raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * left), (int)(raw.raw.uncroppedDim.height * top));
+            raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * right), (int)(raw.raw.uncroppedDim.height * bottom));
 
-                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * left), (int)(raw.preview.uncroppedDim.height * top));
-                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * right), (int)(raw.preview.uncroppedDim.height * bottom));
-            }
-            else if (raw.rotation == 3)
-            {
-                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * bottom), (int)(raw.raw.uncroppedDim.height * left));
-                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * top), (int)(raw.raw.uncroppedDim.height * right));
+            raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * left), (int)(raw.preview.uncroppedDim.height * top));
+            raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * right), (int)(raw.preview.uncroppedDim.height * bottom));
 
-                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * bottom), (int)(raw.preview.uncroppedDim.height * left));
-                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * top), (int)(raw.preview.uncroppedDim.height * right));
-            }
-            else
-            {
-                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * left), (int)(raw.raw.uncroppedDim.height * top));
-                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * right), (int)(raw.raw.uncroppedDim.height * bottom));
-
-                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * left), (int)(raw.preview.uncroppedDim.height * top));
-                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * right), (int)(raw.preview.uncroppedDim.height * bottom));
-            }
             UpdatePreview(true);
             var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
             history.Add(t);
@@ -785,6 +763,11 @@ namespace RawEditor
         {
             CropGrid.Visibility = Visibility.Collapsed;
             EnableEditingControlAsync(true);
+        }
+
+        private void CropUndo_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            CropUI.ResetCrop();
         }
     }
 }
