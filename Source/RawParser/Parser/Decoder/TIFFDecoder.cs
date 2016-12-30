@@ -76,7 +76,9 @@ namespace RawNet
                 rawImage.raw.uncroppedDim = rawImage.raw.dim;
                 //suppose that image are always 8,8,8 or 16,16,16
                 ushort colorDepth = (ushort)bitPerSampleTag.data[0];
-                ushort[] image = new ushort[width * height * 3];
+                rawImage.cpp = 3;
+                rawImage.bpp = colorDepth;
+                rawImage.Init();
                 long strips = height / Convert.ToInt64(rowPerStripTag.data[0]), lastStrip = height % Convert.ToInt64(rowPerStripTag.data[0]);
                 long rowperstrip = Convert.ToInt64(rowPerStripTag.data[0]);
                 uint compression = imageCompressedTag.GetUInt(0);
@@ -94,11 +96,11 @@ namespace RawNet
                             {
                                 //get the pixel
                                 //red
-                                image[(y + i * rowperstrip) * width * 3 + x * 3] = reader.ReadByte();
+                                rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3] = reader.ReadByte();
                                 //green
-                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = reader.ReadByte();
+                                rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = reader.ReadByte();
                                 //blue 
-                                image[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = reader.ReadByte();
+                                rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = reader.ReadByte();
                                 for (int z = 0; z < (Convert.ToInt32(samplesPerPixel.data[0]) - 3); z++)
                                 {
                                     //pass the other pixel if more light
@@ -157,11 +159,11 @@ namespace RawNet
                             {
 
                                 //red
-                                image[(y + i * rowperstrip) * width * 3 + x * 3] = temp[x * 3];
+                                rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3] = temp[x * 3];
                                 //green
-                                image[(y + i * rowperstrip) * width + x * 3 + 1] = temp[x * 3 + 1];
+                                rawImage.raw.data[(y + i * rowperstrip) * width + x * 3 + 1] = temp[x * 3 + 1];
                                 //blue 
-                                image[(y + i * rowperstrip) * width + x * 3 + 2] = temp[x * 3 + 2];
+                                rawImage.raw.data[(y + i * rowperstrip) * width + x * 3 + 2] = temp[x * 3 + 2];
                                 for (int z = 0; z < ((int)samplesPerPixel.data[0] - 3); z++)
                                 {
                                     //pass the other pixel if more light
@@ -173,17 +175,18 @@ namespace RawNet
                 }
                 else
                 {
-                    var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, stream.AsRandomAccessStream()).AsTask();
+                    //we know it's tiff so tiff decoder id
+                    var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.TiffDecoderId, stream.AsRandomAccessStream()).AsTask();
                     decoder.Wait();
                     var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
                     bitmapasync.Wait();
-                    
+
                     using (var img = bitmapasync.Result)
                     using (BitmapBuffer buffer = img.LockBuffer(BitmapBufferAccessMode.Write))
                     using (IMemoryBufferReference reference = buffer.CreateReference())
                     {
                         BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-                        rawImage.raw.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);
+                        rawImage.raw.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);                        
                         rawImage.Init();
                         unsafe
                         {
@@ -204,10 +207,6 @@ namespace RawNet
                         }
                     }
                 }
-                rawImage.cpp = 3;
-                rawImage.ColorDepth = colorDepth;
-                rawImage.bpp = colorDepth;
-                rawImage.raw.data = image;
             }
             else throw new FormatException("Photometric interpretation " + photoMetricTag.DataAsString + " not supported yet");
         }
@@ -229,7 +228,7 @@ namespace RawNet
                 Tag whitelevel = ifd.GetEntryRecursive(TagType.WHITELEVEL);
                 if (whitelevel != null)
                 {
-                    rawImage.whitePoint = whitelevel.GetUInt(0);
+                    rawImage.whitePoint = whitelevel.GetInt(0);
                 }
             }
 

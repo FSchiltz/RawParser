@@ -24,7 +24,8 @@ namespace RawNet
         public ushort ColorDepth { get; set; }
 
         public ImageMetadata metadata = new ImageMetadata();
-        public uint cpp, bpp, whitePoint, pitch;
+        public uint cpp, bpp, pitch;
+        public int whitePoint;
         public int[] blackLevelSeparate = new int[4];
         public List<String> errors = new List<string>();
         public bool isCFA = true;
@@ -172,7 +173,7 @@ namespace RawNet
             if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
-                uint m = 0;
+                int m = 0;
                 for (int row = skipBorder; row < (raw.dim.height - skipBorder + raw.offset.height); row++)
                 {
                     for (int col = skipBorder; col < gw; col++)
@@ -275,7 +276,7 @@ namespace RawNet
                 if (blackLevel < 0)
                     blackLevel = b;
                 if (whitePoint >= 65536)
-                    whitePoint = (uint)m;
+                    whitePoint = m;
                 //Debug.WriteLine("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + " Estimated white: " + whitePoint);
             }
 

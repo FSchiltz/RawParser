@@ -497,7 +497,7 @@ namespace RawEditor
                 DisplayImage(result.Item2, reset);
 
                 var histo = new Histogram();
-                histo.FillAsync(result.Item1, raw.ColorDepth, (uint)raw.preview.dim.height, (uint)raw.preview.dim.width);
+                histo.FillAsync(result.Item1,(uint)raw.preview.dim.height, (uint)raw.preview.dim.width);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     LumaHisto.Points = histo.PointsL;
@@ -511,7 +511,7 @@ namespace RawEditor
         /**
          * Apply the change over the image preview
          */
-        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, Point2D offset, Point2D uncrop, ushort colorDepth, bool histo)
+        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, Point2D offset, Point2D uncrop, int colorDepth, bool histo)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 

@@ -105,7 +105,7 @@ namespace RawNet
 
             rawImage.raw.dim.width = width;
             rawImage.raw.dim.height = (int)offY;
-            rawImage.whitePoint = (uint)(1 << bitPerPixel) - 1;
+            rawImage.whitePoint = (1 << bitPerPixel) - 1;
 
             offY = 0;
             for (int i = 0; i < slices.Count; i++)
@@ -154,7 +154,7 @@ namespace RawNet
                 //uint outPitch = rawImage.pitch;
                 int w = size.width;
                 int h = size.height;
-                uint cpp = rawImage.cpp;
+                int cpp = (int)rawImage.cpp;
                 int ox = offset.width;
                 int oy = offset.height;
 
@@ -283,7 +283,7 @@ namespace RawNet
             {
                 for (int x = 0; x < w; x += 1)
                 {
-                    rawImage.SetWithLookUp(input.ReadByte(), rawImage.raw.data, x,ref random);
+                    rawImage.SetWithLookUp(input.ReadByte(), rawImage.raw.data, x, ref random);
                     input.Position++;
                 }
             }
@@ -487,7 +487,7 @@ namespace RawNet
 
         protected void Decode12BitRawBEunpackedLeftAligned(TIFFBinaryReader input, Int32 w, Int32 h)
         {
-           // uint pitch = rawImage.pitch;
+            // uint pitch = rawImage.pitch;
             if (input.GetRemainSize() < w * h * 2)
             {
                 if (input.GetRemainSize() > w * 2)
@@ -511,7 +511,7 @@ namespace RawNet
 
         protected void Decode14BitRawBEunpacked(TIFFBinaryReader input, Int32 w, Int32 h)
         {
-           // uint pitch = rawImage.pitch;
+            // uint pitch = rawImage.pitch;
             if (input.GetRemainSize() < w * h * 2)
             {
                 if (input.GetRemainSize() > w * 2)
@@ -559,7 +559,7 @@ namespace RawNet
 
         protected void Decode16BitRawBEunpacked(TIFFBinaryReader input, Int32 w, Int32 h)
         {
-           // uint pitch = rawImage.pitch;
+            // uint pitch = rawImage.pitch;
             if (input.GetRemainSize() < w * h * 2)
             {
                 if (input.GetRemainSize() > w * 2)

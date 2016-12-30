@@ -174,8 +174,8 @@ namespace RawNet
 
     class OpcodeMapTable : DngOpcode
     {
-        UInt64 mFirstPlane, mPlanes, mRowPitch, mColPitch;
-        UInt16[] mLookup = new UInt16[65536];
+        UInt64 firstPlane, planes, rowPitch, colPitch;
+        UInt16[] Lookup = new UInt16[65536];
         /***************** OpcodeMapTable   ****************/
 
         public OpcodeMapTable(TIFFBinaryReader parameters, ulong param_max_bytes, ref Int32 bytes_used, uint offset)
@@ -187,13 +187,13 @@ namespace RawNet
             int h2 = (int)parameters.ReadUInt32();
             int w2 = (int)parameters.ReadUInt32();
             aoi.SetAbsolute(w1, h1, w2, h2);
-            mFirstPlane = parameters.ReadUInt32();
-            mPlanes = parameters.ReadUInt32();
-            mRowPitch = parameters.ReadUInt32();
-            mColPitch = parameters.ReadUInt32();
-            if (mPlanes == 0)
+            firstPlane = parameters.ReadUInt32();
+            planes = parameters.ReadUInt32();
+            rowPitch = parameters.ReadUInt32();
+            colPitch = parameters.ReadUInt32();
+            if (planes == 0)
                 throw new RawDecoderException("OpcodeMapPolynomial: Zero planes");
-            if (mRowPitch == 0 || mColPitch == 0)
+            if (rowPitch == 0 || colPitch == 0)
                 throw new RawDecoderException("OpcodeMapPolynomial: Invalid Pitch");
 
             int tablesize = (int)parameters.ReadUInt32();
@@ -211,7 +211,7 @@ namespace RawNet
             {
                 int location = Math.Min(tablesize - 1, i);
                 parameters.BaseStream.Position = 36 + 2 * location + offset;
-                mLookup[i] = parameters.ReadUInt16();
+                Lookup[i] = parameters.ReadUInt16();
             }
 
             bytes_used += tablesize * 2;
@@ -220,10 +220,10 @@ namespace RawNet
 
         public override RawImage CreateOutput(RawImage input)
         {
-            if (mFirstPlane > input.cpp)
+            if (firstPlane > (ulong)input.cpp)
                 throw new RawDecoderException("OpcodeMapTable: Not that many planes in actual image");
 
-            if (mFirstPlane + mPlanes > input.cpp)
+            if (firstPlane + planes > (ulong)input.cpp)
                 throw new RawDecoderException("OpcodeMapTable: Not that many planes in actual image");
 
             return input;
@@ -231,19 +231,18 @@ namespace RawNet
 
         public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
-            uint cpp = output.cpp;
-            for (UInt64 y = startY; y < endY; y += mRowPitch)
+            for (UInt64 y = startY; y < endY; y += rowPitch)
             {
                 fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.GetLeft()])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
-                    src += mFirstPlane;
-                    for (UInt64 x = 0; x < (UInt64)aoi.GetWidth(); x += mColPitch)
+                    src += firstPlane;
+                    for (ulong x = 0; x < (ulong)aoi.GetWidth(); x += colPitch)
                     {
-                        for (UInt64 p = 0; p < mPlanes; p++)
+                        for (uint p = 0; p < planes; p++)
                         {
-                            src[x * cpp + p] = mLookup[src[x * cpp + p]];
+                            src[x * (uint)output.cpp + p] = Lookup[src[x * (uint)output.cpp + p]];
                         }
                     }
                 }
@@ -292,10 +291,10 @@ namespace RawNet
 
         public override RawImage CreateOutput(RawImage input)
         {
-            if (mFirstPlane > input.cpp)
+            if (mFirstPlane > (uint)input.cpp)
                 throw new RawDecoderException("OpcodeMapPolynomial: Not that many planes in actual image");
 
-            if (mFirstPlane + mPlanes > input.cpp)
+            if (mFirstPlane + mPlanes > (uint)input.cpp)
                 throw new RawDecoderException("OpcodeMapPolynomial: Not that many planes in actual image");
 
             // Create lookup
@@ -312,7 +311,6 @@ namespace RawNet
 
         public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
-            uint cpp = output.cpp;
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
                 fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.GetLeft()])
@@ -324,7 +322,7 @@ namespace RawNet
                     {
                         for (UInt64 p = 0; p < mPlanes; p++)
                         {
-                            src[x * cpp + p] = mLookup[src[x * cpp + p]];
+                            src[x * (uint)output.cpp + p] = mLookup[src[x * (uint)output.cpp + p]];
                         }
                     }
                 }
@@ -385,10 +383,10 @@ namespace RawNet
 
         public override RawImage CreateOutput(RawImage input)
         {
-            if (firstPlane > input.cpp)
+            if (firstPlane > (uint)input.cpp)
                 throw new RawDecoderException("OpcodeGainMap: Not that many planes in actual image");
 
-            if (firstPlane + planes > input.cpp)
+            if (firstPlane + planes > (uint)input.cpp)
                 throw new RawDecoderException("OpcodeGainMap: Not that many planes in actual image");
 
             /*
@@ -406,7 +404,6 @@ namespace RawNet
 
         public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
-            uint cpp = output.cpp;
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
                 ulong realY = (y - startY);
@@ -426,7 +423,6 @@ namespace RawNet
                 }
             }
         }
-
     }
 }
 
