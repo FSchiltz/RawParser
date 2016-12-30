@@ -132,7 +132,7 @@ namespace RawNet
 
             for (int y = 0; y < h; y++)
             {
-                fixed (UInt16* dest = &rawImage.raw.data[y * rawImage.raw.dim.width])
+                fixed (UInt16* dest = &rawImage.raw.data[y * rawImage.raw.uncroppedDim.width])
                 {
                     bool y_border = y < 2;
                     bool border = true;
@@ -175,7 +175,7 @@ namespace RawNet
                                 pred = left0;
                             else
                             {
-                                pred = dest[-rawImage.raw.dim.width + x];
+                                pred = dest[-rawImage.raw.uncroppedDim.width + x];
                                 nw0 = pred;
                             }
                             dest[x] = (ushort)(pred + ((diff << 2) | low));
@@ -186,7 +186,7 @@ namespace RawNet
                         {
                             // Have local variables for values used several tiles
                             // (having a "UInt16 *dst_up" that caches dest[-pitch+((int)x)] is actually slower, probably stack spill or aliasing)
-                            int up = dest[-rawImage.raw.dim.width + x];
+                            int up = dest[-rawImage.raw.uncroppedDim.width + x];
                             int leftMinusNw = left0 - nw0;
                             int upMinusNw = up - nw0;
                             // Check if sign is different, and one is not zero
@@ -242,14 +242,14 @@ namespace RawNet
                                 pred = left1;
                             else
                             {
-                                pred = dest[-rawImage.raw.dim.width + x];
+                                pred = dest[-rawImage.raw.uncroppedDim.width + x];
                                 nw1 = pred;
                             }
                             dest[x] = (ushort)(left1 = pred + ((diff << 2) | low));
                         }
                         else
                         {
-                            int up = dest[-rawImage.raw.dim.width + x];
+                            int up = dest[-rawImage.raw.uncroppedDim.width + x];
                             int leftminusNw = left1 - nw1;
                             int upminusNw = up - nw1;
 

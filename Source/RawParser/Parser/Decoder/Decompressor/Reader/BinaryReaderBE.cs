@@ -81,7 +81,7 @@ namespace RawNet
 
         public bool IsValid(uint offset, uint count)
         {
-            return (offset <= this.offset + count);
+            return offset + count < this.BaseStream.Length;
         }
 
         public bool IsValid(uint offset)
