@@ -216,6 +216,9 @@
   <data name="Share.Label" xml:space="preserve">
     <value>Partager</value>
   </data>
+  <data name="System.Header" xml:space="preserve">
+    <value>Info</value>
+  </data>
   <data name="Temperature.Text" xml:space="preserve">
     <value>Température</value>
   </data>

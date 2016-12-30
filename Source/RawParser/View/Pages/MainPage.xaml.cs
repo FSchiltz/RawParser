@@ -60,6 +60,18 @@ namespace RawEditor
             NavigationCacheMode = NavigationCacheMode.Enabled;
             ImageSelected = false;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
+            UpdateMemoryBar(null, null);
+            var dispatcherTimer = new DispatcherTimer();
+            dispatcherTimer.Tick += UpdateMemoryBar;
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 2);
+            dispatcherTimer.Start();
+        }
+
+        public void UpdateMemoryBar(object e, object a)
+        {
+            double var = (MemoryManager.AppMemoryUsage / (double)MemoryManager.AppMemoryUsageLimit) * 100;
+            if (var < 1) var = 1;
+            MemoryBar.Value = var;
         }
 
         public void DisplayLoad()
@@ -130,6 +142,7 @@ namespace RawEditor
                 GreenHisto.Points = null;
                 BlueHisto.Points = null;
             });
+            GC.Collect();
         }
 
         private async void ResetControlsAsync()
@@ -290,9 +303,6 @@ namespace RawEditor
                             {
                                 ExceptionDisplay.Display("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                             }
-#if DEBUG
-                            ExceptionDisplay.Display((MemoryManager.AppMemoryUsage / (1024 * 1024)) + "Mb used");
-#endif
                             UpdatePreview(true);
                             thumbnail = null;
 
@@ -428,7 +438,7 @@ namespace RawEditor
 #if DEBUG
                         ExceptionDisplay.Display(ex.Message);
 #else
-                        ExceptionDisplay.DisplayAsync("An error occured while saving");
+                        ExceptionDisplay.Display("An error occured while saving");
 #endif
                     }
                     StopLoadDisplay();
@@ -768,6 +778,11 @@ namespace RawEditor
         private void CropUndo_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             CropUI.ResetCrop();
+        }
+
+        private void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            EmptyImageAsync();
         }
     }
 }

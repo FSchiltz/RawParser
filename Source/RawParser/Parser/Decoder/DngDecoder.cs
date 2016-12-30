@@ -63,125 +63,6 @@ namespace RawNet
             }
         }
 
-        /* Decodes DNG masked areas into blackareas in the image */
-        bool DecodeMaskedAreas(IFD raw)
-        {
-            Tag masked = raw.GetEntry(TagType.MASKEDAREAS);
-
-            if (masked.dataType != TiffDataType.SHORT && masked.dataType != TiffDataType.LONG)
-                return false;
-
-            Int32 nrects = (int)masked.dataCount / 4;
-            if (0 == nrects)
-                return false;
-
-            /* Since we may both have short or int, copy it to int array. */
-
-            masked.GetIntArray(out Int32[] rects, nrects * 4);
-
-            Point2D top = rawImage.raw.offset;
-
-            for (int i = 0; i < nrects; i++)
-            {
-                Point2D topleft = new Point2D(rects[i * 4 + 1], rects[i * 4]);
-                Point2D bottomright = new Point2D(rects[i * 4 + 3], rects[i * 4 + 2]);
-                // Is this a horizontal box, only add it if it covers the active width of the image
-                if (topleft.width <= top.width && bottomright.width >= (rawImage.raw.dim.width + top.width))
-                    rawImage.blackAreas.Add(new BlackArea(topleft.height, bottomright.height - topleft.height, false));
-                // Is it a vertical box, only add it if it covers the active height of the image
-                else if (topleft.height <= top.height && bottomright.height >= (rawImage.raw.dim.height + top.height))
-                {
-                    rawImage.blackAreas.Add(new BlackArea(topleft.width, bottomright.width - topleft.width, true));
-                }
-            }
-            return rawImage.blackAreas.Count != 0;
-        }
-
-        bool DecodeBlackLevels(IFD raw)
-        {
-            Point2D blackdim = new Point2D(1, 1);
-
-            Tag bleveldim = raw.GetEntry(TagType.BLACKLEVELREPEATDIM);
-            if (bleveldim != null)
-            {
-                if (bleveldim.dataCount != 2)
-                    return false;
-                blackdim = new Point2D(bleveldim.GetInt(0), bleveldim.GetInt(1));
-            }
-
-            if (blackdim.width == 0 || blackdim.height == 0)
-                return false;
-
-            if (raw.GetEntry(TagType.BLACKLEVEL) == null)
-                return true;
-
-            if (rawImage.cpp != 1)
-                return false;
-
-            Tag black_entry = raw.GetEntry(TagType.BLACKLEVEL);
-            if ((int)black_entry.dataCount < blackdim.width * blackdim.height)
-                throw new RawDecoderException("DNG: BLACKLEVEL entry is too small");
-
-            if (blackdim.width < 2 || blackdim.height < 2)
-            {
-                // We so not have enough to fill all individually, read a single and copy it
-                //TODO check if float
-                float value = black_entry.GetFloat(0);
-                for (int y = 0; y < 2; y++)
-                {
-                    for (int x = 0; x < 2; x++)
-                        rawImage.blackLevelSeparate[y * 2 + x] = (int)value;
-                }
-            }
-            else
-            {
-                for (int y = 0; y < 2; y++)
-                {
-                    for (int x = 0; x < 2; x++)
-                        rawImage.blackLevelSeparate[y * 2 + x] = (int)black_entry.GetFloat(y * blackdim.width + x);
-                }
-            }
-
-            // DNG Spec says we must add black in deltav and deltah
-
-            Tag blackleveldeltav = raw.GetEntry(TagType.BLACKLEVELDELTAV);
-            if (blackleveldeltav != null)
-            {
-                if ((int)blackleveldeltav.dataCount < rawImage.raw.dim.height)
-                    throw new RawDecoderException("DNG: BLACKLEVELDELTAV array is too small");
-                float[] black_sum = { 0.0f, 0.0f };
-                for (int i = 0; i < rawImage.raw.dim.height; i++)
-                    black_sum[i & 1] += blackleveldeltav.GetFloat(i);
-
-                for (int i = 0; i < 4; i++)
-                    rawImage.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / rawImage.raw.dim.height * 2.0f);
-            }
-
-
-            Tag blackleveldeltah = raw.GetEntry(TagType.BLACKLEVELDELTAH);
-            if (blackleveldeltah != null)
-            {
-                if ((int)blackleveldeltah.dataCount < rawImage.raw.dim.width)
-                    throw new RawDecoderException("DNG: BLACKLEVELDELTAH array is too small");
-                float[] black_sum = { 0.0f, 0.0f };
-                for (int i = 0; i < rawImage.raw.dim.width; i++)
-                    black_sum[i & 1] += blackleveldeltah.GetFloat(i);
-
-                for (int i = 0; i < 4; i++)
-                    rawImage.blackLevelSeparate[i] += (int)(black_sum[i & 1] / rawImage.raw.dim.width * 2.0f);
-            }
-            return true;
-        }
-
-        void SetBlack(IFD raw)
-        {
-            if (raw.tags.ContainsKey(TagType.MASKEDAREAS))
-                if (DecodeMaskedAreas(raw))
-                    return;
-            if (raw.GetEntry(TagType.BLACKLEVEL) != null)
-                DecodeBlackLevels(raw);
-        }
-
         public override void DecodeRaw()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.COMPRESSION);
@@ -208,11 +89,6 @@ namespace RawNet
 
             if (data.Count == 0)
                 throw new RawDecoderException("DNG Decoder: No RAW chunks found");
-            /*
-            if (data.size() > 1)
-            {
-                _RPT0(0, "Multiple RAW chunks found - using first only!");
-            }*/
 
             IFD raw = data[0];
             int sample_format = 1;
@@ -231,7 +107,6 @@ namespace RawNet
 
             if (sample_format == 3 && bps != 32)
                 throw new RawDecoderException("DNG Decoder: Float point must be 32 bits per sample.");
-
             try
             {
                 rawImage.raw.dim = new Point2D()
@@ -244,8 +119,6 @@ namespace RawNet
             {
                 throw new RawDecoderException("DNG Decoder: Could not read basic image information.");
             }
-
-            //init the raw image
             rawImage.Init();
             rawImage.ColorDepth = (ushort)bps;
             int compression = -1;
@@ -253,55 +126,9 @@ namespace RawNet
             try
             {
                 compression = raw.GetEntry(TagType.COMPRESSION).GetShort(0);
-                if (rawImage.isCFA)
-                {
-                    // Check if layout is OK, if present
-                    if (raw.tags.ContainsKey(TagType.CFALAYOUT))
-                        if (raw.GetEntry(TagType.CFALAYOUT).GetShort(0) != 1)
-                            throw new RawDecoderException("DNG Decoder: Unsupported CFA Layout.");
-
-                    Tag cfadim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM);
-                    if (cfadim.dataCount != 2)
-                        throw new RawDecoderException("DNG Decoder: Couldn't read CFA pattern dimension");
-                    Tag pDim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
-                    var cPat = raw.GetEntry(TagType.CFAPATTERN).data;     // Does NOT contain dimensions as some documents state
-
-                    Point2D cfaSize = new Point2D(pDim.GetInt(1), pDim.GetInt(0));
-                    rawImage.cfa.SetSize(cfaSize);
-                    if (cfaSize.Area() != raw.GetEntry(TagType.CFAPATTERN).dataCount)
-                        throw new RawDecoderException("DNG Decoder: CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
-
-                    for (int y = 0; y < cfaSize.height; y++)
-                    {
-                        for (int x = 0; x < cfaSize.width; x++)
-                        {
-                            int c1 = Convert.ToInt32(cPat[x + y * cfaSize.width]);
-                            CFAColor c2;
-                            switch (c1)
-                            {
-                                case 0:
-                                    c2 = CFAColor.RED; break;
-                                case 1:
-                                    c2 = CFAColor.GREEN; break;
-                                case 2:
-                                    c2 = CFAColor.BLUE; break;
-                                case 3:
-                                    c2 = CFAColor.CYAN; break;
-                                case 4:
-                                    c2 = CFAColor.MAGENTA; break;
-                                case 5:
-                                    c2 = CFAColor.YELLOW; break;
-                                case 6:
-                                    c2 = CFAColor.WHITE; break;
-                                default:
-                                    c2 = CFAColor.UNKNOWN;
-                                    throw new RawDecoderException("DNG Decoder: Unsupported CFA Color.");
-                            }
-                            rawImage.cfa.SetColorAt(new Point2D(x, y), c2);
-                        }
-                    }
+                if (rawImage.isCFA) {
+                    ReadCFA(raw);
                 }
-
                 // Now load the image
                 if (compression == 1)
                 {  // Uncompressed.
@@ -746,6 +573,174 @@ namespace RawNet
                 //thumbnail are optional so ignore all exception
             }
             return null;
+        }
+
+        /* Decodes DNG masked areas into blackareas in the image */
+        bool DecodeMaskedAreas(IFD raw)
+        {
+            Tag masked = raw.GetEntry(TagType.MASKEDAREAS);
+
+            if (masked.dataType != TiffDataType.SHORT && masked.dataType != TiffDataType.LONG)
+                return false;
+
+            Int32 nrects = (int)masked.dataCount / 4;
+            if (0 == nrects)
+                return false;
+
+            /* Since we may both have short or int, copy it to int array. */
+
+            masked.GetIntArray(out Int32[] rects, nrects * 4);
+
+            Point2D top = rawImage.raw.offset;
+
+            for (int i = 0; i < nrects; i++)
+            {
+                Point2D topleft = new Point2D(rects[i * 4 + 1], rects[i * 4]);
+                Point2D bottomright = new Point2D(rects[i * 4 + 3], rects[i * 4 + 2]);
+                // Is this a horizontal box, only add it if it covers the active width of the image
+                if (topleft.width <= top.width && bottomright.width >= (rawImage.raw.dim.width + top.width))
+                    rawImage.blackAreas.Add(new BlackArea(topleft.height, bottomright.height - topleft.height, false));
+                // Is it a vertical box, only add it if it covers the active height of the image
+                else if (topleft.height <= top.height && bottomright.height >= (rawImage.raw.dim.height + top.height))
+                {
+                    rawImage.blackAreas.Add(new BlackArea(topleft.width, bottomright.width - topleft.width, true));
+                }
+            }
+            return rawImage.blackAreas.Count != 0;
+        }
+
+        bool DecodeBlackLevels(IFD raw)
+        {
+            Point2D blackdim = new Point2D(1, 1);
+
+            Tag bleveldim = raw.GetEntry(TagType.BLACKLEVELREPEATDIM);
+            if (bleveldim != null)
+            {
+                if (bleveldim.dataCount != 2)
+                    return false;
+                blackdim = new Point2D(bleveldim.GetInt(0), bleveldim.GetInt(1));
+            }
+
+            if (blackdim.width == 0 || blackdim.height == 0)
+                return false;
+
+            if (raw.GetEntry(TagType.BLACKLEVEL) == null)
+                return true;
+
+            if (rawImage.cpp != 1)
+                return false;
+
+            Tag black_entry = raw.GetEntry(TagType.BLACKLEVEL);
+            if ((int)black_entry.dataCount < blackdim.width * blackdim.height)
+                throw new RawDecoderException("DNG: BLACKLEVEL entry is too small");
+
+            if (blackdim.width < 2 || blackdim.height < 2)
+            {
+                // We so not have enough to fill all individually, read a single and copy it
+                //TODO check if float
+                float value = black_entry.GetFloat(0);
+                for (int y = 0; y < 2; y++)
+                {
+                    for (int x = 0; x < 2; x++)
+                        rawImage.blackLevelSeparate[y * 2 + x] = (int)value;
+                }
+            }
+            else
+            {
+                for (int y = 0; y < 2; y++)
+                {
+                    for (int x = 0; x < 2; x++)
+                        rawImage.blackLevelSeparate[y * 2 + x] = (int)black_entry.GetFloat(y * blackdim.width + x);
+                }
+            }
+
+            // DNG Spec says we must add black in deltav and deltah
+
+            Tag blackleveldeltav = raw.GetEntry(TagType.BLACKLEVELDELTAV);
+            if (blackleveldeltav != null)
+            {
+                if ((int)blackleveldeltav.dataCount < rawImage.raw.dim.height)
+                    throw new RawDecoderException("DNG: BLACKLEVELDELTAV array is too small");
+                float[] black_sum = { 0.0f, 0.0f };
+                for (int i = 0; i < rawImage.raw.dim.height; i++)
+                    black_sum[i & 1] += blackleveldeltav.GetFloat(i);
+
+                for (int i = 0; i < 4; i++)
+                    rawImage.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / rawImage.raw.dim.height * 2.0f);
+            }
+
+
+            Tag blackleveldeltah = raw.GetEntry(TagType.BLACKLEVELDELTAH);
+            if (blackleveldeltah != null)
+            {
+                if ((int)blackleveldeltah.dataCount < rawImage.raw.dim.width)
+                    throw new RawDecoderException("DNG: BLACKLEVELDELTAH array is too small");
+                float[] black_sum = { 0.0f, 0.0f };
+                for (int i = 0; i < rawImage.raw.dim.width; i++)
+                    black_sum[i & 1] += blackleveldeltah.GetFloat(i);
+
+                for (int i = 0; i < 4; i++)
+                    rawImage.blackLevelSeparate[i] += (int)(black_sum[i & 1] / rawImage.raw.dim.width * 2.0f);
+            }
+            return true;
+        }
+
+        void SetBlack(IFD raw)
+        {
+            if (raw.tags.ContainsKey(TagType.MASKEDAREAS))
+                if (DecodeMaskedAreas(raw))
+                    return;
+            if (raw.GetEntry(TagType.BLACKLEVEL) != null)
+                DecodeBlackLevels(raw);
+        }
+
+        protected void ReadCFA(IFD raw)
+        {
+            // Check if layout is OK, if present
+            if (raw.tags.ContainsKey(TagType.CFALAYOUT))
+                if (raw.GetEntry(TagType.CFALAYOUT).GetShort(0) != 1)
+                    throw new RawDecoderException("DNG Decoder: Unsupported CFA Layout.");
+
+            Tag cfadim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM);
+            if (cfadim.dataCount != 2)
+                throw new RawDecoderException("DNG Decoder: Couldn't read CFA pattern dimension");
+            Tag pDim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
+            var cPat = raw.GetEntry(TagType.CFAPATTERN).data;     // Does NOT contain dimensions as some documents state
+
+            Point2D cfaSize = new Point2D(pDim.GetInt(1), pDim.GetInt(0));
+            rawImage.cfa.SetSize(cfaSize);
+            if (cfaSize.Area() != raw.GetEntry(TagType.CFAPATTERN).dataCount)
+                throw new RawDecoderException("DNG Decoder: CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
+
+            for (int y = 0; y < cfaSize.height; y++)
+            {
+                for (int x = 0; x < cfaSize.width; x++)
+                {
+                    int c1 = Convert.ToInt32(cPat[x + y * cfaSize.width]);
+                    CFAColor c2;
+                    switch (c1)
+                    {
+                        case 0:
+                            c2 = CFAColor.RED; break;
+                        case 1:
+                            c2 = CFAColor.GREEN; break;
+                        case 2:
+                            c2 = CFAColor.BLUE; break;
+                        case 3:
+                            c2 = CFAColor.CYAN; break;
+                        case 4:
+                            c2 = CFAColor.MAGENTA; break;
+                        case 5:
+                            c2 = CFAColor.YELLOW; break;
+                        case 6:
+                            c2 = CFAColor.WHITE; break;
+                        default:
+                            c2 = CFAColor.UNKNOWN;
+                            throw new RawDecoderException("DNG Decoder: Unsupported CFA Color.");
+                    }
+                    rawImage.cfa.SetColorAt(new Point2D(x, y), c2);
+                }
+            }
         }
     };
 }
