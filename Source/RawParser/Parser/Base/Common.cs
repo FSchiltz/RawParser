@@ -64,10 +64,10 @@ namespace RawNet
             }
         }
 
-        internal static void ByteToChar(byte[] v, out char[] dest)
+        internal static void ByteToChar(byte[] v, out char[] dest, int count)
         {
-            dest = new char[v.Length];
-            for (int i = 0; i < v.Length; i++)
+            dest = new char[count];
+            for (int i = 0; i < count; i++)
             {
                 dest[i] = (char)v[i];
             }

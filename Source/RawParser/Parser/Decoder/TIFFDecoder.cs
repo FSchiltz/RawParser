@@ -180,13 +180,13 @@ namespace RawNet
                     decoder.Wait();
                     var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
                     bitmapasync.Wait();
-
+                    rawImage.ColorDepth = 8;
                     using (var img = bitmapasync.Result)
                     using (BitmapBuffer buffer = img.LockBuffer(BitmapBufferAccessMode.Write))
                     using (IMemoryBufferReference reference = buffer.CreateReference())
                     {
                         BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-                        rawImage.raw.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);                        
+                        rawImage.raw.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);
                         rawImage.Init();
                         unsafe
                         {

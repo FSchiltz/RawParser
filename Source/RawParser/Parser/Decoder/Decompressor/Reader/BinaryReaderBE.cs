@@ -81,12 +81,12 @@ namespace RawNet
 
         public bool IsValid(uint offset, uint count)
         {
-            return offset + count < this.BaseStream.Length;
+            return offset + count <= this.BaseStream.Length;
         }
 
         public bool IsValid(uint offset)
         {
-            return offset < this.BaseStream.Length;
+            return offset <= this.BaseStream.Length;
         }
 
         protected static Stream StreamFromArray(byte[] data)
