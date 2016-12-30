@@ -7,7 +7,7 @@ namespace RawNet
     {
         public string StringMagic { set; get; }
         public ushort Version { set; get; }
-
+        public IFD Gps { get; set; }
         public NikonMakerNote(byte[] data)
         {
             //read the header
@@ -39,6 +39,7 @@ namespace RawNet
             uint TIFFoffset = buffer.ReadUInt32();
             buffer.BaseStream.Position = TIFFoffset;
             Parse(buffer);
+            //parse gps info
             buffer.Dispose();
         }
     }

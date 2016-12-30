@@ -2,11 +2,11 @@
 {
     public enum FactorValue
     {
-        Auto,
-        O1,
-        O2,
-        O4,
-        O16
+        Auto = 0,
+        FullSize,
+        HalfSize,
+        Small = 4,
+        Tiny = 16
     }
 }
 

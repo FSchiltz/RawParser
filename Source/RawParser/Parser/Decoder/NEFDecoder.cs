@@ -24,29 +24,62 @@ namespace RawNet
             {
                 //find the preview ifd inside the makernote
                 List<IFD> makernote = ifd.GetIFDsWithTag((TagType)0x011);
-                IFD preview = makernote[0].GetIFDsWithTag((TagType)0x0201)[0];
-                //no thumbnail
-                if (preview == null) return null;
-
-                var thumb = preview.GetEntry((TagType)0x0201);
-                var size = preview.GetEntry((TagType)0x0202);
-                if (size == null || thumb == null) return null;
-
-                //get the makernote offset
-                List<IFD> exifs = ifd.GetIFDsWithTag((TagType)0x927C);
-
-                if (exifs == null || exifs.Count == 0) return null;
-
-                Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
-                if (makerNoteOffsetTag == null) return null;
-                reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
-                Thumbnail temp = new Thumbnail()
+                if (makernote.Count != 0)
                 {
-                    data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
-                    Type = ThumbnailType.JPEG,
-                    dim = new Point2D()
-                };
-                return temp;
+                    IFD preview = makernote[0].GetIFDsWithTag((TagType)0x0201)[0];
+                    //no thumbnail
+                    if (preview == null) return null;
+
+                    var thumb = preview.GetEntry((TagType)0x0201);
+                    var size = preview.GetEntry((TagType)0x0202);
+                    if (size == null || thumb == null) return null;
+
+                    //get the makernote offset
+                    List<IFD> exifs = ifd.GetIFDsWithTag((TagType)0x927C);
+
+                    if (exifs == null || exifs.Count == 0) return null;
+
+                    Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
+                    if (makerNoteOffsetTag == null) return null;
+                    reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
+                    Thumbnail temp = new Thumbnail()
+                    {
+                        data = reader.ReadBytes(size.GetInt(0)),
+                        Type = ThumbnailType.JPEG,
+                        dim = new Point2D()
+                    };
+                    return temp;
+                }
+                else
+                {
+                    //no preview in the makernote, use the ifd0 preview
+                    uint bps = ifd.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+                    Point2D dim = new Point2D()
+                    {
+                        width = ifd.GetEntry(TagType.IMAGEWIDTH).GetInt(0),
+                        height = ifd.GetEntry(TagType.IMAGELENGTH).GetInt(0)
+                    };
+
+                    // Uncompressed
+                    uint cpp = ifd.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                    if (cpp > 4)
+                        throw new RawDecoderException();
+
+                    Tag offsets = ifd.GetEntry(TagType.STRIPOFFSETS);
+                    Tag counts = ifd.GetEntry(TagType.STRIPBYTECOUNTS);
+                    uint yPerSlice = ifd.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+
+                    reader.BaseStream.Position = offsets.GetInt(0);
+
+                    Thumbnail thumb = new Thumbnail()
+                    {
+                        cpp = cpp,
+                        dim = dim,
+                        data = reader.ReadBytes(counts.GetInt(0)),
+                        Type = ThumbnailType.RAW
+                    };
+                    return thumb;
+                }
             }
             catch (Exception)
             {

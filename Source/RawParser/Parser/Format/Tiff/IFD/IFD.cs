@@ -24,6 +24,7 @@ namespace RawNet
           'N', 'i', 'k', 'o', 'n', (char)0x0,(char) 0x2
         };
         private bool parseSubIFD = true;
+        private static readonly int MaxRecursion = 20;
 
         public IFD() { }
 
@@ -35,7 +36,7 @@ namespace RawNet
             fileStream.Position = offset;
             Depth = depth + 1;
             this.relativeOffset = relativeOffset;
-            if (depth < 20)
+            if (depth < IFD.MaxRecursion)
             {
                 Parse(fileStream);
                 NextOffset = fileStream.ReadUInt32();
@@ -141,7 +142,7 @@ namespace RawNet
         //makernote should be selfcontained
         Makernote ParseMakerNote(byte[] data, Endianness parentEndian, int parentOffset)
         {
-            if (Depth + 1 < 20) return null;
+            if (Depth + 1 > IFD.MaxRecursion) return null;
             uint offset = 0;
 
             // Pentax makernote starts with AOC\0 - If it's there, skip it

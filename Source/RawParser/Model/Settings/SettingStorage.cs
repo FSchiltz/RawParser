@@ -12,7 +12,7 @@ namespace RawEditor
         static private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         private static string def = "Default";
-        private static uint version = 2;
+        private static uint version = 3;
         //check if settings already exists
         public static double ImageBoxBorder
         {

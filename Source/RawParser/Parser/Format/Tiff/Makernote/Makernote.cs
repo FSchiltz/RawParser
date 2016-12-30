@@ -23,10 +23,7 @@
             file.BaseStream.Position = offset;
             relativeOffset = -parentOffset;
             Depth = depth + 1;
-            if (Depth < 20)
-            {
-                Parse(file);
-            }
+            Parse(file);
             file.Dispose();
         }
     }

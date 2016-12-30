@@ -296,7 +296,7 @@ namespace RawNet
                 Tag img_entry = ifd.GetEntryRecursive(TagType.OLYMPUSIMAGEPROCESSING);
                 if (img_entry != null)
                 {
-                    uint offset = (uint)(img_entry.GetUInt(0) + img_entry.parent_offset - 12);
+                    uint offset = (uint)(img_entry.GetUInt(0) -img_entry.parent_offset+12);
                     try
                     {
                         IFD image_processing = new IFD(reader, offset, ifd.endian,ifd.Depth);
