@@ -46,8 +46,6 @@ namespace RawNet
                 throw new RawDecoderException("RawImageData: Dimensions too large for allocation.");
             if (raw.dim.width <= 0 || raw.dim.height <= 0)
                 throw new RawDecoderException("RawImageData: Dimension of one sides is less than 1 - cannot allocate image.");
-            if (raw.data != null)
-                throw new RawDecoderException("RawImageData: Duplicate data allocation in createData.");
             pitch = (uint)(((raw.dim.width * bpp) + 15) / 16) * 16;
             raw.data = new ushort[raw.dim.width * raw.dim.height * cpp];
             if (raw.data == null)

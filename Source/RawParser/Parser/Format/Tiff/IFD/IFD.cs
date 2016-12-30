@@ -243,8 +243,13 @@ namespace RawNet
             */
             uint size = t.dataCount;
             Common.ConvertArray(t.data, out byte[] data);
-            Common.ByteToChar(data, out char[] dataAsChar);
+            Common.ByteToChar(data, out char[] dataAsChar,20);
             string id = new String(dataAsChar);
+            /*
+            if (id.StartsWith("Microsoft") || id.StartsWith("Nokia")) {
+                return new NokiaMakernote(data,0,endian,Depth,0);
+                //windows phone dng
+            }*/
             if (!id.StartsWith("Adobe"))
             {
                 Debug.WriteLine("Not Adobe Private data");

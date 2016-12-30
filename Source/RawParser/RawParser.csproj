@@ -178,6 +178,7 @@
     <Compile Include="Parser\Format\Image\TableLookUp.cs" />
     <Compile Include="Parser\Format\Image\Thumbnail.cs" />
     <Compile Include="Parser\Format\Tiff\IFD\IFD.cs" />
+    <Compile Include="Parser\Format\Tiff\Makernote\NokiaMakernote.cs" />
     <Compile Include="Parser\Format\Tiff\IFD\Tag.cs" />
     <Compile Include="Parser\Format\Tiff\IFD\TagType.cs" />
     <Compile Include="Parser\Format\Tiff\Makernote\FujiMakerNote.cs" />
