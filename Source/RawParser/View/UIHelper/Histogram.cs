@@ -27,9 +27,8 @@ namespace RawEditor
         public PointCollection PointsR { get; set; }
         public PointCollection PointsG { get; set; }
         public PointCollection PointsB { get; set; }
-
-        //TODO simplify if memory saver mode
-        public async void FillAsync(HistoRaw value, ushort colorDepth, uint height, uint width)
+        
+        public async void FillAsync(HistoRaw value, uint height, uint width)
         {
             ClearAsync();
             //smooth the histogramm

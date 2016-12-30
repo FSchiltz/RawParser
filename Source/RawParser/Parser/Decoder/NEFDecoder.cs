@@ -326,13 +326,13 @@ namespace RawNet
         void ReadCoolpixMangledRaw(TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
             // UInt32 outPitch = rawImage.pitch;
-            UInt32 w = (uint)size.width;
-            UInt32 h = (uint)size.height;
-            UInt32 cpp = rawImage.cpp;
+            int w = size.width;
+            int h = size.height;
+            int cpp = (int)rawImage.cpp;
             if (input.GetRemainSize() < (inputPitch * h))
             {
                 if (input.GetRemainSize() > inputPitch)
-                    h = (uint)(input.GetRemainSize() / inputPitch - 1);
+                    h = (input.GetRemainSize() / inputPitch - 1);
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
             }
@@ -342,13 +342,13 @@ namespace RawNet
             if (offset.width + size.width > rawImage.raw.dim.width)
                 throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
 
-            UInt32 y = (uint)offset.height;
-            h = Math.Min(h + (UInt32)offset.height, (UInt32)rawImage.raw.dim.height);
+            int y = offset.height;
+            h = Math.Min(h + offset.height, rawImage.raw.dim.height);
             w *= cpp;
             BitPumpMSB32 inputMSB = new BitPumpMSB32(input);
             for (; y < h; y++)
             {
-                for (UInt32 x = 0; x < w; x++)
+                for (int x = 0; x < w; x++)
                 {
                     //TODO fix X
                     rawImage.raw.data[x + (offset.width * sizeof(UInt16) * cpp + y * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
@@ -359,13 +359,13 @@ namespace RawNet
         void ReadCoolpixSplitRaw(TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
             //UInt32 outPitch = rawImage.pitch;
-            UInt32 w = (uint)size.width;
-            UInt32 h = (uint)size.height;
-            UInt32 cpp = rawImage.cpp;
+            int w = size.width;
+            int h = size.height;
+            int cpp = (int)rawImage.cpp;
             if (input.GetRemainSize() < (inputPitch * h))
             {
                 if (input.GetRemainSize() > inputPitch)
-                    h = (uint)(input.GetRemainSize() / inputPitch - 1);
+                    h = input.GetRemainSize() / inputPitch - 1;
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
             }
@@ -376,7 +376,7 @@ namespace RawNet
                 throw new RawDecoderException("readCoolpixSplitRaw: Invalid x offset");
 
             UInt32 y = (uint)offset.height;
-            h = Math.Min(h + (UInt32)offset.height, (UInt32)rawImage.raw.dim.height);
+            h = Math.Min(h + offset.height, rawImage.raw.dim.height);
             w *= cpp;
             h /= 2;
             BitPumpMSB inputMSB = new BitPumpMSB(input);
@@ -633,10 +633,7 @@ namespace RawNet
             }
 
             if (rawImage.whitePoint > (1 << rawImage.ColorDepth) - 1)
-                rawImage.whitePoint = (uint)((1 << rawImage.ColorDepth) - 1);
-            hints.TryGetValue("nikon_override_auto_black", out string k);
-            if (!(rawImage.blackLevel >= 0 && k == null))
-                rawImage.blackLevel = Int32.Parse(k);
+                rawImage.whitePoint = (1 << rawImage.ColorDepth) - 1;
 
             //GPS data
             var gpsTag = ifd.GetEntry((TagType)0x0039);

@@ -91,21 +91,21 @@ namespace RawNet
                 throw new RawDecoderException("DNG Decoder: No RAW chunks found");
 
             IFD raw = data[0];
-            int sample_format = 1;
+            int sampleFormat = 1;
             int bps = raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
 
             if (raw.tags.ContainsKey(TagType.SAMPLEFORMAT))
-                sample_format = raw.GetEntry(TagType.SAMPLEFORMAT).GetInt(0);
+                sampleFormat = raw.GetEntry(TagType.SAMPLEFORMAT).GetInt(0);
 
-            if (sample_format != 1)
+            if (sampleFormat != 1)
                 throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported.");
 
             rawImage.isCFA = (raw.GetEntry(TagType.PHOTOMETRICINTERPRETATION).GetUShort(0) == 32803);
 
-            if (sample_format == 1 && bps > 16)
+            if (sampleFormat == 1 && bps > 16)
                 throw new RawDecoderException("DNG Decoder: Integer precision larger than 16 bits currently not supported.");
 
-            if (sample_format == 3 && bps != 32)
+            if (sampleFormat == 3 && bps != 32)
                 throw new RawDecoderException("DNG Decoder: Float point must be 32 bits per sample.");
             try
             {
@@ -126,7 +126,8 @@ namespace RawNet
             try
             {
                 compression = raw.GetEntry(TagType.COMPRESSION).GetShort(0);
-                if (rawImage.isCFA) {
+                if (rawImage.isCFA)
+                {
                     ReadCFA(raw);
                 }
                 // Now load the image
@@ -207,9 +208,9 @@ namespace RawNet
                     {
                         // Let's try loading it as tiles instead
 
-                        rawImage.cpp = (raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0));
+                        rawImage.cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
 
-                        if (sample_format != 1)
+                        if (sampleFormat != 1)
                             throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported for compressed data.");
 
                         DngDecoderSlices slices = new DngDecoderSlices(reader, rawImage, compression);
@@ -405,12 +406,12 @@ namespace RawNet
             }
 
             // Default white level is (2 ** BitsPerSample) - 1
-            rawImage.whitePoint = (uint)(1 >> raw.GetEntry(TagType.BITSPERSAMPLE).GetShort(0)) - 1;
+            rawImage.whitePoint = (1 >> raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0) - 1);
 
             Tag whitelevel = raw.GetEntry(TagType.WHITELEVEL);
             if (whitelevel != null)
             {
-                rawImage.whitePoint = whitelevel.GetUInt(0);
+                rawImage.whitePoint = whitelevel.GetInt(0);
             }
 
             // Set black

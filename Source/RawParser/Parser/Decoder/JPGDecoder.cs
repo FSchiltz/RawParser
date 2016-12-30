@@ -51,7 +51,7 @@ namespace RawNet
             rawImage.cpp = 3;
             rawImage.bpp = 8;
             rawImage.isCFA = false;
-            var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.JpegDecoderId, stream.AsRandomAccessStream()).AsTask();
+            var decoder = BitmapDecoder.CreateAsync(stream.AsRandomAccessStream()).AsTask();
             decoder.Wait();
             var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
             meta = decoder.Result.BitmapProperties;
