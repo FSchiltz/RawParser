@@ -164,91 +164,32 @@ namespace RawNet
 
         public void ScaleValues()
         {
-            //skip 250 pixel to reduce calculation
-            //TODO fix the condiftion
-            const int skipBorder = 250;
-            int gw = (int)((raw.dim.width - skipBorder) * cpp);
-            if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
-            {  // Estimate
-                int b = 65536;
-                int m = 0;
-                for (int row = skipBorder; row < (raw.dim.height - skipBorder + raw.offset.height); row++)
-                {
-                    for (int col = skipBorder; col < gw; col++)
-                    {
-                        b = Math.Min(raw.data[row * raw.dim.width + col], b);
-                        m = Math.Min(raw.data[row * raw.dim.width + col], m);
-                    }
-                }
-                if (blackLevel < 0)
-                    blackLevel = b;
-                if (whitePoint >= 65536)
-                    whitePoint = m;
-                Debug.WriteLine("ISO:" + metadata.IsoSpeed + ", Estimated black:" + blackLevel + ", Estimated white:" + whitePoint);
+            if (whitePoint == 0)
+            {
+                whitePoint = (1 << ColorDepth) - 1;
+                Debug.WriteLine("Whitepoint incorrect");
             }
 
-            /* Skip, if not needed */
-            if ((blackAreas.Count == 0 && blackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || raw.dim.Area() <= 0)
-                return;
-
-            /* If filter has not set separate blacklevel, compute or fetch it */
-            if (blackLevelSeparate[0] < 0)
-                CalculateBlackAreas();
-            gw = (int)(raw.dim.width * cpp) + raw.offset.width;
-            int[] mul = new int[4];
-            int[] sub = new int[4];
-            int depth_values = (int)(whitePoint - blackLevelSeparate[0]);
-            float app_scale = 65535.0f / depth_values;
-
-            // Scale in 30.2 fp
-            int full_scale_fp = (int)(app_scale * 4.0f);
-            // Half Scale in 18.14 fp
-            int half_scale_fp = (int)(app_scale * 4095.0f);
-
-            for (int i = 0; i < 4; i++)
+            if (blackLevel == 0 && blackLevelSeparate[0] != 0)
             {
-                int v = i;
-                if ((raw.offset.width & 1) != 0)
-                    v ^= 1;
-                if ((raw.offset.height & 1) != 0)
-                    v ^= 2;
-                mul[i] = (int)(16384.0f * 65535.0f / (whitePoint - blackLevelSeparate[v]));
-                sub[i] = blackLevelSeparate[v];
-            }
-
-            Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
-            //for (int y = mOffset.y; y < raw.dim.y + mOffset.y; y++)
-            {
-                int v = raw.dim.width + y * 36969;
-                for (int x = raw.offset.width; x < gw; x++)
+                for (int i = 0; i < blackLevelSeparate.Length; i++)
                 {
-                    int rand;
-                    if (DitherScale)
-                    {
-                        v = 18000 * (v & 65535) + (v >> 16);
-                        rand = half_scale_fp - (full_scale_fp * (v & 2047));
-                    }
-                    else
-                    {
-                        rand = 0;
-                    }
-                    raw.data[x + (y * raw.dim.width * cpp)] = (ushort)Common.Clampbits(((raw.data[(y * raw.dim.width * cpp) + x] - sub[(2 * (y & 1)) + (x & 1)]) * mul[(2 * (y & 1)) + (x & 1)] + 8192 + rand) >> 14, 16);
+                    blackLevel += blackLevelSeparate[i];
                 }
-
-            });
-            ColorDepth = 16;
-        }
-
-        /*
-         * return the n byte of the image
-         */
-        internal byte GetByteAt(uint n)
-        {
-            //find the index of the short
-            int index = (int)n / 2;
-            int reste = (int)n % 2;
-            ushort value = raw.data[index];
-            return (reste == 0) ? (byte)(value >> 8) : (byte)value;
+                blackLevel /= blackLevelSeparate.Length;
+            }
+            if (blackLevel != 0 || whitePoint != ((1 << ColorDepth) - 1))
+            {
+                double factor = ((1 << ColorDepth) - 1.0) / (((1 << ColorDepth) - 1.0) - blackLevel);
+                Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
+                {
+                    long v = y * raw.uncroppedDim.width * cpp;
+                    for (int x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
+                    {
+                        raw.data[x + v] = (ushort)((raw.data[x + v] - blackLevel) * factor);
+                    }
+                });
+            }
         }
 
         public void ScaleBlackWhite()

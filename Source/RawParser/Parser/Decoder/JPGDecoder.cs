@@ -24,8 +24,7 @@ namespace RawNet
     {
         BitmapPropertiesView meta;
 
-        public JPGDecoder(Stream file) : base(file) {
-        }
+        public JPGDecoder(Stream file) : base(file) { }
 
         public override void DecodeMetadata()
         {
@@ -53,7 +52,7 @@ namespace RawNet
             var decoder = BitmapDecoder.CreateAsync(stream.AsRandomAccessStream()).AsTask();
             decoder.Wait();
             var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
-           // meta = decoder.Result.BitmapProperties;
+            // meta = decoder.Result.BitmapProperties;
             bitmapasync.Wait();
             var image = bitmapasync.Result;
             using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))
