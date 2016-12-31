@@ -18,47 +18,72 @@ namespace RawNet
             //get first 8 char and see if equal fuji
             file.Position = 0;
             var data = new byte[110];
-            file.Read(data, 0, 110);
+            file.Read(data, 0, 8);
+            string dataAsString = System.Text.Encoding.UTF8.GetString(data.Take(8).ToArray());
+            if (dataAsString != "FUJIFILM")
+            {
+                throw new RawDecoderException("Header is wrong");
+            }
+            //Fuji is indexer reverse endian
+            reader = new TIFFBinaryReaderRE(file);
+            reader.BaseStream.Position = 8;
+            //read next 8 byte
+            dataAsString = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(8).ToArray());
+            //4 byte version
+            var version = reader.ReadUInt32();
+            //8 bytes unknow ??
+            var unknow = reader.ReadUInt64();
+            //32 byte a string (camera model)
+            dataAsString = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(32).ToArray());
+            //Directory
+            //4 bytes version
+            version = reader.ReadUInt32();
+            //20 bytes unkown ??
+            dataAsString = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(20).ToArray());
 
             // First IFD typically JPEG and EXIF
-            uint first_ifd = (uint)(data[87] | (data[86] << 8) | (data[85] << 16) | (data[84] << 24));
+            //position should be 84
+            uint first_ifd = reader.ReadUInt32();
             first_ifd += 12;
             if (stream.Length <= first_ifd)
                 throw new RawDecoderException("File too small (FUJI first IFD)");
-
-            // RAW IFD on newer, pointer to raw data on older models, so we try parsing first
-            // And adds it as data if parsin fails
-            uint second_ifd = (uint)(data[103] | (data[102] << 8) | (data[101] << 16) | (data[100] << 24));
-            if (stream.Length <= second_ifd)
-                second_ifd = 0;
-
+            reader.ReadBytes(6);//?? test position should be 92
             // RAW information IFD on older
             uint third_ifd = (uint)(data[95] | (data[94] << 8) | (data[93] << 16) | (data[92] << 24));
             if (stream.Length <= third_ifd)
                 third_ifd = 0;
 
-            // Open the IFDs and merge them
+            // RAW IFD on newer, pointer to raw data on older models, so we try parsing first
+            // And adds it as data if parsin fails
+            reader.ReadBytes(5);
+            //position should be 100
+            uint second_ifd = reader.ReadUInt32();
+            if (stream.Length <= second_ifd)
+                second_ifd = 0;        
 
+            // Open the IFDs and merge them
             ifd = ParseIFD(first_ifd);
             if (second_ifd != 0)
             {
-                ifd.subIFD.Add(ParseIFD(second_ifd));
+                try
+                {
+                    ifd.subIFD.Add(ParseIFD(second_ifd));
+                }
+                catch (Exception e)
+                {
+                    Tag entry = new Tag(TagType.FUJI_STRIPOFFSETS, TiffDataType.LONG, 1);
+                    entry.data[0] = second_ifd;
+                    ifd.tags.Add(entry.TagId, entry);
+                    entry = new Tag(TagType.FUJI_STRIPBYTECOUNTS, TiffDataType.LONG, 1);
+                    uint max_size = (uint)(stream.Length - second_ifd);
+                    entry.data[0] = max_size;
+                    ifd.tags.Add(entry.TagId, entry);
+                }
             }
 
             if (third_ifd != 0)
             {
                 ParseFuji(third_ifd, ifd);
-            }
-
-            if (second_ifd != 0)
-            {
-                Tag entry = new Tag(TagType.FUJI_STRIPOFFSETS, TiffDataType.LONG, 1);
-                entry.data[0] = second_ifd;
-                ifd.tags.Add(entry.TagId, entry);
-                entry = new Tag(TagType.FUJI_STRIPBYTECOUNTS, TiffDataType.LONG, 1);
-                uint max_size = (uint)(stream.Length - second_ifd);
-                entry.data[0] = max_size;
-                ifd.tags.Add(entry.TagId, entry);
             }
         }
 
