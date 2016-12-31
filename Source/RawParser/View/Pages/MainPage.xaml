@@ -12,9 +12,7 @@
                     VerticalAlignment="Stretch"
                     HorizontalContentAlignment="Left">
             <CommandBar.Content>
-                <ProgressRing x:Name="ProgressDisplay" VerticalAlignment="Center" 
-                                  Height="30" Width="30" IsActive="True" Visibility="Collapsed"
-                                  Margin="2,9,0,0"/>
+                <uihelper:LoadBar x:Name="Load"/>
             </CommandBar.Content>
 
             <AppBarButton IsEnabled="False" 
@@ -225,15 +223,6 @@
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
-                <PivotItem x:Uid="System">
-                    <StackPanel >
-                        <TextBlock Foreground="Black" 
-                                           IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left"
-                                           FontSize="14" >Memory usage</TextBlock>
-                        <ProgressBar x:Name="MemoryBar" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Height="10" Margin="10,10,10,0"></ProgressBar>
-                        <Button Margin="0,10,0,0" Tapped="Button_Tapped">Free image</Button>
-                    </StackPanel>
-                </PivotItem>
                 <!-- <PivotItem x:Uid="Tools">
                         <StackPanel Background="#FFF0F0F0">
                             <Button>Save Thumbnail</Button>
@@ -281,8 +270,16 @@
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
+                <PivotItem x:Uid="System">
+                    <StackPanel >
+                        <TextBlock Foreground="Black" 
+                                           IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left"
+                                           FontSize="14" >Memory usage</TextBlock>
+                        <ProgressBar x:Name="MemoryBar" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Height="10" Margin="10,10,10,0"></ProgressBar>
+                        <Button Margin="0,10,0,0" Tapped="Button_Tapped">Free image</Button>
+                    </StackPanel>
+                </PivotItem>
             </Pivot>
-
         </Grid>
     </Grid>
 </Page>

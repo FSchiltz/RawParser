@@ -49,12 +49,11 @@ namespace RawNet
         {
             rawImage.ColorDepth = 8;
             rawImage.cpp = 3;
-            rawImage.bpp = 8;
             rawImage.isCFA = false;
             var decoder = BitmapDecoder.CreateAsync(stream.AsRandomAccessStream()).AsTask();
             decoder.Wait();
             var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
-            meta = decoder.Result.BitmapProperties;
+           // meta = decoder.Result.BitmapProperties;
             bitmapasync.Wait();
             var image = bitmapasync.Result;
             using (BitmapBuffer buffer = image.LockBuffer(BitmapBufferAccessMode.Write))

@@ -213,9 +213,6 @@ namespace RawNet
                     return new NefDecoder(stream);
                 case ".CR2":
                     return new Cr2Decoder(stream);
-                case ".TIFF":
-                case ".TIF":
-                    return new TiffDecoder(stream);
                 case ".ARW":
                     return new ArwDecoder(stream);
                 case ".PEF":
@@ -226,10 +223,21 @@ namespace RawNet
                     return new OrfDecoder(stream);
                 case ".RAW":
                     return new Rw2Decoder(stream);
+                case ".RAF":
+                    return new RafDecoder(stream);
+
                 //other raw format
+                case ".TIFF":
+                case ".TIF":
+                    return new TiffDecoder(stream);
+
                 case ".JPG":
                 case ".JPEG":
                 case ".PNG":
+                case ".JXR":
+                case ".ICO":
+                case ".BMP":
+                case ".GIF":
                     return new JPGDecoder(stream);
                 default:
                     /*

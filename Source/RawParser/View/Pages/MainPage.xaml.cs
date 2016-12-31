@@ -43,7 +43,6 @@ namespace RawEditor
         public bool ImageSelected { set; get; }
         bool cameraWB = true;
         public Thumbnail thumbnail;
-        private uint displayMutex = 0;
         private bool userAppliedModif = false;
         public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
 #if !DEBUG
@@ -72,32 +71,7 @@ namespace RawEditor
             double var = (MemoryManager.AppMemoryUsage / (double)MemoryManager.AppMemoryUsageLimit) * 100;
             if (var < 1) var = 1;
             MemoryBar.Value = var;
-        }
-
-        public void DisplayLoad()
-        {
-            displayMutex++;
-            if (displayMutex > 0)
-            {
-                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    ProgressDisplay.Visibility = Visibility.Visible;
-                });
-            }
-        }
-
-        public void StopLoadDisplay()
-        {
-            displayMutex--;
-            if (displayMutex <= 0)
-            {
-                displayMutex = 0;
-                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    ProgressDisplay.Visibility = Visibility.Collapsed;
-                });
-            }
-        }
+        }      
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
         {
@@ -224,7 +198,7 @@ namespace RawEditor
                 try
                 {
                     //Add a loading screen
-                    DisplayLoad();
+                    Load.ShowLoad();
                     EmptyImageAsync();
                     ImageSelected = true;
                     Task.Run(async () =>
@@ -334,7 +308,7 @@ namespace RawEditor
                             raw = null;
                             ImageSelected = false;
                         }
-                        StopLoadDisplay();
+                        Load.HideLoad();
                         ImageSelected = false;
                     });
                 }
@@ -425,7 +399,7 @@ namespace RawEditor
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
 
-                DisplayLoad();
+                Load.ShowLoad();
                 var task = Task.Run(async () =>
                 {
                     try
@@ -441,7 +415,7 @@ namespace RawEditor
                         ExceptionDisplay.Display("An error occured while saving");
 #endif
                     }
-                    StopLoadDisplay();
+                    Load.HideLoad();
                 });
             }
         }
@@ -609,7 +583,7 @@ namespace RawEditor
             if (CropUI.Visibility == Visibility.Visible)
             {
                 HideCropUI();
-                StopLoadDisplay();
+                Load.HideLoad();
             }
             ResetControlsAsync();
             history.Add(new HistoryObject() { oldValue = 0, value = 1, target = EffectObject.reset });
@@ -671,7 +645,7 @@ namespace RawEditor
                 var deferal = request.GetDeferral();
                 //TODO regionalise text
                 //generate the bitmap
-                DisplayLoad();
+                Load.ShowLoad();
                 var result = await ApplyUserModifAsync(raw.raw.data, raw.raw.dim, raw.raw.offset, raw.raw.uncroppedDim, raw.ColorDepth, false);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
@@ -684,7 +658,7 @@ namespace RawEditor
                 await encoder.FlushAsync();
                 encoder = null;
                 result.Item2.Dispose();
-                StopLoadDisplay();
+                Load.HideLoad();
 
                 request.Data.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
                 deferal.Complete();
@@ -708,7 +682,7 @@ namespace RawEditor
         private async void CropButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             CropUI.SetThumbAsync(null);
-            DisplayLoad();
+            Load.ShowLoad();
             EnableEditingControlAsync(false);
             //display the crop UI
             CropGrid.Visibility = Visibility.Visible;
@@ -744,7 +718,7 @@ namespace RawEditor
         private void CropReject_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             HideCropUI();
-            StopLoadDisplay();
+            Load.HideLoad();
         }
 
         private void CropAccept_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -766,7 +740,7 @@ namespace RawEditor
             var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
             history.Add(t);
             EnableResetAsync();
-            StopLoadDisplay();
+            Load.HideLoad();
         }
 
         private void HideCropUI()

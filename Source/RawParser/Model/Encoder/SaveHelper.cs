@@ -25,6 +25,7 @@ namespace RawEditor
                     ".bmp",
                     ".gif",
                     ".ico",
+                    ".jxr",
 
                     //raw
                     ".nef",
@@ -33,7 +34,8 @@ namespace RawEditor
                     ".pef",
                     ".arw",
                     ".raw",
-                    ".orf"
+                    ".orf",
+                    ".raf"
                 };
             }
         }

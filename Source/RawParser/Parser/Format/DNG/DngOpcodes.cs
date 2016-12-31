@@ -358,10 +358,10 @@ namespace RawNet
 
             mapPointsV = parameters.ReadUInt32();
             mapPointsH = parameters.ReadUInt32();
-            mapSpacingV = parameters.ReadDoubleFP() * h2;
-            mapSpacingH = parameters.ReadDoubleFP() * w2;
-            mapOriginV = parameters.ReadDoubleFP();
-            mapOriginH = parameters.ReadDoubleFP();
+            mapSpacingV = parameters.ReadDouble() * h2;
+            mapSpacingH = parameters.ReadDouble() * w2;
+            mapOriginV = parameters.ReadDouble();
+            mapOriginH = parameters.ReadDouble();
             mapPlanes = parameters.ReadUInt32();
             gain = new double[mapPointsV, mapPointsH, mapPlanes];
             bytes_used = 76;
@@ -373,7 +373,7 @@ namespace RawNet
                 {
                     for (UInt64 k = 0; k < mapPlanes; k++)
                     {
-                        gain[i, j, k] = parameters.ReadFloatFP();
+                        gain[i, j, k] = parameters.ReadSingle();
                     }
                 }
             }

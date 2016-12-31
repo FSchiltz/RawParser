@@ -11,6 +11,14 @@ namespace RawNet
 
         public TiffDecoder(Stream stream) : base(stream)
         {
+            Parse();
+        }
+
+        //fuji are special Tiff so we need to first remove uncorrect data before parsing the ifd
+        public TiffDecoder(Stream stream, bool isFuji) : base(stream) { }
+
+        protected void Parse()
+        {
             //parse the ifd
             if (stream.Length < 16)
                 throw new RawDecoderException("Not a TIFF file (size too small)");
@@ -23,7 +31,6 @@ namespace RawNet
                 //open binaryreader
                 reader = new TIFFBinaryReaderRE(stream);
                 endian = Endianness.big;
-
                 if (data[3] != 42 && data[2] != 0x4f) // ORF sometimes has 0x4f, Lovely!
                     throw new RawDecoderException("Not a TIFF file (magic 42)");
             }
@@ -37,12 +44,9 @@ namespace RawNet
             {
                 throw new RawDecoderException("Not a TIFF file (ID)");
             }
-
-            uint nextIFD;
             reader.Position = 4;
-            nextIFD = reader.ReadUInt32();
-            ifd = new IFD(reader, nextIFD, endian, 0);
-            nextIFD = ifd.NextOffset;
+            ifd = new IFD(reader, reader.ReadUInt32(), endian, 0);
+            uint nextIFD = ifd.NextOffset;
 
             while (nextIFD != 0)
             {
@@ -75,9 +79,8 @@ namespace RawNet
                 rawImage.raw.dim = new Point2D(width, height);
                 rawImage.raw.uncroppedDim = rawImage.raw.dim;
                 //suppose that image are always 8,8,8 or 16,16,16
-                ushort colorDepth = (ushort)bitPerSampleTag.data[0];
+                rawImage.ColorDepth = (ushort)bitPerSampleTag.data[0];
                 rawImage.cpp = 3;
-                rawImage.bpp = colorDepth;
                 rawImage.Init();
                 long strips = height / Convert.ToInt64(rowPerStripTag.data[0]), lastStrip = height % Convert.ToInt64(rowPerStripTag.data[0]);
                 long rowperstrip = Convert.ToInt64(rowPerStripTag.data[0]);
@@ -241,12 +244,8 @@ namespace RawNet
             var t2 = ifd.GetEntryRecursive(TagType.MODEL);
             if (t != null && t2 != null)
             {
-                string make = t.DataAsString;
-                string model = t2.DataAsString;
-                make = make.Trim();
-                model = model.Trim();
-                rawImage.metadata.Make = make;
-                rawImage.metadata.Model = model;
+                rawImage.metadata.Make = t.DataAsString.Trim();
+                rawImage.metadata.Model = t2.DataAsString.Trim();
             }
 
             //rotation

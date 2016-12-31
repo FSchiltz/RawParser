@@ -37,18 +37,26 @@
             <uap:DisplayName>Raw photo editor</uap:DisplayName>
             <uap:Logo>Assets\StoreLogo.png</uap:Logo>
             <uap:InfoTip>Photo</uap:InfoTip>
+            <uap:EditFlags OpenIsSafe="true" />
             <uap:SupportedFileTypes>
+              <uap:FileType ContentType="image/jpegxr">.jxr</uap:FileType>
               <uap:FileType ContentType="image/jpeg">.jpg</uap:FileType>
-              <uap:FileType ContentType="image/nikon">.nef</uap:FileType>
-              <uap:FileType ContentType="image/dng">.dng</uap:FileType>
-              <uap:FileType ContentType="image/tiff">.tiff</uap:FileType>
-              <uap:FileType ContentType="image/png">.png</uap:FileType>
-              <uap:FileType ContentType="image/canon">.cr2</uap:FileType>
-              <uap:FileType ContentType="image/pentax">.pef</uap:FileType>
-              <uap:FileType ContentType="image/sony">.arw</uap:FileType>
+              <uap:FileType ContentType="image/jpeg">.jpeg</uap:FileType>
               <uap:FileType ContentType="image/icon">.ico</uap:FileType>
               <uap:FileType ContentType="image/gif">.gif</uap:FileType>
               <uap:FileType ContentType="image/bmp">.bmp</uap:FileType>
+              <uap:FileType ContentType="image/tiff">.tiff</uap:FileType>
+              <uap:FileType ContentType="image/tiff">.tif</uap:FileType>
+              <uap:FileType ContentType="image/png">.png</uap:FileType>
+
+              <uap:FileType ContentType="image/nikon">.nef</uap:FileType>
+              <uap:FileType ContentType="image/dng">.dng</uap:FileType>
+              <uap:FileType ContentType="image/canon">.cr2</uap:FileType>
+              <uap:FileType ContentType="image/pentax">.pef</uap:FileType>
+              <uap:FileType ContentType="image/sony">.arw</uap:FileType>
+              <uap:FileType ContentType="image/fuji">.raf</uap:FileType>
+              <uap:FileType ContentType="image/panasonic">.raw</uap:FileType>
+              <uap:FileType ContentType="image/olympus">.orf</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>
