@@ -169,26 +169,43 @@ namespace RawNet
                 whitePoint = (1 << ColorDepth) - 1;
                 Debug.WriteLine("Whitepoint incorrect");
             }
-
-            if (blackLevel == 0 && blackLevelSeparate[0] != 0)
+            try
             {
-                for (int i = 0; i < blackLevelSeparate.Length; i++)
+                if (blackLevel == 0 && blackLevelSeparate[0] != 0)
                 {
-                    blackLevel += blackLevelSeparate[i];
-                }
-                blackLevel /= blackLevelSeparate.Length;
-            }
-            if (blackLevel != 0 || whitePoint != ((1 << ColorDepth) - 1))
-            {
-                double factor = ((1 << ColorDepth) - 1.0) / (((1 << ColorDepth) - 1.0) - blackLevel);
-                Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
-                {
-                    long v = y * raw.uncroppedDim.width * cpp;
-                    for (int x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
+                    for (int i = 0; i < blackLevelSeparate.Length; i++)
                     {
-                        raw.data[x + v] = (ushort)((raw.data[x + v] - blackLevel) * factor);
+                        blackLevel += blackLevelSeparate[i];
                     }
-                });
+                    blackLevel /= blackLevelSeparate.Length;
+                }
+                if (blackLevel != 0 || whitePoint != ((1 << ColorDepth) - 1))
+                {
+                    double factor = ((1 << ColorDepth) - 1.0) / (((1 << ColorDepth) - 1.0) - blackLevel);
+                    Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
+                    {
+                        long v = y * raw.uncroppedDim.width * cpp;
+                        for (int x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
+                        {
+                            raw.data[x + v] = (ushort)((raw.data[x + v] - blackLevel) * factor);
+                        }
+                    });
+                }
+                if (table != null)
+                {
+                    Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
+                    {
+                        long v = y * raw.uncroppedDim.width * cpp;
+                        for (int x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
+                        {
+                            raw.data[x + v] = table.tables[raw.data[x + v]];
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add("Linearisation went wrong:" + ex.Message);
             }
         }
 

@@ -13,13 +13,14 @@ namespace RawNet
         // Creates n numre of tables.
         public TableLookUp(int _ntables, bool _dither)
         {
-            ntables = (_ntables);
-            Dither = (_dither);
+            ntables = _ntables;
+            Dither = _dither;
             tables = null;
             if (ntables < 1)
             {
                 throw new RawDecoderException("Cannot construct 0 tables");
             }
+
             tables = new ushort[ntables * TABLE_SIZE];
             //Common.memset<ushort>(tables, 0, sizeof(ushort) * ntables * TABLE_SIZE);
         }
