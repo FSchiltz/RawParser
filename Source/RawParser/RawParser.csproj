@@ -163,6 +163,7 @@
     <Compile Include="Parser\Decoder\NEFDecoder.cs" />
     <Compile Include="Parser\Decoder\OrfDecoder.cs" />
     <Compile Include="Parser\Decoder\PefDecoder.cs" />
+    <Compile Include="Parser\Decoder\RafDecoder.cs" />
     <Compile Include="Parser\Decoder\RawDecoder.cs" />
     <Compile Include="Parser\Decoder\Rw2Decoder.cs" />
     <Compile Include="Parser\Decoder\TIFFDecoder.cs" />
@@ -200,6 +201,9 @@
     </Compile>
     <Compile Include="View\UIHelper\ExifHelper.cs" />
     <Compile Include="View\UIHelper\Histogram.cs" />
+    <Compile Include="View\UIHelper\LoadBar.xaml.cs">
+      <DependentUpon>LoadBar.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -272,6 +276,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\UIHelper\CropUIHelper.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\UIHelper\LoadBar.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

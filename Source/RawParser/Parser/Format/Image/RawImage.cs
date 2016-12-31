@@ -24,19 +24,19 @@ namespace RawNet
         public ushort ColorDepth { get; set; }
 
         public ImageMetadata metadata = new ImageMetadata();
-        public uint cpp, bpp, pitch;
+        public uint cpp, pitch;
         public int whitePoint;
         public int[] blackLevelSeparate = new int[4];
         public List<String> errors = new List<string>();
         public bool isCFA = true;
         internal TableLookUp table;
         public ColorFilterArray UncroppedCfa;
+        public int bpp { get { return (int)Math.Ceiling(ColorDepth / 8.0); } }
 
         public RawImage()
         {
             //Set for 16bit image non demos           
             cpp = 1;
-            bpp = 2;
             ColorDepth = 16;
         }
 
@@ -237,7 +237,6 @@ namespace RawNet
 
             });
             ColorDepth = 16;
-            bpp = 2;
         }
 
         /*

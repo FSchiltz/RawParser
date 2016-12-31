@@ -23,7 +23,7 @@ namespace RawNet
         protected static char[] nikon_v3_signature = {
           'N', 'i', 'k', 'o', 'n', (char)0x0,(char) 0x2
         };
-        private bool parseSubIFD = true;
+
         private static readonly int MaxRecursion = 20;
 
         public IFD() { }
@@ -46,13 +46,14 @@ namespace RawNet
         protected void Parse(TIFFBinaryReader fileStream)
         {
             tagNumber = fileStream.ReadUInt16();
-            for (int i = 0; i < tagNumber; i++)
+            if (tagNumber <= Int16.MaxValue)
             {
-                long tagPos = fileStream.BaseStream.Position;
-                Tag temp = new Tag(fileStream, relativeOffset);
+                for (int i = 0; i < tagNumber; i++)
+                {
+                    long tagPos = fileStream.BaseStream.Position;
+                    Tag temp = new Tag(fileStream, relativeOffset);
 
-                //Special tag
-                if (parseSubIFD)
+                    //Special tag
                     switch (temp.TagId)
                     {
                         case TagType.DNGPRIVATEDATA:
@@ -80,8 +81,10 @@ namespace RawNet
                             try
                             {
                                 Common.ConvertArray(temp.data, out byte[] dest);
-                                Makernote makernote = ParseMakerNote(dest, endian, (int)temp.dataOffset);
+                                var t = fileStream.BaseStream.Position;
+                                Makernote makernote = ParseMakerNote(dest, endian, (int)temp.dataOffset, fileStream);
                                 if (makernote != null) subIFD.Add(makernote);
+                                fileStream.BaseStream.Position = t;
                             }
                             catch (RawDecoderException)
                             { // Unparsable makernotes are added as entries
@@ -97,13 +100,6 @@ namespace RawNet
                                 temp.dataType = TiffDataType.LONG;
                             goto case TagType.SUBIFDS;
                         case TagType.NIKONTHUMB:
-                            if (temp.GetUInt(0) >= fileStream.BaseStream.Length)
-                            {
-                                parseSubIFD = false;
-                                //some nikon makernote are not self contained
-                                break;
-                            }
-                            goto case TagType.SUBIFDS;
                         case TagType.SUBIFDS:
                         case TagType.EXIFIFDPOINTER:
 
@@ -127,20 +123,21 @@ namespace RawNet
                             break;
                     }
 
-                if (!tags.ContainsKey(temp.TagId))
-                {
-                    tags.Add(temp.TagId, temp);
-                }
-                else
-                {
-                    Debug.WriteLine("tags already exist");
+                    if (!tags.ContainsKey(temp.TagId))
+                    {
+                        tags.Add(temp.TagId, temp);
+                    }
+                    else
+                    {
+                        Debug.WriteLine("tags already exist");
+                    }
                 }
             }
         }
 
         /* This will attempt to parse makernotes and return it as an IFD */
-        //makernote should be selfcontained
-        Makernote ParseMakerNote(byte[] data, Endianness parentEndian, int parentOffset)
+        //makernote should be self contained
+        Makernote ParseMakerNote(byte[] data, Endianness parentEndian, int parentOffset, TIFFBinaryReader fileStream)
         {
             if (Depth + 1 > IFD.MaxRecursion) return null;
             uint offset = 0;
@@ -175,6 +172,9 @@ namespace RawNet
             }
             else if (Common.Memcmp(nikon_v3_signature, data))
             {
+                //for nikon makernote read more because they are not always self contained
+                fileStream.BaseStream.Position = parentOffset;
+                data = fileStream.ReadBytes(data.Length + (data.Length / 2));
                 return new NikonMakerNote(data);
             }
 
@@ -243,7 +243,7 @@ namespace RawNet
             */
             uint size = t.dataCount;
             Common.ConvertArray(t.data, out byte[] data);
-            Common.ByteToChar(data, out char[] dataAsChar,20);
+            Common.ByteToChar(data, out char[] dataAsChar, (int)size);
             string id = new String(dataAsChar);
             /*
             if (id.StartsWith("Microsoft") || id.StartsWith("Nokia")) {
@@ -297,7 +297,7 @@ namespace RawNet
             Makernote makerIfd;
             try
             {
-                makerIfd = ParseMakerNote(data, makernote_endian, 0);
+                makerIfd = ParseMakerNote(data, makernote_endian, 0, null);
             }
             catch (RawDecoderException e)
             {

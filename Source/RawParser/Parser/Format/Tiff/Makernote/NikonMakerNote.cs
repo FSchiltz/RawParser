@@ -3,6 +3,7 @@ using System.Linq;
 
 namespace RawNet
 {
+    //nikon makernote are not always self contained so use the file stream to parse
     class NikonMakerNote : Makernote
     {
         public string StringMagic { set; get; }

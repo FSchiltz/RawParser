@@ -19,7 +19,6 @@ namespace RawNet
         }
 
         public TIFFBinaryReader(Stream s) : base(s, Encoding.ASCII) { }
-        public TIFFBinaryReader(Stream s, Encoding e) : base(s, e) { }
         public TIFFBinaryReader(Stream s, uint offset) : base(s, Encoding.ASCII)
         {
             this.offset = offset;
@@ -27,12 +26,10 @@ namespace RawNet
         }
 
         public TIFFBinaryReader(byte[] s, uint o) : this(StreamFromArray(s), o) { }
-        public TIFFBinaryReader(byte[] s, Encoding e) : this(StreamFromArray(s), e) { }
         public TIFFBinaryReader(byte[] s) : this(StreamFromArray(s)) { }
 
         public TIFFBinaryReader(object[] data, TiffDataType dataType) : this(StreamFromArray(data, dataType)) { }
         public TIFFBinaryReader(object[] data, TiffDataType dataType, uint offset) : this(StreamFromArray(data, dataType), offset) { }
-        public TIFFBinaryReader(object[] data, TiffDataType dataType, Encoding e) : this(StreamFromArray(data, dataType), e) { }
 
         public void SkipToMarker()
         {
@@ -50,7 +47,7 @@ namespace RawNet
 
         public int GetRemainSize() { return (int)(BaseStream.Length - Position); }
 
-        public override double ReadDouble()
+        public virtual double ReadRational()
         {
             /* byte[] part1 = ; (4);
              byte[] part2 = base.ReadBytes(4);
@@ -164,11 +161,9 @@ namespace RawNet
     public class TIFFBinaryReaderRE : TIFFBinaryReader
     {
         public TIFFBinaryReaderRE(Stream s) : base(s) { }
-        public TIFFBinaryReaderRE(Stream s, Encoding e) : base(s, e) { }
         public TIFFBinaryReaderRE(Stream s, uint o) : base(s, o) { }
 
         public TIFFBinaryReaderRE(byte[] s, uint o) : base(StreamFromArray(s), o) { }
-        public TIFFBinaryReaderRE(byte[] s, Encoding e) : base(StreamFromArray(s), e) { }
         public TIFFBinaryReaderRE(byte[] s) : base(StreamFromArray(s)) { }
 
         public TIFFBinaryReaderRE(object[] data, TiffDataType dataType) : base(StreamFromArray(data, dataType)) { }
@@ -217,7 +212,7 @@ namespace RawNet
             // return ReadByte() | ReadByte() << 8 | ReadByte() << 16 | ReadByte() << 24;
         }
 
-        public override double ReadDouble()
+        public override double ReadRational()
         {
             return ReadInt32() / (double)ReadInt32();
         }
@@ -242,7 +237,7 @@ namespace RawNet
             return BitConverter.ToInt16(new byte[2] { (byte)array[offset + 1], (byte)array[offset] }, 0);
         }
 
-        internal float ReadFloatFP()
+        public override float ReadSingle()
         {
             byte[] temp = new byte[4];
             temp[3] = base.ReadByte();
@@ -252,7 +247,7 @@ namespace RawNet
             return BitConverter.ToSingle(temp, 0);
         }
 
-        internal double ReadDoubleFP()
+        public override double ReadDouble()
         {
             byte[] temp = new byte[8];
             for (int i = 7; i >= 0; i--)
