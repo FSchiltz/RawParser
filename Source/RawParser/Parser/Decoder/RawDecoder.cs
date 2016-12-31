@@ -25,6 +25,8 @@ namespace RawNet
         /* Should Fuji images be rotated? */
         protected bool FujiRotate { get; set; }
 
+        public bool ScaleValue { get; set; } = false;
+
         /* The Raw input file to be decoded */
         protected TIFFBinaryReader reader;
 

@@ -16,7 +16,10 @@ namespace RawNet
 
     internal class NefDecoder : TiffDecoder
     {
-        public NefDecoder(Stream file) : base(file) { }
+        public NefDecoder(Stream file) : base(file)
+        {
+            ScaleValue = true;
+        }
 
         public override Thumbnail DecodeThumb()
         {

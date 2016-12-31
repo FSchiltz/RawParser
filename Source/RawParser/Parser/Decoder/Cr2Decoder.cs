@@ -17,7 +17,10 @@ namespace RawNet
     {
         int[] sraw_coeffs = new int[3];
 
-        public Cr2Decoder(Stream file) : base(file) { }
+        public Cr2Decoder(Stream file) : base(file)
+        {
+            ScaleValue = true;
+        }
 
         public override Thumbnail DecodeThumb()
         {

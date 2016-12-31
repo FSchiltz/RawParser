@@ -15,7 +15,6 @@ using Windows.UI.ViewManagement;
 using Windows.Foundation;
 using RawNet;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using Microsoft.Services.Store.Engagement;
 using Windows.ApplicationModel.DataTransfer;
@@ -25,15 +24,6 @@ using Windows.System;
 
 namespace RawEditor
 {
-    // Using the COM interface IMemoryBufferByteAccess allows us to access the underlying byte array
-    [ComImport]
-    [Guid("5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    unsafe interface IMemoryBufferByteAccess
-    {
-        void GetBuffer(out byte* buffer, out uint capacity);
-    }
-
     /// <summary>
     /// The main class of the appliation
     /// </summary>
@@ -71,7 +61,7 @@ namespace RawEditor
             double var = (MemoryManager.AppMemoryUsage / (double)MemoryManager.AppMemoryUsageLimit) * 100;
             if (var < 1) var = 1;
             MemoryBar.Value = var;
-        }      
+        }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
         {
@@ -236,6 +226,8 @@ namespace RawEditor
                             decoder.DecodeRaw();
                             decoder.DecodeMetadata();
                             raw = decoder.rawImage;
+                            if (decoder.ScaleValue)
+                                raw.ScaleValues();
                             raw.metadata.FileName = file.DisplayName;
                             raw.metadata.FileNameComplete = file.Name;
                             raw.metadata.FileExtension = file.FileType;
@@ -471,7 +463,7 @@ namespace RawEditor
                 DisplayImage(result.Item2, reset);
 
                 var histo = new Histogram();
-                histo.FillAsync(result.Item1,(uint)raw.preview.dim.height, (uint)raw.preview.dim.width);
+                histo.FillAsync(result.Item1, (uint)raw.preview.dim.height, (uint)raw.preview.dim.width);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     LumaHisto.Points = histo.PointsL;
