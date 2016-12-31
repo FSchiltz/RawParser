@@ -399,7 +399,6 @@ namespace RawNet
                 lintable.GetShortArray(out ushort[] table, (int)len);
                 rawImage.SetTable(table, (int)len, true);
 
-                //TODO Fix
                 //mRaw.sixteenBitLookup();
                 //mRaw.table = (null);
 
