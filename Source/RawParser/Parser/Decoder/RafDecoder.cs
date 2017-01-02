@@ -323,7 +323,7 @@ namespace RawNet
             }
             else if (model.Contains("FinePix X100"))
             {
-                rawImage.raw.dim.width -= 74;
+                rawImage.raw.dim.width -= 144;
                 rawImage.raw.offset.width = 74;
             }
             else
