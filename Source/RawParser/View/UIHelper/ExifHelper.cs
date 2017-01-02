@@ -16,7 +16,8 @@ namespace RawEditor
                 exif.Add("Model", raw.metadata.Model);
             if (!string.IsNullOrEmpty(raw.metadata.Mode))
                 exif.Add("Image mode", raw.metadata.Mode);
-
+            if (!string.IsNullOrEmpty(raw.metadata.Lens))
+                exif.Add("Lense", raw.metadata.Lens);
             exif.Add("Size", "" + ((raw.raw.dim.width * raw.raw.dim.height) / 1000000.0).ToString("F") + " MPixels");
             exif.Add("Dimension", "" + raw.raw.dim.width + " x " + raw.raw.dim.height);
 
@@ -43,7 +44,7 @@ namespace RawEditor
             }
 
             //more metadata
-            exif.Add("Black level", "" + raw.blackLevel);
+            exif.Add("Black level", "" + raw.BlackLevel);
             exif.Add("White level", "" + raw.whitePoint);
             exif.Add("Color depth", "" + raw.ColorDepth + " bits");
 

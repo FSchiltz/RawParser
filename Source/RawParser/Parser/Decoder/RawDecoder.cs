@@ -293,7 +293,7 @@ namespace RawNet
 
         protected void Decode12BitRaw(TIFFBinaryReader input, Int32 w, Int32 h)
         {
-            if (w < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
+            if (w < 2) throw new IOException("1 pixel wide raw images are not supported");
             //uint pitch = rawImage.pitch;
 
             if (input.GetRemainSize() < ((w * 12 / 8) * h))
@@ -312,9 +312,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[(y * rawImage.raw.dim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                    rawImage.raw.data[(y * rawImage.raw.uncroppedDim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.data[(y * rawImage.raw.dim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                    rawImage.raw.data[(y * rawImage.raw.uncroppedDim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                 }
             }
         }

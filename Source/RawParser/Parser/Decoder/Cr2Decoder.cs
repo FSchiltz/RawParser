@@ -497,7 +497,7 @@ namespace RawNet
                         break;
                     case "EOS D2000C":
                         rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.GREEN, CFAColor.RED, CFAColor.BLUE, CFAColor.GREEN);
-                        rawImage.blackLevel = (int)rawImage.curve[200];
+                        rawImage.BlackLevel = (int)rawImage.curve[200];
                         break;
                 }
         }

@@ -193,7 +193,7 @@ namespace RawNet
 
                 for (slice = 0; slice < slices; slice++)
                 {
-                    imagePos[slice] = (UInt16*)&draw[(t_x + offX) * raw.bpp + ((offY + t_y) * raw.pitch)];
+                    imagePos[slice] = (UInt16*)&draw[(t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)];
                     sliceWidth[slice] = slice_width[t_s];
                     t_y += maxSuperV;
                     if (t_y >= (frame.h - skipY))
@@ -372,7 +372,7 @@ namespace RawNet
 
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * raw.bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y += 2;
                     if (t_y >= (real_h - skipY))
@@ -518,7 +518,7 @@ namespace RawNet
 
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * raw.bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y++;
                     if (t_y >= (frame.h - skipY))
@@ -637,7 +637,7 @@ namespace RawNet
                 UInt32 cw = (uint)(frame.w - skipX);
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * raw.bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y++;
                     if (t_y == (frame.h - skipY))
@@ -742,7 +742,7 @@ namespace RawNet
                 UInt32 slice = 0;
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * raw.bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y++;
                     if (t_y == (frame.h - skipY))
@@ -863,7 +863,7 @@ namespace RawNet
                 UInt32 slice = 0;
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * raw.bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
+                    offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y++;
                     if (t_y == (frame.h - skipY))
