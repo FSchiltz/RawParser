@@ -4,7 +4,7 @@ namespace RawNet
 {
     internal class PentaxMakernote : Makernote
     {
-        public PentaxMakernote(byte[] data, int offset, int parentOffset)
+        public PentaxMakernote(byte[] data, int offset, int parentOffset, Endianness endian, int depth) : base(endian, depth)
         {
             TIFFBinaryReader buffer;
             if (data[offset] == 0x4D && data[offset + 1] == 0x4D)
@@ -20,10 +20,9 @@ namespace RawNet
                 throw new RawDecoderException("Makernote endianess unknown " + data[0]);
             }
             buffer.BaseStream.Position += (offset + 2);
-            relativeOffset = -parentOffset;
+            RelativeOffset = -parentOffset;
             //offset are from the start of the tag
             Parse(buffer);
-            
             buffer.Dispose();
         }
     }

@@ -9,7 +9,7 @@ namespace RawNet
         public string StringMagic { set; get; }
         public ushort Version { set; get; }
         public IFD Gps { get; set; }
-        public NikonMakerNote(byte[] data)
+        public NikonMakerNote(byte[] data, int depth) : base(Endianness.little, depth)
         {
             //read the header
             // buffer.BaseStream.Position = offset;

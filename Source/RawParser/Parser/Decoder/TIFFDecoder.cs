@@ -7,24 +7,24 @@ namespace RawNet
 {
     internal class TiffDecoder : RawDecoder
     {
-        protected IFD ifd;
+        public IFD ifd = null;
 
         public TiffDecoder(Stream stream) : base(stream)
         {
-            Parse();
+            Parse(0);
         }
 
         //fuji are special Tiff so we need to first remove uncorrect data before parsing the ifd
         public TiffDecoder(Stream stream, bool isFuji) : base(stream) { }
 
-        protected void Parse()
+        protected void Parse(uint offset)
         {
             //parse the ifd
             if (stream.Length < 16)
                 throw new RawDecoderException("Not a TIFF file (size too small)");
             Endianness endian = Endianness.little;
             byte[] data = new byte[5];
-            stream.Position = 0;
+            stream.Position = offset;
             stream.Read(data, 0, 4);
             if (data[0] == 0x4D || data[1] == 0x4D)
             {
@@ -44,13 +44,21 @@ namespace RawNet
             {
                 throw new RawDecoderException("Not a TIFF file (ID)");
             }
-            reader.Position = 4;
-            ifd = new IFD(reader, reader.ReadUInt32(), endian, 0);
-            uint nextIFD = ifd.NextOffset;
+            reader.Position = offset + 4;
 
+            var newIfd = new IFD(reader, reader.ReadUInt32(), endian, 0, (int)offset);
+            if (ifd == null)
+            {
+                ifd = newIfd;
+            }
+            else
+            {
+                ifd.subIFD.Add(newIfd);
+            }
+            uint nextIFD = newIfd.NextOffset;
             while (nextIFD != 0)
             {
-                ifd.subIFD.Add(new IFD(reader, nextIFD, endian, 0));
+                ifd.subIFD.Add(new IFD(reader, nextIFD, endian, 0, (int)offset));
                 if (ifd.subIFD.Count > 100)
                 {
                     throw new RawDecoderException("TIFF file has too many SubIFDs, probably broken");
@@ -222,10 +230,20 @@ namespace RawNet
             }
             var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
             if (isoTag != null) rawImage.metadata.IsoSpeed = isoTag.GetInt(0);
+            var fn = ifd.GetEntryRecursive(TagType.APERTUREVALUE);
+            if (fn != null)
+            {
+                rawImage.metadata.Aperture = fn.GetFloat(0);
+            }
+            else
+            {
+                fn = ifd.GetEntryRecursive(TagType.FNUMBER);
+                if (fn != null) rawImage.metadata.Aperture = fn.GetFloat(0);
+            }
+
             var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
-            var fn = ifd.GetEntryRecursive(TagType.FNUMBER);
             if (exposure != null) rawImage.metadata.Exposure = exposure.GetFloat(0);
-            if (fn != null) rawImage.metadata.Aperture = fn.GetFloat(0);
+
             if (rawImage.whitePoint == 0)
             {
                 Tag whitelevel = ifd.GetEntryRecursive(TagType.WHITELEVEL);

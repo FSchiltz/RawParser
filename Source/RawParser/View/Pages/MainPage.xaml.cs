@@ -206,21 +206,25 @@ namespace RawEditor
 
                             var watch = Stopwatch.StartNew();
                             RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
-                            thumbnail = decoder.DecodeThumb();
-                            if (thumbnail != null)
+                            try
                             {
+                                thumbnail = decoder.DecodeThumb();
                                 //read the thumbnail
                                 Task.Run(() =>
-                                        {
-                                            try
-                                            {
-                                                DisplayImage(thumbnail.GetSoftwareBitmap(), true);
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Debug.WriteLine("Error in thumb " + e.Message);
-                                            }
-                                        });
+                                {
+                                    try
+                                    {
+                                        DisplayImage(thumbnail.GetSoftwareBitmap(), true);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Debug.WriteLine("Error in thumb " + e.Message);
+                                    }
+                                });
+                            }
+                            catch (Exception)
+                            {
+                                //since thumbnail are optionnal, we ignore all errors
                             }
 
                             decoder.DecodeRaw();

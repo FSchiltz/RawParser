@@ -28,68 +28,53 @@ namespace RawNet
             reader = new TIFFBinaryReaderRE(file);
             reader.BaseStream.Position = 8;
             //read next 8 byte
-            dataAsString = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(8).ToArray());
+            dataAsString = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(8).ToArray()).Trim();
             //4 byte version
-            var version = reader.ReadUInt32();
+            var version = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(4).ToArray());
             //8 bytes unknow ??
-            var unknow = reader.ReadUInt64();
+            var unknow = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(8).ToArray()).Trim();
             //32 byte a string (camera model)
-            dataAsString = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(32).ToArray());
+            dataAsString = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(32).ToArray()).Trim();
             //Directory
             //4 bytes version
-            version = reader.ReadUInt32();
+            version = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(4).ToArray());
             //20 bytes unkown ??
-            dataAsString = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(20).ToArray());
+            dataAsString = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(20).ToArray()).Trim();
 
-            // First IFD typically JPEG and EXIF
-            //position should be 84
+            //parse the ifd
             uint first_ifd = reader.ReadUInt32();
-            first_ifd += 12;
-            if (stream.Length <= first_ifd)
-                throw new RawDecoderException("File too small (FUJI first IFD)");
-            reader.ReadBytes(6);//?? test position should be 92
+
+            reader.ReadInt32();
+            //raw header
             // RAW information IFD on older
-            uint third_ifd = (uint)(data[95] | (data[94] << 8) | (data[93] << 16) | (data[92] << 24));
-            if (stream.Length <= third_ifd)
-                third_ifd = 0;
+            uint third_ifd = reader.ReadUInt32();
+            reader.ReadUInt32();
 
-            // RAW IFD on newer, pointer to raw data on older models, so we try parsing first
-            // And adds it as data if parsin fails
-            reader.ReadBytes(5);
-            //position should be 100
-            uint second_ifd = reader.ReadUInt32();
-            if (stream.Length <= second_ifd)
-                second_ifd = 0;        
-
-            // Open the IFDs and merge them
-            ifd = ParseIFD(first_ifd);
-            if (second_ifd != 0)
+            switch (version)
             {
-                try
-                {
-                    ifd.subIFD.Add(ParseIFD(second_ifd));
-                }
-                catch (Exception e)
-                {
-                    Tag entry = new Tag(TagType.FUJI_STRIPOFFSETS, TiffDataType.LONG, 1);
-                    entry.data[0] = second_ifd;
+                case "0310":
+                    uint secondIFD = reader.ReadUInt32();
+                    Parse(secondIFD);
+                    break;
+                case "0100":
+                case "0159":
+                    //old format
+                    //raw image
+                    var entry = new Tag(TagType.FUJI_STRIPOFFSETS, TiffDataType.LONG, 1);
+                    entry.data[0] = reader.ReadUInt32();
                     ifd.tags.Add(entry.TagId, entry);
                     entry = new Tag(TagType.FUJI_STRIPBYTECOUNTS, TiffDataType.LONG, 1);
-                    uint max_size = (uint)(stream.Length - second_ifd);
-                    entry.data[0] = max_size;
+                    entry.data[0] = reader.ReadUInt32();
                     ifd.tags.Add(entry.TagId, entry);
-                }
+                    break;
             }
-
-            if (third_ifd != 0)
-            {
-                ParseFuji(third_ifd, ifd);
-            }
+            Parse(first_ifd + 12);
+            ParseFuji(third_ifd);
         }
 
         /* Parse FUJI information */
         /* It is a simpler form of Tiff IFD, so we add them as TiffEntries */
-        void ParseFuji(uint offset, IFD target_ifd)
+        void ParseFuji(uint offset)
         {
             try
             {
@@ -98,7 +83,7 @@ namespace RawNet
 
                 if (entries > 255)
                     throw new RawDecoderException("ParseFuji: Too many entries");
-                IFD target = new IFD();
+
                 for (int i = 0; i < entries; i++)
                 {
                     UInt16 tag = bytes.ReadUInt16();
@@ -135,7 +120,7 @@ namespace RawNet
                             }
                             break;
                     }
-                    target_ifd.tags.Add(t.TagId, t);
+                    ifd.tags.Add(t.TagId, t);
                     //bytes.ReadBytes((int)length);
                 }
             }
@@ -145,47 +130,11 @@ namespace RawNet
             }
         }
 
-        private IFD ParseIFD(uint offset)
-        {
-            IFD temp;
-            //parse the ifd
-            if (stream.Length < 16)
-                throw new RawDecoderException("Not a TIFF file (size too small)");
-            Endianness endian = Endianness.little;
-            byte[] buffer = new byte[5];
-
-            stream.Position = offset;
-            stream.Read(buffer, 0, 4);
-            if (buffer[0] == 0x4D || buffer[1] == 0x4D)
-            {
-                //open binaryreader
-                reader = new TIFFBinaryReaderRE(stream);
-                endian = Endianness.big;
-            }
-            else if (buffer[0] == 0x49 || buffer[1] == 0x49)
-            {
-                reader = new TIFFBinaryReader(stream);
-            }
-            else
-            {
-                throw new RawDecoderException("Not a TIFF file (ID)");
-            }
-
-            if (buffer[2] != 42 && buffer[2] != 0x52 && buffer[2] != 0x55 && buffer[2] != 0x4f)
-            {
-                // ORF has 0x52, RW2 0x55 - Brillant!
-                throw new RawDecoderException("Not a TIFF file (magic 42)");
-            }
-            reader.Position = offset + 4;
-            temp = new IFD(reader, reader.ReadUInt32(), endian, 0);
-            uint nextIFD = ifd.NextOffset;
-            return temp;
-        }
         public override void DecodeRaw()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.FUJI_STRIPOFFSETS);
 
-            if (data.Count > 0)
+            if (data.Count <= 0)
                 throw new RawDecoderException("Fuji decoder: Unable to locate raw IFD");
 
             IFD raw = data[0];
@@ -274,10 +223,27 @@ namespace RawNet
 
         public override void DecodeMetadata()
         {
+            //metadata
             base.DecodeMetadata();
             if (rawImage.metadata.Model == null) throw new RawDecoderException("RAF Meta Decoder: Model name not found");
             if (rawImage.metadata.Make == null) throw new RawDecoderException("RAF Support: Make name not found");
 
+            //get cfa
+            var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
+            if (cfa == null)
+            {
+                //Debug.WriteLine("CFA pattern is not found");
+                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            }
+            else
+            {
+                rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
+            }
+
+            //read lens
+            var lens = ifd.GetEntryRecursive((TagType)42036);
+            if (lens != null)
+                rawImage.metadata.Lens = Common.Trim(lens.DataAsString);
             Tag sep_black = ifd.GetEntryRecursive(TagType.FUJI_RGGBLEVELSBLACK);
             if (sep_black != null)
             {
@@ -311,6 +277,27 @@ namespace RawNet
                     }
                 }
             }
+        }
+
+        public override Thumbnail DecodeThumb()
+        {
+            IFD preview = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)[0];
+            //no thumbnail
+            if (preview == null) return null;
+
+            var thumb = preview.GetEntry(TagType.JPEGINTERCHANGEFORMAT);
+            var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
+            if (size == null || thumb == null) return null;
+
+
+            reader.Position = (uint)(thumb.data[0]) + preview.RelativeOffset;
+            Thumbnail temp = new Thumbnail()
+            {
+                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                Type = ThumbnailType.JPEG,
+                dim = new Point2D()
+            };
+            return temp;
         }
     }
 }

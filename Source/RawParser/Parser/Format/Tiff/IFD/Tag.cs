@@ -133,22 +133,29 @@ namespace RawNet
             parent_offset = baseOffset;
             TagId = (TagType)fileStream.ReadUInt16();
             dataType = (TiffDataType)fileStream.ReadUInt16();
+            if (TagId == TagType.FUJI_RAW_IFD)
+            {
+                if (dataType == TiffDataType.OFFSET) // FUJI - correct type
+                    dataType = TiffDataType.LONG;
+            }
+
             dataCount = fileStream.ReadUInt32();
             dataOffset = 0;
             if (((dataCount * GetTypeSize(dataType) > 4)))
             {
                 dataOffset = fileStream.ReadUInt32();
             }
-            if (dataOffset < fileStream.BaseStream.Length)
+
+            //Get the tag data
+            data = new Object[dataCount];
+            long firstPosition = fileStream.Position;
+
+            if (dataOffset < fileStream.BaseStream.Length && TagId != TagType.MAKERNOTE && TagId != TagType.MAKERNOTE_ALT)
             {
-                //Get the tag data
-                data = new Object[dataCount];
-                long firstPosition = fileStream.Position;
                 if (dataOffset > 1)
                 {
                     fileStream.Position = dataOffset + baseOffset;
                 }
-
                 for (int j = 0; j < dataCount; j++)
                 {
                     try
@@ -202,16 +209,16 @@ namespace RawNet
                         Debug.WriteLine("Error " + e.Message + " while reading IFD tag: " + TagId.ToString());
                     }
                 }
-                if (dataOffset > 1)
-                {
-                    fileStream.BaseStream.Position = firstPosition;
-                }
-                else if (dataOffset == 0)
-                {
-                    int k = (int)dataCount * GetTypeSize(dataType);
-                    if (k < 4)
-                        fileStream.ReadBytes(4 - k);
-                }
+            }
+            if (dataOffset > 1)
+            {
+                fileStream.BaseStream.Position = firstPosition;
+            }
+            else if (dataOffset == 0)
+            {
+                int k = (int)dataCount * GetTypeSize(dataType);
+                if (k < 4)
+                    fileStream.ReadBytes(4 - k);
             }
         }
 
