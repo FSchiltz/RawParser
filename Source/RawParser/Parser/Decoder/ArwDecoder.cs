@@ -430,7 +430,7 @@ namespace RawNet
         {
             if (rawImage.raw.dim.width > 3888)
             {
-                rawImage.blackLevel = 128 << (rawImage.ColorDepth - 12);
+                rawImage.BlackLevel = 128 << (rawImage.ColorDepth - 12);
             }
 
             switch (rawImage.raw.dim.width)
@@ -445,7 +445,7 @@ namespace RawNet
                 case 4600:
                     if (model.Contains("DSLR-A350"))
                         rawImage.raw.dim.height -= 4;
-                    rawImage.blackLevel = 0;
+                    rawImage.BlackLevel = 0;
                     break;
                 case 4928:
                     if (rawImage.raw.dim.height < 3280) rawImage.raw.dim.width -= 8;
@@ -453,7 +453,7 @@ namespace RawNet
                 case 5504:
                     rawImage.raw.dim.width -= (rawImage.raw.dim.height > 3664) ? 8 : 32;
                     if (model.StartsWith("DSC"))
-                        rawImage.blackLevel = 200 << (rawImage.ColorDepth - 12);
+                        rawImage.BlackLevel = 200 << (rawImage.ColorDepth - 12);
                     break;
                 case 6048:
                     rawImage.raw.dim.width -= 24;
@@ -469,7 +469,7 @@ namespace RawNet
                     {
                         rawImage.ColorDepth = 14;
                         //load_raw = &CLASS unpacked_load_raw;
-                        rawImage.blackLevel = 512;
+                        rawImage.BlackLevel = 512;
                     }
                     break;
             }

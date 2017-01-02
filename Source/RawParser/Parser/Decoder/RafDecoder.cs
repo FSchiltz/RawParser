@@ -9,6 +9,7 @@ namespace RawNet
     class RafDecoder : TiffDecoder
     {
         bool alt_layout;
+        uint relativeOffset;
 
         public RafDecoder(Stream file) : base(file, true)
         {
@@ -43,30 +44,29 @@ namespace RawNet
 
             //parse the ifd
             uint first_ifd = reader.ReadUInt32();
-
+            relativeOffset = first_ifd + 12;
             reader.ReadInt32();
             //raw header
             // RAW information IFD on older
             uint third_ifd = reader.ReadUInt32();
             reader.ReadUInt32();
-
-            switch (version)
+            uint secondIFD = reader.ReadUInt32();
+            uint count = reader.ReadUInt32();
+            try
             {
-                case "0310":
-                    uint secondIFD = reader.ReadUInt32();
-                    Parse(secondIFD);
-                    break;
-                case "0100":
-                case "0159":
-                    //old format
-                    //raw image
-                    var entry = new Tag(TagType.FUJI_STRIPOFFSETS, TiffDataType.LONG, 1);
-                    entry.data[0] = reader.ReadUInt32();
-                    ifd.tags.Add(entry.TagId, entry);
-                    entry = new Tag(TagType.FUJI_STRIPBYTECOUNTS, TiffDataType.LONG, 1);
-                    entry.data[0] = reader.ReadUInt32();
-                    ifd.tags.Add(entry.TagId, entry);
-                    break;
+                Parse(secondIFD);
+            }
+            catch (Exception)
+            {
+                //old format
+                ifd = new IFD(Endianness.big, 0);
+                //raw image
+                var entry = new Tag(TagType.FUJI_STRIPOFFSETS, TiffDataType.LONG, 1);
+                entry.data[0] = secondIFD;
+                ifd.tags.Add(entry.TagId, entry);
+                entry = new Tag(TagType.FUJI_STRIPBYTECOUNTS, TiffDataType.LONG, 1);
+                entry.data[0] = count;
+                ifd.tags.Add(entry.TagId, entry);
             }
             Parse(first_ifd + 12);
             ParseFuji(third_ifd);
@@ -78,6 +78,7 @@ namespace RawNet
         {
             try
             {
+                IFD tempIFD = new IFD(ifd.endian, ifd.Depth);
                 TIFFBinaryReaderRE bytes = new TIFFBinaryReaderRE(stream, offset);
                 uint entries = bytes.ReadUInt32();
 
@@ -120,9 +121,10 @@ namespace RawNet
                             }
                             break;
                     }
-                    ifd.tags.Add(t.TagId, t);
+                    tempIFD.tags.Add(t.TagId, t);
                     //bytes.ReadBytes((int)length);
                 }
+                ifd.subIFD.Add(tempIFD);
             }
             catch (IOException e)
             {
@@ -145,11 +147,11 @@ namespace RawNet
             if (dim != null)
             {
                 height = dim.GetInt(0);
-                width = dim.GetInt(0);
+                width = raw.GetEntry(TagType.FUJI_RAWIMAGEFULLWIDTH).GetInt(0);
             }
             else
             {
-                Tag wtag = raw.GetEntry(TagType.IMAGEWIDTH);
+                Tag wtag = raw.GetEntryRecursive(TagType.IMAGEWIDTH);
                 if (wtag != null)
                 {
                     if (wtag.dataCount < 2)
@@ -159,7 +161,7 @@ namespace RawNet
                 }
             }
 
-            Tag e = raw.GetEntry(TagType.FUJI_LAYOUT);
+            Tag e = raw.GetEntryRecursive(TagType.FUJI_LAYOUT);
             if (e != null)
             {
                 if (e.dataCount < 2)
@@ -180,12 +182,17 @@ namespace RawNet
             uint off = offsets.GetUInt(0);
             int count = counts.GetInt(0);
 
-            int bps = 16;
-            var bpsTag = raw.GetEntry(TagType.FUJI_BITSPERSAMPLE);
+            ushort bps = 16;
+            var bpsTag = raw.GetEntryRecursive(TagType.FUJI_BITSPERSAMPLE);
             if (bpsTag != null)
             {
-                bps = bpsTag.GetInt(0);
+                bps = bpsTag.GetUShort(0);
             }
+            else
+            {
+                rawImage.errors.Add("BPS not found");
+            }
+            rawImage.ColorDepth = bps;
 
             // x-trans sensors report 14bpp, but data isn't packed so read as 16bpp
             if (bps == 14) bps = 16;
@@ -197,7 +204,7 @@ namespace RawNet
 
             rawImage.raw.dim = new Point2D(width * (double_width ? 2 : 1), height);
             rawImage.Init();
-            TIFFBinaryReader input = new TIFFBinaryReader(stream, off);
+            TIFFBinaryReader input = new TIFFBinaryReader(stream, (uint)(off + raw.RelativeOffset));
             Point2D pos = new Point2D(0, 0);
 
             if (count * 8 / (width * height) < 10)
@@ -228,6 +235,25 @@ namespace RawNet
             if (rawImage.metadata.Model == null) throw new RawDecoderException("RAF Meta Decoder: Model name not found");
             if (rawImage.metadata.Make == null) throw new RawDecoderException("RAF Support: Make name not found");
 
+            //testing
+            Tag active_area = ifd.GetEntryRecursive(TagType.ACTIVEAREA);
+            if (active_area != null)
+            {
+                if (active_area.dataCount != 4)
+                    throw new RawDecoderException("DNG: active area has " + active_area.dataCount + " values instead of 4");
+
+                //active_area.GetIntArray(out int[] corners, 4);
+                if (new Point2D(active_area.GetInt(1), active_area.GetInt(0)).IsThisInside(rawImage.raw.dim))
+                {
+                    if (new Point2D(active_area.GetInt(3), active_area.GetInt(2)).IsThisInside(rawImage.raw.dim))
+                    {
+                        Rectangle2D crop = new Rectangle2D(active_area.GetInt(1), active_area.GetInt(0),
+                            active_area.GetInt(3) - active_area.GetInt(1), active_area.GetInt(2) - active_area.GetInt(0));
+                        rawImage.Crop(crop);
+                    }
+                }
+            }
+
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)
@@ -247,7 +273,7 @@ namespace RawNet
             Tag sep_black = ifd.GetEntryRecursive(TagType.FUJI_RGGBLEVELSBLACK);
             if (sep_black != null)
             {
-                if (sep_black.dataCount == 4)
+                if (sep_black.dataCount >= 4)
                 {
                     for (int k = 0; k < 4; k++)
                         rawImage.blackLevelSeparate[k] = sep_black.GetInt(k);
@@ -259,9 +285,9 @@ namespace RawNet
             {
                 if (wb.dataCount == 3)
                 {
-                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(1);
-                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0);
-                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(2);
+                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(1) / wb.GetFloat(0);
+                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
+                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(2) / wb.GetFloat(0);
                 }
             }
             else
@@ -271,9 +297,9 @@ namespace RawNet
                 {
                     if (wb.dataCount == 8)
                     {
-                        rawImage.metadata.WbCoeffs[0] = wb.GetFloat(1);
-                        rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0);
-                        rawImage.metadata.WbCoeffs[2] = wb.GetFloat(3);
+                        rawImage.metadata.WbCoeffs[0] = wb.GetFloat(1) / wb.GetFloat(0);
+                        rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
+                        rawImage.metadata.WbCoeffs[2] = wb.GetFloat(3) / wb.GetFloat(0);
                     }
                 }
             }

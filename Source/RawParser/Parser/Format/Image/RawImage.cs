@@ -17,8 +17,8 @@ namespace RawNet
     {
         public Image preview = new Image(), thumb, raw = new Image();
         public ColorFilterArray cfa = new ColorFilterArray();
-        public double[] camMul, black, curve;
-        public int rotation = 0, blackLevel, saturation, dark;
+        public double[] camMul, curve;
+        public int rotation = 0, saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
         public bool DitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
         public ushort ColorDepth { get; set; }
@@ -27,11 +27,21 @@ namespace RawNet
         public uint cpp, pitch;
         public int whitePoint;
         public int[] blackLevelSeparate = new int[4];
+        private int black;
+        public int BlackLevel
+        {
+            set { black = value; }
+            get
+            {
+                if (blackLevelSeparate[0] != 0) return blackLevelSeparate[0];
+                else return black;
+            }
+        }
         public List<String> errors = new List<string>();
         public bool isCFA = true;
         internal TableLookUp table;
         public ColorFilterArray UncroppedCfa;
-        public int bpp { get { return (int)Math.Ceiling(ColorDepth / 8.0); } }
+        public int Bpp { get { return (int)Math.Ceiling(ColorDepth / 8.0); } }
 
         public RawImage()
         {
@@ -46,7 +56,7 @@ namespace RawNet
                 throw new RawDecoderException("RawImageData: Dimensions too large for allocation.");
             if (raw.dim.width <= 0 || raw.dim.height <= 0)
                 throw new RawDecoderException("RawImageData: Dimension of one sides is less than 1 - cannot allocate image.");
-            pitch = (uint)(((raw.dim.width * bpp) + 15) / 16) * 16;
+            pitch = (uint)(((raw.dim.width * Bpp) + 15) / 16) * 16;
             raw.data = new ushort[raw.dim.width * raw.dim.height * cpp];
             if (raw.data == null)
                 throw new RawDecoderException("RawImageData::createData: Memory Allocation failed.");
@@ -171,23 +181,23 @@ namespace RawNet
             }
             try
             {
-                if (blackLevel == 0 && blackLevelSeparate[0] != 0)
+                if (BlackLevel == 0 && blackLevelSeparate[0] != 0)
                 {
                     for (int i = 0; i < blackLevelSeparate.Length; i++)
                     {
-                        blackLevel += blackLevelSeparate[i];
+                        BlackLevel += blackLevelSeparate[i];
                     }
-                    blackLevel /= blackLevelSeparate.Length;
+                    BlackLevel /= blackLevelSeparate.Length;
                 }
-                if (blackLevel != 0 || whitePoint != ((1 << ColorDepth) - 1))
+                if (BlackLevel != 0 || whitePoint != ((1 << ColorDepth) - 1))
                 {
-                    double factor = ((1 << ColorDepth) - 1.0) / (((1 << ColorDepth) - 1.0) - blackLevel);
+                    double factor = ((1 << ColorDepth) - 1.0) / (((1 << ColorDepth) - 1.0) - BlackLevel);
                     Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
                     {
                         long v = y * raw.uncroppedDim.width * cpp;
                         for (int x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
                         {
-                            raw.data[x + v] = (ushort)((raw.data[x + v] - blackLevel) * factor);
+                            raw.data[x + v] = (ushort)((raw.data[x + v] - BlackLevel) * factor);
                         }
                     });
                 }
@@ -213,7 +223,7 @@ namespace RawNet
         {
             const int skipBorder = 250;
             int gw = (int)((raw.dim.width - skipBorder + raw.offset.width) * cpp);
-            if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && blackLevel < 0) || whitePoint >= 65536)
+            if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && BlackLevel < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
                 int m = 0;
@@ -228,15 +238,15 @@ namespace RawNet
                         pix++;
                     }
                 }
-                if (blackLevel < 0)
-                    blackLevel = b;
+                if (BlackLevel < 0)
+                    BlackLevel = b;
                 if (whitePoint >= 65536)
                     whitePoint = m;
                 //Debug.WriteLine("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + " Estimated white: " + whitePoint);
             }
 
             /* Skip, if not needed */
-            if ((blackAreas.Count == 0 && blackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || raw.dim.Area() <= 0)
+            if ((blackAreas.Count == 0 && BlackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || raw.dim.Area() <= 0)
                 return;
 
             /* If filter has not set separate blacklevel, compute or fetch it */
@@ -298,7 +308,7 @@ namespace RawNet
             if (totalpixels == 0)
             {
                 for (int i = 0; i < 4; i++)
-                    blackLevelSeparate[i] = blackLevel;
+                    blackLevelSeparate[i] = BlackLevel;
                 return;
             }
 

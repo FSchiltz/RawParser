@@ -95,7 +95,7 @@ namespace RawNet
             InitTable(huffSelect);
 
             raw.whitePoint = curve[max - 1];
-            raw.blackLevel = curve[0];
+            raw.BlackLevel = curve[0];
             raw.SetTable(curve, max, true);
 
             BitPumpMSB bits = new BitPumpMSB(input, offset, size);

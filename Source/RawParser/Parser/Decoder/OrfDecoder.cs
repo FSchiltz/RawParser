@@ -339,7 +339,7 @@ namespace RawNet
                                         rawImage.blackLevelSeparate[i] = blackEntry.GetShort(2);
                                 }
                                 // Adjust whitelevel based on the read black (we assume the dynamic range is the same)
-                                rawImage.whitePoint -= rawImage.blackLevel - rawImage.blackLevelSeparate[0];
+                                rawImage.whitePoint -= rawImage.BlackLevel - rawImage.blackLevelSeparate[0];
                             }
                         }
                     }
