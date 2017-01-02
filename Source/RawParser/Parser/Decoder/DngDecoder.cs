@@ -55,11 +55,11 @@ namespace RawNet
             if (cfa == null)
             {
                 Debug.WriteLine("CFA pattern is not found");
-                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
             }
             else
             {
-                rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
         }
 
@@ -366,9 +366,9 @@ namespace RawNet
 
                 rawImage.Crop(cropped);
                 if (rawImage.isCFA && cropped.Pos.width % 2 == 1)
-                    rawImage.cfa.ShiftLeft(1);
+                    rawImage.colorFilter.ShiftLeft(1);
                 if (rawImage.isCFA && cropped.Pos.height % 2 == 1)
-                    rawImage.cfa.ShiftDown(1);
+                    rawImage.colorFilter.ShiftDown(1);
             }
             if (rawImage.raw.dim.Area() <= 0)
                 throw new RawDecoderException("DNG Decoder: No image left after crop");
@@ -708,7 +708,7 @@ namespace RawNet
             var cPat = raw.GetEntry(TagType.CFAPATTERN).data;     // Does NOT contain dimensions as some documents state
 
             Point2D cfaSize = new Point2D(pDim.GetInt(1), pDim.GetInt(0));
-            rawImage.cfa.SetSize(cfaSize);
+            rawImage.colorFilter.SetSize(cfaSize);
             if (cfaSize.Area() != raw.GetEntry(TagType.CFAPATTERN).dataCount)
                 throw new RawDecoderException("DNG Decoder: CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
 
@@ -738,7 +738,7 @@ namespace RawNet
                             c2 = CFAColor.UNKNOWN;
                             throw new RawDecoderException("DNG Decoder: Unsupported CFA Color.");
                     }
-                    rawImage.cfa.SetColorAt(new Point2D(x, y), c2);
+                    rawImage.colorFilter.SetColorAt(new Point2D(x, y), c2);
                 }
             }
         }

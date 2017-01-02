@@ -16,7 +16,7 @@ namespace RawNet
     public class RawImage
     {
         public Image preview = new Image(), thumb, raw = new Image();
-        public ColorFilterArray cfa = new ColorFilterArray();
+        public ColorFilterArray colorFilter = new ColorFilterArray();
         public double[] camMul, curve;
         public int rotation = 0, saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
@@ -39,8 +39,9 @@ namespace RawNet
         }
         public List<String> errors = new List<string>();
         public bool isCFA = true;
+        public bool isFujiTrans = false;
         internal TableLookUp table;
-        public ColorFilterArray UncroppedCfa;
+        public ColorFilterArray UncroppedColorFilter;
         public int Bpp { get { return (int)Math.Ceiling(ColorDepth / 8.0); } }
 
         public RawImage()
@@ -113,9 +114,9 @@ namespace RawNet
             raw.dim = crop.Dim;
 
             if ((crop.Pos.width & 1) != 0)
-                cfa.ShiftLeft(0);
+                colorFilter.ShiftLeft(0);
             if ((crop.Pos.height & 1) != 0)
-                cfa.ShiftDown(0);
+                colorFilter.ShiftDown(0);
         }
 
         // setWithLookUp will set a single pixel by using the lookup table if supplied,
@@ -348,7 +349,7 @@ namespace RawNet
         public void CreatePreview(int previewFactor)
         {
             preview.dim = new Point2D(raw.dim.width / previewFactor, raw.dim.height / previewFactor);
-            preview.uncroppedDim = new Point2D(raw.dim.width / previewFactor, raw.dim.height / previewFactor);
+            preview.uncroppedDim = new Point2D(preview.dim.width, preview.dim.height);
             Debug.WriteLine("Preview of size w:" + preview.dim.width + "y:" + preview.dim.height);
             preview.data = new ushort[preview.dim.height * preview.dim.width * cpp];
             int doubleFactor = previewFactor * previewFactor;
