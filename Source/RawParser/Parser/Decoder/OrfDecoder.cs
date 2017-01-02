@@ -134,6 +134,8 @@ namespace RawNet
             {
                 fixed (UInt16* dest = &rawImage.raw.data[y * rawImage.raw.uncroppedDim.width])
                 {
+                    acarry0 = new long[3];
+                    acarry1 = new long[3];
                     bool y_border = y < 2;
                     bool border = true;
                     for (int x = 0; x < w; x++)
