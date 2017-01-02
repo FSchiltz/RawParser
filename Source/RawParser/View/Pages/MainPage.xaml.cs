@@ -230,8 +230,8 @@ namespace RawEditor
                             decoder.DecodeRaw();
                             decoder.DecodeMetadata();
                             raw = decoder.rawImage;
-                            if (decoder.ScaleValue)
-                                raw.ScaleValues();
+                            //if (decoder.ScaleValue)
+                                //raw.ScaleValues();
                             raw.metadata.FileName = file.DisplayName;
                             raw.metadata.FileNameComplete = file.Name;
                             raw.metadata.FileExtension = file.FileType;

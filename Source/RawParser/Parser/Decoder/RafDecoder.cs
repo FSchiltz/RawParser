@@ -246,6 +246,7 @@ namespace RawNet
                     //fuji cfa
                     rawImage.colorFilter = new ColorFilterArray(new Point2D(6, 6));
                     rawImage.isFujiTrans = true;
+                    rawImage.errors.Add("No support for X-trans yet,colour will be wrong");
                     for (int i = 0; i < t.dataCount; i++)
                     {
                         rawImage.colorFilter.cfa[i] = (CFAColor)t.GetInt(i);
