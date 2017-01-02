@@ -2,9 +2,9 @@
 {
     class Makernote : IFD
     {
-        public Makernote() { }
+        public Makernote(Endianness endian, int depth) : base(endian, depth) { }
 
-        public Makernote(byte[] data, uint offset, Endianness endian, int depth, int parentOffset)
+        public Makernote(byte[] data, uint offset, Endianness endian, int depth, int parentOffset) : base(endian, depth)
         {
             TIFFBinaryReader file;
 
@@ -21,8 +21,7 @@
                 throw new RawDecoderException("Endianess not correct " + endian);
             }
             file.BaseStream.Position = offset;
-            relativeOffset = -parentOffset;
-            Depth = depth + 1;
+            RelativeOffset = -parentOffset;
             Parse(file);
             file.Dispose();
         }

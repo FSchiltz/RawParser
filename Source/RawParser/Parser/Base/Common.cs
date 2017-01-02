@@ -4,6 +4,13 @@ namespace RawNet
 {
     internal static class Common
     {
+        static public string Trim(string val)
+        {
+            //ifd string have somtimes trailing zero so remove them
+            return val.Remove(val.IndexOf((char)0));
+
+        }
+
         static public int Clampbits(int x, int n)
         {
             int _y_temp = x >> n;

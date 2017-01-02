@@ -64,6 +64,8 @@ namespace RawNet
         public Point2D RawDim { get; set; }
         public int OriginalRotation { get; set; }
 
+        public string Lens { get; set; }
+
         public ImageMetadata()
         {
             Subsampling.width = Subsampling.height = 1;

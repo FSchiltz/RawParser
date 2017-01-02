@@ -179,14 +179,14 @@
     <Compile Include="Parser\Format\Image\TableLookUp.cs" />
     <Compile Include="Parser\Format\Image\Thumbnail.cs" />
     <Compile Include="Parser\Format\Tiff\IFD\IFD.cs" />
-    <Compile Include="Parser\Format\Tiff\Makernote\NokiaMakernote.cs" />
+    <Compile Include="Parser\Format\Makernote\NokiaMakernote.cs" />
     <Compile Include="Parser\Format\Tiff\IFD\Tag.cs" />
     <Compile Include="Parser\Format\Tiff\IFD\TagType.cs" />
-    <Compile Include="Parser\Format\Tiff\Makernote\FujiMakerNote.cs" />
-    <Compile Include="Parser\Format\Tiff\Makernote\Makernote.cs" />
-    <Compile Include="Parser\Format\Tiff\Makernote\NikonMakerNote.cs" />
-    <Compile Include="Parser\Format\Tiff\Makernote\PanasonicMakernote.cs" />
-    <Compile Include="Parser\Format\Tiff\Makernote\PentaxMakernote.cs" />
+    <Compile Include="Parser\Format\Makernote\FujiMakerNote.cs" />
+    <Compile Include="Parser\Format\Makernote\Makernote.cs" />
+    <Compile Include="Parser\Format\Makernote\NikonMakerNote.cs" />
+    <Compile Include="Parser\Format\Makernote\PanasonicMakernote.cs" />
+    <Compile Include="Parser\Format\Makernote\PentaxMakernote.cs" />
     <Compile Include="Parser\RawParser.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
