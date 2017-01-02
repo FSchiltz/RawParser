@@ -36,7 +36,10 @@ namespace RawNet
 
         public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset) : this(endian, depth)
         {
-            fileStream.Position = offset + relativeOffset;
+            if (relativeOffset >= 0)
+                fileStream.Position = offset + relativeOffset;
+            else
+                fileStream.Position = offset;
 
             this.RelativeOffset = relativeOffset;
             if (depth < IFD.MaxRecursion)

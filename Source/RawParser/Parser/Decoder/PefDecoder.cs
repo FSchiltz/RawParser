@@ -71,11 +71,11 @@ namespace RawNet
             if (cfa == null)
             {
                 Debug.WriteLine("CFA pattern is not found");
-                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
             }
             else
             {
-                rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
             // Read black level
@@ -118,24 +118,24 @@ namespace RawNet
             {
                 rawImage.raw.dim.height = 3124;
                 rawImage.raw.dim.width = 4688;
-                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
             }
             else if (rawImage.raw.dim.width == 4352 && (model == "K-r" || model == "K-x"))
             {
                 rawImage.raw.dim.width = 4309;
-                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
             }
             else if (rawImage.raw.dim.width >= 4960 && model.Contains("K-5"))
             {
                 rawImage.raw.offset.height = 10;
                 rawImage.raw.dim.width = 4950;
-                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
             }
             else if (rawImage.raw.dim.width == 4736 && model == "K-7")
             {
                 rawImage.raw.dim.height = 3122;
                 rawImage.raw.dim.width = 4684;
-                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
                 rawImage.raw.offset.width = 2;
             }
             else if (rawImage.raw.dim.width == 6080 && model == "K-3")
@@ -147,7 +147,7 @@ namespace RawNet
             {
                 rawImage.raw.dim.height = 5502;
                 rawImage.raw.dim.width = 7328;
-                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.GREEN, CFAColor.RED, CFAColor.BLUE, CFAColor.GREEN);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.GREEN, CFAColor.RED, CFAColor.BLUE, CFAColor.GREEN);
                 rawImage.raw.offset.width = 29;
                 rawImage.raw.offset.height = 48;
             }

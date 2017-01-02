@@ -237,7 +237,7 @@ namespace RawNet
 
         public override void DecodeMetadata()
         {
-            rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
+            rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.BLUE, CFAColor.GREEN, CFAColor.GREEN, CFAColor.RED);
 
             base.DecodeMetadata();
 

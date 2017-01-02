@@ -234,36 +234,40 @@ namespace RawNet
             base.DecodeMetadata();
             if (rawImage.metadata.Model == null) throw new RawDecoderException("RAF Meta Decoder: Model name not found");
             if (rawImage.metadata.Make == null) throw new RawDecoderException("RAF Support: Make name not found");
-
-            //testing
-            Tag active_area = ifd.GetEntryRecursive(TagType.ACTIVEAREA);
-            if (active_area != null)
+            SetMetadata(rawImage.metadata.Model);
+            //get cfa
+            var rawifd = ifd.GetIFDsWithTag(TagType.FUJI_LAYOUT);
+            if (rawifd != null)
             {
-                if (active_area.dataCount != 4)
-                    throw new RawDecoderException("DNG: active area has " + active_area.dataCount + " values instead of 4");
-
-                //active_area.GetIntArray(out int[] corners, 4);
-                if (new Point2D(active_area.GetInt(1), active_area.GetInt(0)).IsThisInside(rawImage.raw.dim))
+                var cfa = rawifd[0].GetEntry(TagType.FUJI_LAYOUT);
+                var t = rawifd[0].GetEntry((TagType)0x0131);
+                if (t != null)
                 {
-                    if (new Point2D(active_area.GetInt(3), active_area.GetInt(2)).IsThisInside(rawImage.raw.dim))
+                    //fuji cfa
+                    rawImage.colorFilter = new ColorFilterArray(new Point2D(6, 6));
+                    rawImage.isFujiTrans = true;
+                    for (int i = 0; i < t.dataCount; i++)
                     {
-                        Rectangle2D crop = new Rectangle2D(active_area.GetInt(1), active_area.GetInt(0),
-                            active_area.GetInt(3) - active_area.GetInt(1), active_area.GetInt(2) - active_area.GetInt(0));
-                        rawImage.Crop(crop);
+                        rawImage.colorFilter.cfa[i] = (CFAColor)t.GetInt(i);
                     }
                 }
-            }
+                else if (cfa.GetInt(0) < 4)
+                {
+                    //bayer cfa
+                    rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0),
+                        (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
+                }
+                else
+                {
+                    //default to GRBG
+                    rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                }
 
-            //get cfa
-            var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
-            if (cfa == null)
-            {
                 //Debug.WriteLine("CFA pattern is not found");
-                rawImage.cfa.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
             }
             else
             {
-                rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
+                //rawImage.cfa.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
             //read lens
@@ -301,6 +305,46 @@ namespace RawNet
                         rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
                         rawImage.metadata.WbCoeffs[2] = wb.GetFloat(3) / wb.GetFloat(0);
                     }
+                }
+            }
+        }
+
+        protected void SetMetadata(string model)
+        {
+            if (model.Contains("S2Pro"))
+            {
+                rawImage.raw.dim.height = 2144;
+                rawImage.raw.dim.width = 2880;
+                //flip = 6;
+            }
+            else if (model.Contains("X-Pro1"))
+            {
+                rawImage.raw.dim.width -= 168;
+            }
+            else if (model.Contains("FinePix X100"))
+            {
+                rawImage.raw.dim.width -= 74;
+                rawImage.raw.offset.width = 74;
+            }
+            else
+            {
+                //maximum = (is_raw == 2 && shot_select) ? 0x2f00 : 0x3e00;
+                //top_margin = (raw_height - height) >> 2 << 1;
+                //left_margin = (raw_width - width) >> 2 << 1;
+                // if (rawImage.raw.dim.width == 2848 || rawImage.raw.dim.width == 3664) filters = 0x16161616;
+                //if (rawImage.raw.dim.width == 4032 || rawImage.raw.dim.width == 4952 || rawImage.raw.dim.width == 6032) rawImage.raw.offset.width = 0;
+                if (rawImage.raw.dim.width == 3328)
+                {
+                    rawImage.raw.offset.width = 34;
+                    rawImage.raw.dim.width -= 66;
+                }
+                else if (rawImage.raw.dim.width == 4936)
+                    rawImage.raw.offset.width = 4;
+
+                if (model.Contains("HS50EXR") || model.Contains("F900EXR"))
+                {
+                    rawImage.raw.dim.width += 2;
+                    rawImage.raw.offset.width = 0;
                 }
             }
         }
