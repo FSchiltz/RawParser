@@ -77,6 +77,8 @@ namespace RawEditor.Effect
         {
             int height = image.colorFilter.Size.height;
             int width = image.colorFilter.Size.width;
+            //first deflate
+            Deflate(image, deflated);
             Parallel.For(0, image.raw.dim.height, row =>
             {
                 int realRow = row + image.raw.offset.height;
@@ -113,15 +115,13 @@ namespace RawEditor.Effect
 
         private static void Bilinear(RawImage image, ushort[] deflated)
         {
-            int height = image.colorFilter.Size.height;
-            int width = image.colorFilter.Size.width;
             Parallel.For(0, image.raw.dim.height, row =>
             {
                 int realRow = row + image.raw.offset.height;
                 for (int col = 0; col < image.raw.dim.width; col++)
                 {
                     int realCol = col + image.raw.offset.width;
-                    CFAColor pixeltype = image.colorFilter.cfa[((row % height) * width) + col % width];
+                    CFAColor pixeltype = image.colorFilter.cfa[((row % 2) * 2) + col % 2];
                     if (pixeltype == CFAColor.GREEN)
                     {
                         //if green
