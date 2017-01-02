@@ -202,7 +202,7 @@ namespace RawNet
                         }
                     });
                 }
-                if (table != null)
+                /*if (table != null)
                 {
                     Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
                     {
@@ -212,7 +212,7 @@ namespace RawNet
                             raw.data[x + v] = table.tables[raw.data[x + v]];
                         }
                     });
-                }
+                }*/
             }
             catch (Exception ex)
             {
