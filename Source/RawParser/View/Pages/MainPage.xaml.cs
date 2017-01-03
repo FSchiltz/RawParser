@@ -478,8 +478,8 @@ namespace RawEditor
                 effect.gMul = colorTintSlider.Value;
                 effect.bMul = colorTintBlueSlider.Value;
                 effect.contrast = contrastSlider.Value / 10;
-                effect.shadow = ShadowSlider.Value * 2;
-                effect.hightlight = HighLightSlider.Value * 3;
+                effect.shadow = ShadowSlider.Value;
+                effect.hightlight = HighLightSlider.Value;
                 effect.saturation = 1 + saturationSlider.Value / 100;
                 effect.vignet = VignetSlider.Value;
                 effect.ReverseGamma = (bool)GammaToggle.IsChecked;
