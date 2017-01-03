@@ -63,9 +63,6 @@ namespace RawNet
         public override void DecodeMetadata()
         {
             base.DecodeMetadata();
-
-            SetMetadata(rawImage.metadata.Model);
-
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)
@@ -77,6 +74,8 @@ namespace RawNet
             {
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
+
+            SetMetadata(rawImage.metadata.Model);
 
             // Read black level
             Tag black = ifd.GetEntryRecursive((TagType)0x200);
@@ -148,7 +147,7 @@ namespace RawNet
                 rawImage.raw.dim.height = 5502;
                 rawImage.raw.dim.width = 7328;
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.GREEN, CFAColor.RED, CFAColor.BLUE, CFAColor.GREEN);
-                rawImage.raw.offset.width = 29;
+                rawImage.raw.offset.width = 30;
                 rawImage.raw.offset.height = 48;
             }
         }
