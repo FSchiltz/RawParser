@@ -21,6 +21,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using RawEditor.Effect;
 using Windows.System;
+using Windows.ApplicationModel;
 
 namespace RawEditor
 {
@@ -54,6 +55,11 @@ namespace RawEditor
             dispatcherTimer.Tick += UpdateMemoryBar;
             dispatcherTimer.Interval = new TimeSpan(0, 0, 2);
             dispatcherTimer.Start();
+            Version.Text = string.Format("Version: {0}.{1}.{2}.{3}",
+                    Package.Current.Id.Version.Major,
+                    Package.Current.Id.Version.Minor,
+                    Package.Current.Id.Version.Build,
+                    Package.Current.Id.Version.Revision);
         }
 
         public void UpdateMemoryBar(object e, object a)
