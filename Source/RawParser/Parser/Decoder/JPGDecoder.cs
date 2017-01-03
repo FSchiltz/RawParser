@@ -29,6 +29,7 @@ namespace RawNet
         public override void DecodeMetadata()
         {
             //fill useless metadata
+            rawImage.IsGammaCorrected = false;
             rawImage.whitePoint = byte.MaxValue;
             rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.width, rawImage.raw.uncroppedDim.height);
             /*List<string> list = new List<string>

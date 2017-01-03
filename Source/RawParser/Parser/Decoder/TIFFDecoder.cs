@@ -90,6 +90,7 @@ namespace RawNet
                 rawImage.ColorDepth = (ushort)bitPerSampleTag.data[0];
                 rawImage.cpp = 3;
                 rawImage.Init();
+                rawImage.IsGammaCorrected = false;
                 long strips = height / Convert.ToInt64(rowPerStripTag.data[0]), lastStrip = height % Convert.ToInt64(rowPerStripTag.data[0]);
                 long rowperstrip = Convert.ToInt64(rowPerStripTag.data[0]);
                 uint compression = imageCompressedTag.GetUInt(0);

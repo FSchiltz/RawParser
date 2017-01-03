@@ -26,6 +26,7 @@ namespace RawEditor.Effect
             for (int i = 0; i < curve.Length; i++)
             {
                 curve[i] = spline.Interpolate(i);
+                if (curve[i] < 0) curve[i] = 0;
             }
 
             return curve;

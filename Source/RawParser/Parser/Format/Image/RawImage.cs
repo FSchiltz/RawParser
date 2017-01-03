@@ -44,6 +44,8 @@ namespace RawNet
         public ColorFilterArray UncroppedColorFilter;
         public int Bpp { get { return (int)Math.Ceiling(ColorDepth / 8.0); } }
 
+        public bool IsGammaCorrected { get; set; } = true;
+
         public RawImage()
         {
             //Set for 16bit image non demos           
