@@ -13,7 +13,7 @@ using Windows.UI.Xaml.Shapes;
 
 namespace RawEditor
 {
-    public struct HistoRaw
+    public class HistoRaw
     {
         public int[] red;
         public int[] blue;

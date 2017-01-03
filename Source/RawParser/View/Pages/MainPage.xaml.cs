@@ -98,9 +98,6 @@ namespace RawEditor
                 ExifDisplay.ItemsSource = null;
                 //empty the histogram
                 EnableEditingControlAsync(false);
-                //set back editing control to default value
-                ResetControlsAsync();
-
                 LumaHisto.Points = null;
                 RedHisto.Points = null;
                 GreenHisto.Points = null;
@@ -116,13 +113,14 @@ namespace RawEditor
                 exposureSlider.Value = 0;
                 ShadowSlider.Value = 0;
                 HighLightSlider.Value = 0;
-                contrastSlider.Value = 10;
+                contrastSlider.Value = 0;
                 saturationSlider.Value = 0;
                 ResetButton.IsEnabled = false;
                 userAppliedModif = false;
                 CropUI.ResetCrop();
                 CropUI.SetThumbAsync(null);
                 VignetSlider.Value = 0;
+                GammaToggle.IsChecked = raw?.IsGammaCorrected;
                 if (raw != null)
                 {
                     raw.raw.offset = new Point2D(0, 0);
@@ -162,23 +160,24 @@ namespace RawEditor
         private async void EnableEditingControlAsync(bool v)
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                 {
-                     colorTempSlider.IsEnabled = v;
-                     colorTintSlider.IsEnabled = v;
-                     colorTintBlueSlider.IsEnabled = v;
-                     exposureSlider.IsEnabled = v;
-                     ShadowSlider.IsEnabled = v;
-                     HighLightSlider.IsEnabled = v;
-                     contrastSlider.IsEnabled = v;
-                     saturationSlider.IsEnabled = v;
-                     SaveButton.IsEnabled = v;
-                     ZoomSlider.IsEnabled = v;
-                     RotateLeftButton.IsEnabled = v;
-                     RotateRightButton.IsEnabled = v;
-                     ShareButton.IsEnabled = v;
-                     CropButton.IsEnabled = v;
-                     VignetSlider.IsEnabled = v;
-                 });
+            {
+                colorTempSlider.IsEnabled = v;
+                colorTintSlider.IsEnabled = v;
+                colorTintBlueSlider.IsEnabled = v;
+                exposureSlider.IsEnabled = v;
+                ShadowSlider.IsEnabled = v;
+                HighLightSlider.IsEnabled = v;
+                contrastSlider.IsEnabled = v;
+                saturationSlider.IsEnabled = v;
+                SaveButton.IsEnabled = v;
+                ZoomSlider.IsEnabled = v;
+                RotateLeftButton.IsEnabled = v;
+                RotateRightButton.IsEnabled = v;
+                ShareButton.IsEnabled = v;
+                CropButton.IsEnabled = v;
+                VignetSlider.IsEnabled = v;
+                GammaToggle.IsEnabled = v;
+            });
         }
 
         private void OpenFile(StorageFile file)
@@ -214,7 +213,7 @@ namespace RawEditor
                                 {
                                     try
                                     {
-                                        DisplayImage(thumbnail.GetSoftwareBitmap(), true);
+                                        DisplayImage(thumbnail?.GetSoftwareBitmap(), true);
                                     }
                                     catch (Exception e)
                                     {
@@ -231,7 +230,7 @@ namespace RawEditor
                             decoder.DecodeMetadata();
                             raw = decoder.rawImage;
                             //if (decoder.ScaleValue)
-                                //raw.ScaleValues();
+                            //raw.ScaleValues();
                             raw.metadata.FileName = file.DisplayName;
                             raw.metadata.FileNameComplete = file.Name;
                             raw.metadata.FileExtension = file.FileType;
@@ -278,6 +277,8 @@ namespace RawEditor
 
                             //activate the editing control
                             SetWBAsync();
+                            //set back editing control to default value
+                            ResetControlsAsync();
                             EnableEditingControlAsync(true);
                             //dispose
 #if !DEBUG
@@ -288,15 +289,14 @@ namespace RawEditor
                         }
                         catch (Exception e)
                         {
-                            raw = null;
-                            EmptyImageAsync();
+                            //if error display message but try to keep the old image
+                            if (raw != null)
+                                UpdatePreview(true);
 #if DEBUG
                             Debug.WriteLine(e.Message);
 #else
-
-                    //send an event with file extension and camera model and make if any                   
-                    logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
-
+                                                //send an event with file extension and camera model and make if any                   
+                    logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);                       
 #endif
                             var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                             var str = loader.GetString("ExceptionText");
@@ -496,12 +496,13 @@ namespace RawEditor
                 effect.hightlight = HighLightSlider.Value * 3;
                 effect.saturation = 1 + saturationSlider.Value / 100;
                 effect.vignet = VignetSlider.Value;
+                effect.ReverseGamma = (bool)GammaToggle.IsChecked;
             });
 
             effect.mul = raw.metadata.WbCoeffs;
             effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
-            effect.camCurve = raw.curve;
+            //effect.camCurve = raw.curve;
             effect.rotation = raw.rotation;
             SoftwareBitmap bitmap = null;
 
@@ -524,7 +525,7 @@ namespace RawEditor
             }
             else
             {
-                effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap);
+                effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap, false);
                 return Tuple.Create(new HistoRaw(), bitmap);
             }
         }
@@ -753,6 +754,16 @@ namespace RawEditor
         private void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             EmptyImageAsync();
+        }
+
+        private void GammaToggle_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            if (raw?.preview.data != null)
+            {
+                history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.saturation });
+                EnableResetAsync();
+                UpdatePreview(false);
+            }
         }
     }
 }

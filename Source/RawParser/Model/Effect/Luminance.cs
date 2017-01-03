@@ -15,6 +15,13 @@ namespace RawEditor.Effect
             g *= value;
             b *= value;
         }
+        public static void Contraste(ref double l, double value)
+        {
+            l -= 0.5;
+            l *= value * 1.0;
+            l += 0.5;
+        }
+
 
         public static void Contraste(ref double r, ref double g, ref double b, uint maxValue, double value)
         {
