@@ -194,61 +194,53 @@ namespace RawEditor
                     {
                         try
                         {
-                            Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
-
-                            //Does not improve speed
-                            /*
-                            byte[] data = new byte[stream.Length];
-                            stream.Read(data, 0, (int)stream.Length);
-                            stream = new MemoryStream(data);
-                            stream.Position = 0;*/
-
-                            var watch = Stopwatch.StartNew();
-                            RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
-                            try
+                            using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                             {
-                                thumbnail = decoder.DecodeThumb();
-                                //read the thumbnail
-                                Task.Run(() =>
+                                var watch = Stopwatch.StartNew();
+                                RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
+                                try
                                 {
-                                    try
+                                    thumbnail = decoder.DecodeThumb();
+                                    //read the thumbnail
+                                    Task.Run(() =>
                                     {
-                                        DisplayImage(thumbnail?.GetSoftwareBitmap(), true);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Debug.WriteLine("Error in thumb " + e.Message);
-                                    }
-                                });
-                            }
-                            catch (Exception)
-                            {
-                                //since thumbnail are optionnal, we ignore all errors
-                            }
+                                        try
+                                        {
+                                            DisplayImage(thumbnail?.GetSoftwareBitmap(), true);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Debug.WriteLine("Error in thumb " + e.Message);
+                                        }
+                                    });
+                                }
+                                catch (Exception)
+                                {                                    //since thumbnail are optionnal, we ignore all errors 
+                                }
 
-                            decoder.DecodeRaw();
-                            decoder.DecodeMetadata();
-                            raw = decoder.rawImage;
-                            //if (decoder.ScaleValue)
-                            //raw.ScaleValues();
-                            raw.metadata.FileName = file.DisplayName;
-                            raw.metadata.FileNameComplete = file.Name;
-                            raw.metadata.FileExtension = file.FileType;
-                            if (raw.errors.Count > 0)
-                            {
-                                ExceptionDisplay.Display("This file is not fully supported, it may appear incorrectly");
+                                decoder.DecodeRaw();
+                                decoder.DecodeMetadata();
+                                raw = decoder.rawImage;
+                                //if (decoder.ScaleValue)
+                                //raw.ScaleValues();
+                                raw.metadata.FileName = file.DisplayName;
+                                raw.metadata.FileNameComplete = file.Name;
+                                raw.metadata.FileExtension = file.FileType;
+                                if (raw.errors.Count > 0)
+                                {
+                                    ExceptionDisplay.Display("This file is not fully supported, it may appear incorrectly");
 #if !DEBUG
                                 //send an event with file extension and camera model and make if any                   
                                 logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + ""+raw.errors.Count);
 #endif
+                                }
+                                watch.Stop();
+                                raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
+                                //Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
+                                decoder = null;
+                                file = null;
                             }
 
-                            watch.Stop();
-                            raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
-                            //Debug.WriteLine("Parsed done in " + watch.ElapsedMilliseconds + "ms");
-                            stream.Dispose();
-                            file = null;
-                            decoder = null;
                             DisplayExif();
                             if (raw.isCFA)
                             {
@@ -272,15 +264,10 @@ namespace RawEditor
                             {
                                 ExceptionDisplay.Display("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                             }
-                            UpdatePreview(true);
-                            thumbnail = null;
-
                             //activate the editing control
                             SetWBAsync();
                             //set back editing control to default value
                             ResetControlsAsync();
-                            EnableEditingControlAsync(true);
-                            //dispose
 #if !DEBUG
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
@@ -289,9 +276,6 @@ namespace RawEditor
                         }
                         catch (Exception e)
                         {
-                            //if error display message but try to keep the old image
-                            if (raw != null)
-                                UpdatePreview(true);
 #if DEBUG
                             Debug.WriteLine(e.Message);
 #else
@@ -301,10 +285,12 @@ namespace RawEditor
                             var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                             var str = loader.GetString("ExceptionText");
                             ExceptionDisplay.Display(str);
-                            raw = null;
-                            ImageSelected = false;
                         }
+                        if (raw != null)
+                            UpdatePreview(true);
+                        thumbnail = null;
                         Load.HideLoad();
+                        EnableEditingControlAsync(true);
                         ImageSelected = false;
                     });
                 }
