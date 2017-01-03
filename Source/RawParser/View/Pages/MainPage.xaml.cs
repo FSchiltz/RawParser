@@ -264,18 +264,22 @@ namespace RawEditor
                             {
                                 ExceptionDisplay.Display("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                             }
-                            //activate the editing control
-                            SetWBAsync();
                             //set back editing control to default value
                             ResetControlsAsync();
 #if !DEBUG
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
-                            file = null;
+                            UpdatePreview(true);
+                            thumbnail = null;
+                            EnableEditingControlAsync(true);
                         }
                         catch (Exception e)
                         {
+                            raw = null;
+                            EmptyImageAsync();
+                            ImageSelected = false;
+
 #if DEBUG
                             Debug.WriteLine(e.Message);
 #else
@@ -286,11 +290,7 @@ namespace RawEditor
                             var str = loader.GetString("ExceptionText");
                             ExceptionDisplay.Display(str);
                         }
-                        if (raw != null)
-                            UpdatePreview(true);
-                        thumbnail = null;
                         Load.HideLoad();
-                        EnableEditingControlAsync(true);
                         ImageSelected = false;
                     });
                 }
