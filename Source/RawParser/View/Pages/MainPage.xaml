@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:rawnet="using:RawNet"
     xmlns:uihelper="using:RawEditor.View.UIHelper"
     mc:Ignorable="d"  >
 
@@ -128,25 +129,25 @@
                           RelativePanel.AlignTopWithPanel="True" 
                           RelativePanel.AlignLeftWithPanel="True"  
                           HorizontalContentAlignment="Stretch" 
-                          VerticalContentAlignment="Stretch" ViewChanged="ImageDisplay_ViewChanged" >
+                          VerticalContentAlignment="Stretch" >
                 <ScrollViewer.Background>
                     <SolidColorBrush Color="#19FFFFFF"/>
                 </ScrollViewer.Background>
                 <Image x:Name="ImageBox"/>
             </ScrollViewer>
             <Slider  x:Name="ZoomSlider" IsEnabled="False" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1"
-                     Canvas.ZIndex="3" Margin="10,0,0,10" ValueChanged="Slider_ValueChanged" 
+                     Canvas.ZIndex="3" Margin="10,0,0,10" Value="{x:Bind ImageDisplay.ZoomFactor, Mode=OneWay}" ValueChanged="Slider_ValueChanged"
                      Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom"/>
 
             <Grid x:Name="CropGrid" Visibility="Collapsed" Canvas.ZIndex="5" Background="#FFAAAAAA" >
                 <uihelper:CropUIHelper x:Name="CropUI"></uihelper:CropUIHelper>
-                <Button x:Name="CropUndo" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,-80,10" Background="{ThemeResource ButtonForeground}" Tapped="CropUndo_Tapped">
+                <Button x:Name="CropUndo" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,-80,10" Background="{ThemeResource ButtonForeground}" Tapped="{x:Bind CropUI.ResetCrop}">
                     <SymbolIcon Symbol="Refresh" Foreground="{ThemeResource AppBarBorderThemeBrush}" Width="20" Height="20"/>
                 </Button>
                 <Button x:Name="CropAccept" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="{ThemeResource ButtonForeground}" Tapped="CropAccept_Tapped" Margin="0,0,10,10">
                     <SymbolIcon Symbol="Accept" Width="20" Height="20" Foreground="{ThemeResource AppBarBorderThemeBrush}"></SymbolIcon>
                 </Button>
-                <Button x:Name="CropReject" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,100,10" Background="{ThemeResource ButtonForeground}" Tapped="CropReject_Tapped">
+                <Button x:Name="CropReject" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,100,10" Background="{ThemeResource ButtonForeground}" Tapped="{x:Bind HideCropUI}">
                     <SymbolIcon Symbol="Clear" Foreground="{ThemeResource AppBarBorderThemeBrush}" Width="20" Height="20"/>
                 </Button>
             </Grid>
@@ -168,16 +169,16 @@
                             <Button x:Name="ResetButton" Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="ResetButton_Tapped" Padding="8,2" IsEnabled="False">Reset</Button>
                             <TextBlock FontSize="16" x:Uid="ExplosureSettings" />
                             <TextBlock FontSize="12" x:Uid="Exposure"/>
-                            <Slider x:Name="exposureSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3"/>
+                            <Slider x:Name="exposureSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3"/>
                             <!-- <TextBlock FontSize="12">Brightness</TextBlock>
                                 <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False" StepFrequency="5"/>
                                 -->
                             <TextBlock FontSize="12"> Highlight</TextBlock>
-                            <Slider x:Name="HighLightSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="50" Minimum="-50" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
+                            <Slider x:Name="HighLightSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}"  Maximum="50" Minimum="-50" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
                             <TextBlock FontSize="12">Shadow
                             </TextBlock>
-                            <Slider x:Name="ShadowSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="50" Minimum="-50" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
-                            <ToggleButton x:Name="GammaToggle" IsEnabled="False" IsChecked="True" Tapped="GammaToggle_Tapped" 
+                            <Slider x:Name="ShadowSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}"  Maximum="50" Minimum="-50" LargeChange="5" SmallChange="1" IsEnabled="False"  StepFrequency="1"/>
+                            <ToggleButton x:Name="GammaToggle" IsEnabled="False" IsChecked="True" Tapped="{x:Bind EditingControlChanged}" 
                                           Margin="0,10,0,5" HorizontalAlignment="Center" >Apply gamma curve</ToggleButton>
                             <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
 
@@ -193,7 +194,7 @@
                             <Button IsEnabled="False" Click="CameraWBCheck_Click" FontSize="12" Grid.Column="1" 
                                         x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton" Margin="0,0,0,10"/>
                             <TextBlock FontSize="12" x:Uid="Saturation"/>
-                            <Slider x:Name="saturationSlider"   PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False"/>
+                            <Slider x:Name="saturationSlider"   PointerCaptureLost="{x:Bind EditingControlChanged}"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False"/>
                             <!-- <TextBlock FontSize="12">Vibrance</TextBlock>
                                 <Slider x:Name="vibranceSlider"    PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>
 -->
@@ -201,25 +202,16 @@
                             <TextBlock Foreground="Black" FontSize="16" x:Uid="ContrastBalance"/>
 
                             <TextBlock FontSize="12" x:Uid="Contrast"/>
-                            <Slider x:Name="contrastSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="5" LargeChange="1" Value="0" Minimum="-5" IsEnabled="False" />
+                            <Slider x:Name="contrastSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" LargeChange="1" Value="0" Minimum="-5" IsEnabled="False" />
                             <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
-                            <!--
-                            <TextBlock FontSize="12" >Crop</TextBlock>
-                            <Grid Width="250" Height="250">
-                                <Slider Height="200" x:Name="TopSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="100" LargeChange="10" Value="0" Minimum="0"  IsEnabled="False" Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left" IsDirectionReversed="True" Margin="0,50,0,0" />
-                                <Slider Height="200" x:Name="BottomSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="100" LargeChange="10" Value="100" Minimum="1"  IsEnabled="False" Orientation="Vertical" VerticalAlignment="Bottom" HorizontalAlignment="Right" IsDirectionReversed="True" Margin="0,0,0,50" />
-                                <Slider Width="200" x:Name="LeftSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="100" LargeChange="10" Value="0" Minimum="0" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                                <Slider Width="200" x:Name="RightSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="100" LargeChange="10" Value="100" Minimum="1" IsEnabled="False" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                            </Grid>
-                            <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
-                        -->
+
                             <TextBlock Foreground="Black" FontSize="16"  x:Uid="CameraProfile"/>
                             <TextBlock FontSize="12">Vignet</TextBlock>
-                            <Slider x:Name="VignetSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                            <Slider x:Name="VignetSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
                             <TextBlock FontSize="12">Sharpness</TextBlock>
-                            <Slider x:Name="NoiseSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                            <Slider x:Name="NoiseSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
                             <TextBlock FontSize="12">Noise reduction</TextBlock>
-                            <Slider x:Name="SharpenSlider"  PointerCaptureLost="Slider_PointerCaptureLost" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                            <Slider x:Name="SharpenSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
 
                             <Rectangle Width="120" Height="1" Fill="#FF343434" Margin="0,6,0,0"/>
                         </StackPanel>
@@ -235,7 +227,7 @@
                     </PivotItem>
                 <PivotItem x:Uid="History">
                     <ScrollViewer VerticalContentAlignment="Stretch">
-                        <ListView ItemsSource="{x:Bind history}" x:Name="HistoryDisplay" VerticalAlignment="Top" HorizontalAlignment="Left" >
+                        <ListView ItemsSource="{x:Bind history,Mode=OneWay}" VerticalAlignment="Top" HorizontalAlignment="Left" >
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid>
@@ -255,9 +247,9 @@
                     <ScrollViewer VerticalContentAlignment="Stretch">
                         <StackPanel>
                             <TextBlock x:Uid="ExifsData"/>
-                            <ListView  x:Name="ExifDisplay" VerticalAlignment="Top" HorizontalAlignment="Left" >
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
+                            <ListView ItemsSource="{x:Bind ExifSource,Mode=OneWay}" VerticalAlignment="Top" HorizontalAlignment="Left" >
+                                <ListView.ItemTemplate >
+                                    <DataTemplate >
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition />
@@ -278,7 +270,7 @@
                                            IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left"
                                            FontSize="14" >Memory usage</TextBlock>
                         <uihelper:MemoryBar ></uihelper:MemoryBar>
-                        <Button Margin="0,10,0,0" Tapped="Button_Tapped">Free image</Button>
+                        <Button Margin="0,10,0,0" Tapped="{x:Bind EmptyImageAsync}">Free image</Button>
                     </StackPanel>
                 </PivotItem>
             </Pivot>

@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace RawNet
 {
@@ -13,12 +14,34 @@ namespace RawNet
         public Point2D dim, offset = new Point2D(), uncroppedDim;
 
     }
+
+    public class ExifValue
+    {
+        public string Key { get; set; }
+        public string Value { get; set; }
+        public ExifValue(string key, string value)
+        {
+            Key = key;
+            Value = value;
+        }
+    }
+
     public class RawImage
     {
         public Image preview = new Image(), thumb, raw = new Image();
         public ColorFilterArray colorFilter = new ColorFilterArray();
         public double[] camMul, curve;
-        public int rotation = 0, saturation, dark;
+        private int rotation = 0;
+        public int Rotation
+        {
+            get { return rotation; }
+            set
+            {
+                if (value < 0) rotation = 0;
+                else rotation = value % 4;
+            }
+        }
+        public int saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
         public bool DitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
         public ushort ColorDepth { get; set; }
@@ -417,9 +440,47 @@ namespace RawNet
              });
         }
 
-        public void Rotate(bool v)
+        public void ParseExif(ObservableCollection<ExifValue> exif)
         {
-            throw new NotImplementedException();
+            exif.Add(new ExifValue("File", metadata.FileNameComplete));
+            exif.Add(new ExifValue("Parsing time", metadata.ParsingTimeAsString));
+            if (!string.IsNullOrEmpty(metadata.Make))
+                exif.Add(new ExifValue("Maker", metadata.Make));
+            if (!string.IsNullOrEmpty(metadata.Model))
+                exif.Add(new ExifValue("Model", metadata.Model));
+            if (!string.IsNullOrEmpty(metadata.Mode))
+                exif.Add(new ExifValue("Image mode", metadata.Mode));
+            if (!string.IsNullOrEmpty(metadata.Lens))
+                exif.Add(new ExifValue("Lense", metadata.Lens));
+            exif.Add(new ExifValue("Size", "" + ((raw.dim.width * raw.dim.height) / 1000000.0).ToString("F") + " MPixels"));
+            exif.Add(new ExifValue("Dimension", "" + raw.dim.width + " x " + raw.dim.height));
+
+            exif.Add(new ExifValue("Sensor size", "" + ((metadata.RawDim.width * metadata.RawDim.height) / 1000000.0).ToString("F") + " MPixels"));
+            exif.Add(new ExifValue("Sensor dimension", "" + metadata.RawDim.width + " x " + metadata.RawDim.height));
+
+            if (metadata.IsoSpeed > 0)
+                exif.Add(new ExifValue("ISO", "" + metadata.IsoSpeed));
+            if (metadata.Aperture > 0)
+                exif.Add(new ExifValue("Aperture", "" + metadata.Aperture.ToString("F")));
+            if (metadata.Exposure > 0)
+                exif.Add(new ExifValue("Exposure time", "" + metadata.ExposureAsString));
+
+            if (!string.IsNullOrEmpty(metadata.TimeTake))
+                exif.Add(new ExifValue("Time of capture", "" + metadata.TimeTake));
+            if (!string.IsNullOrEmpty(metadata.TimeModify))
+                exif.Add(new ExifValue("Time modified", "" + metadata.TimeModify));
+
+            if (metadata.Gps != null)
+            {
+                exif.Add(new ExifValue("Longitude", metadata.Gps.LongitudeAsString));
+                exif.Add(new ExifValue("lattitude", metadata.Gps.LattitudeAsString));
+                exif.Add(new ExifValue("altitude", metadata.Gps.AltitudeAsString));
+            }
+
+            //more metadata
+            exif.Add(new ExifValue("Black level", "" + BlackLevel));
+            exif.Add(new ExifValue("White level", "" + whitePoint));
+            exif.Add(new ExifValue("Color depth", "" + ColorDepth + " bits"));
         }
     }
 }

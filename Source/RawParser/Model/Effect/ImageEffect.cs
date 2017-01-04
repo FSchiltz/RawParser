@@ -59,9 +59,11 @@ namespace RawEditor.Effect
             yCurve[3] = ((yCurve[2] + yCurve[4]) / 2) + (maxValue / 200);
             maxValue--;
             double param = 1;
+            double k = 1;
             if (ReverseGamma)
             {
-                param = 0.45;
+                param = 0.417;
+                k = 1.055;
             }
             param += contrast;
 
@@ -69,7 +71,7 @@ namespace RawEditor.Effect
             //create a reverse gamma array
             for (int i = 0; i < curve.Length; i++)
             {
-                curve[i] = maxValue * Math.Pow(curve[i] / (double)maxValue, param);
+                curve[i] = maxValue * Math.Pow(k*(curve[i] / (double)maxValue), param);
             }
             return curve;
         }
