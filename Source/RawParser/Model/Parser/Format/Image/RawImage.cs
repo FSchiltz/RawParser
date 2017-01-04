@@ -348,8 +348,30 @@ namespace RawNet
          * The X and Y dimension will be both divided by the image
          * 
          */
-        public void CreatePreview(int previewFactor)
+        public void CreatePreview(FactorValue factor, double viewHeight, double viewWidth)
         {
+            //image will be size of windows
+            int previewFactor = 0;
+            if (factor == FactorValue.Auto)
+            {
+                if (raw.dim.height > raw.dim.width)
+                {
+                    previewFactor = (int)(raw.dim.height / viewHeight);
+                }
+                else
+                {
+                    previewFactor = (int)(raw.dim.width / viewWidth);
+                }
+                int start = 1;
+                for (; previewFactor > (start << 1); start <<= 1) ;
+                if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
+                else previewFactor <<= 1;
+            }
+            else
+            {
+                previewFactor = (int)factor;
+            }
+
             preview.dim = new Point2D(raw.dim.width / previewFactor, raw.dim.height / previewFactor);
             preview.uncroppedDim = new Point2D(preview.dim.width, preview.dim.height);
             Debug.WriteLine("Preview of size w:" + preview.dim.width + "y:" + preview.dim.height);
