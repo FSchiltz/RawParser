@@ -278,15 +278,15 @@ namespace RawNet
                     {
                         case 3:
                         case 2:
-                            rawImage.rotation = 2;
+                            rawImage.Rotation = 2;
                             break;
                         case 4:
                         case 6:
-                            rawImage.rotation = 1;
+                            rawImage.Rotation = 1;
                             break;
                         case 7:
                         case 5:
-                            rawImage.rotation = 3;
+                            rawImage.Rotation = 3;
                             break;
                     }
                 }
@@ -297,19 +297,19 @@ namespace RawNet
                 {
                     case 3:
                     case 2:
-                        rawImage.rotation = 2;
+                        rawImage.Rotation = 2;
                         break;
                     case 6:
                     case 5:
-                        rawImage.rotation = 1;
+                        rawImage.Rotation = 1;
                         break;
                     case 8:
                     case 7:
-                        rawImage.rotation = 3;
+                        rawImage.Rotation = 3;
                         break;
                 }
             }
-            rawImage.metadata.OriginalRotation = rawImage.rotation;
+            rawImage.metadata.OriginalRotation = rawImage.Rotation;
             rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.width, rawImage.raw.uncroppedDim.height);
         }
     }
