@@ -21,7 +21,6 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using RawEditor.Effect;
 using Windows.System;
-using Windows.ApplicationModel;
 
 namespace RawEditor
 {
@@ -36,6 +35,8 @@ namespace RawEditor
         public Thumbnail thumbnail;
         private bool userAppliedModif = false;
         public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
+        public BindableBool resetButtonVisibility = new BindableBool();
+        public BindableBool controlVisibilty = new BindableBool();
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
@@ -49,19 +50,7 @@ namespace RawEditor
             NavigationCacheMode = NavigationCacheMode.Required;
             NavigationCacheMode = NavigationCacheMode.Enabled;
             ImageSelected = false;
-            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
-            UpdateMemoryBar(null, null);
-            var dispatcherTimer = new DispatcherTimer();
-            dispatcherTimer.Tick += UpdateMemoryBar;
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 2);
-            dispatcherTimer.Start();            
-        }
-
-        public void UpdateMemoryBar(object e, object a)
-        {
-            double var = (MemoryManager.AppMemoryUsage / (double)MemoryManager.AppMemoryUsageLimit) * 100;
-            if (var < 1) var = 1;
-            MemoryBar.Value = var;
+            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));                   
         }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
@@ -78,8 +67,7 @@ namespace RawEditor
                 {
                     filePicker.FileTypeFilter.Add(format);
                 }
-                StorageFile file = await filePicker.PickSingleFileAsync();
-                ImageSelected = true;
+                StorageFile file = await filePicker.PickSingleFileAsync();                
                 OpenFile(file);
             }
         }
@@ -115,8 +103,7 @@ namespace RawEditor
                 ShadowSlider.Value = 0;
                 HighLightSlider.Value = 0;
                 contrastSlider.Value = 0;
-                saturationSlider.Value = 0;
-                ResetButton.IsEnabled = false;
+                saturationSlider.Value = 0;                
                 userAppliedModif = false;
                 CropUI.ResetCrop();
                 CropUI.SetThumbAsync(null);
@@ -131,6 +118,7 @@ namespace RawEditor
                     raw.rotation = raw.metadata.OriginalRotation;
                 }
                 SetWBAsync();
+                resetButtonVisibility.Value = false;
             });
             if (raw != null)
             {
@@ -190,11 +178,11 @@ namespace RawEditor
                     //Add a loading screen
                     Load.ShowLoad();
                     EmptyImageAsync();
-                    ImageSelected = true;
                     Task.Run(async () =>
                     {
                         try
                         {
+                            ImageSelected = true;
                             using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                             {
                                 var watch = Stopwatch.StartNew();
@@ -259,7 +247,8 @@ namespace RawEditor
                                 Demosaic.Demos(raw, algo);
                             }
 
-                            CreatePreview();
+                            raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+
                             //check if enough memory
                             if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < (ulong)raw.raw.data.Length || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                             {
@@ -303,35 +292,6 @@ namespace RawEditor
 #endif
                 }
             }
-        }
-
-        private void CreatePreview()
-        {
-            //create a small image from raw to display
-            FactorValue factor = SettingStorage.PreviewFactor;
-
-            //image will be size of windows
-            int previewFactor = 0;
-            if (factor == FactorValue.Auto)
-            {
-                if (raw.raw.dim.height > raw.raw.dim.width)
-                {
-                    previewFactor = (int)(raw.raw.dim.height / ImageDisplay.ViewportHeight);
-                }
-                else
-                {
-                    previewFactor = (int)(raw.raw.dim.width / ImageDisplay.ViewportWidth);
-                }
-                int start = 1;
-                for (; previewFactor > (start << 1); start <<= 1) ;
-                if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
-                else previewFactor <<= 1;
-            }
-            else
-            {
-                previewFactor = (int)factor;
-            }
-            raw.CreatePreview(previewFactor);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
