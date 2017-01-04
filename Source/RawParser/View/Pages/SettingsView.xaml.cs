@@ -3,6 +3,7 @@ using RawNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Windows.ApplicationModel;
 using Windows.Data.Pdf;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -19,6 +20,14 @@ namespace RawEditor
         {
             get;
         } = new List<BitmapImage>();
+
+        public string Version
+        {
+            get
+            {
+                return string.Format("Version: {0}.{1}.{2}.{3}", Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor, Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
+            }
+        }
 
         public SettingsView()
         {

@@ -56,6 +56,8 @@
                 <ScrollViewer VerticalContentAlignment="Stretch">
                     <StackPanel HorizontalAlignment="Left">
                         <TextBlock TextWrapping="WrapWholeWords" FontSize="30" x:Uid="About" />
+                        <TextBlock Text="{x:Bind Version, Mode=OneTime}" FontSize="14"></TextBlock>
+
                         <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Issue" />
 
                         <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" Margin="0,10,0,0"/>
@@ -66,7 +68,7 @@
                 </ScrollViewer>
             </PivotItem>
         </Pivot>
-       
+
         <Popup IsOpen="False" x:Name="PopUp" IsLightDismissEnabled="True">
             <Popup.ChildTransitions>
                 <TransitionCollection>

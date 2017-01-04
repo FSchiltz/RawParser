@@ -165,7 +165,7 @@
                                 <Polygon x:Name="BlueHisto" Opacity="0.4" Stretch="Fill" Fill="#FF000083" Width="260" Height="120"/>
                                 <Polygon x:Name="LumaHisto" Opacity="0.9" Stretch="Fill" Fill="#FF555555" Width="260" Height="120"/>
                             </Grid>
-                            <Button x:Name="ResetButton" Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="ResetButton_Tapped" Padding="8,2" >Reset</Button>
+                            <Button x:Name="ResetButton" Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="ResetButton_Tapped" Padding="8,2" IsEnabled="False">Reset</Button>
                             <TextBlock FontSize="16" x:Uid="ExplosureSettings" />
                             <TextBlock FontSize="12" x:Uid="Exposure"/>
                             <Slider x:Name="exposureSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="False" StepFrequency="0.3"/>
@@ -274,13 +274,11 @@
                 </PivotItem>
                 <PivotItem x:Uid="System">
                     <StackPanel >
-                        <TextBlock x:Name="Version"></TextBlock>
                         <TextBlock Foreground="Black" 
                                            IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left"
                                            FontSize="14" >Memory usage</TextBlock>
                         <ProgressBar x:Name="MemoryBar" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Height="10" Margin="10,10,10,0"></ProgressBar>
-                        <Button Margin="0,10,0,0" Tapped="Button_Tapped">Free image</Button>
-                     
+                        <Button Margin="0,10,0,0" Tapped="Button_Tapped">Free image</Button>                     
                     </StackPanel>
                 </PivotItem>
             </Pivot>
