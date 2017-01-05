@@ -15,7 +15,6 @@
 			<AppBarSeparator />
 			<AppBarButton Icon="Setting" x:Uid="Setting" Click="SettingClick" />
 			<CommandBar.SecondaryCommands>
-				<AppBarButton x:Name="FeedbackButton" IsEnabled="{x:Bind feedbacksupport.Value}" Tapped="FeedbackButton_TappedAsync" Icon="LikeDislike" Label="Send Feedback" />
 				<AppBarButton Tapped="ReportButton_Tapped" Icon="MailForward" Label="Report issue" />
 				<AppBarButton Tapped="GitterButton_Tapped" Icon="Comment" Label="Send suggestion" />
 			</CommandBar.SecondaryCommands>
@@ -115,7 +114,7 @@
 								<Polygon x:Name="BlueHisto" Opacity="0.4" Stretch="Fill" Fill="#FF000083" Width="260" Height="120" />
 								<Polygon x:Name="LumaHisto" Opacity="0.9" Stretch="Fill" Fill="#FF555555" Width="260" Height="120" />
 							</Grid>
-							<Button Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="ResetButton_Tapped" Padding="8,2" IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}">Reset</Button>
+							<Button Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="{x:Bind ResetControlsAsync}" Padding="8,2" IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}">Reset</Button>
 							<TextBlock FontSize="16" x:Uid="ExplosureSettings" />
 							<TextBlock FontSize="12" x:Uid="Exposure" />
 							<Slider x:Name="exposureSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="0.3" />
