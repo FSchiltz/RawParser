@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace RawEditor.Effect
 {
     static public class Color
     {
-        public static void RgbToHsl(double r, double g, double b, uint maxValue, ref double h, ref double s, ref double l)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void RgbToHsl(double r, double g, double b, uint maxValue, out double h, out double s, out double l)
         {
             r /= maxValue;
             g /= maxValue;
@@ -35,10 +38,16 @@ namespace RawEditor.Effect
                 {
                     h = (r - g) / d + 4.0;
                 }
+                else
+                {
+                    h = 0;
+                }
             }
             h /= 6;
         }
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void HslToRgb(double h, double s, double l, uint maxValue, ref double r, ref double g, ref double b)
         {
             if (s == 0)
@@ -58,6 +67,8 @@ namespace RawEditor.Effect
             b *= maxValue;
         }
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Hue2rgb(double p, double q, double t)
         {
             if (t < 0) t += 1;

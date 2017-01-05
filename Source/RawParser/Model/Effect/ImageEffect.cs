@@ -1,5 +1,6 @@
 ﻿using RawNet;
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,13 +32,13 @@ namespace RawEditor.Effect
         public bool ReverseGamma = true;
         public uint maxValue;
         public double saturation = 1;
-        public double vibrance = 0;
+        //public double vibrance = 0;
         //public double[] camCurve;
         public double rMul;
         public double gMul;
         public double bMul;
-        internal int rotation;
-        internal double vignet;
+        public int rotation;
+        //internal double vignet;
 
         internal double[] CreateCurve()
         {
@@ -53,12 +54,6 @@ namespace RawEditor.Effect
             //hightlight
             xCurve[2] = maxValue;
             yCurve[2] = (maxValue + ((hightlight + contrast) * (maxValue / 200))) * exposure;
-            //contrast
-            /*
-            xCurve[1] = maxValue / 4;
-            yCurve[1] = ((yCurve[0] + yCurve[2]) / 2) - (maxValue / 200);
-            xCurve[3] = maxValue * 3 / 4;
-            yCurve[3] = ((yCurve[2] + yCurve[4]) / 2) + (maxValue / 200);*/
             maxValue--;
 
             var curve = Curve.CubicSpline(xCurve, yCurve);
@@ -81,112 +76,123 @@ namespace RawEditor.Effect
                     curve[i] *= maxValue;
                 }
             }
-
             return curve;
         }
 
-        public unsafe HistoRaw ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap, bool histo)
+        //ugly code
+        public unsafe void ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap)
         {
-            HistoRaw value = null;
-            if (histo) value = new HistoRaw()
-            {
-                luma = new int[256],
-                red = new int[256],
-                blue = new int[256],
-                green = new int[256]
-            };
+            int shift = colorDepth - 8;
+            maxValue = (uint)(1 << colorDepth);
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
+            using (var reference = buffer.CreateReference())
             {
-                using (var reference = buffer.CreateReference())
+                int startIndex = buffer.GetPlaneDescription(0).StartIndex;
+                ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
+                if (!cameraWB)
                 {
-                    BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-                    ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                    maxValue = (uint)(1 << colorDepth);
-                    int shift = colorDepth - 8;
-                    if (!cameraWB)
-                    {
-                        mul = new float[4];
-                        mul[0] = (float)(rMul / 255);
-                        mul[1] = (float)(gMul / 255);
-                        mul[2] = (float)(bMul / 255);
-                    }
-                    double[] contrastCurve = CreateCurve();
-
-                    Parallel.For(0, dim.height, y =>
-                    {
-                        int realY = (y + off.height) * uncrop.width * 3;
-                        int bufferY = y * dim.width * 4 + bufferLayout.StartIndex;
-                        for (int x = 0; x < dim.width; x++)
-                        {
-                            int realPix = realY + (3 * (x + off.width));
-                            int bufferPix;
-                            switch (rotation)
-                            {
-                                //dest_buffer[c][m - r - 1] = source_buffer[r][c];
-                                case 2:
-                                    bufferPix = (dim.height - y - 1) * dim.width + dim.width - x - 1;
-                                    break;
-                                case 3:
-                                    bufferPix = (dim.width - x - 1) * dim.height + y;
-                                    break;
-                                case 1:
-                                    bufferPix = x * dim.height + dim.height - y - 1;
-                                    break;
-                                default:
-                                    bufferPix = y * dim.width + x;
-                                    break;
-                            }
-                            bufferPix = bufferPix * 4 + bufferLayout.StartIndex;
-                            //get the RGB value
-                            double red = image[realPix], green = image[realPix + 1], blue = image[realPix + 2];
-                            red *= mul[0];
-                            green *= mul[1];
-                            blue *= mul[2];
-                            //clip
-                            Luminance.Clip(ref red, ref green, ref blue, maxValue);
-                            double h = 0, s = 0, l = 0;
-                            //transform to HSL value                            
-                            Color.RgbToHsl(red, green, blue, maxValue, ref h, ref s, ref l);
-                            //vignet correction
-                            //int xV = (x + off.width);
-                            //int yV = (y + off.height);
-
-                            //var v = Math.Abs(xV - (uncrop.width / 2.0)) / uncrop.width;
-                            //l *= 1 + (vignet * Math.Sin((xV - uncrop.width / 2) / uncrop.width) + Math.Sin((yV - uncrop.height / 2) / uncrop.width));
-
-                            Luminance.Clip(ref l);
-
-                            //change brightness from curve
-                            //add saturation
-                            l = contrastCurve[(uint)(l * maxValue)] / maxValue;
-
-                            //Luminance.Contraste(ref l, contrast);
-
-                            s *= saturation;
-                            s += vibrance;
-
-                            //change back to RGB
-                            Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
-
-                            Luminance.Clip(ref red, ref green, ref blue, maxValue);
-
-                            temp[bufferPix] = (byte)((int)blue >> shift);
-                            temp[bufferPix + 1] = (byte)((int)green >> shift);
-                            temp[bufferPix + 2] = (byte)((int)red >> shift);
-                            if (histo)
-                            {
-                                Interlocked.Increment(ref value.red[(int)red >> shift]);
-                                Interlocked.Increment(ref value.green[(int)green >> shift]);
-                                Interlocked.Increment(ref value.blue[(int)blue >> shift]);
-                                Interlocked.Increment(ref value.luma[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
-                            }
-                            //set transparency to 255 else image will be blank
-                            temp[bufferPix + 3] = 255;
-                        }
-                    });
+                    mul = new float[4];
+                    mul[0] = (float)(rMul / 255);
+                    mul[1] = (float)(gMul / 255);
+                    mul[2] = (float)(bMul / 255);
                 }
+                double[] curve = CreateCurve();
+                Parallel.For(0, dim.height, y =>
+                {
+                    int realY = (y + off.height) * uncrop.width * 3;
+                    int bufferY = y * dim.width * 4 + startIndex;
+                    for (int x = 0; x < dim.width; x++)
+                    {
+                        int realPix = realY + (3 * (x + off.width));
+                        int bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
+                        double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
+                        Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
+                        l = curve[(uint)(l * maxValue)] / maxValue;
+                        s *= saturation;
+                        Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
+                        temp[bufferPix] = (byte)((int)blue >> shift);
+                        temp[bufferPix + 1] = (byte)((int)green >> shift);
+                        temp[bufferPix + 2] = (byte)((int)red >> shift);
+                        temp[bufferPix + 3] = 255; //set transparency to 255 else image will be blank
+                    }
+                });
             }
-            return value;
+        }
+        
+        public unsafe HistoRaw ApplyModificationHisto(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap)
+        {
+            int shift = colorDepth - 8;
+            maxValue = (uint)(1 << colorDepth);
+            using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
+            using (var reference = buffer.CreateReference())
+            {
+                int startIndex = buffer.GetPlaneDescription(0).StartIndex;
+                ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
+                if (!cameraWB)
+                {
+                    mul = new float[4];
+                    mul[0] = (float)(rMul / 255);
+                    mul[1] = (float)(gMul / 255);
+                    mul[2] = (float)(bMul / 255);
+                }
+                double[] curve = CreateCurve();
+                HistoRaw value = new HistoRaw()
+                {
+                    luma = new int[256],
+                    red = new int[256],
+                    blue = new int[256],
+                    green = new int[256]
+                };
+                Parallel.For(0, dim.height, y =>
+                {
+                    int realY = (y + off.height) * uncrop.width * 3;
+                    int bufferY = y * dim.width * 4 + startIndex;
+                    for (int x = 0; x < dim.width; x++)
+                    {
+                        int realPix = realY + (3 * (x + off.width));
+                        int bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
+                        double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
+                        // Luminance.Clip(ref red, ref green, ref blue, maxValue);                           
+                        Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
+                        //vignet correction
+                        //int xV = (x + off.width);
+                        //int yV = (y + off.height);
+                        //var v = Math.Abs(xV - (uncrop.width / 2.0)) / uncrop.width;
+                        //l *= 1 + (vignet * Math.Sin((xV - uncrop.width / 2) / uncrop.width) + Math.Sin((yV - uncrop.height / 2) / uncrop.width));
+                        Luminance.Clip(ref l);
+
+                        l = curve[(uint)(l * maxValue)] / maxValue;
+                        s *= saturation;
+                        // s += vibrance;
+                        Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
+
+                        temp[bufferPix] = (byte)((int)blue >> shift);
+                        temp[bufferPix + 1] = (byte)((int)green >> shift);
+                        temp[bufferPix + 2] = (byte)((int)red >> shift);
+                        temp[bufferPix + 3] = 255; //set transparency to 255 else image will be blank
+                        Interlocked.Increment(ref value.red[(int)red >> shift]);
+                        Interlocked.Increment(ref value.green[(int)green >> shift]);
+                        Interlocked.Increment(ref value.blue[(int)blue >> shift]);
+                        Interlocked.Increment(ref value.luma[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
+                    }
+                });
+                return value;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int Rotate(int x, int y, int w, int h)
+        {
+            switch (rotation)
+            {
+                //dest_buffer[c][m - r - 1] = source_buffer[r][c];
+                case 2: return (h - y - 1) * w + w - x - 1;
+                case 3: return (w - x - 1) * h + y;
+                case 1: return x * h + h - y - 1;
+                default: return y * w + x;
+            }
         }
     }
 }

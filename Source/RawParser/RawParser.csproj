@@ -141,7 +141,6 @@
     <Compile Include="Model\Encoder\SaveHelper.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
-    <Compile Include="Model\Effect\Balance.cs" />
     <Compile Include="Model\Parser\Base\Common.cs" />
     <Compile Include="Model\Parser\Base\Point2D.cs" />
     <Compile Include="Model\Parser\Base\Rectangle2D.cs" />

@@ -251,7 +251,6 @@ namespace RawNet
             5. 4 bytes: the original file offset for the MakerNote tag data (stored according to the byte order given above).
             6. The contents of the MakerNote tag. This is a simple byte-for-byte copy, with no modification.
             */
-            return null;
             uint size = t.dataCount;
             Common.ConvertArray(t.data, out byte[] data);
             Common.ByteToChar(data, out char[] dataAsChar, (int)size);

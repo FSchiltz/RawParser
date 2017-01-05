@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -22,7 +21,7 @@ namespace RawNet
      */
     internal class JPGDecoder : RawDecoder
     {
-        BitmapPropertiesView meta;
+        //BitmapPropertiesView meta;
 
         public JPGDecoder(Stream file) : base(file) { }
 
