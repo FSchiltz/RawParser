@@ -38,16 +38,13 @@ namespace RawEditor
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
+        public Bindable<bool> feedbacksupport = new Bindable<bool>( StoreServicesFeedbackLauncher.IsSupported());
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
         public MainPage()
         {
-            InitializeComponent();
-            if (StoreServicesFeedbackLauncher.IsSupported())
-            {
-                FeedbackButton.Visibility = Visibility.Visible;
-            }
+            InitializeComponent();           
             NavigationCacheMode = NavigationCacheMode.Required;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
         }

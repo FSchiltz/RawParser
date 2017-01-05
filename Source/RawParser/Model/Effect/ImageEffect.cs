@@ -42,37 +42,46 @@ namespace RawEditor.Effect
         internal double[] CreateCurve()
         {
             //generate the curve            
-            double[] xCurve = new double[5], yCurve = new double[5];
+            double[] xCurve = new double[3], yCurve = new double[3];
+            //todo add exposure in the curve
             //mid point
-            xCurve[2] = maxValue / 2;
-            yCurve[2] = maxValue / 2;
+            xCurve[1] = maxValue / 2;
+            yCurve[1] = (maxValue / 2) * exposure;
             //shadow
             xCurve[0] = 0;
-            yCurve[0] = shadow * (maxValue / (200));
+            yCurve[0] = ((shadow - contrast) * (maxValue / 200)) * exposure;
             //hightlight
-            xCurve[4] = maxValue;
-            yCurve[4] = maxValue + (hightlight * (maxValue / 200));
+            xCurve[2] = maxValue;
+            yCurve[2] = (maxValue + ((hightlight + contrast) * (maxValue / 200))) * exposure;
             //contrast
+            /*
             xCurve[1] = maxValue / 4;
             yCurve[1] = ((yCurve[0] + yCurve[2]) / 2) - (maxValue / 200);
             xCurve[3] = maxValue * 3 / 4;
-            yCurve[3] = ((yCurve[2] + yCurve[4]) / 2) + (maxValue / 200);
+            yCurve[3] = ((yCurve[2] + yCurve[4]) / 2) + (maxValue / 200);*/
             maxValue--;
-            double param = 1;
-            double k = 1;
-            if (ReverseGamma)
-            {
-                param = 0.417;
-                k = 1.055;
-            }
-            param += contrast;
 
             var curve = Curve.CubicSpline(xCurve, yCurve);
-            //create a reverse gamma array
-            for (int i = 0; i < curve.Length; i++)
+            if (ReverseGamma)
             {
-                curve[i] = maxValue * Math.Pow(k*(curve[i] / (double)maxValue), param);
+                double param = 1 / 2.4;
+
+                param += contrast;
+                for (int i = 0; i < curve.Length; i++)
+                {
+                    double normal = curve[i] / maxValue;
+                    if (normal <= 0.0031308)
+                    {
+                        curve[i] = normal * 12.92;
+                    }
+                    else
+                    {
+                        curve[i] = Math.Pow(1.055 * normal, param) - 0.055;
+                    }
+                    curve[i] *= maxValue;
+                }
             }
+
             return curve;
         }
 
@@ -155,7 +164,6 @@ namespace RawEditor.Effect
 
                             s *= saturation;
                             s += vibrance;
-                            l *= exposure;
 
                             //change back to RGB
                             Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
