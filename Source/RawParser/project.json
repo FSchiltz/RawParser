@@ -1,6 +1,6 @@
 ﻿{
   "dependencies": {
-    "MathNet.Numerics": "3.13.1",
+    "MathNet.Numerics": "3.16.0",
     "Microsoft.ApplicationInsights.PersistenceChannel": "1.2.3",
     "Microsoft.ApplicationInsights.WindowsApps": "1.1.1",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2",

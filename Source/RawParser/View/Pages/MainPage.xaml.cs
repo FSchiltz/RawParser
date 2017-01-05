@@ -21,6 +21,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using RawEditor.Effect;
 using Windows.System;
+using Microsoft.Toolkit.Uwp.UI.Animations;
 
 namespace RawEditor
 {
@@ -196,9 +197,10 @@ namespace RawEditor
                         }
                         Demosaic.Demos(raw, algo);
                     }
-                    if (raw.convertionM != null) {
+                    if (raw.convertionM != null)
+                    {
                         raw.ConvertRGB();
-                    }                
+                    }
                     raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
                     //check if enough memory
@@ -221,19 +223,18 @@ namespace RawEditor
                 }
                 catch (Exception e)
                 {
-                    raw = null;
+#if DEBUG
+                    Debug.WriteLine(e.Message);
+#else
+                                                //send an event with file extension and camera model and make if any                   
+                    logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
+#endif
+
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         EmptyImage();
                     });
                     ImageSelected = false;
-
-#if DEBUG
-                    Debug.WriteLine(e.Message);
-#else
-                                                //send an event with file extension and camera model and make if any                   
-                    logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);                       
-#endif
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     var str = loader.GetString("ExceptionText");
                     ExceptionDisplay.Display(str);
