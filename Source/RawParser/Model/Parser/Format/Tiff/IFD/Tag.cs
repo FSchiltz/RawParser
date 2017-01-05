@@ -156,9 +156,10 @@ namespace RawNet
                 {
                     fileStream.Position = dataOffset + baseOffset;
                 }
-                for (int j = 0; j < dataCount; j++)
+
+                try
                 {
-                    try
+                    for (int j = 0; j < dataCount; j++)
                     {
                         switch (dataType)
                         {
@@ -204,10 +205,10 @@ namespace RawNet
                                 break;
                         }
                     }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine("Error " + e.Message + " while reading IFD tag: " + TagId.ToString());
-                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Error " + e.Message + " while reading IFD tag: " + TagId.ToString());
                 }
             }
             if (dataOffset > 1)
