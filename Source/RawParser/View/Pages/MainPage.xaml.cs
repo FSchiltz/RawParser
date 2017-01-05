@@ -97,6 +97,7 @@ namespace RawEditor
         {
             CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                Load.HideLoad();
                 exposureSlider.Value = 0;
                 ShadowSlider.Value = 0;
                 HighLightSlider.Value = 0;
@@ -146,8 +147,8 @@ namespace RawEditor
         private void OpenFile(StorageFile file)
         {
             //Add a loading screen
-            Load.ShowLoad();
             EmptyImageAsync();
+            Load.ShowLoad();
             Task.Run(async () =>
             {
                 try
@@ -252,7 +253,7 @@ namespace RawEditor
                     var str = loader.GetString("ExceptionText");
                     ExceptionDisplay.Display(str);
                 }
-                Load.HideLoad();
+                Load.HideLoadAsync();
                 ImageSelected = false;
             });
         }
@@ -308,7 +309,7 @@ namespace RawEditor
                         ExceptionDisplay.Display("An error occured while saving");
 #endif
                     }
-                    Load.HideLoad();
+                    Load.HideLoadAsync();
                 });
             }
         }
@@ -454,18 +455,6 @@ namespace RawEditor
             UpdatePreview(false);
         }
 
-        private void ResetButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
-        {
-            if (CropUI.Visibility == Visibility.Visible)
-            {
-                HideCropUI();
-                Load.HideLoad();
-            }
-            ResetControlsAsync();
-            //history.Add(new HistoryObject() { oldValue = 0, value = 1, target = EffectObject.reset });
-
-        }
-
         private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
             ImageDisplay.ChangeView(null, null, (float)e.NewValue);
@@ -492,11 +481,6 @@ namespace RawEditor
             history.Add(t);*/
             ResetButtonVisibility.Value = true;
             UpdatePreview(false);
-        }
-
-        private void FeedbackButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
-        {
-            StoreServicesFeedbackLauncher.GetDefault().LaunchAsync();
         }
 
         private void ShareButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -610,9 +594,12 @@ namespace RawEditor
 
         private void HideCropUI()
         {
-            Load.HideLoad();
-            CropGrid.Visibility = Visibility.Collapsed;
-            ControlVisibilty.Value = true;
+            if (CropUI.Visibility == Visibility.Visible)
+            {
+                Load.HideLoad();
+                CropGrid.Visibility = Visibility.Collapsed;
+                ControlVisibilty.Value = true;
+            }
         }
     }
 }
