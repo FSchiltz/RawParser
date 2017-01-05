@@ -21,7 +21,6 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using RawEditor.Effect;
 using Windows.System;
-using Microsoft.Toolkit.Uwp.UI.Animations;
 
 namespace RawEditor
 {
