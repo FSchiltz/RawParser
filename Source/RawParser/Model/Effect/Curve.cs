@@ -18,6 +18,7 @@ namespace RawEditor.Effect
             return curve;
         }
 
+        //interpolate normalized value
         public static double[] CubicSpline(double[] x, double[] y)
         {
             double[] curve = new double[(int)x[x.Length - 1]];
