@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace RawNet
 {
-
-
     class DngStrip
     {
         public DngStrip() { offset = count = offsetY = 0; h = 0; }
@@ -22,6 +19,7 @@ namespace RawNet
     {
         bool mFixLjpeg;
 
+        //DNG thumbnail are tiff so no need to override 
         internal DngDecoder(Stream file) : base(file)
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.DNGVERSION);
@@ -49,7 +47,20 @@ namespace RawNet
         public override void DecodeMetadata()
         {
             base.DecodeMetadata();
-
+            //get transform matrix
+            var matrix = ifd.GetEntryRecursive(TagType.FORWARDMATRIX1);
+            if (matrix == null) matrix = ifd.GetEntryRecursive(TagType.FORWARDMATRIX2);
+            if (matrix != null)
+            {
+                rawImage.convertionM = new double[3, 3];
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        rawImage.convertionM[i, k] = Convert.ToDouble(matrix.data[i * 3 + k]);
+                    }
+                }
+            }
             //get cfa
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)
@@ -489,90 +500,6 @@ namespace RawNet
                     }
                 }
             }
-        }
-
-        public override Thumbnail DecodeThumb()
-        {
-            //find the preview IFD (usually the first if any)
-            try
-            {
-                List<IFD> potential = ifd.GetIFDsWithTag(TagType.NEWSUBFILETYPE);
-                if (potential != null || potential.Count != 0)
-                {
-                    IFD thumbIFD = null;
-                    for (int i = 0; i < potential.Count; i++)
-                    {
-                        var subFile = potential[i].GetEntry(TagType.NEWSUBFILETYPE);
-                        if (subFile.GetInt(0) == 1)
-                        {
-                            thumbIFD = potential[i];
-                            break;
-                        }
-                    }
-                    if (thumbIFD != null)
-                    {
-                        //there is a thumbnail
-                        uint bps = thumbIFD.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
-                        Point2D dim = new Point2D()
-                        {
-                            width = thumbIFD.GetEntry(TagType.IMAGEWIDTH).GetInt(0),
-                            height = thumbIFD.GetEntry(TagType.IMAGELENGTH).GetInt(0)
-                        };
-
-                        int compression = thumbIFD.GetEntry(TagType.COMPRESSION).GetShort(0);
-                        // Now load the image
-                        if (compression == 1)
-                        {
-                            // Uncompressed
-                            uint cpp = thumbIFD.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
-                            if (cpp > 4)
-                                throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
-
-                            Tag offsets = thumbIFD.GetEntry(TagType.STRIPOFFSETS);
-                            Tag counts = thumbIFD.GetEntry(TagType.STRIPBYTECOUNTS);
-                            uint yPerSlice = thumbIFD.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
-
-                            reader.BaseStream.Position = offsets.GetInt(0);
-
-                            Thumbnail thumb = new Thumbnail()
-                            {
-                                cpp = cpp,
-                                dim = dim,
-                                data = reader.ReadBytes(counts.GetInt(0)),
-                                Type = ThumbnailType.RAW
-                            };
-                            return thumb;
-                        }
-                        else if (compression == 6)
-                        {
-                            var offset = thumbIFD.GetEntry((TagType)0x0201);
-                            var size = thumbIFD.GetEntry((TagType)0x0202);
-                            if (size == null || offset == null) return null;
-
-                            //get the makernote offset
-                            List<IFD> exifs = ifd.GetIFDsWithTag((TagType)0x927C);
-
-                            if (exifs == null || exifs.Count == 0) return null;
-
-                            Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
-                            if (makerNoteOffsetTag == null) return null;
-                            reader.Position = (uint)(offset.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
-                            Thumbnail temp = new Thumbnail()
-                            {
-                                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
-                                Type = ThumbnailType.JPEG,
-                                dim = new Point2D()
-                            };
-                            return temp;
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                //thumbnail are optional so ignore all exception
-            }
-            return null;
         }
 
         /* Decodes DNG masked areas into blackareas in the image */

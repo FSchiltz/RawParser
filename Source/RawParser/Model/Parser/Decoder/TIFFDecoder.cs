@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
@@ -311,6 +312,90 @@ namespace RawNet
             }
             rawImage.metadata.OriginalRotation = rawImage.Rotation;
             rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.width, rawImage.raw.uncroppedDim.height);
+        }
+
+        public override Thumbnail DecodeThumb()
+        {
+            //find the preview IFD (usually the first if any)
+            try
+            {
+                List<IFD> potential = ifd.GetIFDsWithTag(TagType.NEWSUBFILETYPE);
+                if (potential != null || potential.Count != 0)
+                {
+                    IFD thumbIFD = null;
+                    for (int i = 0; i < potential.Count; i++)
+                    {
+                        var subFile = potential[i].GetEntry(TagType.NEWSUBFILETYPE);
+                        if (subFile.GetInt(0) == 1)
+                        {
+                            thumbIFD = potential[i];
+                            break;
+                        }
+                    }
+                    if (thumbIFD != null)
+                    {
+                        //there is a thumbnail
+                        uint bps = thumbIFD.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+                        Point2D dim = new Point2D()
+                        {
+                            width = thumbIFD.GetEntry(TagType.IMAGEWIDTH).GetInt(0),
+                            height = thumbIFD.GetEntry(TagType.IMAGELENGTH).GetInt(0)
+                        };
+
+                        int compression = thumbIFD.GetEntry(TagType.COMPRESSION).GetShort(0);
+                        // Now load the image
+                        if (compression == 1)
+                        {
+                            // Uncompressed
+                            uint cpp = thumbIFD.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                            if (cpp > 4)
+                                throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
+
+                            Tag offsets = thumbIFD.GetEntry(TagType.STRIPOFFSETS);
+                            Tag counts = thumbIFD.GetEntry(TagType.STRIPBYTECOUNTS);
+                            uint yPerSlice = thumbIFD.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+
+                            reader.BaseStream.Position = offsets.GetInt(0);
+
+                            Thumbnail thumb = new Thumbnail()
+                            {
+                                cpp = cpp,
+                                dim = dim,
+                                data = reader.ReadBytes(counts.GetInt(0)),
+                                Type = ThumbnailType.RAW
+                            };
+                            return thumb;
+                        }
+                        else if (compression == 6)
+                        {
+                            var offset = thumbIFD.GetEntry((TagType)0x0201);
+                            var size = thumbIFD.GetEntry((TagType)0x0202);
+                            if (size == null || offset == null) return null;
+
+                            //get the makernote offset
+                            List<IFD> exifs = ifd.GetIFDsWithTag((TagType)0x927C);
+
+                            if (exifs == null || exifs.Count == 0) return null;
+
+                            Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
+                            if (makerNoteOffsetTag == null) return null;
+                            reader.Position = (uint)(offset.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
+                            Thumbnail temp = new Thumbnail()
+                            {
+                                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                                Type = ThumbnailType.JPEG,
+                                dim = new Point2D()
+                            };
+                            return temp;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                //thumbnail are optional so ignore all exception
+            }
+            return null;
         }
     }
 }

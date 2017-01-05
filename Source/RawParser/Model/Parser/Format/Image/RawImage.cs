@@ -30,6 +30,7 @@ namespace RawNet
     {
         public Image preview = new Image(), thumb, raw = new Image();
         public ColorFilterArray colorFilter = new ColorFilterArray();
+        public double[,] convertionM;
         public double[] camMul, curve;
         private int rotation = 0;
         public int Rotation
@@ -243,6 +244,41 @@ namespace RawNet
             {
                 errors.Add("Linearisation went wrong:" + ex.Message);
             }
+        }
+
+        internal void ConvertRGB()
+        {
+            double[,] xyzToRGB = { { 0.412453, 0.357580, 0.180423 }, { 0.212671, 0.715160, 0.072169 }, { 0.019334, 0.119193, 0.950227 } };
+            int maxValue = (1 << ColorDepth) - 1;
+            Parallel.For(0, raw.dim.height, y =>
+            {
+                int realY = (y + raw.offset.height) * raw.uncroppedDim.width * 3;
+                for (int x = 0; x < raw.dim.width; x++)
+                {
+                    int realX = y + 3 * (x + raw.offset.width);
+                    double[] rgb = { raw.data[realX] / maxValue, raw.data[realX + 1] / maxValue, raw.data[realY + 2] / maxValue };
+                    //convert to XYZ
+                    double[] result = mult3by1(convertionM, rgb);
+                    //convert back to rgb
+                    double[] rgbConv = mult3by1(xyzToRGB, result);
+                    raw.data[realX] = (ushort)(rgb[0]*maxValue);
+                    raw.data[realX + 1] = (ushort)(rgb[1] * maxValue);
+                    raw.data[realY + 2] = (ushort)(rgb[2] * maxValue);
+                }
+            });
+        }
+
+        public double[] mult3by1(double[,] m1, double[] m2)
+        {
+            double[] resultMatrix = new double[3];
+            for (int i = 0; i < 3; i++)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    resultMatrix[i] += m1[i, k] * m2[k];
+                }
+            }
+            return resultMatrix;
         }
 
         public void ScaleBlackWhite()
@@ -484,4 +520,3 @@ namespace RawNet
         }
     }
 }
-
