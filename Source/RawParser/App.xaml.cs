@@ -1,6 +1,4 @@
-﻿using Microsoft.Services.Store.Engagement;
-using RawNet;
-using Windows.ApplicationModel;
+﻿using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;

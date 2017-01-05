@@ -4,6 +4,7 @@ namespace RawEditor.Effect
 {
     public static class Balance
     {
+        
         public static void SRGBToRGB(ref double value, double maxValue)
         {
             value /= maxValue;

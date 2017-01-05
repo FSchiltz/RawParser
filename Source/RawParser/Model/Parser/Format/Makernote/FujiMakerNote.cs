@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RawNet
+﻿namespace RawNet
 {
     internal class FujiMakerNote : Makernote
     {

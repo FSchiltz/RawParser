@@ -92,7 +92,7 @@ namespace RawNet
         /*
          * Should not be used if possible
          * not efficient but allows more concise code
-         * for demos
+         * for demosaic
          */
         public ushort this[int row, int col]
         {

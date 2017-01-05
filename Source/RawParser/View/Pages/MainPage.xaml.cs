@@ -33,18 +33,17 @@ namespace RawEditor
         public bool ImageSelected { set; get; } = false;
         bool cameraWB = true;
         public Thumbnail thumbnail;
-        private bool userAppliedModif = false;
         //public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
-        public Bindable<bool> feedbacksupport = new Bindable<bool>( StoreServicesFeedbackLauncher.IsSupported());
+        public Bindable<bool> feedbacksupport = new Bindable<bool>(StoreServicesFeedbackLauncher.IsSupported());
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
         public MainPage()
         {
-            InitializeComponent();           
+            InitializeComponent();
             NavigationCacheMode = NavigationCacheMode.Required;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
         }
@@ -76,6 +75,7 @@ namespace RawEditor
             raw = null;
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                Load.HideLoad();
                 CropUI.SetThumbAsync(null);
                 //empty the image display
                 ImageBox.Source = null;
@@ -93,7 +93,7 @@ namespace RawEditor
             GC.Collect();
         }
 
-        private async void ResetControlsAsync()
+        private void ResetControlsAsync()
         {
             CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -145,26 +145,23 @@ namespace RawEditor
 
         private void OpenFile(StorageFile file)
         {
-            try
+            //Add a loading screen
+            Load.ShowLoad();
+            EmptyImageAsync();
+            Task.Run(async () =>
             {
-                ExifSource.Add(new ExifValue("Test", "Test"));
-                //Add a loading screen
-                Load.ShowLoad();
-                EmptyImageAsync();
-                Task.Run(async () =>
+                try
                 {
-                    try
+                    ImageSelected = true;
+                    using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                     {
-                        ImageSelected = true;
-                        using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
+                        var watch = Stopwatch.StartNew();
+                        RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
+                        try
                         {
-                            var watch = Stopwatch.StartNew();
-                            RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
-                            try
-                            {
-                                thumbnail = decoder.DecodeThumb();
-                                //read the thumbnail
-                                Task.Run(() =>
+                            thumbnail = decoder.DecodeThumb();
+                            //read the thumbnail
+                            Task.Run(() =>
                             {
                                 try
                                 {
@@ -175,97 +172,89 @@ namespace RawEditor
                                     Debug.WriteLine("Error in thumb " + e.Message);
                                 }
                             });
-                            }
-                            catch (Exception)
-                            {                                    //since thumbnail are optionnal, we ignore all errors 
-                            }
+                        }
+                        catch (Exception)
+                        {                                    //since thumbnail are optionnal, we ignore all errors 
+                        }
 
-                            decoder.DecodeRaw();
-                            decoder.DecodeMetadata();
-                            raw = decoder.rawImage;
-                            //if (decoder.ScaleValue)
-                            //raw.ScaleValues();
-                            raw.metadata.FileName = file.DisplayName;
-                            raw.metadata.FileNameComplete = file.Name;
-                            raw.metadata.FileExtension = file.FileType;
-                            if (raw.errors.Count > 0)
-                            {
-                                ExceptionDisplay.Display("This file is not fully supported, it may appear incorrectly");
+                        decoder.DecodeRaw();
+                        decoder.DecodeMetadata();
+                        raw = decoder.rawImage;
+                        //if (decoder.ScaleValue)
+                        //raw.ScaleValues();
+                        raw.metadata.FileName = file.DisplayName;
+                        raw.metadata.FileNameComplete = file.Name;
+                        raw.metadata.FileExtension = file.FileType;
+                        if (raw.errors.Count > 0)
+                        {
+                            ExceptionDisplay.Display("This file is not fully supported, it may appear incorrectly");
 #if !DEBUG
                                 //send an event with file extension and camera model and make if any                   
                                 logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + ""+raw.errors.Count);
 #endif
-                            }
-                            watch.Stop();
-                            raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
                         }
+                        watch.Stop();
+                        raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
+                    }
 
-                        //create a list from the metadata object
-                        CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    //create a list from the metadata object
+                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        raw.ParseExif(ExifSource);
+                    });
+                    if (raw.isCFA)
+                    {
+                        //get the algo from the settings
+                        DemosAlgorithm algo;
+                        try
                         {
-                            raw.ParseExif(ExifSource);
-                        });
-                        if (raw.isCFA)
-                        {
-                            //get the algo from the settings
-                            DemosAlgorithm algo;
-                            try
-                            {
-                                algo = SettingStorage.DemosAlgo;
-                            }
-                            catch (Exception e)
-                            {
-                                Debug.WriteLine(e.Message);
-                                algo = DemosAlgorithm.Deflate;
-                            }
-                            Demosaic.Demos(raw, algo);
+                            algo = SettingStorage.DemosAlgo;
                         }
-                        raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine(e.Message);
+                            algo = DemosAlgorithm.Deflate;
+                        }
+                        Demosaic.Demos(raw, algo);
+                    }
+                    raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
-                        //check if enough memory
-                        if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < (ulong)raw.raw.data.Length || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
-                        {
-                            ExceptionDisplay.Display("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
-                        }
+                    //check if enough memory
+                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < (ulong)raw.raw.data.Length || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
+                    {
+                        ExceptionDisplay.Display("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
+                    }
 #if !DEBUG
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
-                        UpdatePreview(true);
-                        thumbnail = null;
-                        ResetControlsAsync();
-                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            ControlVisibilty.Value = true;
-                        });
-                    }
-                    catch (Exception e)
+                    UpdatePreview(true);
+                    thumbnail = null;
+                    ResetControlsAsync();
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        raw = null;
-                        EmptyImageAsync();
-                        ImageSelected = false;
+                        ControlVisibilty.Value = true;
+                    });
+                }
+                catch (Exception e)
+                {
+                    raw = null;
+                    EmptyImageAsync();
+                    ImageSelected = false;
 
 #if DEBUG
-                        Debug.WriteLine(e.Message);
+                    Debug.WriteLine(e.Message);
 #else
                                                 //send an event with file extension and camera model and make if any                   
                     logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);                       
 #endif
-                        var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
-                        var str = loader.GetString("ExceptionText");
-                        ExceptionDisplay.Display(str);
-                    }
-                    Load.HideLoad();
-                    ImageSelected = false;
-                });
-            }
-            catch (Exception e)
-            {
-                ExceptionDisplay.Display("Somethig wrong happened sorry. (" + e.GetType() + ")");
-#if DEBUG
-                Debug.WriteLine(e.Message + " " + e.StackTrace);
-#endif
-            }
+                    var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                    var str = loader.GetString("ExceptionText");
+                    ExceptionDisplay.Display(str);
+                }
+                Load.HideLoad();
+                ImageSelected = false;
+            });
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -425,12 +414,12 @@ namespace RawEditor
             });
             if (histo)
             {
-                var tmp = effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap, histo);
+                var tmp = effect.ApplyModificationHisto(image, dim, offset, uncrop, colorDepth, bitmap);
                 return Tuple.Create(tmp, bitmap);
             }
             else
             {
-                effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap, false);
+                effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap);
                 return Tuple.Create(new HistoRaw(), bitmap);
             }
         }
@@ -616,7 +605,7 @@ namespace RawEditor
             //var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
             //history.Add(t)
             ResetButtonVisibility.Value = true;
-            
+
         }
 
         private void HideCropUI()

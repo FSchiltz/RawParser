@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace RawNet
+﻿namespace RawNet
 {
     internal class PentaxMakernote : Makernote
     {
