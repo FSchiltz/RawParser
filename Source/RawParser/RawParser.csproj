@@ -139,6 +139,7 @@
     <Compile Include="Model\Effect\Demosaic.cs" />
     <Compile Include="Model\Effect\ImageEffect.cs" />
     <Compile Include="Model\Encoder\SaveHelper.cs" />
+    <Compile Include="Model\Parser\Format\Image\CamRGB.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="Model\Parser\Base\Common.cs" />

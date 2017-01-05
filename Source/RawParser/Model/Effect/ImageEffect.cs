@@ -59,7 +59,7 @@ namespace RawEditor.Effect
             var curve = Curve.CubicSpline(xCurve, yCurve);
             if (ReverseGamma)
             {
-                double param = 1 / 2.4;
+                double param = 1 / 1.8;
 
                 param += contrast;
                 for (int i = 0; i < curve.Length; i++)
@@ -76,6 +76,25 @@ namespace RawEditor.Effect
                     curve[i] *= maxValue;
                 }
             }
+            /*
+            {
+                double param = 2.4;
+
+                param += contrast;
+                for (int i = 0; i < curve.Length; i++)
+                {
+                    double normal = curve[i] / maxValue;
+                    if (normal <= 0.04045)
+                    {
+                        curve[i] = normal / 12.92;
+                    }
+                    else
+                    {
+                        curve[i] = Math.Pow((normal+0.055)/1.055, param);
+                    }
+                    curve[i] *= maxValue;
+                }
+            }*/
             return curve;
         }
 
@@ -107,6 +126,7 @@ namespace RawEditor.Effect
                         int bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
                         double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
+                        Luminance.Clip(ref l);
                         l = curve[(uint)(l * maxValue)] / maxValue;
                         s *= saturation;
                         Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
@@ -119,7 +139,7 @@ namespace RawEditor.Effect
                 });
             }
         }
-        
+
         public unsafe HistoRaw ApplyModificationHisto(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap)
         {
             int shift = colorDepth - 8;

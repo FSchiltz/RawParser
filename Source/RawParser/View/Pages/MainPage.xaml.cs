@@ -69,55 +69,49 @@ namespace RawEditor
         }
 
         //Always call in the UI thread
-        private async void EmptyImageAsync()
+        private void EmptyImage()
         {
             //empty the previous image data
             raw = null;
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                Load.HideLoad();
-                CropUI.SetThumbAsync(null);
-                //empty the image display
-                ImageBox.Source = null;
-                //empty the exif data
-                //history?.Clear();
-                ExifSource?.Clear();
-                //empty the histogram
-                ControlVisibilty.Value = false;
-                LumaHisto.Points = null;
-                RedHisto.Points = null;
-                GreenHisto.Points = null;
-                BlueHisto.Points = null;
-                ResetControlsAsync();
-            });
+            CropUI.SetThumbAsync(null);
+            //empty the image display
+            ImageBox.Source = null;
+            //empty the exif data
+            //history?.Clear();
+            ExifSource?.Clear();
+            //empty the histogram
+            ControlVisibilty.Value = false;
+            LumaHisto.Points = null;
+            RedHisto.Points = null;
+            GreenHisto.Points = null;
+            BlueHisto.Points = null;
+            ResetControls();
+
             GC.Collect();
         }
 
-        private void ResetControlsAsync()
+        private void ResetControls()
         {
-            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            exposureSlider.Value = 0;
+            ShadowSlider.Value = 0;
+            HighLightSlider.Value = 0;
+            contrastSlider.Value = 0;
+            saturationSlider.Value = 0;
+            CropUI.ResetCrop();
+            CropUI.SetThumbAsync(null);
+            //VignetSlider.Value = 0;
+            GammaToggle.IsChecked = raw?.IsGammaCorrected ?? true;
+            if (raw != null)
             {
-                Load.HideLoad();
-                exposureSlider.Value = 0;
-                ShadowSlider.Value = 0;
-                HighLightSlider.Value = 0;
-                contrastSlider.Value = 0;
-                saturationSlider.Value = 0;
-                CropUI.ResetCrop();
-                CropUI.SetThumbAsync(null);
-                //VignetSlider.Value = 0;
-                GammaToggle.IsChecked = raw?.IsGammaCorrected ?? true;
-                if (raw != null)
-                {
-                    raw.raw.offset = new Point2D(0, 0);
-                    raw.raw.dim = new Point2D(raw.raw.uncroppedDim.width, raw.raw.uncroppedDim.height);
-                    raw.preview.offset = new Point2D(0, 0);
-                    raw.preview.dim = new Point2D(raw.preview.uncroppedDim.width, raw.preview.uncroppedDim.height);
-                    raw.Rotation = raw.metadata.OriginalRotation;
-                }
-                SetWBAsync();
-                ResetButtonVisibility.Value = false;
-            });
+                raw.raw.offset = new Point2D(0, 0);
+                raw.raw.dim = new Point2D(raw.raw.uncroppedDim.width, raw.raw.uncroppedDim.height);
+                raw.preview.offset = new Point2D(0, 0);
+                raw.preview.dim = new Point2D(raw.preview.uncroppedDim.width, raw.preview.uncroppedDim.height);
+                raw.Rotation = raw.metadata.OriginalRotation;
+            }
+            SetWBAsync();
+            ResetButtonVisibility.Value = false;
+            HideCropUI();
             if (raw != null)
             {
                 UpdatePreview(false);
@@ -147,7 +141,7 @@ namespace RawEditor
         private void OpenFile(StorageFile file)
         {
             //Add a loading screen
-            EmptyImageAsync();
+            EmptyImage();
             Load.ShowLoad();
             Task.Run(async () =>
             {
@@ -161,22 +155,12 @@ namespace RawEditor
                         try
                         {
                             thumbnail = decoder.DecodeThumb();
-                            //read the thumbnail
                             Task.Run(() =>
                             {
-                                try
-                                {
-                                    DisplayImage(thumbnail?.GetSoftwareBitmap(), true);
-                                }
-                                catch (Exception e)
-                                {
-                                    Debug.WriteLine("Error in thumb " + e.Message);
-                                }
+                                DisplayImage(thumbnail?.GetSoftwareBitmap(), true);
                             });
                         }
-                        catch (Exception)
-                        {                                    //since thumbnail are optionnal, we ignore all errors 
-                        }
+                        catch (Exception) { }                            //since thumbnail are optionnal, we ignore all errors                         
 
                         decoder.DecodeRaw();
                         decoder.DecodeMetadata();
@@ -197,12 +181,6 @@ namespace RawEditor
                         watch.Stop();
                         raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
                     }
-
-                    //create a list from the metadata object
-                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        raw.ParseExif(ExifSource);
-                    });
                     if (raw.isCFA)
                     {
                         //get the algo from the settings
@@ -218,6 +196,9 @@ namespace RawEditor
                         }
                         Demosaic.Demos(raw, algo);
                     }
+                    if (raw.convertionM != null) {
+                        raw.ConvertRGB();
+                    }                
                     raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
                     //check if enough memory
@@ -231,16 +212,20 @@ namespace RawEditor
 #endif
                     UpdatePreview(true);
                     thumbnail = null;
-                    ResetControlsAsync();
-                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
+                        raw.ParseExif(ExifSource);
+                        ResetControls();
                         ControlVisibilty.Value = true;
                     });
                 }
                 catch (Exception e)
                 {
                     raw = null;
-                    EmptyImageAsync();
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        EmptyImage();
+                    });
                     ImageSelected = false;
 
 #if DEBUG
@@ -433,8 +418,7 @@ namespace RawEditor
                 cameraWB = false;
                 //history.Add(new HistoryObject() { oldValue = 0, value = colorTempSlider.Value, target = EffectObject.red });
                 cameraWBCheck.IsEnabled = true;
-                ResetButtonVisibility.Value = true;
-                UpdatePreview(false);
+                EditingControlChanged();
             }
         }
 
@@ -467,8 +451,7 @@ namespace RawEditor
             
             t.value = raw.Rotation;
             history.Add(t);*/
-            ResetButtonVisibility.Value = true;
-            UpdatePreview(false);
+            EditingControlChanged();
         }
 
         private void RotateLeftButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -479,8 +462,7 @@ namespace RawEditor
             
             t.value = raw.Rotation;
             history.Add(t);*/
-            ResetButtonVisibility.Value = true;
-            UpdatePreview(false);
+            EditingControlChanged();
         }
 
         private void ShareButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -572,7 +554,6 @@ namespace RawEditor
 
         private void CropAccept_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            //hide Crop UI
             HideCropUI();
             double top = CropUI.Top;
             double left = CropUI.Left;
@@ -589,12 +570,11 @@ namespace RawEditor
             //var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
             //history.Add(t)
             ResetButtonVisibility.Value = true;
-
         }
 
         private void HideCropUI()
         {
-            if (CropUI.Visibility == Visibility.Visible)
+            if (CropGrid.Visibility == Visibility.Visible)
             {
                 Load.HideLoad();
                 CropGrid.Visibility = Visibility.Collapsed;
