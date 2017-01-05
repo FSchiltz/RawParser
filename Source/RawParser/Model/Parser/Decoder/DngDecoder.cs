@@ -74,7 +74,7 @@ namespace RawNet
             for (int k = data.Count - 1; k >= 0; k--)
             {
                 IFD i = data[k];
-                int comp = i.GetEntry(TagType.COMPRESSION).GetShort(0);
+                int comp = i.GetEntry(TagType.COMPRESSION).GetInt(0);
                 bool isSubsampled = false;
                 try
                 {

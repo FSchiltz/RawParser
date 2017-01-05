@@ -35,8 +35,8 @@ namespace RawEditor
         public Thumbnail thumbnail;
         private bool userAppliedModif = false;
         //public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
-        public Bindable<bool> ResetButtonVisibility { get; set; } = new Bindable<bool>(false);
-        public Bindable<bool> ControlVisibilty { get; set; } = new Bindable<bool>(false);
+        public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
+        public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
@@ -86,28 +86,28 @@ namespace RawEditor
                 //history?.Clear();
                 ExifSource?.Clear();
                 //empty the histogram
-                EnableEditingControlAsync(false);
+                ControlVisibilty.Value = false;
                 LumaHisto.Points = null;
                 RedHisto.Points = null;
                 GreenHisto.Points = null;
                 BlueHisto.Points = null;
+                ResetControlsAsync();
             });
             GC.Collect();
         }
 
         private async void ResetControlsAsync()
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 exposureSlider.Value = 0;
                 ShadowSlider.Value = 0;
                 HighLightSlider.Value = 0;
                 contrastSlider.Value = 0;
                 saturationSlider.Value = 0;
-                userAppliedModif = false;
                 CropUI.ResetCrop();
                 CropUI.SetThumbAsync(null);
-                VignetSlider.Value = 0;
+                //VignetSlider.Value = 0;
                 GammaToggle.IsChecked = raw?.IsGammaCorrected ?? true;
                 if (raw != null)
                 {
@@ -140,32 +140,9 @@ namespace RawEditor
             }
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                colorTempSlider.Value = rValue;
-                colorTintSlider.Value = gValue;
-                colorTintBlueSlider.Value = bValue;
-            });
-        }
-
-        private void EnableEditingControlAsync(bool v)
-        {
-            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                colorTempSlider.IsEnabled = v;
-                colorTintSlider.IsEnabled = v;
-                colorTintBlueSlider.IsEnabled = v;
-                exposureSlider.IsEnabled = v;
-                ShadowSlider.IsEnabled = v;
-                HighLightSlider.IsEnabled = v;
-                contrastSlider.IsEnabled = v;
-                saturationSlider.IsEnabled = v;
-                SaveButton.IsEnabled = v;
-                ZoomSlider.IsEnabled = v;
-                RotateLeftButton.IsEnabled = v;
-                RotateRightButton.IsEnabled = v;
-                ShareButton.IsEnabled = v;
-                CropButton.IsEnabled = v;
-                VignetSlider.IsEnabled = v;
-                GammaToggle.IsEnabled = v;
+                ColorTempSlider.Value = rValue;
+                ColorTintSlider.Value = gValue;
+                ColorTintBlueSlider.Value = bValue;
             });
         }
 
@@ -260,7 +237,10 @@ namespace RawEditor
                         UpdatePreview(true);
                         thumbnail = null;
                         ResetControlsAsync();
-                        EnableEditingControlAsync(true);
+                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            ControlVisibilty.Value = true;
+                        });
                     }
                     catch (Exception e)
                     {
@@ -416,14 +396,14 @@ namespace RawEditor
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 effect.exposure = exposureSlider.Value;
-                effect.rMul = colorTempSlider.Value;
-                effect.gMul = colorTintSlider.Value;
-                effect.bMul = colorTintBlueSlider.Value;
+                effect.rMul = ColorTempSlider.Value;
+                effect.gMul = ColorTintSlider.Value;
+                effect.bMul = ColorTintBlueSlider.Value;
                 effect.contrast = contrastSlider.Value / 10;
                 effect.shadow = ShadowSlider.Value;
                 effect.hightlight = HighLightSlider.Value;
                 effect.saturation = 1 + saturationSlider.Value / 100;
-                effect.vignet = VignetSlider.Value;
+                //effect.vignet = VignetSlider.Value;
                 effect.ReverseGamma = (bool)GammaToggle.IsChecked;
             });
 
@@ -466,20 +446,8 @@ namespace RawEditor
                 cameraWB = false;
                 //history.Add(new HistoryObject() { oldValue = 0, value = colorTempSlider.Value, target = EffectObject.red });
                 cameraWBCheck.IsEnabled = true;
-                EnableResetAsync();
+                ResetButtonVisibility.Value = true;
                 UpdatePreview(false);
-            }
-        }
-
-        private async void EnableResetAsync()
-        {
-            if (!userAppliedModif)
-            {
-                userAppliedModif = true;
-                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    ResetButton.IsEnabled = true;
-                });
             }
         }
 
@@ -495,7 +463,8 @@ namespace RawEditor
 
         private void EditingControlChanged()
         { //history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.saturation });
-            EnableResetAsync();
+
+            ResetButtonVisibility.Value = true;
             UpdatePreview(false);
         }
 
@@ -523,7 +492,7 @@ namespace RawEditor
             
             t.value = raw.Rotation;
             history.Add(t);*/
-            EnableResetAsync();
+            ResetButtonVisibility.Value = true;
             UpdatePreview(false);
         }
 
@@ -535,9 +504,9 @@ namespace RawEditor
             
             t.value = raw.Rotation;
             history.Add(t);*/
-            EnableResetAsync();
+            ResetButtonVisibility.Value = true;
             UpdatePreview(false);
-        }        
+        }
 
         private void FeedbackButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
@@ -599,7 +568,7 @@ namespace RawEditor
         {
             CropUI.SetThumbAsync(null);
             Load.ShowLoad();
-            EnableEditingControlAsync(false);
+            ControlVisibilty.Value = false;
             //display the crop UI
             CropGrid.Visibility = Visibility.Visible;
             //wait for accept or reset pressed
@@ -649,14 +618,15 @@ namespace RawEditor
             UpdatePreview(true);
             //var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
             //history.Add(t)
-            EnableResetAsync();
+            ResetButtonVisibility.Value = true;
+            
         }
 
         private void HideCropUI()
         {
             Load.HideLoad();
             CropGrid.Visibility = Visibility.Collapsed;
-            EnableEditingControlAsync(true);
+            ControlVisibilty.Value = true;
         }
     }
 }

@@ -251,6 +251,7 @@ namespace RawNet
             5. 4 bytes: the original file offset for the MakerNote tag data (stored according to the byte order given above).
             6. The contents of the MakerNote tag. This is a simple byte-for-byte copy, with no modification.
             */
+            return null;
             uint size = t.dataCount;
             Common.ConvertArray(t.data, out byte[] data);
             Common.ByteToChar(data, out char[] dataAsChar, (int)size);
@@ -293,11 +294,10 @@ namespace RawNet
                 Debug.WriteLine("Cannot determine endianess of DNG makernote");
                 return null;
             }
-            data = data.Skip(2).ToArray();
             uint org_offset;
-            org_offset = (uint)data[0] << 24 | (uint)data[1] << 16 | (uint)data[2] << 8 | data[3];
+            org_offset = (uint)data[2] << 24 | (uint)data[3] << 16 | (uint)data[4] << 8 | data[5];
 
-            data = data.Skip(4).ToArray();
+            data = data.Skip(6).ToArray();
             /* We don't parse original makernotes that are placed after 300MB mark in the original file */
             if (org_offset + count > 300 * 1024 * 1024)
             {
