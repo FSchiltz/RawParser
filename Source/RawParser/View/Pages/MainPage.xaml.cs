@@ -446,23 +446,29 @@ namespace RawEditor
 
         private void RotateRightButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            raw.Rotation++;
-            /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.rotate };
-            
-            t.value = raw.Rotation;
-            history.Add(t);*/
-            EditingControlChanged();
+            if (raw != null)
+            {
+                raw.Rotation++;
+                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.rotate };
+
+                t.value = raw.Rotation;
+                history.Add(t);*/
+                EditingControlChanged();
+            }
         }
 
         private void RotateLeftButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            raw.Rotation--;
-            /*
-            var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.rotate };
-            
-            t.value = raw.Rotation;
-            history.Add(t);*/
-            EditingControlChanged();
+            if (raw != null)
+            {
+                raw.Rotation--;
+                /*
+                var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.rotate };
+
+                t.value = raw.Rotation;
+                history.Add(t);*/
+                EditingControlChanged();
+            }
         }
 
         private void ShareButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -518,38 +524,41 @@ namespace RawEditor
 
         private async void CropButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            CropUI.SetThumbAsync(null);
-            Load.ShowLoad();
-            ControlVisibilty.Value = false;
-            //display the crop UI
-            CropGrid.Visibility = Visibility.Visible;
-            //wait for accept or reset pressed
+            if (raw?.raw != null)
+            {
+                CropUI.SetThumbAsync(null);
+                Load.ShowLoad();
+                ControlVisibilty.Value = false;
+                //display the crop UI
+                CropGrid.Visibility = Visibility.Visible;
+                //wait for accept or reset pressed
 
-            int h, w;
-            if (raw.Rotation == 1 || raw.Rotation == 3)
-            {
-                h = raw.preview.uncroppedDim.width;
-                w = raw.preview.uncroppedDim.height;
+                int h, w;
+                if (raw.Rotation == 1 || raw.Rotation == 3)
+                {
+                    h = raw.preview.uncroppedDim.width;
+                    w = raw.preview.uncroppedDim.height;
+                }
+                else
+                {
+                    h = raw.preview.uncroppedDim.height;
+                    w = raw.preview.uncroppedDim.width;
+                }
+                double factor;
+                if (w > h)
+                {
+                    factor = ImageDisplay.ActualWidth / (w + 160);
+                }
+                else
+                {
+                    factor = ImageDisplay.ActualHeight / (h + 160);
+                }
+                CropUI.SetSize((int)(w * factor), (int)(h * factor), raw.Rotation);
+                //create a preview of the image
+                var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.uncroppedDim, new Point2D(0, 0), raw.preview.uncroppedDim, raw.ColorDepth, false);
+                //display the preview
+                CropUI.SetThumbAsync(result.Item2);
             }
-            else
-            {
-                h = raw.preview.uncroppedDim.height;
-                w = raw.preview.uncroppedDim.width;
-            }
-            double factor;
-            if (w > h)
-            {
-                factor = ImageDisplay.ActualWidth / (w + 160);
-            }
-            else
-            {
-                factor = ImageDisplay.ActualHeight / (h + 160);
-            }
-            CropUI.SetSize((int)(w * factor), (int)(h * factor), raw.Rotation);
-            //create a preview of the image
-            var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.uncroppedDim, new Point2D(0, 0), raw.preview.uncroppedDim, raw.ColorDepth, false);
-            //display the preview
-            CropUI.SetThumbAsync(result.Item2);
         }
 
         private void CropAccept_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
@@ -559,14 +568,16 @@ namespace RawEditor
             double left = CropUI.Left;
             double right = CropUI.Right;
             double bottom = CropUI.Bottom;
+            if (raw?.raw != null && raw?.preview != null)
+            {
+                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * left), (int)(raw.raw.uncroppedDim.height * top));
+                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * right), (int)(raw.raw.uncroppedDim.height * bottom));
 
-            raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * left), (int)(raw.raw.uncroppedDim.height * top));
-            raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * right), (int)(raw.raw.uncroppedDim.height * bottom));
+                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * left), (int)(raw.preview.uncroppedDim.height * top));
+                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * right), (int)(raw.preview.uncroppedDim.height * bottom));
 
-            raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * left), (int)(raw.preview.uncroppedDim.height * top));
-            raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * right), (int)(raw.preview.uncroppedDim.height * bottom));
-
-            UpdatePreview(true);
+                UpdatePreview(true);
+            }
             //var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
             //history.Add(t)
             ResetButtonVisibility.Value = true;

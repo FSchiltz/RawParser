@@ -1,4 +1,4 @@
-namespace RawSpeed
+namespace RawNet
 {
     public enum CiffTag
     {
