@@ -1,0 +1,662 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="RawEditor.App" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="21.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAQAAAQAAIAAA=</HashCode>
+      <FileName>App.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="RawEditor.Bindable&lt;S&gt;" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="23.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAgAAAACAAAAAgAAAAAAA=</HashCode>
+      <FileName>Model\Base\Bindable.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="RawEditor.FormatHelper" Collapsed="true">
+    <Position X="25.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAIIAAA=</HashCode>
+      <FileName>Model\Encoder\SaveHelper.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.HistoryObject" Collapsed="true">
+    <Position X="32.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAAAAIAAAAiAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Settings\HistoryObject.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.SettingStorage" Collapsed="true">
+    <Position X="23.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAIAAAABAAAAIAAgAgAAAADAAAAIgCCAAAAAAQ=</HashCode>
+      <FileName>Model\Settings\SettingStorage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.MainPage" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="32.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IDGAAgQYAAAABAAohJEAAAQAICAAAMAAACAJgQBBBAA=</HashCode>
+      <FileName>View\Pages\MainPage.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="RawEditor.SettingsView" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="25.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAEAAQIAEAAgAQAAAAAAAAAQAAACAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>View\Pages\SettingsView.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="RawEditor.ExceptionDisplay" Collapsed="true">
+    <Position X="21.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>View\UIHelper\ExceptionDisplay.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.HistoRaw" Collapsed="true">
+    <Position X="30.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>View\UIHelper\Histogram.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.Histogram" Collapsed="true">
+    <Position X="28.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABACgACAAAAAAAAAAIAAAgAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>View\UIHelper\Histogram.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.Effect.Color" Collapsed="true">
+    <Position X="25.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgCAAAAAA=</HashCode>
+      <FileName>Model\Effect\Color.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.Effect.Curve" Collapsed="true">
+    <Position X="21.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAgAAAAAAAA=</HashCode>
+      <FileName>Model\Effect\Curve.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.Effect.Demosaic" Collapsed="true">
+    <Position X="25.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAIAAAAAAAAAgCAIAAAAAAAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Model\Effect\Demosaic.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.Effect.ImageEffect" Collapsed="true">
+    <Position X="25.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAUAgAABFAAQIAgACICAAACQEAAAACAAAAAAAAABQAA=</HashCode>
+      <FileName>Model\Effect\ImageEffect.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.Effect.Luminance" Collapsed="true">
+    <Position X="30.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAA=</HashCode>
+      <FileName>Model\Effect\Luminance.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Common" Collapsed="true">
+    <Position X="28.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAwAAAAEgAEAAiAAAAAAACAAAAAABBAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Base\Common.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Point2D" Collapsed="true">
+    <Position X="27" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAQAwAEAAAEACAAAAIAAAAAAAQAAAiA=</HashCode>
+      <FileName>Model\Parser\Base\Point2D.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Rectangle2D" Collapsed="true">
+    <Position X="21.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAgAAAABQAAJAgAAAKgABQCAGAAAAACAABAUEggAA=</HashCode>
+      <FileName>Model\Parser\Base\Rectangle2D.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.ArwDecoder" Collapsed="true">
+    <Position X="5.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAgAAAAAAAACCAQAAAAAIAAAAAAAAAABAAAAABAEAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\ArwDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Cr2Slice" Collapsed="true">
+    <Position X="30.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAABAAAAAAAAAAAAAAAQAgAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Cr2Decoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Cr2Decoder" Collapsed="true">
+    <Position X="10.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAECAVAAAAAIDAAAAAAAESAAAAIAAIGAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Cr2Decoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.BitPumpJPEG" Collapsed="true">
+    <Position X="25.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAQAAAAAMCBAAgAAIQIAgAAAYAACBAAAWBCBgAQSUQ=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\BitPumpJPEG.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.BitPumpMSB" Collapsed="true">
+    <Position X="27" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAMCBAAgEAIQIAgAAAYAICBAAAWBCBgAQSUQ=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\BitPumpMSB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.BitPumpMSB16" Collapsed="true">
+    <Position X="28.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAICBAAhEAIQIAgAAAQAACBAAECBDBAAASAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\BitPumpMSB16.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.BitPumpMSB32" Collapsed="true">
+    <Position X="30.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAICBAAhEAIQIAgAAAQAACBAAECBDBAAASAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\BitPumpMSB32.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.BitPumpPlain" Collapsed="true">
+    <Position X="32.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAIAAEQCACAAAhAAIQIgAAAAAAAYAEAAQBAQAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\BitPumpPlain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.HuffmanTable" Collapsed="true">
+    <Position X="21.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAEAAACAAAAAEAIAAAAKAAAAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\LJpegDecompressor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.SOFInfo" Collapsed="true">
+    <Position X="27" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAAAAAAABAAAAAAAAAAAAAAQIgAAAACAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\LJpegDecompressor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.LJpegDecompressor" Collapsed="true">
+    <Position X="13" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAQABAIFCAAABkAAAAAAAAEQAICEBDCAAJSETAAACA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\LJpegDecompressor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.LJpegPlain" Collapsed="true">
+    <Position X="10.75" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAQAAAAAAEAAAAAAAKAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\LJpegPlain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.NikonDecompressor" Collapsed="true">
+    <Position X="13" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAAAAAAAAAAAAKAAAAAAAAACAAAAAE=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\NikonDecompressor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.PanaBitpump" Collapsed="true">
+    <Position X="25.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAggAACAAABAAAAAABAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\PanaBitpump.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.PentaxDecompressor" Collapsed="true">
+    <Position X="15.25" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAAAAAAAAAAAAAAABAAAAAAAAAAAAAE=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\PentaxDecompressor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.TIFFBinaryReader" Collapsed="true">
+    <Position X="0.5" Y="11.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABCAAAAAQAAACAAgAAgABAEAAAAAAAAAAAAAEAAAAAg=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\Reader\BinaryReaderBE.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.TIFFBinaryReaderRE" Collapsed="true">
+    <Position X="0.5" Y="13" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAACAAAAAgAhAAAAAACAAAAAAAREAAAAAg=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\Reader\BinaryReaderBE.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.DngStrip" Collapsed="true">
+    <Position X="32.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAABABAAAAAAAAAAAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\DngDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.DngDecoder" Collapsed="true">
+    <Position X="12.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAABAAACAAAAAAAAAAAAAAAAAAAAAAAAFAEAIA=</HashCode>
+      <FileName>Model\Parser\Decoder\DngDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.JPGDecoder" Collapsed="true">
+    <Position X="19.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\JPGDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.NefSlice" Collapsed="true">
+    <Position X="23.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAABAAAAAAAAAAAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\NEFDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.NefDecoder" Collapsed="true">
+    <Position X="14.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAQAAAAJAAACAQAQAAAIAIgEAAAgACBAAAAABAEACg=</HashCode>
+      <FileName>Model\Parser\Decoder\NEFDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.OrfDecoder" Collapsed="true">
+    <Position X="17" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQCAAAAAAAIAAAAAAAAAQBAAAAAAAEAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\OrfDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.PefDecoder" Collapsed="true">
+    <Position X="1.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAQAAAAAIAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\PefDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.RafDecoder" Collapsed="true">
+    <Position X="3.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAQAAACAQAAAEAIAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\RafDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.RawDecoder" Collapsed="true">
+    <Position X="10.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ATACCAAAEAAAChAAEAIIIABAAAiAAAABCCgBAAAUQAA=</HashCode>
+      <FileName>Model\Parser\Decoder\RawDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Rw2Decoder" Collapsed="true">
+    <Position X="8" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAQAAABAIAAAAAAAAAAAIgAAAAAkAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Rw2Decoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.TiffDecoder" Collapsed="true">
+    <Position X="9.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAAgCAAAAAAAIAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\TIFFDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.RawDecoderException" Collapsed="true">
+    <Position X="28.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Exception\RawDecoderException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.DngSliceElement" Collapsed="true">
+    <Position X="30.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAAAAAAAAAAQQAAADAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\DNG\DngDecoderSlices.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.DngDecoderSlices" Collapsed="true">
+    <Position X="27" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAIAIAAgAAAAAAAAAAAAgAAAAAABIAAAAAAACA=</HashCode>
+      <FileName>Model\Parser\Format\DNG\DngDecoderSlices.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.DngOpcode" Collapsed="true">
+    <Position X="4" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAAABAAAAAAACAAAAAAAAAAAAAAAQ=</HashCode>
+      <FileName>Model\Parser\Format\DNG\DngOpcodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.DngOpcodes" Collapsed="true">
+    <Position X="28.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIBAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\DNG\DngOpcodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.OpcodeTrimBounds" Collapsed="true">
+    <Position X="0.75" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgQAAAAACBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>Model\Parser\Format\DNG\DngOpcodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.OpcodeMapTable" Collapsed="true">
+    <Position X="3" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAABAAAAAAAAAAIAAAEACAAgAAAAAAACAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\DNG\DngOpcodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.OpcodeMapPolynomial" Collapsed="true">
+    <Position X="5.25" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAAAAAgAIAAACCAIAABgAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\DNG\DngOpcodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.OpcodeGainMap" Collapsed="true">
+    <Position X="7.5" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAQCAAAAABAAAAAAgAAAACAAEACAAgAAAQAAACABQAA=</HashCode>
+      <FileName>Model\Parser\Format\DNG\DngOpcodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.BlackArea" Collapsed="true">
+    <Position X="21.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAgAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\BlackArea.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.CamRGB" Collapsed="true">
+    <Position X="23.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAEACAAAAAEAAAAAAAAAAAABAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\CamRGB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.ColorFilterArray" Collapsed="true">
+    <Position X="27" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAEAAAiCiAgAAICAAAAAAAAAggAAAJAAIAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\ColorFilterArray.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.GPSInfo" Collapsed="true">
+    <Position X="27" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BCQAQAQAAAAAAAAAgAAAAAAAAIAAAAAAAAAAACAAIAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\ImageMetadata.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.ImageMetadata" Collapsed="true">
+    <Position X="27" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAABAAAAAJAIAYABABAAQQAEAQAAkAAAQAkBAAJIAAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\ImageMetadata.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Image" Collapsed="true">
+    <Position X="23.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAQAACAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\RawImage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.ExifValue" Collapsed="true">
+    <Position X="23.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\RawImage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.RawImage" Collapsed="true">
+    <Position X="30.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQCggkMECAAANBEDgGQAIAAABGABkAAAoCGUAAABQA=</HashCode>
+      <FileName>Model\Parser\Format\Image\RawImage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.TableLookUp" Collapsed="true">
+    <Position X="28.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BEgAAAAAAAAAAAhAAAQAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\TableLookUp.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Thumbnail" Collapsed="true">
+    <Position X="32.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAYAQAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\Thumbnail.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.FujiMakerNote" Collapsed="true">
+    <Position X="9.75" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Makernote\FujiMakerNote.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Makernote" Collapsed="true">
+    <Position X="5.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Makernote\Makernote.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.NikonMakerNote" Collapsed="true">
+    <Position X="0.75" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAAA=</HashCode>
+      <FileName>Model\Parser\Format\Makernote\NikonMakerNote.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.NokiaMakernote" Collapsed="true">
+    <Position X="3" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Makernote\NokiaMakernote.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.PanasonicMakernote" Collapsed="true">
+    <Position X="5.25" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Makernote\PanasonicMakernote.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.PentaxMakernote" Collapsed="true">
+    <Position X="7.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Makernote\PentaxMakernote.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.IFD" Collapsed="true">
+    <Position X="5.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAgAGQAAAABAQAAAIAEgABACAAAAAAgAABAAAAACCI=</HashCode>
+      <FileName>Model\Parser\Format\Tiff\IFD\IFD.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Data" Collapsed="true">
+    <Position X="23.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>Model\Parser\Format\Tiff\IFD\Tag.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.Tag" Collapsed="true">
+    <Position X="30.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgEgQSAAHEYAAAAAAAAIABBBAAQAAAAQAAiQAFE=</HashCode>
+      <FileName>Model\Parser\Format\Tiff\IFD\Tag.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawNet.RawParser" Collapsed="true">
+    <Position X="32.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\RawParser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RawEditor.View.UIHelper.CropUIHelper" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="32.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAEwAAAAQAQACYAAgAgAIIAAAgCACAggAAAAg=</HashCode>
+      <FileName>View\UIHelper\CropUIHelper.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="RawEditor.View.UIHelper.LoadBar" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="28.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAgAAABAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>View\UIHelper\LoadBar.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="RawEditor.View.UIHelper.MemoryBar" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="21.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAA=</HashCode>
+      <FileName>View\UIHelper\MemoryBar.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Struct Name="RawNet.JpegComponentInfo" Collapsed="true">
+    <Position X="21.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAwAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\LJpegDecompressor.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Interface Name="RawEditor.Effect.IMemoryBufferByteAccess" Collapsed="true">
+    <Position X="21.75" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Effect\ImageEffect.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RawNet.IMemoryBufferByteAccess" Collapsed="true">
+    <Position X="23.5" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\JPGDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="RawEditor.EffectObject" Collapsed="true">
+    <Position X="28.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>GAAAAAAEEAAQIAAAAAIQABAQAAAAAAAAAAIAAAAAAgA=</HashCode>
+      <FileName>Model\Settings\HistoryObject.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawEditor.ThemeEnum" Collapsed="true">
+    <Position X="25.25" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAAAAAAAAgAAAAAAAABAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Settings\SettingStorage.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawEditor.Effect.DemosAlgorithm" Collapsed="true">
+    <Position X="27" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAgCAIAAAAEAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Effect\Demosaic.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.JpegMarker" Collapsed="true">
+    <Position X="21.75" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAQgBIAAAAgAAAAQABAQABACMR/AAAAABACAIAAgAQ=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\LJpegDecompressor.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.Endianness" Collapsed="true">
+    <Position X="30.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAIAAAAAAAAAAAAAAAAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\Reader\BinaryReaderBE.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.BitOrder" Collapsed="true">
+    <Position X="21.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAABAAAAAAAAIEAgAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Decoder\Decompressor\Reader\BitOrder.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.CiffTag" Collapsed="true">
+    <Position X="25.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAAAAAAAAAAQAAAAAAAgAIAAACgAGAABAgA=</HashCode>
+      <FileName>Model\Parser\Format\Ciff\CiffTag.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.CFAColor" Collapsed="true">
+    <Position X="23.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAJgAQIAAAAAAAAAAAkAAEAAAEAAAAAAAAAE=</HashCode>
+      <FileName>Model\Parser\Format\Image\ColorFilterArray.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.FactorValue" Collapsed="true">
+    <Position X="32.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAAAAAAAABAAAAAIAAAAAAAADAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\FactorValue.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.ThumbnailType" Collapsed="true">
+    <Position X="27" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Image\Thumbnail.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.TiffDataType" Collapsed="true">
+    <Position X="28.75" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAMAAAQAAEEAABiAAAAAAIAAAABAAgAABCAAAAAAAA=</HashCode>
+      <FileName>Model\Parser\Format\Tiff\IFD\Tag.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RawNet.TagType" Collapsed="true">
+    <Position X="23.5" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>39GcrAPP+Nq3b8uWjk7kfbOXZ5fuSKS/Zf/yZIue+68=</HashCode>
+      <FileName>Model\Parser\Format\Tiff\IFD\TagType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

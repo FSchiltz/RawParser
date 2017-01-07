@@ -121,6 +121,7 @@
     <Content Include="Assets\PrivacyPolicy.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="UML\ClassDiagram.cd" />
     <None Include="project.json" />
     <None Include="RawParser_StoreKey.pfx" />
     <None Include="RawParser_TemporaryKey.pfx" />
