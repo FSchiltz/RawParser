@@ -55,7 +55,7 @@ namespace RawNet
             {
                 for (int y = 0; y < 2; y++)
                 {
-                    CFAColor c = ToRawspeedColor(FC(filters, y, x));
+                    CFAColor c = (CFAColor)FC(filters, y, x);
                     SetColorAt(new Point2D(x, y), c);
                 }
             }
@@ -107,14 +107,14 @@ namespace RawNet
             cfa[3] = color4;
         }
 
-        public void ShiftLeft(int n)
+        public void ShiftLeft(int count)
         {
             if (Size.width == 0)
             {
                 throw new RawDecoderException("ColorFilterArray:shiftLeft: No CFA size set (or set to zero)");
             }
             //Debug.Write("Shift left:" + n + "\n");
-            int shift = n % Size.width;
+            int shift = count % Size.width;
             if (0 == shift)
                 return;
             CFAColor[] tmp = new CFAColor[Size.width];
@@ -127,14 +127,14 @@ namespace RawNet
             }
         }
 
-        public void ShiftDown(int n)
+        public void ShiftDown(int count)
         {
             if (Size.height == 0)
             {
                 throw new RawDecoderException("ColorFilterArray:shiftDown: No CFA size set (or set to zero)");
             }
             //Debug.Write("Shift down:" + n + "\n");
-            int shift = n % Size.height;
+            int shift = count % Size.height;
             if (0 == shift)
                 return;
             CFAColor[] tmp = new CFAColor[Size.height];
@@ -162,67 +162,13 @@ namespace RawNet
             return dst;
         }
 
-        public void SetColorAt(Point2D pos, CFAColor c)
+        public void SetColorAt(Point2D position, CFAColor color)
         {
-            if (pos.width >= Size.width || pos.width < 0)
+            if (position.width >= Size.width || position.width < 0)
                 throw new RawDecoderException("SetColor: position out of CFA pattern");
-            if (pos.height >= Size.height || pos.height < 0)
+            if (position.height >= Size.height || position.height < 0)
                 throw new RawDecoderException("SetColor: position out of CFA pattern");
-            cfa[pos.width + pos.height * Size.width] = c;
-        }
-
-        protected uint GetDcrawFilter()
-        {
-            //dcraw magic
-            if (Size.width == 6 && Size.height == 6)
-                return 9;
-
-            if (Size.width > 8 || Size.height > 2 || cfa == null)
-                return 1;
-
-            if (Math.Log(Size.width, 2) % 1 == 0)
-                return 1;
-
-            uint ret = 0;
-            for (int x = 0; x < 8; x++)
-            {
-                for (int y = 0; y < 2; y++)
-                {
-                    uint c = ToDcrawColor(GetColorAt((uint)x, (uint)y));
-                    int g = (x >> 1) * 8;
-                    ret |= c << ((x & 1) * 2 + y * 4 + g);
-                }
-            }
-            return ret;
-        }
-
-        protected static CFAColor ToRawspeedColor(uint dcrawColor)
-        {
-            switch (dcrawColor)
-            {
-                case 0: return CFAColor.RED;
-                case 1: return CFAColor.GREEN;
-                case 2: return CFAColor.BLUE;
-                case 3: return CFAColor.GREEN;
-            }
-            return CFAColor.UNKNOWN;
-        }
-
-        protected static uint ToDcrawColor(CFAColor c)
-        {
-            switch (c)
-            {
-                case CFAColor.FUJI_GREEN:
-                case CFAColor.RED: return 0;
-                case CFAColor.MAGENTA:
-                case CFAColor.GREEN: return 1;
-                case CFAColor.CYAN:
-                case CFAColor.BLUE: return 2;
-                case CFAColor.YELLOW:
-                default:
-                    break;
-            }
-            return 0;
+            cfa[position.width + position.height * Size.width] = color;
         }
     };
 }

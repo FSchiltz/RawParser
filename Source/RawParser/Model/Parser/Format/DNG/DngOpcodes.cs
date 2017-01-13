@@ -31,7 +31,7 @@ namespace RawNet
     class DngOpcodes
     {
         List<DngOpcode> opcodes = new List<DngOpcode>();
-        UInt32 GetULong(byte[] ptr)
+        static UInt32 GetULong(byte[] ptr)
         {
             return (UInt32)ptr[1] << 24 | (UInt32)ptr[2] << 16 | (UInt32)ptr[3] << 8 | (UInt32)ptr[4];
             //return (UInt32)ptr[0] << 24 | (UInt32)ptr[1] << 16 | (UInt32)ptr[2] << 8 | (UInt32)ptr[3];
@@ -39,69 +39,70 @@ namespace RawNet
 
         unsafe public DngOpcodes(Tag entry)
         {
-            TIFFBinaryReaderRE reader = new TIFFBinaryReaderRE(entry.GetByteArray());
-
-            UInt32 entry_size = entry.dataCount;
-
-            if (entry_size < 20)
-                throw new RawDecoderException("DngOpcodes: Not enough bytes to read a single opcode");
-
-            UInt32 opcode_count = reader.ReadUInt32();
-            uint bytes_used = 4;
-            for (UInt32 i = 0; i < opcode_count; i++)
+            using (TIFFBinaryReaderRE reader = new TIFFBinaryReaderRE(entry.GetByteArray()))
             {
-                //if ((int)entry_size - bytes_used < 16)
-                // throw new RawDecoderException("DngOpcodes: Not enough bytes to read a new opcode");
-                reader.BaseStream.Position = bytes_used;
-                UInt32 code = reader.ReadUInt32();
-                UInt32 version = reader.ReadUInt32();
-                UInt32 flags = reader.ReadUInt32();
-                UInt32 expected_size = reader.ReadUInt32();
-                bytes_used += 16;
-                int opcode_used = 0;
-                switch (code)
+                UInt32 entry_size = entry.dataCount;
+
+                if (entry_size < 20)
+                    throw new RawDecoderException("DngOpcodes: Not enough bytes to read a single opcode");
+
+                UInt32 opcode_count = reader.ReadUInt32();
+                uint bytes_used = 4;
+                for (UInt32 i = 0; i < opcode_count; i++)
                 {
-                    /*
-                    case 4:
-                        mOpcodes.Add(new OpcodeFixBadPixelsConstant(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                    //if ((int)entry_size - bytes_used < 16)
+                    // throw new RawDecoderException("DngOpcodes: Not enough bytes to read a new opcode");
+                    reader.BaseStream.Position = bytes_used;
+                    UInt32 code = reader.ReadUInt32();
+                    reader.ReadUInt32();
+                    reader.ReadUInt32();
+                    UInt32 expected_size = reader.ReadUInt32();
+                    bytes_used += 16;
+                    int opcode_used = 0;
+                    switch (code)
+                    {
+                        /*
+                        case 4:
+                            mOpcodes.Add(new OpcodeFixBadPixelsConstant(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                            break;
+                        case 5:
+                            mOpcodes.Add(new OpcodeFixBadPixelsList(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                            break;*/
+                        case 6:
+                            opcodes.Add(new OpcodeTrimBounds(reader, entry_size - bytes_used, ref opcode_used));
+                            break;
+                        case 7:
+                            opcodes.Add(new OpcodeMapTable(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
+                            break;
+                        case 8:
+                            opcodes.Add(new OpcodeMapPolynomial(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
+                            break;
+                        case 9:
+                            opcodes.Add(new OpcodeGainMap(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
+                            break;
+                        /*
+                    case 10:
+                        mOpcodes.Add(new OpcodeDeltaPerRow(&data[bytes_used], entry_size - bytes_used, &opcode_used));
                         break;
-                    case 5:
-                        mOpcodes.Add(new OpcodeFixBadPixelsList(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                    case 11:
+                        mOpcodes.Add(new OpcodeDeltaPerCol(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                        break;
+                    case 12:
+                        mOpcodes.Add(new OpcodeScalePerRow(&data[bytes_used], entry_size - bytes_used, &opcode_used));
+                        break;
+                    case 13:
+                        mOpcodes.Add(new OpcodeScalePerCol(&data[bytes_used], entry_size - bytes_used, &opcode_used));
                         break;*/
-                    case 6:
-                        opcodes.Add(new OpcodeTrimBounds(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
-                        break;
-                    case 7:
-                        opcodes.Add(new OpcodeMapTable(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
-                        break;
-                    case 8:
-                        opcodes.Add(new OpcodeMapPolynomial(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
-                        break;
-                    case 9:
-                        opcodes.Add(new OpcodeGainMap(reader, entry_size - bytes_used, ref opcode_used, bytes_used));
-                        break;
-                    /*
-                case 10:
-                    mOpcodes.Add(new OpcodeDeltaPerRow(&data[bytes_used], entry_size - bytes_used, &opcode_used));
-                    break;
-                case 11:
-                    mOpcodes.Add(new OpcodeDeltaPerCol(&data[bytes_used], entry_size - bytes_used, &opcode_used));
-                    break;
-                case 12:
-                    mOpcodes.Add(new OpcodeScalePerRow(&data[bytes_used], entry_size - bytes_used, &opcode_used));
-                    break;
-                case 13:
-                    mOpcodes.Add(new OpcodeScalePerCol(&data[bytes_used], entry_size - bytes_used, &opcode_used));
-                    break;*/
-                    default:
-                        // Throw Error if not marked as optional
-                        /*if ((flags & 1) == 0)
-                            throw new RawDecoderException("DngOpcodes: Unsupported Opcode: " + code);*/
-                        break;
-                }
-                //if (opcode_used != expected_size)
+                        default:
+                            // Throw Error if not marked as optional
+                            /*if ((flags & 1) == 0)
+                                throw new RawDecoderException("DngOpcodes: Unsupported Opcode: " + code);*/
+                            break;
+                    }
+                    //if (opcode_used != expected_size)
                     //throw new RawDecoderException("DngOpcodes: Inconsistent length of opcode");
-                bytes_used += (uint)opcode_used;
+                    bytes_used += (uint)opcode_used;
+                }
             }
         }
 
@@ -119,7 +120,7 @@ namespace RawNet
                     throw new RawDecoderException("DngOpcodes: Area of interest not inside image!");
                 if (opcodes[i].aoi.HasPositiveArea())
                 {
-                    opcodes[i].Apply(img, ref img_out, (uint)opcodes[i].aoi.GetTop(), (uint)opcodes[i].aoi.GetBottom());
+                    opcodes[i].Apply(img, ref img_out, (uint)opcodes[i].aoi.Top, (uint)opcodes[i].aoi.Bottom);
                     img = img_out;
                 }
             }
@@ -152,7 +153,7 @@ namespace RawNet
         UInt64 mTop, mLeft, mBottom, mRight;
         /***************** OpcodeTrimBounds   ****************/
 
-        public OpcodeTrimBounds(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref Int32 bytes_used, uint offset)
+        public OpcodeTrimBounds(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref Int32 bytes_used)
         {
             if (param_max_bytes < 16)
                 throw new RawDecoderException("OpcodeTrimBounds: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
@@ -166,8 +167,8 @@ namespace RawNet
         public override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
             Rectangle2D crop = new Rectangle2D((int)mLeft, (int)mTop, (int)(mRight - mLeft), (int)(mBottom - mTop));
-            output.raw.offset = crop.GetTopLeft();
-            output.raw.dim = crop.GetBottomRight();
+            output.raw.offset = crop.TopLeft;
+            output.raw.dim = crop.BottomRight;
         }
 
     };
@@ -233,12 +234,12 @@ namespace RawNet
         {
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
-                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.GetLeft()])
+                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
                     src += firstPlane;
-                    for (ulong x = 0; x < (ulong)aoi.GetWidth(); x += colPitch)
+                    for (ulong x = 0; x < (ulong)aoi.Width; x += colPitch)
                     {
                         for (uint p = 0; p < planes; p++)
                         {
@@ -313,12 +314,12 @@ namespace RawNet
         {
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
-                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.GetLeft()])
+                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
                     src += mFirstPlane;
-                    for (UInt64 x = 0; x < (UInt64)aoi.GetWidth(); x += mColPitch)
+                    for (UInt64 x = 0; x < (UInt64)aoi.Width; x += mColPitch)
                     {
                         for (UInt64 p = 0; p < mPlanes; p++)
                         {
@@ -407,12 +408,12 @@ namespace RawNet
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
                 ulong realY = (y - startY);
-                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.uncroppedDim.width + aoi.GetLeft()])
+                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.uncroppedDim.width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
                     src += firstPlane;
-                    for (UInt64 x = 0; x < (UInt64)aoi.GetWidth(); x += colPitch)
+                    for (UInt64 x = 0; x < (UInt64)aoi.Width; x += colPitch)
                     {
                         for (UInt64 p = 0; p < planes; p++)
                         {

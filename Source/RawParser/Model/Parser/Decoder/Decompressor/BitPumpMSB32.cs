@@ -71,10 +71,10 @@ namespace RawNet
 
 
         /*** Used for entropy encoded sections, for now only Nikon Coolpix ***/
-        public BitPumpMSB32(TIFFBinaryReader s)
+        public BitPumpMSB32(TIFFBinaryReader reader)
         {
-            s.Read(buffer, (int)s.Position, (int)s.BaseStream.Length);
-            size = (uint)(s.GetRemainSize() + sizeof(uint));
+            reader.Read(buffer, (int)reader.Position, (int)reader.BaseStream.Length);
+            size = (uint)(reader.RemainingSize + sizeof(uint));
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
             Init();
         }

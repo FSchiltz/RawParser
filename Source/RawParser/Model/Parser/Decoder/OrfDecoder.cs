@@ -87,7 +87,7 @@ namespace RawNet
             }
             else if (size >= w * h * 2)
             { // We're in an unpacked raw
-                if (endian == Endianness.little)
+                if (endian == Endianness.Little)
                     Decode12BitRawUnpacked(s, w, h);
                 else
                     Decode12BitRawBEunpackedLeftAligned(s, w, h);

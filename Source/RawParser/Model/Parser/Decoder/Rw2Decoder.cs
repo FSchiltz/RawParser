@@ -67,7 +67,7 @@ namespace RawNet
                 rawImage.Init();
 
                 UInt32 size = (uint)(reader.BaseStream.Length - off);
-                TIFFBinaryReader input_start = new TIFFBinaryReader(stream, off);
+                input_start = new TIFFBinaryReader(stream, off);
 
                 if (size >= width * height * 2)
                 {
@@ -194,7 +194,7 @@ namespace RawNet
                                 }
                             }
                             else if ((nonz[0] = (int)bits.GetBits(8)) != 0 || i > 11)
-                                pred[0] = (int)(nonz[0] << 4 | bits.GetBits(4));
+                                pred[0] = nonz[0] << 4 | (int)bits.GetBits(4);
                             *dest = (ushort)pred[0];
                             dest = dest + 1;
                             if (zero_is_bad && 0 == pred[0])
@@ -218,7 +218,7 @@ namespace RawNet
                                 }
                             }
                             else if ((nonz[1] = (int)bits.GetBits(8)) != 0 || i > 11)
-                                pred[1] = (int)(nonz[1] << 4 | bits.GetBits(4));
+                                pred[1] = nonz[1] << 4 | (int)bits.GetBits(4);
                             *dest = (ushort)pred[1];
                             dest++;
                             if (zero_is_bad && 0 == pred[1])
@@ -262,7 +262,12 @@ namespace RawNet
 
         private void SetMetadata(string model)
         {
-
+            switch (model)
+            {
+                case "":
+                    rawImage.metadata.Model = "";
+                    break;
+            }
         }
 
         string GuessMode()

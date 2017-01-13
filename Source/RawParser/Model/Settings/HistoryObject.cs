@@ -2,15 +2,16 @@
 {
     public enum EffectObject
     {
-        reset,
-        exposure,
-        red, blue, green,
-        contrast,
-        shadow, hightlight,
-        rotate,
-        zoom,
-        saturation,
-        crop
+        Reset,
+        Exposure,
+        Red, Blue, Green,
+        Contrast,
+        Shadow,
+        Hightlight,
+        Rotate,
+        Zoom,
+        Saturation,
+        Crop
     }
     public class HistoryObject
     {

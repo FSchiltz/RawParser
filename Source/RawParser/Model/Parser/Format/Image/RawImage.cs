@@ -124,24 +124,24 @@ namespace RawNet
 
         public void Crop(Rectangle2D crop)
         {
-            if (!crop.Dim.IsThisInside(raw.dim - crop.Pos))
+            if (!crop.Dimension.IsThisInside(raw.dim - crop.Position))
             {
                 Debug.WriteLine("WARNING: RawImageData::subFrame - Attempted to create new subframe larger than original size. Crop skipped.");
                 return;
             }
-            if (crop.Pos.width < 0 || crop.Pos.height < 0 || !crop.HasPositiveArea())
+            if (crop.Position.width < 0 || crop.Position.height < 0 || !crop.HasPositiveArea())
             {
                 Debug.WriteLine("WARNING: RawImageData::subFrame - Negative crop raw.offset. Crop skipped.");
                 return;
             }
 
-            raw.offset += crop.Pos;
+            raw.offset += crop.Position;
 
-            raw.dim = crop.Dim;
+            raw.dim = crop.Dimension;
 
-            if ((crop.Pos.width & 1) != 0)
+            if ((crop.Position.width & 1) != 0)
                 colorFilter.ShiftLeft(0);
-            if ((crop.Pos.height & 1) != 0)
+            if ((crop.Position.height & 1) != 0)
                 colorFilter.ShiftDown(0);
         }
 
@@ -258,9 +258,9 @@ namespace RawNet
                     int realX = y + 3 * (x + raw.offset.width);
                     double[] rgb = { raw.data[realX] / maxValue, raw.data[realX + 1] / maxValue, raw.data[realY + 2] / maxValue };
                     //convert to XYZ
-                    double[] result = mult3by1(convertionM, rgb);
+                    double[] result = Mult3by1(convertionM, rgb);
                     //convert back to rgb
-                    double[] rgbConv = mult3by1(xyzToRGB, result);
+                    double[] rgbConv = Mult3by1(xyzToRGB, result);
                     raw.data[realX] = (ushort)(rgb[0]*maxValue);
                     raw.data[realX + 1] = (ushort)(rgb[1] * maxValue);
                     raw.data[realY + 2] = (ushort)(rgb[2] * maxValue);
@@ -268,7 +268,7 @@ namespace RawNet
             });
         }
 
-        public double[] mult3by1(double[,] m1, double[] m2)
+        public double[] Mult3by1(double[,] m1, double[] m2)
         {
             double[] resultMatrix = new double[3];
             for (int i = 0; i < 3; i++)

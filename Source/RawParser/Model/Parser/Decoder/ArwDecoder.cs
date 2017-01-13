@@ -109,9 +109,10 @@ namespace RawNet
                     // And now decode as a normal 16bit raw
                     rawImage.raw.dim = new Point2D(w, h);
                     rawImage.Init();
-                    TIFFBinaryReader reader = new TIFFBinaryReader(imageData, len);
-                    Decode16BitRawBEunpacked(reader, w, h);
-                    reader.Dispose();
+                    using (TIFFBinaryReader reader = new TIFFBinaryReader(imageData, len))
+                    {
+                        Decode16BitRawBEunpacked(reader, w, h);
+                    }
                     return;
                 }
                 else
@@ -281,17 +282,17 @@ namespace RawNet
                 for (uint y = 0; y < rawImage.raw.dim.height; y++)
                 {
                     // Realign
-                    bits.setAbsoluteOffset((uint)(rawImage.raw.dim.width * 8 * y) >> 3);
-                    uint random = bits.peekBits(24);
+                    bits.SetAbsoluteOffset((uint)(rawImage.raw.dim.width * 8 * y) >> 3);
+                    uint random = bits.PeekBits(24);
 
                     // Process 32 pixels (16x2) per loop.
                     for (uint x = 0; x < rawImage.raw.dim.width - 30;)
                     {
-                        bits.checkPos();
-                        int _max = (int)bits.getBits(11);
-                        int _min = (int)bits.getBits(11);
-                        int _imax = (int)bits.getBits(4);
-                        int _imin = (int)bits.getBits(4);
+                        bits.CheckPos();
+                        int _max = (int)bits.GetBits(11);
+                        int _min = (int)bits.GetBits(11);
+                        int _imax = (int)bits.GetBits(4);
+                        int _imin = (int)bits.GetBits(4);
                         int sh;
                         for (sh = 0; sh < 4 && 0x80 << sh <= _max - _min; sh++) ;
                         for (int i = 0; i < 16; i++)
@@ -301,7 +302,7 @@ namespace RawNet
                             else if (i == _imin) p = _min;
                             else
                             {
-                                p = (int)(bits.getBits(7) << sh) + _min;
+                                p = (int)(bits.GetBits(7) << sh) + _min;
                                 if (p > 0x7ff)
                                     p = 0x7ff;
                             }
@@ -320,11 +321,11 @@ namespace RawNet
                     fixed (byte* inputTemp = inputTempArray)
                     {
                         byte* t2 = inputTemp;
-                        if (input.GetRemainSize() < (w * 3 / 2))
+                        if (input.RemainingSize < (w * 3 / 2))
                             throw new RawDecoderException("Sony Decoder: Image data section too small, file probably truncated");
 
-                        if (input.GetRemainSize() < (w * h * 3 / 2))
-                            h = input.GetRemainSize() / (w * 3 / 2) - 1;
+                        if (input.RemainingSize < (w * h * 3 / 2))
+                            h = input.RemainingSize / (w * 3 / 2) - 1;
 
                         for (uint y = 0; y < h; y++)
                         {

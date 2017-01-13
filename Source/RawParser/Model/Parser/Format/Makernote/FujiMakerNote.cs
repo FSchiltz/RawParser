@@ -6,11 +6,11 @@
         {
             TIFFBinaryReader file;
 
-            if (endian == Endianness.little)
+            if (endian == Endianness.Little)
             {
                 file = new TIFFBinaryReader(data);
             }
-            else if (endian == Endianness.big)
+            else if (endian == Endianness.Big)
             {
                 file = new TIFFBinaryReaderRE(data);
             }

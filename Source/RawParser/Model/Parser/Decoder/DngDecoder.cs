@@ -190,7 +190,7 @@ namespace RawNet
                             Point2D size = new Point2D((int)width, (int)slice.h);
                             Point2D pos = new Point2D(0, (int)slice.offsetY);
 
-                            bool big_endian = (raw.endian == Endianness.big);
+                            bool big_endian = (raw.endian == Endianness.Big);
                             // DNG spec says that if not 8 or 16 bit/sample, always use big endian
                             if (bps != 8 && bps != 16)
                                 big_endian = true;
@@ -364,21 +364,21 @@ namespace RawNet
                 if (new Point2D((int)tl[0], (int)tl[1]).IsThisInside(rawImage.raw.dim))
                     cropped = new Rectangle2D((int)tl[0], (int)tl[1], 0, 0);
 
-                cropped.Dim = rawImage.raw.dim - cropped.Pos;
+                cropped.Dimension = rawImage.raw.dim - cropped.Position;
                 /* Read size (sometimes is rational so use float) */
 
                 size_entry.GetFloatArray(out float[] sz, 2);
                 Point2D size = new Point2D((int)sz[0], (int)sz[1]);
-                if ((size + cropped.Pos).IsThisInside(rawImage.raw.dim))
-                    cropped.Dim = size;
+                if ((size + cropped.Position).IsThisInside(rawImage.raw.dim))
+                    cropped.Dimension = size;
 
                 if (!cropped.HasPositiveArea())
                     throw new RawDecoderException("DNG Decoder: No positive crop area");
 
                 rawImage.Crop(cropped);
-                if (rawImage.isCFA && cropped.Pos.width % 2 == 1)
+                if (rawImage.isCFA && cropped.Position.width % 2 == 1)
                     rawImage.colorFilter.ShiftLeft(1);
-                if (rawImage.isCFA && cropped.Pos.height % 2 == 1)
+                if (rawImage.isCFA && cropped.Position.height % 2 == 1)
                     rawImage.colorFilter.ShiftDown(1);
             }
             if (rawImage.raw.dim.Area() <= 0)

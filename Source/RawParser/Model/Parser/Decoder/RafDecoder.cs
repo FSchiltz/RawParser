@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,12 +7,12 @@ namespace RawNet
 {
     class RafDecoder : TiffDecoder
     {
-        bool alt_layout;
+        //bool alt_layout;
         uint relativeOffset;
 
         public RafDecoder(Stream file) : base(file, true)
         {
-            alt_layout = false;
+            //alt_layout = false;
             rawImage.IsGammaCorrected = false;
             // FUJI has pointers to IFD's at fixed byte offsets
             // So if camera is FUJI, we cannot use ordinary TIFF parser
@@ -60,7 +59,7 @@ namespace RawNet
             catch (Exception)
             {
                 //old format
-                ifd = new IFD(Endianness.big, 0);
+                ifd = new IFD(Endianness.Big, 0);
                 //raw image
                 var entry = new Tag(TagType.FUJI_STRIPOFFSETS, TiffDataType.LONG, 1);
                 entry.data[0] = secondIFD;
@@ -216,7 +215,7 @@ namespace RawNet
             {
                 Decode16BitRawUnpacked(input, width * 2, height);
             }
-            else if (ifd.endian == Endianness.big)
+            else if (ifd.endian == Endianness.Big)
             {
                 Decode16BitRawBEunpacked(input, width, height);
             }

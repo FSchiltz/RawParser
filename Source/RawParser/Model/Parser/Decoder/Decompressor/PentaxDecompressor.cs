@@ -18,7 +18,6 @@ namespace RawNet
             HuffmanTable dctbl1 = huff[0];
 
             /* Attempt to read huffman table, if found in makernote */
-
             Tag t = root.GetEntryRecursive((TagType)0x220);
             if (t != null)
             {

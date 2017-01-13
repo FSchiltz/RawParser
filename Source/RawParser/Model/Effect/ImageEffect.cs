@@ -22,9 +22,9 @@ namespace RawEditor.Effect
         public double exposure = 0;
         //public double temperature = 1;
         //public double tint = 1;
-        public double gamma = 0;
+        //public double gamma = 0;
         public double contrast = 0;
-        public double brightness = 0;
+      //  public double brightness = 0;
         public double hightlight = 1;
         public double shadow = 1;
         public float[] mul;
@@ -119,7 +119,6 @@ namespace RawEditor.Effect
                 Parallel.For(0, dim.height, y =>
                 {
                     int realY = (y + off.height) * uncrop.width * 3;
-                    int bufferY = y * dim.width * 4 + startIndex;
                     for (int x = 0; x < dim.width; x++)
                     {
                         int realPix = realY + (3 * (x + off.width));
@@ -167,7 +166,6 @@ namespace RawEditor.Effect
                 Parallel.For(0, dim.height, y =>
                 {
                     int realY = (y + off.height) * uncrop.width * 3;
-                    int bufferY = y * dim.width * 4 + startIndex;
                     for (int x = 0; x < dim.width; x++)
                     {
                         int realPix = realY + (3 * (x + off.width));

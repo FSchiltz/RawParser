@@ -16,16 +16,16 @@ namespace RawNet
         int stuffed = 0;              // How many bytes has been stuffed?
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpJPEG(TIFFBinaryReader s) : this(s, (uint)s.Position, (uint)s.BaseStream.Length) { }
+        public BitPumpJPEG(TIFFBinaryReader reader) : this(reader, (uint)reader.Position, (uint)reader.BaseStream.Length) { }
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpJPEG(TIFFBinaryReader s, uint offset, uint count)
+        public BitPumpJPEG(TIFFBinaryReader reader, uint offset, uint count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
-            size = (uint)(s.GetRemainSize() + sizeof(uint));
+            size = count + sizeof(uint);
             buffer = new byte[size];
-            s.BaseStream.Position = offset;
-            s.Read(buffer, 0, s.GetRemainSize());
+            reader.BaseStream.Position = offset;
+            reader.Read(buffer, 0, reader.RemainingSize);
             Init();
         }
 

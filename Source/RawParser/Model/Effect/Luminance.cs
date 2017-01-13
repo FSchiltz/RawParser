@@ -2,7 +2,7 @@
 
 namespace RawEditor.Effect
 {
-    class Luminance
+    static class Luminance
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Clip(ref double red, ref double green, ref double blue, uint maxValue)

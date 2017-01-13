@@ -160,7 +160,7 @@ namespace RawNet
             {
                 NikonDecompressor decompressor = new NikonDecompressor(reader, rawImage);
                 TIFFBinaryReader metastream;
-                if (data[0].endian == Endianness.big)
+                if (data[0].endian == Endianness.Big)
                     metastream = new TIFFBinaryReaderRE(meta.data, meta.dataType);
                 else
                     metastream = new TIFFBinaryReader(meta.data, meta.dataType);
@@ -325,10 +325,10 @@ namespace RawNet
             int w = size.width;
             int h = size.height;
             int cpp = (int)rawImage.cpp;
-            if (input.GetRemainSize() < (inputPitch * h))
+            if (input.RemainingSize < (inputPitch * h))
             {
-                if (input.GetRemainSize() > inputPitch)
-                    h = (input.GetRemainSize() / inputPitch - 1);
+                if (input.RemainingSize > inputPitch)
+                    h = (input.RemainingSize / inputPitch - 1);
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
             }
@@ -358,10 +358,10 @@ namespace RawNet
             int w = size.width;
             int h = size.height;
             int cpp = (int)rawImage.cpp;
-            if (input.GetRemainSize() < (inputPitch * h))
+            if (input.RemainingSize < (inputPitch * h))
             {
-                if (input.GetRemainSize() > inputPitch)
-                    h = input.GetRemainSize() / inputPitch - 1;
+                if (input.RemainingSize > inputPitch)
+                    h = input.RemainingSize / inputPitch - 1;
                 else
                     throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
             }
@@ -655,11 +655,11 @@ namespace RawNet
             if (w < 6) throw new IOException("NEF: got a " + w + " wide sNEF, aborting");
 
             //UInt32 pitch = rawImage.pitch;
-            if (input.GetRemainSize() < (w * h * 3))
+            if (input.RemainingSize < (w * h * 3))
             {
-                if ((UInt32)input.GetRemainSize() > w * 3)
+                if ((UInt32)input.RemainingSize > w * 3)
                 {
-                    h = (uint)(input.GetRemainSize() / (w * 3) - 1);
+                    h = (uint)(input.RemainingSize / (w * 3) - 1);
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else

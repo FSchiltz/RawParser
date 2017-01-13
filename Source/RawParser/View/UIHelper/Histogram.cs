@@ -17,11 +17,11 @@ namespace RawEditor
 
     public class Histogram
     {
-        public PointCollection PointsL { get; set; }
-        public PointCollection PointsR { get; set; }
-        public PointCollection PointsG { get; set; }
-        public PointCollection PointsB { get; set; }
-        
+        public PointCollection PointsL { get; }
+        public PointCollection PointsR { get; }
+        public PointCollection PointsG { get; }
+        public PointCollection PointsB { get; }
+
         public async void FillAsync(HistoRaw value, uint height, uint width)
         {
             ClearAsync();
@@ -59,16 +59,16 @@ namespace RawEditor
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                PointsL = new PointCollection();
-                PointsR = new PointCollection();
-                PointsG = new PointCollection();
-                PointsB = new PointCollection();
+                PointsL.Clear();
+                PointsR.Clear();
+                PointsG.Clear();
+                PointsB.Clear();
             });
         }
 
         public Histogram() { }
 
-        private int[] SmoothHistogram(int[] originalValues)
+        private static int[] SmoothHistogram(int[] originalValues)
         {
             int[] smoothedValues = new int[originalValues.Length];
             double[] mask = new double[] { 0.25, 0.5, 0.25 };
