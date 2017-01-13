@@ -2,15 +2,15 @@ namespace RawNet
 {
     public enum CiffTag
     {
-        NULL = 0x0000,
-        makeModel = 0x080a,
-        shotInfo = 0x102a,
-        whiteBalance = 0x10a9,
-        sensorInfo = 0x1031,
-        imageInfo = 0x1810,
-        decoderTable = 0x1835,
-        rawData = 0x2005,
-        subifd = 0x300a,
-        exi = 0x300b,
+        Null = 0x0000,
+        MakeModel = 0x080a,
+        ShotInfo = 0x102a,
+        WhiteBalance = 0x10a9,
+        SensorInfo = 0x1031,
+        ImageInfo = 0x1810,
+        DecoderTable = 0x1835,
+        RawData = 0x2005,
+        Subifd = 0x300a,
+        Exif = 0x300b,
     };
 }

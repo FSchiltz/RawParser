@@ -147,10 +147,5 @@ UInt16* dst = (UInt16*)mRaw.getData(e.offX, y + e.offY);
             else
                 raw.errors.Add("DngDecoderSlices: Unknown compression");
         }
-
-        int Size()
-        {
-            return slices.Count;
-        }
     }
-} // namespace RawSpeed
+}

@@ -33,19 +33,19 @@ namespace RawNet
                 * part of the reader. Since there is no chance of affecting output buffer
                 * size we allow the decoder to decode this
                 */
-                if (input.GetRemainSize() < 0x4000 - load_flags)
+                if (input.RemainingSize < 0x4000 - load_flags)
                 {
-                    Common.Memcopy(buf, input.ReadBytes(input.GetRemainSize()), (uint)input.GetRemainSize(), load_flags, 0);
-                    input.ReadBytes(input.GetRemainSize());
+                    Common.Memcopy(buf, input.ReadBytes(input.RemainingSize), (uint)input.RemainingSize, load_flags, 0);
+                    input.ReadBytes(input.RemainingSize);
                 }
                 else
                 {
                     Common.Memcopy(buf, input.ReadBytes(0x4000 - load_flags), (uint)(0x4000 - load_flags), load_flags, 0);
                     input.ReadBytes(0x4000 - load_flags);
-                    if (input.GetRemainSize() < load_flags)
+                    if (input.RemainingSize < load_flags)
                     {
-                        Common.Memcopy(buf, input.ReadBytes(input.GetRemainSize()), (uint)input.GetRemainSize());
-                        input.ReadBytes(input.GetRemainSize());
+                        Common.Memcopy(buf, input.ReadBytes(input.RemainingSize), (uint)input.RemainingSize);
+                        input.ReadBytes(input.RemainingSize);
                     }
                     else
                     {

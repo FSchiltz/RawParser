@@ -4,8 +4,8 @@ namespace RawNet
 {
     public class RawDecoderException : Exception
     {
-        public RawDecoderException(string msg) : base(msg) { }
+        public RawDecoderException(string message) : base(message) { }
         public RawDecoderException() { }
-        public RawDecoderException(string msg, Exception innerException) : base(msg, innerException) { }
+        public RawDecoderException(string message, Exception innerException) : base(message, innerException) { }
     }
 }

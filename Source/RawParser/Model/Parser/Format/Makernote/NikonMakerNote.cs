@@ -9,7 +9,7 @@ namespace RawNet
         public string StringMagic { set; get; }
         public ushort Version { set; get; }
         public IFD Gps { get; set; }
-        public NikonMakerNote(byte[] data, int depth) : base(Endianness.little, depth)
+        public NikonMakerNote(byte[] data, int depth) : base(Endianness.Little, depth)
         {
             //read the header
             // buffer.BaseStream.Position = offset;
@@ -27,12 +27,12 @@ namespace RawNet
             if (data[0] == 0x4D && data[1] == 0x4D)
             {
                 buffer = new TIFFBinaryReaderRE(data);
-                endian = Endianness.big;
+                endian = Endianness.Big;
             }
             else if (data[0] == 0x49 && data[1] == 0x49)
             {
                 buffer = new TIFFBinaryReader(data);
-                endian = Endianness.little;
+                endian = Endianness.Little;
             }
             else throw new RawDecoderException("Makernote endianess unknown " + data[0]);
             buffer.BaseStream.Position = 2;

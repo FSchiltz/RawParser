@@ -58,9 +58,9 @@ namespace RawEditor.Effect
             {
                 var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
                 var p = 2 * l - q;
-                r = Hue2rgb(p, q, h + 1 / 3.0);
-                g = Hue2rgb(p, q, h);
-                b = Hue2rgb(p, q, h - 1 / 3.0);
+                r = Hue2Rgb(p, q, h + 1 / 3.0);
+                g = Hue2Rgb(p, q, h);
+                b = Hue2Rgb(p, q, h - 1 / 3.0);
             }
             r *= maxValue;
             g *= maxValue;
@@ -69,7 +69,7 @@ namespace RawEditor.Effect
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Hue2rgb(double p, double q, double t)
+        public static double Hue2Rgb(double p, double q, double t)
         {
             if (t < 0) t += 1;
             else if (t > 1) t -= 1;

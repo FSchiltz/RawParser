@@ -103,11 +103,11 @@ namespace RawEditor.View.UIHelper
             ResetCrop();
         }
 
-        public void SetSize(int w, int h, int rotation)
+        public void SetSize(int width, int height, int rotation)
         {
             //set the size
-            CropZone.Height = CropSelection.Height = (h - 1);
-            CropZone.Width = CropSelection.Width = (w - 1);
+            CropZone.Height = CropSelection.Height = (height - 1);
+            CropZone.Width = CropSelection.Width = (width - 1);
             Thumb.Height = Thumb2.Height = CropZone.Height;
             Thumb.Width = Thumb2.Width = CropZone.Width;
 

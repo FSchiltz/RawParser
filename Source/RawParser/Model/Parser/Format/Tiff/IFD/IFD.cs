@@ -12,7 +12,7 @@ namespace RawNet
         public Dictionary<TagType, Tag> tags = new Dictionary<TagType, Tag>();
         public List<IFD> subIFD = new List<IFD>();
         public uint NextOffset { get; protected set; }
-        public Endianness endian = Endianness.unknown;
+        public Endianness endian = Endianness.Unknown;
         public int Depth { private set; get; }
         public int RelativeOffset { protected set; get; }
 
@@ -204,11 +204,11 @@ namespace RawNet
             if (data[offset] == 0x49 && data[1 + offset] == 0x49)
             {
                 offset += 2;
-                parentEndian = Endianness.little;
+                parentEndian = Endianness.Little;
             }
             else if (data[offset] == 0x4D && data[offset + 1] == 0x4D)
             {
-                parentEndian = Endianness.big;
+                parentEndian = Endianness.Big;
                 offset += 2;
             }
 
@@ -283,11 +283,11 @@ namespace RawNet
                 Debug.WriteLine("Error reading TIFF structure (invalid size). File Corrupt");
                 return null;
             }
-            Endianness makernote_endian = Endianness.unknown;
+            Endianness makernote_endian = Endianness.Unknown;
             if (data[0] == 0x49 && data[1] == 0x49)
-                makernote_endian = Endianness.little;
+                makernote_endian = Endianness.Little;
             else if (data[0] == 0x4D && data[1] == 0x4D)
-                makernote_endian = Endianness.big;
+                makernote_endian = Endianness.Big;
             else
             {
                 Debug.WriteLine("Cannot determine endianess of DNG makernote");

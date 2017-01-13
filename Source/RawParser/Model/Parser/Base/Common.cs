@@ -4,14 +4,14 @@ namespace RawNet
 {
     internal static class Common
     {
-        static public string Trim(string val)
+        static internal string Trim(string val)
         {
             //ifd string have somtimes trailing zero so remove them
             return val.Remove(val.IndexOf((char)0));
 
         }
 
-        static public int Clampbits(int x, int n)
+        static internal int Clampbits(int x, int n)
         {
             int _y_temp = x >> n;
             if ((_y_temp != 0))
@@ -19,15 +19,7 @@ namespace RawNet
             return x;
         }
 
-        static public uint Clampbits(uint x, int n)
-        {
-            uint _y_temp = x >> n;
-            if ((_y_temp != 0))
-                x = ~_y_temp >> (32 - n);
-            return x;
-        }
-
-        static public int[] ConvertByteToInt(byte[] array)
+        static internal int[] ConvertByteToInt(byte[] array)
         {
             int bytePerInt = sizeof(int);
             int[] temp = new int[array.Length / bytePerInt];
@@ -38,7 +30,7 @@ namespace RawNet
             return temp;
         }
 
-        static public void Memcopy<T>(T[] dest, T[] src)
+        static internal void Memcopy<T>(T[] dest, T[] src)
         {
             Memcopy<T>(dest, src, (uint)dest.Length);
         }
@@ -82,7 +74,7 @@ namespace RawNet
 
         internal static Endianness GetHostEndianness()
         {
-            return (BitConverter.IsLittleEndian) ? Endianness.little : Endianness.big;
+            return (BitConverter.IsLittleEndian) ? Endianness.Little : Endianness.Big;
         }
 
         internal static bool Strncmp(byte[] data, string v1, int count)

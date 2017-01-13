@@ -44,12 +44,14 @@ namespace RawEditor
         {
             get
             {
-                var temp = new Dictionary<string, List<string>>();
-                temp.Add("Jpeg image", new List<string>() { ".jpg" });
-                temp.Add("PNG image", new List<string>() { ".png" });
-                temp.Add("Tiff image", new List<string>() { ".tiff" });
-                temp.Add("BMP image", new List<string>() { ".bmp" });
-                temp.Add("JpegXR image", new List<string>() { ".jxr" });
+                var temp = new Dictionary<string, List<string>>
+                {
+                    { "Jpeg image", new List<string>() { ".jpg" } },
+                    { "PNG image", new List<string>() { ".png" } },
+                    { "Tiff image", new List<string>() { ".tiff" } },
+                    { "BMP image", new List<string>() { ".bmp" } },
+                    { "JpegXR image", new List<string>() { ".jxr" } }
+                };
                 return temp;
             }
         }

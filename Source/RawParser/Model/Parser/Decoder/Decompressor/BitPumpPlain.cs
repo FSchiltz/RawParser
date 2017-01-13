@@ -6,24 +6,24 @@ namespace RawNet
     // Note: Allocated buffer MUST be at least size+sizeof(int) large.
     class BitPumpPlain
     {
-        public uint getOffset() { return off >> 3; }
-        public void checkPos() { if (off >= size) throw new IOException("Out of buffer read"); }        // Check if we have a valid position
+        public uint GetOffset() { return off >> 3; }
+        public void CheckPos() { if (off >= size) throw new IOException("Out of buffer read"); }        // Check if we have a valid position
 
         byte[] buffer;
         uint size;            // This if the end of buffer.
         uint off;                  // Offset in bytes
 
-        int BITS_PER_LONG = (8 * sizeof(uint));
-        int MIN_GET_BITS;// = (BITS_PER_LONG - 7);  /* max value for long getBuffer */
+        //int BITS_PER_LONG = (8 * sizeof(uint));
+        //int MIN_GET_BITS;// = (BITS_PER_LONG - 7);  /* max value for long getBuffer */
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpPlain(TIFFBinaryReader s) : this(s, (uint)s.Position, (uint)s.GetRemainSize()) { }
+        public BitPumpPlain(TIFFBinaryReader s) : this(s, (uint)s.Position, (uint)s.RemainingSize) { }
 
 
         /*** Used for entropy encoded sections ***/
         public BitPumpPlain(TIFFBinaryReader s, uint offset, uint count)
         {
-            MIN_GET_BITS = (BITS_PER_LONG - 7);
+            //MIN_GET_BITS = (BITS_PER_LONG - 7);
             size = 8 * count;
             buffer = new byte[count];
             s.BaseStream.Position = offset;
@@ -32,26 +32,26 @@ namespace RawNet
 
         public BitPumpPlain(byte[] _buffer, uint _size)
         {
-            MIN_GET_BITS = (BITS_PER_LONG - 7);
+            //MIN_GET_BITS = (BITS_PER_LONG - 7);
             buffer = (_buffer);
             size = (_size * 8);
         }
 
-        unsafe public uint getBit()
+        unsafe public uint GetBit()
         {
-            uint v = peekBit();
+            uint v = PeekBit();
             off++;
             return v;
         }
 
-        public uint getBits(uint nbits)
+        public uint GetBits(uint nbits)
         {
-            uint v = peekBits(nbits);
+            uint v = PeekBits(nbits);
             off += nbits;
             return v;
         }
 
-        unsafe public uint peekBit()
+        unsafe public uint PeekBit()
         {
             fixed (byte* t = &buffer[off >> 3])
             {
@@ -59,7 +59,7 @@ namespace RawNet
             }
         }
 
-        unsafe public uint peekBits(uint nbits)
+        unsafe public uint PeekBits(uint nbits)
         {
             fixed (byte* t = &buffer[off >> 3])
             {
@@ -67,36 +67,36 @@ namespace RawNet
             }
         }
 
-        public uint peekByte()
+        public uint PeekByte()
         {
             return (uint)(((buffer[off >> 3] << 8) | buffer[(off >> 3) + 1]) >> (int)(off & 7) & 0xff);
         }
 
-        unsafe public uint getBitSafe()
+        unsafe public uint GetBitSafe()
         {
-            checkPos();
+            CheckPos();
             fixed (byte* t = &buffer[off >> 3])
             {
                 return (uint)(*(Int32*)t >> ((int)off & 7) & 1);
             }
         }
 
-        unsafe public uint getBitsSafe(uint nbits)
+        unsafe public uint GetBitsSafe(uint nbits)
         {
-            checkPos();
+            CheckPos();
             fixed (byte* t = &buffer[off >> 3])
             {
                 return (uint)(*(Int32*)t >> ((int)off & 7) & ((1 << (int)nbits) - 1));
             }
         }
 
-        public void skipBits(uint nbits)
+        public void SkipBits(uint nbits)
         {
             off += nbits;
-            checkPos();
+            CheckPos();
         }
 
-        unsafe public byte getByte()
+        unsafe public byte GetByte()
         {
             fixed (byte* t = &buffer[off >> 3])
             {
@@ -106,17 +106,17 @@ namespace RawNet
             }
         }
 
-        public byte getByteSafe()
+        public byte GetByteSafe()
         {
-            var v = getByte();
-            checkPos();
+            var v = GetByte();
+            CheckPos();
             return v;
         }
 
-        public void setAbsoluteOffset(uint offset)
+        public void SetAbsoluteOffset(uint offset)
         {
             off = offset * 8;
-            checkPos();
+            CheckPos();
         }
     }
 }

@@ -6,7 +6,7 @@ namespace RawNet
 {
     public enum Endianness
     {
-        big, little, unknown
+        Big, Little, Unknown
     };
 
     public class TIFFBinaryReader : BinaryReader
@@ -18,15 +18,15 @@ namespace RawNet
             set { BaseStream.Position = value + offset; }
         }
 
-        public TIFFBinaryReader(Stream s) : base(s, Encoding.ASCII) { }
-        public TIFFBinaryReader(Stream s, uint offset) : base(s, Encoding.ASCII)
+        public TIFFBinaryReader(Stream data) : base(data, Encoding.ASCII) { }
+        public TIFFBinaryReader(Stream data, uint offset) : base(data, Encoding.ASCII)
         {
             this.offset = offset;
-            s.Position = offset;
+            data.Position = offset;
         }
 
-        public TIFFBinaryReader(byte[] s, uint o) : this(StreamFromArray(s), o) { }
-        public TIFFBinaryReader(byte[] s) : this(StreamFromArray(s)) { }
+        public TIFFBinaryReader(byte[] data, uint offset) : this(StreamFromArray(data), offset) { }
+        public TIFFBinaryReader(byte[] data) : this(StreamFromArray(data)) { }
 
         public TIFFBinaryReader(object[] data, TiffDataType dataType) : this(StreamFromArray(data, dataType)) { }
         public TIFFBinaryReader(object[] data, TiffDataType dataType, uint offset) : this(StreamFromArray(data, dataType), offset) { }
@@ -45,7 +45,7 @@ namespace RawNet
             BaseStream.Position -= 1;
         }
 
-        public int GetRemainSize() { return (int)(BaseStream.Length - Position); }
+        public int RemainingSize { get { return (int)(BaseStream.Length - Position); } }
 
         public virtual double ReadRational()
         {
@@ -54,27 +54,7 @@ namespace RawNet
              double d1 = BitConverter.ToInt32(part1, 0);
              double d2 = BitConverter.ToInt32(part2, 0);*/
             return base.ReadInt32() / (double)base.ReadInt32();
-        }
-
-        public ushort ReadUshortFromArray(byte[] array, int offset)
-        {
-            return BitConverter.ToUInt16(new byte[2] { array[offset], array[offset + 1] }, 0);
-        }
-
-        public short ReadshortFromArray(byte[] array, int offset)
-        {
-            return BitConverter.ToInt16(new byte[2] { array[offset], array[offset + 1] }, 0);
-        }
-
-        public ushort ReadUshortFromArrayC(object[] array, int offset)
-        {
-            return BitConverter.ToUInt16(new byte[2] { (byte)array[offset], (byte)array[offset + 1] }, 0);
-        }
-
-        public short ReadshortFromArrayC(object[] array, int offset)
-        {
-            return BitConverter.ToInt16(new byte[2] { (byte)array[offset], (byte)array[offset + 1] }, 0);
-        }
+        }       
 
         public bool IsValid(uint offset, uint count)
         {
@@ -160,12 +140,10 @@ namespace RawNet
 
     public class TIFFBinaryReaderRE : TIFFBinaryReader
     {
-        public TIFFBinaryReaderRE(Stream s) : base(s) { }
-        public TIFFBinaryReaderRE(Stream s, uint o) : base(s, o) { }
-
-        public TIFFBinaryReaderRE(byte[] s, uint o) : base(StreamFromArray(s), o) { }
-        public TIFFBinaryReaderRE(byte[] s) : base(StreamFromArray(s)) { }
-
+        public TIFFBinaryReaderRE(Stream data) : base(data) { }
+        public TIFFBinaryReaderRE(Stream data, uint offset) : base(data, offset) { }
+        public TIFFBinaryReaderRE(byte[] data, uint offset) : base(StreamFromArray(data), offset) { }
+        public TIFFBinaryReaderRE(byte[] data) : base(StreamFromArray(data)) { }
         public TIFFBinaryReaderRE(object[] data, TiffDataType dataType) : base(StreamFromArray(data, dataType)) { }
 
         public override ushort ReadUInt16()
@@ -179,7 +157,6 @@ namespace RawNet
 
         public override uint ReadUInt32()
         {
-
             byte[] temp = new byte[4];
             temp[3] = base.ReadByte();
             temp[2] = base.ReadByte();
@@ -201,7 +178,6 @@ namespace RawNet
 
         public override int ReadInt32()
         {
-
             byte[] temp = new byte[4];
             temp[3] = base.ReadByte();
             temp[2] = base.ReadByte();
@@ -215,26 +191,6 @@ namespace RawNet
         public override double ReadRational()
         {
             return ReadInt32() / (double)ReadInt32();
-        }
-
-        public new ushort ReadUshortFromArray(byte[] array, int offset)
-        {
-            return BitConverter.ToUInt16(new byte[2] { array[offset + 1], array[offset] }, 0);
-        }
-
-        public new short ReadshortFromArray(byte[] array, int offset)
-        {
-            return BitConverter.ToInt16(new byte[2] { array[offset + 1], array[offset] }, 0);
-        }
-
-        public new ushort ReadUshortFromArrayC(object[] array, int offset)
-        {
-            return BitConverter.ToUInt16(new byte[2] { (byte)array[offset + 1], (byte)array[offset] }, 0);
-        }
-
-        public new short ReadshortFromArrayC(object[] array, int offset)
-        {
-            return BitConverter.ToInt16(new byte[2] { (byte)array[offset + 1], (byte)array[offset] }, 0);
         }
 
         public override float ReadSingle()

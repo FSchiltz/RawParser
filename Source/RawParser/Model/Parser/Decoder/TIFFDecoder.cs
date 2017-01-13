@@ -14,7 +14,6 @@ namespace RawNet
         {
             Parse(0);
         }
-
         //fuji are special Tiff so we need to first remove uncorrect data before parsing the ifd
         public TiffDecoder(Stream stream, bool isFuji) : base(stream) { }
 
@@ -23,7 +22,7 @@ namespace RawNet
             //parse the ifd
             if (stream.Length < 16)
                 throw new RawDecoderException("Not a TIFF file (size too small)");
-            Endianness endian = Endianness.little;
+            Endianness endian = Endianness.Little;
             byte[] data = new byte[5];
             stream.Position = offset;
             stream.Read(data, 0, 4);
@@ -31,7 +30,7 @@ namespace RawNet
             {
                 //open binaryreader
                 reader = new TIFFBinaryReaderRE(stream);
-                endian = Endianness.big;
+                endian = Endianness.Big;
                 if (data[3] != 42 && data[2] != 0x4f) // ORF sometimes has 0x4f!
                     throw new RawDecoderException("Not a TIFF file (magic 42)");
             }
