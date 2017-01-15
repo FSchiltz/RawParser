@@ -1,4 +1,4 @@
-﻿namespace RawEditor
+﻿namespace RawEditor.Settings
 {
     public enum EffectObject
     {

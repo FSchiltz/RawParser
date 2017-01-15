@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace RawNet
+namespace RawNet.Format.TIFF
 {
     internal class IFD
     {

@@ -1,10 +1,12 @@
+using RawNet.DNG;
+using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace RawNet
+namespace RawNet.Decoder
 {
     class DngStrip
     {

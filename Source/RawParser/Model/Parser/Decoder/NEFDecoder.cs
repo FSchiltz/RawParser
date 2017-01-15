@@ -1,10 +1,12 @@
-﻿using System;
+﻿using RawNet.Decoder.Decompressor;
+using RawNet.Format.TIFF;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace RawNet
+namespace RawNet.Decoder
 {
     internal class NefSlice
     {

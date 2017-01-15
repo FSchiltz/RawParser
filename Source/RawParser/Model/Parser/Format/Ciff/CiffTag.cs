@@ -1,4 +1,4 @@
-namespace RawNet
+namespace RawNet.Ciff
 {
     public enum CiffTag
     {

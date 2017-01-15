@@ -1,11 +1,11 @@
 using System;
 using System.IO;
 
-namespace RawNet
+namespace RawNet.Decoder.Decompressor
 {
     /*** Used for entropy encoded sections, for now only Nikon Coolpix ***/
     // Note: Allocated buffer MUST be at least size+sizeof(int) large.
-    class BitPumpMSB16
+    class BitPumpMSB16: BitPump
     {
         int BITS_PER_LONG_LONG = (8 * sizeof(UInt64));
         int MIN_GET_BITS;   /* max value for long getBuffer */
@@ -33,13 +33,13 @@ namespace RawNet
             Init();
         }
 
-        public void Init()
+        public override void Init()
         {
             mStuffed = 0;
             Fill();
         }
 
-        public void Fill()
+        public override void Fill()
         {
             uint c, c2;
             if ((off + 4) > size)
@@ -66,31 +66,32 @@ namespace RawNet
             mLeft += 16;
         }
 
-        public uint GetOffset()
+        public override uint GetOffset()
         {
             return off - (mLeft >> 3);
         }
-        public void CheckPos()
+
+        public override void CheckPos()
         {
             if (mStuffed > 3)
                 throw new IOException("Out of buffer read");
-        }        // Check if we have a valid position
+        }
 
         // Fill the buffer with at least 24 bits
-        void FillCheck() { if (mLeft < MIN_GET_BITS) Fill(); }
+        public override void FillCheck() { if (mLeft < MIN_GET_BITS) Fill(); }
 
-        public uint GetBit()
+        public override uint GetBit()
         {
             if (mLeft == 0) Fill();
             return (uint)((mCurr >> (int)(--mLeft)) & 1);
         }
 
-        public uint GetBitNoFill()
+        public override uint GetBitNoFill()
         {
             return (uint)((mCurr >> (int)(--mLeft)) & 1);
         }
 
-        public uint GetBits(uint nbits)
+        public override uint GetBits(uint nbits)
         {
             if (mLeft < nbits)
             {
@@ -99,12 +100,12 @@ namespace RawNet
             return (uint)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
         }
 
-        public uint GetBitsNoFill(uint nbits)
+        public override uint GetBitsNoFill(uint nbits)
         {
             return (uint)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
         }
 
-        public void SkipBits(uint nbits)
+        public override void SkipBits(uint nbits)
         {
             while (nbits != 0)
             {
@@ -116,17 +117,17 @@ namespace RawNet
             }
         }
 
-        public uint PeekByteNoFill()
+        public override uint PeekByteNoFill()
         {
             return (uint)((mCurr >> (int)(mLeft - 8)) & 0xff);
         }
 
-        public void SkipBitsNoFill(uint nbits)
+        public override void SkipBitsNoFill(uint nbits)
         {
             mLeft -= nbits;
         }
 
-        public uint GetBitsSafe(uint nbits)
+        public override uint GetBitsSafe(uint nbits)
         {
             if (nbits > MIN_GET_BITS)
                 throw new IOException("Too many bits requested");
@@ -139,7 +140,7 @@ namespace RawNet
             return (uint)((int)(mCurr >> (int)(mLeft -= (nbits))) & ((1 << (int)nbits) - 1));
         }
 
-        public void SetAbsoluteOffset(uint offset)
+        public override void SetAbsoluteOffset(uint offset)
         {
             if (offset >= size)
                 throw new IOException("Offset set out of buffer");
@@ -149,6 +150,41 @@ namespace RawNet
             off = offset;
             mStuffed = 0;
             Fill();
+        }
+
+        public override uint GetBitSafe()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override byte GetByte()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override byte GetByteSafe()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override uint PeekBit()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override uint PeekBits(uint nbits)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override uint PeekBitsNoFill(uint nbits)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override uint PeekByte()
+        {
+            throw new NotImplementedException();
         }
     }
 }

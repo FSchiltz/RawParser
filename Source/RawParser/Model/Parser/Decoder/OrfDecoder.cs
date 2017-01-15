@@ -1,8 +1,10 @@
+using RawNet.Decoder.Decompressor;
+using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace RawNet
+namespace RawNet.Decoder
 {
     class OrfDecoder : TiffDecoder
     {

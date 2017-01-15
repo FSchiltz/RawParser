@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 
-namespace RawNet
+namespace RawNet.Decoder
 {
     // Using the COM interface IMemoryBufferByteAccess allows us to access the underlying byte array in an AudioFrame
     [ComImport]

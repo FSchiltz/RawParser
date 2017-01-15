@@ -1,9 +1,11 @@
+using RawNet.Decoder.Decompressor;
+using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace RawNet
+namespace RawNet.Decoder
 {
     class ArwDecoder : TiffDecoder
     {

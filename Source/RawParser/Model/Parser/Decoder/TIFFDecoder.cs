@@ -1,10 +1,11 @@
-﻿using System;
+﻿using RawNet.Format.TIFF;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 
-namespace RawNet
+namespace RawNet.Decoder
 {
     internal class TiffDecoder : RawDecoder
     {

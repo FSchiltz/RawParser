@@ -1,4 +1,5 @@
 ﻿using RawEditor.Effect;
+using RawEditor.Settings;
 using RawNet;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace RawEditor
+namespace RawEditor.View.Pages
 {
     public sealed partial class SettingsView : Page
     {

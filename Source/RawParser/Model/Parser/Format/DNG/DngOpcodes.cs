@@ -1,7 +1,8 @@
+using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
 
-namespace RawNet
+namespace RawNet.DNG
 {
 
     class DngOpcode

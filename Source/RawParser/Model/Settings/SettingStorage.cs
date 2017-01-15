@@ -3,7 +3,7 @@ using RawNet;
 using System;
 using Windows.Storage;
 
-namespace RawEditor
+namespace RawEditor.Settings
 {
     public enum ThemeEnum { Dark, Light, System }
 

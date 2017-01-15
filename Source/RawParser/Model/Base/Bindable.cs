@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace RawEditor
+namespace RawEditor.Base
 {
     public class Bindable<Type> : INotifyPropertyChanged
     {
