@@ -1,8 +1,10 @@
+using RawNet.Decoder.Decompressor;
+using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace RawNet
+namespace RawNet.Decoder
 {
     class Rw2Decoder : TiffDecoder
     {
@@ -99,7 +101,6 @@ namespace RawNet
             }
             else
             {
-
                 rawImage.raw.dim = new Point2D(width, height);
                 rawImage.Init();
                 Tag offsets = raw.GetEntry(TagType.PANASONIC_STRIPOFFSET);

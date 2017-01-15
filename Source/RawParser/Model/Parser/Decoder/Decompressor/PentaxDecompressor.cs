@@ -1,6 +1,7 @@
+using RawNet.Format.TIFF;
 using System;
 
-namespace RawNet
+namespace RawNet.Decoder.Decompressor
 {
 
     class PentaxDecompressor : LJpegDecompressor

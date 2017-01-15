@@ -1,21 +1,11 @@
 using System;
-using System.IO;
 
-namespace RawNet
+namespace RawNet.Decoder.Decompressor
 {
     // Note: Allocated buffer MUST be at least size+sizeof(int) large.
-    class BitPumpPlain
+    internal class BitPumpPlain : BitPump
     {
-        public uint GetOffset() { return off >> 3; }
-        public void CheckPos() { if (off >= size) throw new IOException("Out of buffer read"); }        // Check if we have a valid position
-
-        byte[] buffer;
-        uint size;            // This if the end of buffer.
-        uint off;                  // Offset in bytes
-
-        //int BITS_PER_LONG = (8 * sizeof(uint));
-        //int MIN_GET_BITS;// = (BITS_PER_LONG - 7);  /* max value for long getBuffer */
-
+        public override uint GetOffset() { return off >> 3; }
         /*** Used for entropy encoded sections ***/
         public BitPumpPlain(TIFFBinaryReader s) : this(s, (uint)s.Position, (uint)s.RemainingSize) { }
 
@@ -33,25 +23,25 @@ namespace RawNet
         public BitPumpPlain(byte[] _buffer, uint _size)
         {
             //MIN_GET_BITS = (BITS_PER_LONG - 7);
-            buffer = (_buffer);
-            size = (_size * 8);
+            buffer = _buffer;
+            size = _size * 8;
         }
 
-        unsafe public uint GetBit()
+        unsafe public override uint GetBit()
         {
             uint v = PeekBit();
             off++;
             return v;
         }
 
-        public uint GetBits(uint nbits)
+        public override uint GetBits(uint nbits)
         {
             uint v = PeekBits(nbits);
             off += nbits;
             return v;
         }
 
-        unsafe public uint PeekBit()
+        unsafe public override uint PeekBit()
         {
             fixed (byte* t = &buffer[off >> 3])
             {
@@ -59,7 +49,7 @@ namespace RawNet
             }
         }
 
-        unsafe public uint PeekBits(uint nbits)
+        unsafe public override uint PeekBits(uint nbits)
         {
             fixed (byte* t = &buffer[off >> 3])
             {
@@ -67,12 +57,12 @@ namespace RawNet
             }
         }
 
-        public uint PeekByte()
+        public override uint PeekByte()
         {
             return (uint)(((buffer[off >> 3] << 8) | buffer[(off >> 3) + 1]) >> (int)(off & 7) & 0xff);
         }
 
-        unsafe public uint GetBitSafe()
+        unsafe public override uint GetBitSafe()
         {
             CheckPos();
             fixed (byte* t = &buffer[off >> 3])
@@ -81,7 +71,7 @@ namespace RawNet
             }
         }
 
-        unsafe public uint GetBitsSafe(uint nbits)
+        unsafe public override uint GetBitsSafe(uint nbits)
         {
             CheckPos();
             fixed (byte* t = &buffer[off >> 3])
@@ -90,13 +80,13 @@ namespace RawNet
             }
         }
 
-        public void SkipBits(uint nbits)
+        public override void SkipBits(uint nbits)
         {
             off += nbits;
             CheckPos();
         }
 
-        unsafe public byte GetByte()
+        unsafe public override byte GetByte()
         {
             fixed (byte* t = &buffer[off >> 3])
             {
@@ -106,17 +96,65 @@ namespace RawNet
             }
         }
 
-        public byte GetByteSafe()
+        public override byte GetByteSafe()
         {
             var v = GetByte();
             CheckPos();
             return v;
         }
 
-        public void SetAbsoluteOffset(uint offset)
+        public override void SetAbsoluteOffset(uint offset)
         {
             off = offset * 8;
             CheckPos();
         }
+
+        #region abstract
+
+        public override void CheckPos()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Fill()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void FillCheck()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override uint GetBitNoFill()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override uint GetBitsNoFill(uint nbits)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Init()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override uint PeekBitsNoFill(uint nbits)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override uint PeekByteNoFill()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SkipBitsNoFill(uint nbits)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
     }
 }

@@ -1,15 +1,9 @@
-﻿<Page
-    x:Class="RawEditor.SettingsView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+﻿<Page x:Class="RawEditor.View.Pages.SettingsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
     <Page.Transitions>
         <TransitionCollection>
             <NavigationThemeTransition>
                 <NavigationThemeTransition.DefaultNavigationTransitionInfo>
-                    <DrillInNavigationTransitionInfo/>
+                    <DrillInNavigationTransitionInfo />
                 </NavigationThemeTransition.DefaultNavigationTransitionInfo>
             </NavigationThemeTransition>
         </TransitionCollection>
@@ -32,23 +26,23 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <TextBlock TextWrapping="WrapWholeWords" FontSize="48" x:Uid="Settings"/>
+        <TextBlock TextWrapping="WrapWholeWords" FontSize="48" x:Uid="Settings" />
         <Pivot FontSize="30">
             <PivotItem x:Uid="DisplayHeader">
                 <ScrollViewer VerticalContentAlignment="Stretch">
                     <StackPanel HorizontalAlignment="Left">
-                        <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left" x:Uid="BorderText"/>
+                        <TextBlock TextWrapping="Wrap" FontSize="18" HorizontalAlignment="Left" x:Uid="BorderText" />
                         <Slider x:Name="BorderSlider" ValueChanged="Slider_ValueChanged" Width="100" HorizontalAlignment="Center" Margin="0,10" />
 
-                        <TextBlock  TextWrapping="Wrap" FontSize="18"  x:Uid="ScalingFactor"/>
+                        <TextBlock TextWrapping="Wrap" FontSize="18" x:Uid="ScalingFactor" />
                         <ComboBox x:Name="ScaleComboBox" SelectionChanged="PreviewFactor_SelectionChanged" Margin="0,0,0,10" HorizontalAlignment="Stretch"></ComboBox>
-                        <TextBlock  TextWrapping="Wrap" FontSize="18"  x:Uid="Demos"/>
-                        <TextBlock TextWrapping="WrapWholeWords" FontSize="12"  x:Uid="DemosWarningText" Margin="0,0,0,5" MaxWidth="360"/>
-                        <ComboBox Grid.Row="2" SelectionChanged="Algo_SelectionChanged"  Margin="0,0,0,10" x:Name="DemosComboBox" HorizontalAlignment="Stretch"></ComboBox>
-                        <TextBlock  TextWrapping="Wrap" FontSize="18"  x:Uid="Theme"/>
-                        <ComboBox Grid.Row="2"   Margin="0,10,0,0" x:Name="ThemeComboBox" SelectionChanged="ThemeComboBox_SelectionChanged" HorizontalAlignment="Stretch"></ComboBox>
+                        <TextBlock TextWrapping="Wrap" FontSize="18" x:Uid="Demos" />
+                        <TextBlock TextWrapping="WrapWholeWords" FontSize="12" x:Uid="DemosWarningText" Margin="0,0,0,5" MaxWidth="360" />
+                        <ComboBox Grid.Row="2" SelectionChanged="Algo_SelectionChanged" Margin="0,0,0,10" x:Name="DemosComboBox" HorizontalAlignment="Stretch"></ComboBox>
+                        <TextBlock TextWrapping="Wrap" FontSize="18" x:Uid="Theme" />
+                        <ComboBox Grid.Row="2" Margin="0,10,0,0" x:Name="ThemeComboBox" SelectionChanged="ThemeComboBox_SelectionChanged" HorizontalAlignment="Stretch"></ComboBox>
 
-                        <Button Tapped="Reset_Tapped" HorizontalAlignment="Center" Margin="0,10" >Reset</Button>
+                        <Button Tapped="Reset_Tapped" HorizontalAlignment="Center" Margin="0,10">Reset</Button>
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
@@ -60,10 +54,10 @@
 
                         <TextBlock FontSize="18" TextWrapping="WrapWholeWords" x:Uid="Issue" />
 
-                        <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" Margin="0,10,0,0"/>
+                        <HyperlinkButton Content="Github.com" NavigateUri="https://github.com/arimhan/RawParser/issues" Margin="0,10,0,0" />
                         <TextBlock FontSize="30" TextWrapping="WrapWholeWords" x:Uid="Legal" Margin="0,10,0,0" />
-                        <HyperlinkButton Content="Icon from flaticon.com" NavigateUri="https://www.flaticon.com/" Margin="0,10,0,0"/>
-                        <Button x:Uid="Privacy"  Tapped="Button_TappedAsync" Margin="0,20,0,0"></Button>
+                        <HyperlinkButton Content="Icon from flaticon.com" NavigateUri="https://www.flaticon.com/" Margin="0,10,0,0" />
+                        <Button x:Uid="Privacy" Tapped="Button_TappedAsync" Margin="0,20,0,0"></Button>
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
@@ -73,21 +67,20 @@
             <Popup.ChildTransitions>
                 <TransitionCollection>
                     <!--<EdgeUIThemeTransition Edge="Left" />-->
-                    <PaneThemeTransition Edge="Bottom"/>
+                    <PaneThemeTransition Edge="Bottom" />
                 </TransitionCollection>
             </Popup.ChildTransitions>
             <Grid Background="Black">
-                <ScrollViewer x:Name="scroll"  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="Black" Margin="2,2,2,0" ZoomMode="Enabled">
-                    <ItemsControl x:Name="pop"  Padding="1,1,1,1">
+                <ScrollViewer x:Name="scroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="Black" Margin="2,2,2,0" ZoomMode="Enabled">
+                    <ItemsControl x:Name="pop" Padding="1,1,1,1">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Image Source="{Binding}"/>
+                                <Image Source="{Binding}" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <Button Tapped="PolicyButton_Tapped"  HorizontalAlignment="Right" VerticalAlignment="Top" FocusVisualPrimaryBrush="#FFC90000" Foreground="#FFC70000" Background="#00000000" Margin="2,0,20,0" 
-                        FontFamily="Segoe MDL2 Assets" Content="&#xE711;" FontSize="20"/>
+                <Button Tapped="PolicyButton_Tapped" HorizontalAlignment="Right" VerticalAlignment="Top" FocusVisualPrimaryBrush="#FFC90000" Foreground="#FFC70000" Background="#00000000" Margin="2,0,20,0" FontFamily="Segoe MDL2 Assets" Content="&#xE711;" FontSize="20" />
             </Grid>
         </Popup>
     </StackPanel>

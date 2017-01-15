@@ -21,8 +21,11 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using RawEditor.Effect;
 using Windows.System;
+using RawEditor.Base;
+using RawEditor.View.UIHelper;
+using RawEditor.Settings;
 
-namespace RawEditor
+namespace RawEditor.View.Pages
 {
     /// <summary>
     /// The main class of the appliation

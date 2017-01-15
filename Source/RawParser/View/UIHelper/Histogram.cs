@@ -5,7 +5,7 @@ using Windows.Foundation;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media;
 
-namespace RawEditor
+namespace RawEditor.View.UIHelper
 {
     public class HistoRaw
     {

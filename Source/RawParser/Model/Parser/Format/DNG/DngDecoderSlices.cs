@@ -1,7 +1,8 @@
+using RawNet.Decoder.Decompressor;
 using System.Collections.Generic;
 using System.IO;
 
-namespace RawNet
+namespace RawNet.DNG
 {
 
     internal class DngSliceElement

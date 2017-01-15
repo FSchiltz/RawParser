@@ -1,6 +1,6 @@
 using System;
 
-namespace RawNet
+namespace RawNet.Decoder.Decompressor
 {
     internal class NikonDecompressor : LJpegDecompressor
     {

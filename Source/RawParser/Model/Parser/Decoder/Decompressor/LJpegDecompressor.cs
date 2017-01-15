@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace RawNet
+namespace RawNet.Decoder.Decompressor
 {
     public enum JpegMarker
     {       /* JPEG marker codes			*/

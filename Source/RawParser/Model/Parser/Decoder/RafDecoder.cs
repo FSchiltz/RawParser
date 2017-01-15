@@ -1,9 +1,10 @@
+using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace RawNet
+namespace RawNet.Decoder
 {
     class RafDecoder : TiffDecoder
     {

@@ -8,7 +8,7 @@ using Windows.Storage;
 using Windows.Storage.Provider;
 using Windows.UI.Core;
 
-namespace RawEditor
+namespace RawNet
 {
     public static class FormatHelper
     {

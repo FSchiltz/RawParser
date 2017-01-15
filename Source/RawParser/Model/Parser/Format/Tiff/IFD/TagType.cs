@@ -1,4 +1,4 @@
-﻿namespace RawNet
+﻿namespace RawNet.Format.TIFF
 {
     public enum TagType
     {

@@ -1,10 +1,16 @@
-﻿using Microsoft.Services.Store.Engagement;
-using RawNet;
+﻿using RawEditor.Settings;
+using RawEditor.View.Pages;
+using RawEditor.View.UIHelper;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+
+#if !DEBUG
+using RawNet;
+using Microsoft.Services.Store.Engagement;
+#endif
 
 namespace RawEditor
 {

@@ -1,12 +1,11 @@
 using System;
 
-namespace RawNet
+namespace RawNet.Decoder.Decompressor
 {
 
     /******************
      * Decompresses Lossless non subsampled JPEGs, with 2-4 components
      *****************/
-
     internal unsafe class LJpegPlain : LJpegDecompressor
     {
         public LJpegPlain(TIFFBinaryReader file, RawImage img) : base(file, img) { }

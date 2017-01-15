@@ -1,14 +1,15 @@
 ﻿using System;
 
-namespace RawNet
+namespace RawNet.Decoder.Decompressor
 {
-    class PanaBitpump
+    internal class PanaBitpump
     {
         TIFFBinaryReader input;
         byte[] buf = new byte[0x4000];
         int vbits;
         int load_flags;
-        internal PanaBitpump(TIFFBinaryReader _input, uint load)
+
+        public PanaBitpump(TIFFBinaryReader _input, uint load)
         {
             input = _input;
             vbits = 0;
