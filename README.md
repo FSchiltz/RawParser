@@ -26,17 +26,13 @@ Support for Xbox and hololens could be added if someone can test them.
 
 ## File support:
 ### input:
-- DNG
 - Tiff
-- JPEG
-- PNG
-- ICO
-- JpegXR
-- Tiff (uncompressed only)
 - Jpeg
-- Png 
 - JpegXR
+- Png 
 - BMP
+- ICO
+
 - DNG (uncompressed and Ljpeg)  
 - NEF (Nikon raw)
 - PEF (Pentax raw)
