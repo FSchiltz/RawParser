@@ -2,8 +2,6 @@
 =========
 [![Join the chat at https://gitter.im/RawParser/Lobby](https://badges.gitter.im/RawParser/Lobby.svg)](https://gitter.im/RawParser/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/arimhan/RawParser.svg)](http://isitmaintained.com/project/arimhan/RawParser "Percentage of issues still open")
-
 [![Build status](https://ci.appveyor.com/api/projects/status/sdvkbleoqohq9rmb/branch/master?svg=true)](https://ci.appveyor.com/project/arimhan/rawparser/branch/master)
 
 ## the app is now live on the store (https://www.microsoft.com/store/apps/9pfwlj4lxftf) 
