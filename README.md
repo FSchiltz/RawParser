@@ -18,31 +18,39 @@ Support for Xbox and hololens could be added if someone can test them.
 
 ## Roadmap
 - Complete support of DNG 
-- Find a better app identity
 - Translation in other language
 - History view with undo/redo
 - Presets
-- Import and export of preset 
 - Better demosaic algorithms
-- Support for crop (part of the code is already there)
+- add more cameras
+- Correct color from camera to other color space
+- Support for rasterized SVG
 
 ## File support:
 ### input:
-  - Nikon nef (12/14 bits)
-  - Tiff (uncompressed only)
-  - Jpeg
-  - Png 
-  - DNG (uncompressed and Ljpeg)
-  - Pef (pentax raw)
-  - orf (olympus raw)
-  - raw (panasonic raw)
-  - cr2 (canon raw)
-  - SRW (sony raw)
+- DNG
+- Tiff
+- JPEG
+- PNG
+- ICO
+- JpegXR
+- Tiff (uncompressed only)
+- Jpeg
+- Png 
+- JpegXR
+- BMP
+- DNG (uncompressed and Ljpeg)  
+- NEF (Nikon raw)
+- PEF (Pentax raw)
+- ORF (Olympus raw)
+- RAW (Panasonic raw)
+- CR2 (Canon raw)
+- SRW (Sony raw)
   
 ### output:
-  - Tiff
-  - Jpeg
-  - PNG
+ - Tiff
+ - Jpeg
+ - PNG
 
 ## Installation
 ### From the store (recommended)
@@ -93,20 +101,3 @@ decoder.DecodeMetadata();
 RawImage raw = decoder.rawImage;
 ```
 The image may need further processing like debayerisation and color correction depending on the file format.
-
-###Camera supported
-- Sony srw
-- Nikon Nef (only rgb files)
-- Canon cr2
-- Panasonic raw
-- Olympus raw
-- DNG
-- Tiff
-- JPEG
-- PNG
-
-###TODO
-- add more cameras
-- Correct color from camer to other color space
-- Get the correct Exif with the correct value
-
