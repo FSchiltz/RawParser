@@ -59,10 +59,13 @@ namespace RawEditor.View.UIHelper
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                PointsL.Clear();
-                PointsR.Clear();
-                PointsG.Clear();
-                PointsB.Clear();
+                if (PointsL.Count > 0)
+                {
+                    PointsL.Clear();
+                    PointsR.Clear();
+                    PointsG.Clear();
+                    PointsB.Clear();
+                }
             });
         }
 
