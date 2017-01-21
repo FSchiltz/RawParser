@@ -4,12 +4,15 @@ using System.IO;
 namespace RawNet.Decoder.Decompressor
 {
     // Note: Allocated buffer MUST be at least size+sizeof(uint) large.
-    internal class BitPumpJPEG : BitPump
+    internal class BitPumpJPEG
     {
         int BITS_PER_LONG = (8 * sizeof(uint));
         int MIN_GET_BITS;   /* max value for long getBuffer */
+        byte[] buffer;
         byte[] current_buffer = new byte[24];
+        uint size = 0;            // This if the end of buffer.
         int mLeft = 0;
+        uint off;                  // Offset in bytes
         int stuffed = 0;              // How many bytes has been stuffed?
 
         /*** Used for entropy encoded sections ***/
@@ -19,10 +22,10 @@ namespace RawNet.Decoder.Decompressor
         public BitPumpJPEG(TIFFBinaryReader reader, uint offset, uint count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
-            size = count + sizeof(uint);
+            size = (uint)(reader.RemainingSize + sizeof(uint));
             buffer = new byte[size];
             reader.BaseStream.Position = offset;
-            reader.Read(buffer, 0, reader.RemainingSize);
+            reader.Read(buffer, 0, (int)reader.RemainingSize);
             Init();
         }
 
@@ -33,12 +36,12 @@ namespace RawNet.Decoder.Decompressor
             Init();
         }
 
-        public override void Init()
+        public void Init()
         {
             Fill();
         }
 
-        public override void Fill()
+        public void FillNoCheck()
         {
             // Fill in 96 bits
             //int[] b = Common.convertByteToInt(current_buffer);
@@ -109,12 +112,12 @@ namespace RawNet.Decoder.Decompressor
             mLeft += 96;
         }
 
-        public override uint GetOffset()
+        public uint GetOffset()
         {
             return (uint)(off - (mLeft >> 3) + stuffed);
         }
 
-        public override void CheckPos()
+        public void CheckPos()
         {
             if (off >= size || stuffed > (mLeft >> 3))
             {
@@ -123,12 +126,12 @@ namespace RawNet.Decoder.Decompressor
         }        // Check if we have a valid position
 
         // Fill the buffer with at least 24 bits
-        public override void FillCheck()
+        public void Fill()
         {
-            if (mLeft < 25) Fill();
+            if (mLeft < 25) FillNoCheck();
         }
 
-        public override uint PeekBitsNoFill(uint nbits)
+        public uint PeekBitsNoFill(uint nbits)
         {
             int shift = (int)(mLeft - nbits);
             uint ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
@@ -136,41 +139,41 @@ namespace RawNet.Decoder.Decompressor
             return (uint)(ret & ((1 << (int)nbits) - 1));
         }
 
-        public override uint GetBit()
+        public uint GetBit()
         {
-            if (mLeft == 0) Fill();
+            if (mLeft == 0) FillNoCheck();
             mLeft--;
             uint _byte = (uint)(mLeft >> 3);
             return (uint)(current_buffer[_byte] >> (mLeft & 0x7)) & 1;
         }
 
-        public override uint GetBitsNoFill(uint nbits)
+        public uint GetBitsNoFill(uint nbits)
         {
             uint ret = PeekBitsNoFill(nbits);
             mLeft -= (int)nbits;
             return ret;
         }
 
-        public override uint GetBits(uint nbits)
+        public uint GetBits(uint nbits)
         {
-            FillCheck();
+            Fill();
             return GetBitsNoFill(nbits);
         }
 
-        public override uint PeekBit()
+        public uint PeekBit()
         {
-            if (mLeft == 0) Fill();
+            if (mLeft == 0) FillNoCheck();
             return (uint)(current_buffer[(mLeft - 1) >> 3] >> ((mLeft - 1) & 0x7)) & 1;
         }
 
-        public override uint GetBitNoFill()
+        public uint GetBitNoFill()
         {
             mLeft--;
             uint ret = (uint)(current_buffer[mLeft >> 3] >> (mLeft & 0x7)) & 1;
             return ret;
         }
 
-        public override uint PeekByteNoFill()
+        public uint PeekByteNoFill()
         {
             int shift = mLeft - 8;
             uint ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
@@ -178,27 +181,27 @@ namespace RawNet.Decoder.Decompressor
             return ret & 0xff;
         }
 
-        public override uint PeekBits(uint nbits)
+        public uint PeekBits(uint nbits)
         {
-            FillCheck();
+            Fill();
             return PeekBitsNoFill(nbits);
         }
 
-        public override uint PeekByte()
+        public uint PeekByte()
         {
-            FillCheck();
+            Fill();
             if (off > size)
                 throw new IOException("Out of buffer read");
 
             return PeekByteNoFill();
         }
 
-        public override void SkipBits(uint nbits)
+        public void SkipBits(uint nbits)
         {
             int skipn = (int)nbits;
             while (skipn != 0)
             {
-                FillCheck();
+                Fill();
                 CheckPos();
                 int n = Math.Min(skipn, mLeft);
                 mLeft -= n;
@@ -206,14 +209,14 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public override void SkipBitsNoFill(uint nbits)
+        public void SkipBitsNoFill(uint nbits)
         {
             mLeft -= (int)nbits;
         }
 
-        public override byte GetByte()
+        public byte GetByte()
         {
-            FillCheck();
+            Fill();
             mLeft -= 8;
             int shift = mLeft;
             uint ret = current_buffer[shift >> 3];
@@ -221,38 +224,38 @@ namespace RawNet.Decoder.Decompressor
             return (byte)(ret & 0xff);
         }
 
-        public override uint GetBitSafe()
+        public uint GetBitSafe()
         {
-            FillCheck();
+            Fill();
             CheckPos();
             return GetBitNoFill();
         }
 
-        public override uint GetBitsSafe(uint nbits)
+        public uint GetBitsSafe(uint nbits)
         {
             if (nbits > MIN_GET_BITS)
                 throw new IOException("Too many bits requested");
 
-            FillCheck();
+            Fill();
             CheckPos();
             return GetBitsNoFill(nbits);
         }
 
-        public override byte GetByteSafe()
+        public byte GetByteSafe()
         {
-            FillCheck();
+            Fill();
             CheckPos();
             return (byte)GetBitsNoFill(8);
         }
 
-        public override void SetAbsoluteOffset(uint offset)
+        public void SetAbsoluteOffset(uint offset)
         {
             if (offset >= size)
                 throw new IOException("Offset set out of buffer");
 
             mLeft = 0;
             off = offset;
-            Fill();
+            FillNoCheck();
         }
     }
 }

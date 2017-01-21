@@ -1,6 +1,7 @@
 using RawNet.Decoder.Decompressor;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace RawNet.DNG
 {
@@ -9,11 +10,11 @@ namespace RawNet.DNG
     {
         public DngSliceElement(uint off, uint count, uint offsetX, uint offsetY)
         {
-            byteOffset = (off);
-            byteCount = (count);
-            offX = (offsetX);
-            offY = (offsetY);
-            mUseBigtable = (false);
+            byteOffset = off;
+            byteCount = count;
+            offX = offsetX;
+            offY = offsetY;
+            mUseBigtable = false;
         }
 
         public uint byteOffset;
@@ -21,11 +22,12 @@ namespace RawNet.DNG
         public uint offX;
         public uint offY;
         public bool mUseBigtable;
+        public byte[] data;
     };
 
     internal class DngDecoderSlices
     {
-        public Queue<DngSliceElement> slices = new Queue<DngSliceElement>();
+        public List<DngSliceElement> slices = new List<DngSliceElement>();
         TIFFBinaryReader file;
         RawImage raw;
         public bool FixLjpeg { get; set; }
@@ -60,24 +62,33 @@ namespace RawNet.DNG
 
         public void AddSlice(DngSliceElement slice)
         {
-            slices.Enqueue(slice);
+            slices.Add(slice);
         }
 
         public void DecodeSlice()
         {
+            //first read data for each slice
+            for (int i = 0; i < slices.Count; i++)
+            {
+                file.BaseStream.Position = slices[i].byteOffset;
+                slices[i].data = file.ReadBytes((int)slices[i].byteCount);
+            }
+
             if (compression == 7)
             {
-                while (slices.Count != 0)
+                Parallel.For(0, slices.Count, (i) =>
                 {
-                    LJpegPlain l = new LJpegPlain(file, raw)
+                    DngSliceElement e = slices[i];
+                    LJpegPlain l = new LJpegPlain(e.data, raw)
                     {
-                        DNGCompatible = FixLjpeg
+                        DNGCompatible = FixLjpeg,
+                        UseBigtable = e.mUseBigtable
                     };
-                    DngSliceElement e = slices.Dequeue();
-                    l.UseBigtable = e.mUseBigtable;
+
                     try
                     {
-                        l.StartDecoder(e.byteOffset, e.byteCount, e.offX, e.offY);
+                        l.StartDecoder(0, e.byteCount, e.offX, e.offY);
+                        l.input.Dispose();
                     }
                     catch (RawDecoderException err)
                     {
@@ -87,7 +98,7 @@ namespace RawNet.DNG
                     {
                         raw.errors.Add(err.Message);
                     }
-                }
+                });
                 /* Lossy DNG */
             }
             /*else if (compression == 0x884c)

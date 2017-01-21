@@ -82,8 +82,8 @@ namespace RawNet.Decoder
             {
                 if (!ifd.tags.TryGetValue((TagType)0x0102, out var bitPerSampleTag)) throw new FormatException("File not correct");
                 if (!ifd.tags.TryGetValue((TagType)0x0115, out var samplesPerPixel)) throw new FormatException("File not correct");
-                int height = imageHeightTag.GetInt(0);
-                int width = imageWidthTag.GetInt(0);
+                uint height = imageHeightTag.GetUInt(0);
+                uint width = imageWidthTag.GetUInt(0);
                 rawImage.isCFA = false;
                 rawImage.raw.dim = new Point2D(width, height);
                 rawImage.raw.uncroppedDim = rawImage.raw.dim;
@@ -199,19 +199,19 @@ namespace RawNet.Decoder
                     using (IMemoryBufferReference reference = buffer.CreateReference())
                     {
                         BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-                        rawImage.raw.dim = new Point2D(bufferLayout.Width, bufferLayout.Height);
+                        rawImage.raw.dim = new Point2D((uint)bufferLayout.Width, (uint)bufferLayout.Height);
                         rawImage.Init();
                         unsafe
                         {
                             ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
                             for (int y = 0; y < rawImage.raw.dim.height; y++)
                             {
-                                int realY = y * rawImage.raw.dim.width * 3;
-                                int bufferY = y * rawImage.raw.dim.width * 4 + +bufferLayout.StartIndex;
+                                long realY = y * rawImage.raw.dim.width * 3;
+                                long bufferY = y * rawImage.raw.dim.width * 4 + +bufferLayout.StartIndex;
                                 for (int x = 0; x < rawImage.raw.dim.width; x++)
                                 {
-                                    int realPix = realY + (3 * x);
-                                    int bufferPix = bufferY + (4 * x);
+                                    long realPix = realY + (3 * x);
+                                    long bufferPix = bufferY + (4 * x);
                                     rawImage.raw.data[realPix] = temp[bufferPix + 2];
                                     rawImage.raw.data[realPix + 1] = temp[bufferPix + 1];
                                     rawImage.raw.data[realPix + 2] = temp[bufferPix];
@@ -336,11 +336,7 @@ namespace RawNet.Decoder
                     {
                         //there is a thumbnail
                         uint bps = thumbIFD.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
-                        Point2D dim = new Point2D()
-                        {
-                            width = thumbIFD.GetEntry(TagType.IMAGEWIDTH).GetInt(0),
-                            height = thumbIFD.GetEntry(TagType.IMAGELENGTH).GetInt(0)
-                        };
+                        Point2D dim = new Point2D(thumbIFD.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), thumbIFD.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
 
                         int compression = thumbIFD.GetEntry(TagType.COMPRESSION).GetShort(0);
                         // Now load the image

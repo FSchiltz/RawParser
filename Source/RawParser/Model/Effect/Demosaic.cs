@@ -58,14 +58,14 @@ namespace RawEditor.Effect
 
         private static void Deflate(RawImage image, ushort[] deflated)
         {
-            int height = image.colorFilter.Size.height;
-            int width = image.colorFilter.Size.width;
+            uint height = image.colorFilter.Size.height;
+            uint width = image.colorFilter.Size.width;
             Parallel.For(0, image.raw.dim.height, row =>
             {
-                int realRow = row + image.raw.offset.height;
+                long realRow = row + image.raw.offset.height;
                 for (int col = 0; col < image.raw.dim.width; col++)
                 {
-                    int realCol = col + image.raw.offset.width;
+                    long realCol = col + image.raw.offset.width;
                     int pixeltype = (int)image.colorFilter.cfa[((row % height) * width) + col % width];
 
                     deflated[(((row * image.raw.dim.width) + col) * 3) + pixeltype] = image[realRow, realCol];
@@ -75,16 +75,16 @@ namespace RawEditor.Effect
 
         private static void FujiBilinear(RawImage image, ushort[] deflated)
         {
-            int height = image.colorFilter.Size.height;
-            int width = image.colorFilter.Size.width;
+            uint height = image.colorFilter.Size.height;
+            uint width = image.colorFilter.Size.width;
             //first deflate
             Deflate(image, deflated);
             Parallel.For(0, image.raw.dim.height, row =>
             {
-                int realRow = row + image.raw.offset.height;
+                long realRow = row + image.raw.offset.height;
                 for (int col = 0; col < image.raw.dim.width; col++)
                 {
-                    int realCol = col + image.raw.offset.width;
+                    long realCol = col + image.raw.offset.width;
                     CFAColor pixeltype = image.colorFilter.cfa[((row % height) * width) + col % width];
                     if (pixeltype == CFAColor.GREEN)
                     {
@@ -117,10 +117,10 @@ namespace RawEditor.Effect
         {
             Parallel.For(0, image.raw.dim.height, row =>
             {
-                int realRow = row + image.raw.offset.height;
+                long realRow = row + image.raw.offset.height;
                 for (int col = 0; col < image.raw.dim.width; col++)
                 {
-                    int realCol = col + image.raw.offset.width;
+                    long realCol = col + image.raw.offset.width;
                     CFAColor pixeltype = image.colorFilter.cfa[((row % 2) * 2) + col % 2];
                     if (pixeltype == CFAColor.GREEN)
                     {

@@ -267,6 +267,13 @@ namespace RawNet.Format.TIFF
                 array[i] = Convert.ToInt32(data[i]);
         }
 
+        internal void GetUIntArray(out uint[] array, int count)
+        {
+            array = new uint[count];
+            for (int i = 0; i < count; i++)
+                array[i] = Convert.ToUInt32(data[i]);
+        }
+
         internal void GetFloatArray(out float[] array, int count)
         {
             array = new float[count];

@@ -4,7 +4,7 @@ namespace RawNet
 {
     public class Point2D
     {
-        public int width, height;
+        public uint width, height;
 
         public override bool Equals(object obj)
         {
@@ -15,11 +15,11 @@ namespace RawNet
         //TODO check
         public override int GetHashCode()
         {
-            return width + height;
+            return (int)(width + height);
         }
 
         public Point2D() { width = height = 0; }
-        public Point2D(int x, int y) { this.width = x; this.height = y; }
+        public Point2D(uint width, uint height) { this.width = width; this.height = height; }
         public Point2D(Point2D pt) { width = pt.width; height = pt.height; }
         
         static public Point2D operator -(Point2D a, Point2D b)

@@ -6,9 +6,11 @@ namespace RawNet.Decoder.Decompressor
     /******************
      * Decompresses Lossless non subsampled JPEGs, with 2-4 components
      *****************/
+
     internal unsafe class LJpegPlain : LJpegDecompressor
     {
         public LJpegPlain(TIFFBinaryReader file, RawImage img) : base(file, img) { }
+        public LJpegPlain(byte[] data, RawImage img) : base(new TIFFBinaryReader(data), img) { }
 
         public override void DecodeScan()
         {
@@ -16,7 +18,7 @@ namespace RawNet.Decoder.Decompressor
             // We temporarily swap width and height for cropping.
             if (CanonFlipDim)
             {
-                int w = frame.w;
+                uint w = frame.w;
                 frame.w = frame.h;
                 frame.h = w;
             }
@@ -30,17 +32,17 @@ namespace RawNet.Decoder.Decompressor
             // Swap back (see above)
             if (CanonFlipDim)
             {
-                int w = frame.w;
+                uint w = frame.w;
                 frame.w = frame.h;
                 frame.h = w;
             }
 
             /* Correct wrong slice count (Canon G16) */
             if (slicesW.Count == 1)
-                slicesW[0] = (int)(frame.w * frame.cps);
+                slicesW[0] = frame.w * frame.cps;
 
             if (slicesW.Count == 0)
-                slicesW.Add((int)(frame.w * frame.cps));
+                slicesW.Add(frame.w * frame.cps);
 
             if (0 == frame.h || 0 == frame.w)
                 throw new RawDecoderException("decodeScan: Image width or height set to zero");
@@ -161,8 +163,8 @@ namespace RawNet.Decoder.Decompressor
                     pixGroup += samplesComp[i];
                 }
 
-                raw.metadata.Subsampling.width = (int)maxSuperH;
-                raw.metadata.Subsampling.height = (int)maxSuperV;
+                raw.metadata.Subsampling.width = maxSuperH;
+                raw.metadata.Subsampling.height = maxSuperV;
 
                 //Prepare slices (for CR2)
                 Int32 slices = slicesW.Count * (int)((frame.h - skipY) / maxSuperV);
@@ -325,7 +327,7 @@ namespace RawNet.Decoder.Decompressor
         /*************************************************************************/
         unsafe void DecodeScanLeft4_2_0()
         {
-            int COMPS = 3;
+            uint COMPS = 3;
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
             //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
             //_ASSERTE(frame.compInfo[0].superH == 2);   // Check if this is a valid state
@@ -363,7 +365,7 @@ namespace RawNet.Decoder.Decompressor
                 UInt32 slice = 0;
                 UInt32 pitch_s = raw.pitch / 2;  // Pitch in shorts
 
-                int[] slice_width = new int[slices];
+                uint[] slice_width = new uint[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (int i = 0; i < slicesW.Count; i++)
@@ -390,7 +392,7 @@ namespace RawNet.Decoder.Decompressor
                 offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
                 if (skipX != 0)
-                    slice_width[slicesW.Count - 1] -= (int)skipX;
+                    slice_width[slicesW.Count - 1] -= skipX;
 
                 // Predictors for components
                 UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
@@ -509,7 +511,7 @@ namespace RawNet.Decoder.Decompressor
                 UInt32 t_x = 0;
                 UInt32 t_s = 0;
                 UInt32 slice = 0;
-                int[] slice_width = new int[slices];
+                uint[] slice_width = new uint[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (int i = 0; i < slicesW.Count; i++)
@@ -534,7 +536,7 @@ namespace RawNet.Decoder.Decompressor
                 offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
                 if (skipX != 0)
-                    slice_width[slicesW.Count - 1] -= (int)skipX;
+                    slice_width[slicesW.Count - 1] -= skipX;
 
                 // Predictors for components
                 UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
@@ -614,7 +616,7 @@ namespace RawNet.Decoder.Decompressor
 
         void DecodeScanLeft2Comps()
         {
-            int COMPS = 2;
+            uint COMPS = 2;
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
             //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
             fixed (ushort* d = raw.raw.data)
@@ -652,14 +654,14 @@ namespace RawNet.Decoder.Decompressor
                 }
                 offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-                int[] slice_width = new int[slices];
+                uint[] slice_width = new uint[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)
                     slice_width[i] = slicesW[i] / COMPS;
 
                 if (skipX != 0)
-                    slice_width[slicesW.Count - 1] -= (int)skipX;
+                    slice_width[slicesW.Count - 1] -= skipX;
 
                 // First pixels are obviously not predicted
                 int p1;
@@ -721,7 +723,7 @@ namespace RawNet.Decoder.Decompressor
 
         void DecodeScanLeft3Comps()
         {
-            int COMPS = 3;
+            uint COMPS = 3;
             fixed (ushort* d = raw.raw.data)
             {
                 //TODO remove this hack
@@ -747,7 +749,7 @@ namespace RawNet.Decoder.Decompressor
                     if (t_y == (frame.h - skipY))
                     {
                         t_y = 0;
-                        t_x += (uint)slicesW[(int)t_s++];
+                        t_x += slicesW[(int)t_s++];
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
@@ -758,14 +760,14 @@ namespace RawNet.Decoder.Decompressor
 
                 offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-                int[] slice_width = new int[slices];
+                uint[] slice_width = new uint[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)
                     slice_width[i] = slicesW[i] / COMPS;
 
                 if (skipX != 0)
-                    slice_width[slicesW.Count - 1] -= (int)skipX;
+                    slice_width[slicesW.Count - 1] -= skipX;
 
                 // First pixels are obviously not predicted
                 int p1;
@@ -835,7 +837,7 @@ namespace RawNet.Decoder.Decompressor
 
         void DecodeScanLeft4Comps()
         {
-            int COMPS = 4;
+            uint COMPS = 4;
             // First line
             HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
             HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
@@ -878,14 +880,14 @@ namespace RawNet.Decoder.Decompressor
                 }
                 offset[slices] = offset[slices - 1];        // Extra offset to avoid branch in loop.
 
-                int[] slice_width = new int[slices];
+                uint[] slice_width = new uint[slices];
 
                 // This is divided by comps, since comps pixels are processed at the time
                 for (Int32 i = 0; i < slicesW.Count; i++)
                     slice_width[i] = slicesW[i] / COMPS;
 
                 if (skipX != 0)
-                    slice_width[slicesW.Count - 1] -= (int)skipX;
+                    slice_width[slicesW.Count - 1] -= skipX;
 
                 // First pixels are obviously not predicted
                 int p1;

@@ -119,11 +119,11 @@ namespace RawEditor.Effect
                 double[] curve = CreateCurve();
                 Parallel.For(0, dim.height, y =>
                 {
-                    int realY = (y + off.height) * uncrop.width * 3;
+                    long realY = (y + off.height) * uncrop.width * 3;
                     for (int x = 0; x < dim.width; x++)
                     {
-                        int realPix = realY + (3 * (x + off.width));
-                        int bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
+                        long realPix = realY + (3 * (x + off.width));
+                        long bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
                         double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                         Luminance.Clip(ref l);
@@ -166,11 +166,11 @@ namespace RawEditor.Effect
                 };
                 Parallel.For(0, dim.height, y =>
                 {
-                    int realY = (y + off.height) * uncrop.width * 3;
+                    long realY = (y + off.height) * uncrop.width * 3;
                     for (int x = 0; x < dim.width; x++)
                     {
-                        int realPix = realY + (3 * (x + off.width));
-                        int bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
+                        long realPix = realY + (3 * (x + off.width));
+                        long bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
                         double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
                         // Luminance.Clip(ref red, ref green, ref blue, maxValue);                           
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
@@ -202,7 +202,7 @@ namespace RawEditor.Effect
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int Rotate(int x, int y, int w, int h)
+        private long Rotate(long x, long y, uint w, uint h)
         {
             switch (rotation)
             {

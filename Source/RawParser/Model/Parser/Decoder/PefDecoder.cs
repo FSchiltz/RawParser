@@ -42,12 +42,9 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("PEF Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
             }
             if (!reader.IsValid(offsets.GetUInt(0), counts.GetUInt(0)))
-                throw new RawDecoderException("PEF Decoder: Truncated file.");
+                throw new RawDecoderException("PEF Decoder: Truncated file.");            
 
-            Int32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
-            Int32 height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
-
-            rawImage.raw.dim = new Point2D(width, height);
+            rawImage.raw.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
             rawImage.Init();
             try
             {

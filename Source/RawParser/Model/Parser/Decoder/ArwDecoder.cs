@@ -52,8 +52,8 @@ namespace RawNet.Decoder
                         throw new RawDecoderException("ARW: A100 format, couldn't find offset");
                     raw = data[0];
                     uint offset = raw.GetEntry(TagType.SUBIFDS).GetUInt(0);
-                    int w = 3881;
-                    int h = 2608;
+                    uint w = 3881;
+                    uint h = 2608;
 
                     rawImage.raw.dim = new Point2D(w, h);
                     rawImage.Init();
@@ -79,9 +79,9 @@ namespace RawNet.Decoder
                         throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
                     raw = data[0];
 
-                    int w = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
-                    int h = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
-                    uint len = (uint)(w * h * 2);
+                    uint w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+                    uint h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
+                    uint len = (w * h * 2);
 
                     // Constants taken from dcraw
                     uint offtemp = 862144;
@@ -153,8 +153,8 @@ namespace RawNet.Decoder
             {
                 throw new RawDecoderException("ARW Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:%u " + offsets.dataCount);
             }
-            int width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
-            int height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+            uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
             int bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
             rawImage.ColorDepth = (ushort)bitPerPixel;
             // Sony E-550 marks compressed 8bpp ARW with 12 bit per pixel
@@ -177,7 +177,7 @@ namespace RawNet.Decoder
             if (arw1)
                 height += 8;
 
-            rawImage.raw.dim = new Point2D((int)width, (int)height);
+            rawImage.raw.dim = new Point2D(width, height);
             rawImage.Init();
 
             UInt16[] curve = new UInt16[0x4001];
@@ -197,14 +197,14 @@ namespace RawNet.Decoder
 
             rawImage.SetTable(curve, 0x4000, true);
 
-            uint c2 = counts.GetUInt(0);
+            long c2 = counts.GetUInt(0);
             uint off = offsets.GetUInt(0);
 
             if (!reader.IsValid(off))
                 throw new RawDecoderException("Sony ARW decoder: Data offset after EOF, file probably truncated");
 
             if (!reader.IsValid(off, c2))
-                c2 = (uint)(reader.BaseStream.Length - off);
+                c2 = reader.BaseStream.Length - off;
 
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, off);
 
@@ -228,8 +228,8 @@ namespace RawNet.Decoder
 
         void DecodeUncompressed(IFD raw)
         {
-            int width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
-            int height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+            uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
             uint off = raw.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
 
             rawImage.raw.dim = new Point2D(width, height);
@@ -242,14 +242,14 @@ namespace RawNet.Decoder
                 Decode16BitRawUnpacked(input, width, height);
         }
 
-        unsafe void DecodeARW(TIFFBinaryReader input, int w, int h)
+        unsafe void DecodeARW(TIFFBinaryReader input, long w, long h)
         {
             BitPumpMSB bits = new BitPumpMSB(input);
             fixed (UInt16* dest = rawImage.raw.data)
             {
                 //uint pitch = rawImage.pitch / sizeof(UInt16);
                 int sum = 0;
-                for (int x = w; (x--) != 0;)
+                for (long x = w; (x--) != 0;)
                 {
                     for (int y = 0; y < h + 1; y += 2)
                     {
@@ -271,7 +271,7 @@ namespace RawNet.Decoder
             }
         }
 
-        void DecodeARW2(TIFFBinaryReader input, int w, int h, int bpp)
+        void DecodeARW2(TIFFBinaryReader input, long w, long h, int bpp)
         {
             input.Position = 0;
             if (bpp == 8)
@@ -449,7 +449,7 @@ namespace RawNet.Decoder
                     if (rawImage.raw.dim.height < 3280) rawImage.raw.dim.width -= 8;
                     break;
                 case 5504:
-                    rawImage.raw.dim.width -= (rawImage.raw.dim.height > 3664) ? 8 : 32;
+                    rawImage.raw.dim.width -= (uint)((rawImage.raw.dim.height > 3664) ? 8 : 32);
                     if (model.StartsWith("DSC"))
                         rawImage.BlackLevel = 200 << (rawImage.ColorDepth - 12);
                     break;

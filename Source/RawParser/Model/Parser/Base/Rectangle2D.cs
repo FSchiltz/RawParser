@@ -7,18 +7,18 @@ namespace RawNet
     {
         public Point2D Position { get; set; }
         public Point2D Dimension { get; set; }
-        public int Top { get { return Position.height; } }
-        public int Bottom { get { return Position.height + Dimension.height; } }
-        public int Left { get { return Position.width; } }
-        public int Right { get { return Position.width + Dimension.width; } }
-        public int Width { get { return Dimension.width; } }
-        public int Height { get { return Dimension.height; } }
+        public uint Top { get { return Position.height; } }
+        public uint Bottom { get { return Position.height + Dimension.height; } }
+        public uint Left { get { return Position.width; } }
+        public uint Right { get { return Position.width + Dimension.width; } }
+        public uint Width { get { return Dimension.width; } }
+        public uint Height { get { return Dimension.height; } }
         public Point2D TopLeft { get { return Position; } set { Position = value; } }
         public Point2D BottomRight { get { return Dimension + Position; } set { Dimension = new Point2D(value) - Position; } }
 
         public Rectangle2D() { }
-        public Rectangle2D(int w, int h) { Dimension = new Point2D(w, h); }
-        public Rectangle2D(int xPos, int yPos, int w, int h) { Dimension = new Point2D(w, h); Position = new Point2D(xPos, yPos); }
+        public Rectangle2D(uint w, uint h) { Dimension = new Point2D(w, h); }
+        public Rectangle2D(uint xPos, uint yPos, uint w, uint h) { Dimension = new Point2D(w, h); Position = new Point2D(xPos, yPos); }
         public Rectangle2D(Rectangle2D r)
         {
             Dimension = new Point2D(r.Dimension); Position = new Point2D(r.Position);
@@ -45,7 +45,7 @@ namespace RawNet
         }
 
 
-        public void SetAbsolute(int x1, int y1, int x2, int y2)
+        public void SetAbsolute(uint x1, uint y1, uint x2, uint y2)
         {
             Position = new Point2D(x1, y1);
             Dimension = new Point2D(x2 - x1, y2 - y1);
@@ -69,7 +69,7 @@ namespace RawNet
 
         /* This will make sure that offset is positive, and make the area smaller if needed */
         /* This will return true if there is any area left */
-        public bool CropOffsetToZero()
+       /* public bool CropOffsetToZero()
         {
             Point2D crop_pixels = new Point2D();
             if (Position.width < 0)
@@ -84,7 +84,7 @@ namespace RawNet
             }
             Dimension -= crop_pixels;
             return CropArea();
-        }
+        }*/
         /*
         Rectangle2D GetOverlap(Rectangle2D other)
         {

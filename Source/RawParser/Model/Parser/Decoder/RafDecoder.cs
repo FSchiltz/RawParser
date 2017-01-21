@@ -141,14 +141,14 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("Fuji decoder: Unable to locate raw IFD");
 
             IFD raw = data[0];
-            Int32 height = 0;
-            Int32 width = 0;
+            uint height = 0;
+            uint width = 0;
 
             var dim = raw.GetEntry(TagType.FUJI_RAWIMAGEFULLHEIGHT);
             if (dim != null)
             {
-                height = dim.GetInt(0);
-                width = raw.GetEntry(TagType.FUJI_RAWIMAGEFULLWIDTH).GetInt(0);
+                height = dim.GetUInt(0);
+                width = raw.GetEntry(TagType.FUJI_RAWIMAGEFULLWIDTH).GetUInt(0);
             }
             else
             {
@@ -157,8 +157,8 @@ namespace RawNet.Decoder
                 {
                     if (wtag.dataCount < 2)
                         throw new RawDecoderException("Fuji decoder: Size array too small");
-                    height = wtag.GetShort(0);
-                    width = wtag.GetShort(1);
+                    height = wtag.GetUShort(0);
+                    width = wtag.GetUShort(1);
                 }
             }
 
@@ -180,7 +180,7 @@ namespace RawNet.Decoder
             if (offsets.dataCount != 1 || counts.dataCount != 1)
                 throw new RawDecoderException("RAF Decoder: Multiple Strips found: " + offsets.dataCount + " " + counts.dataCount);
 
-            uint off = offsets.GetUInt(0);
+            int off = offsets.GetInt(0);
             int count = counts.GetInt(0);
 
             ushort bps = 16;
@@ -203,7 +203,7 @@ namespace RawNet.Decoder
             // a higher dynamic range image. Right now we're ignoring it.
             bool double_width = hints.ContainsKey("double_width_unpacked");
 
-            rawImage.raw.dim = new Point2D(width * (double_width ? 2 : 1), height);
+            rawImage.raw.dim = new Point2D((uint)(width * (double_width ? 2 : 1)), height);
             rawImage.Init();
             TIFFBinaryReader input = new TIFFBinaryReader(stream, (uint)(off + raw.RelativeOffset));
             Point2D pos = new Point2D(0, 0);
