@@ -141,7 +141,10 @@ namespace RawEditor.View.Pages
         private void OpenFile(StorageFile file)
         {
             //Add a loading screen
-            EmptyImage();
+            if (raw != null)
+            {
+                EmptyImage();
+            }
             Load.ShowLoad();
             Task.Run(async () =>
             {

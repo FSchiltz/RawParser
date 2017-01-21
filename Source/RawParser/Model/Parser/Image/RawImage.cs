@@ -260,7 +260,7 @@ namespace RawNet
                     double[] result = Mult3by1(convertionM, rgb);
                     //convert back to rgb
                     double[] rgbConv = Mult3by1(xyzToRGB, result);
-                    raw.data[realX] = (ushort)(rgb[0]*maxValue);
+                    raw.data[realX] = (ushort)(rgb[0] * maxValue);
                     raw.data[realX + 1] = (ushort)(rgb[1] * maxValue);
                     raw.data[realY + 2] = (ushort)(rgb[2] * maxValue);
                 }
@@ -420,10 +420,17 @@ namespace RawNet
                 {
                     previewFactor = (uint)(raw.dim.width / viewWidth);
                 }
-                uint start = 1;
-                for (; previewFactor > (start << 1); start <<= 1) ;
-                if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
-                else previewFactor <<= 1;
+                if (previewFactor > 1)
+                {
+                    uint start = 1;
+                    for (; previewFactor > (start << 1); start <<= 1) ;
+                    if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
+                    else previewFactor <<= 1;
+                }
+                else
+                {
+                    previewFactor = 1;
+                }
             }
             else
             {
