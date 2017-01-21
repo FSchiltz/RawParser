@@ -50,8 +50,8 @@ namespace RawNet.Decoder
             }
 
             IFD raw = data[0];
-            Int32 height = raw.GetEntry((TagType)3).GetInt(0);
-            Int32 width = raw.GetEntry((TagType)2).GetInt(0);
+            uint height = raw.GetEntry((TagType)3).GetUInt(0);
+            uint width = raw.GetEntry((TagType)2).GetUInt(0);
 
             if (isOldPanasonic)
             {
@@ -160,7 +160,7 @@ namespace RawNet.Decoder
         {
             int i, j, sh = 0;
             int[] pred = new int[2], nonz = new int[2];
-            int w = rawImage.raw.dim.width / 14;
+            uint w = rawImage.raw.dim.width / 14;
 
             bool zero_is_bad = true;
             if (hints.ContainsKey("zero_is_not_bad"))

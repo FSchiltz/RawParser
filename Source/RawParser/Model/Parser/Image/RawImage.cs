@@ -94,7 +94,7 @@ namespace RawNet
          * not efficient but allows more concise code
          * for demosaic
          */
-        public ushort this[int row, int col]
+        public ushort this[long row, long col]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -148,7 +148,7 @@ namespace RawNet
         // You must supply the destination where the value should be written, and a pointer to
         // a value that will be used to store a random counter that can be reused between calls.
         // this needs to be inline to speed up tight decompressor loops
-        internal void SetWithLookUp(UInt16 value, ushort[] dst, int offset, ref uint random)
+        internal void SetWithLookUp(UInt16 value, ushort[] dst, long offset, ref uint random)
         {
             if (table == null)
             {
@@ -221,7 +221,7 @@ namespace RawNet
                     Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
                     {
                         long v = y * raw.uncroppedDim.width * cpp;
-                        for (int x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
+                        for (uint x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
                         {
                             raw.data[x + v] = (ushort)((raw.data[x + v] - BlackLevel) * factor);
                         }
@@ -251,10 +251,10 @@ namespace RawNet
             int maxValue = (1 << ColorDepth) - 1;
             Parallel.For(0, raw.dim.height, y =>
             {
-                int realY = (y + raw.offset.height) * raw.uncroppedDim.width * 3;
+                long realY = (y + raw.offset.height) * raw.uncroppedDim.width * 3;
                 for (int x = 0; x < raw.dim.width; x++)
                 {
-                    int realX = y + 3 * (x + raw.offset.width);
+                    long realX = y + 3 * (x + raw.offset.width);
                     double[] rgb = { raw.data[realX] / maxValue, raw.data[realX + 1] / maxValue, raw.data[realY + 2] / maxValue };
                     //convert to XYZ
                     double[] result = Mult3by1(convertionM, rgb);
@@ -290,7 +290,7 @@ namespace RawNet
                 int m = 0;
                 for (int row = skipBorder; row < (raw.dim.height - skipBorder + raw.offset.height); row++)
                 {
-                    ushort[] pixel = raw.data.Skip(skipBorder + row * raw.dim.width).ToArray();
+                    ushort[] pixel = raw.data.Skip((int)(skipBorder + row * raw.dim.width)).ToArray();
                     int pix = 0;
                     for (int col = skipBorder; col < gw; col++)
                     {
@@ -321,7 +321,7 @@ namespace RawNet
         {
             int[] histogram = new int[4 * 65536 * sizeof(int)];
             //memset(histogram, 0, 4 * 65536 * sizeof(int));
-            int totalpixels = 0;
+            uint totalpixels = 0;
 
             for (int i = 0; i < blackAreas.Count; i++)
             {
@@ -336,11 +336,11 @@ namespace RawNet
                 {
                     if (area.Offset + area.Size > raw.uncroppedDim.height)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
-                    for (int y = area.Offset; y < area.Offset + area.Size; y++)
+                    for (uint y = area.Offset; y < area.Offset + area.Size; y++)
                     {
-                        ushort[] pixel = preview.data.Skip(raw.offset.width + raw.dim.width * y).ToArray();
-                        int[] localhist = histogram.Skip((y & 1) * (65536 * 2)).ToArray();
-                        for (int x = raw.offset.width; x < raw.dim.width + raw.offset.width; x++)
+                        ushort[] pixel = preview.data.Skip((int)(raw.offset.width + raw.dim.width * y)).ToArray();
+                        int[] localhist = histogram.Skip((int)(y & 1) * (65536 * 2)).ToArray();
+                        for (uint x = raw.offset.width; x < raw.dim.width + raw.offset.width; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
@@ -353,11 +353,11 @@ namespace RawNet
                 {
                     if (area.Offset + area.Size > raw.uncroppedDim.width)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
-                    for (int y = raw.offset.height; y < raw.dim.height + raw.offset.height; y++)
+                    for (uint y = raw.offset.height; y < raw.dim.height + raw.offset.height; y++)
                     {
-                        ushort[] pixel = preview.data.Skip(area.Offset + raw.dim.width * y).ToArray();
-                        int[] localhist = histogram.Skip((y & 1) * (65536 * 2)).ToArray();
-                        for (int x = area.Offset; x < area.Size + area.Offset; x++)
+                        ushort[] pixel = preview.data.Skip((int)(area.Offset + raw.dim.width * y)).ToArray();
+                        int[] localhist = histogram.Skip((int)(y & 1) * (65536 * 2)).ToArray();
+                        for (uint x = area.Offset; x < area.Size + area.Offset; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
@@ -409,32 +409,32 @@ namespace RawNet
         public void CreatePreview(FactorValue factor, double viewHeight, double viewWidth)
         {
             //image will be size of windows
-            int previewFactor = 0;
+            uint previewFactor = 0;
             if (factor == FactorValue.Auto)
             {
                 if (raw.dim.height > raw.dim.width)
                 {
-                    previewFactor = (int)(raw.dim.height / viewHeight);
+                    previewFactor = (uint)(raw.dim.height / viewHeight);
                 }
                 else
                 {
-                    previewFactor = (int)(raw.dim.width / viewWidth);
+                    previewFactor = (uint)(raw.dim.width / viewWidth);
                 }
-                int start = 1;
+                uint start = 1;
                 for (; previewFactor > (start << 1); start <<= 1) ;
                 if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
                 else previewFactor <<= 1;
             }
             else
             {
-                previewFactor = (int)factor;
+                previewFactor = (uint)factor;
             }
 
             preview.dim = new Point2D(raw.dim.width / previewFactor, raw.dim.height / previewFactor);
             preview.uncroppedDim = new Point2D(preview.dim.width, preview.dim.height);
             Debug.WriteLine("Preview of size w:" + preview.dim.width + "y:" + preview.dim.height);
             preview.data = new ushort[preview.dim.height * preview.dim.width * cpp];
-            int doubleFactor = previewFactor * previewFactor;
+            uint doubleFactor = previewFactor * previewFactor;
             ushort maxValue = (ushort)((1 << ColorDepth) - 1);
             //loop over each block
             Parallel.For(0, preview.dim.height, y =>
@@ -446,7 +446,7 @@ namespace RawNet
                      int xk = 0, yk = 0;
                      for (int i = 0; i < previewFactor; i++)
                      {
-                         int realY = raw.dim.width * ((y * previewFactor) + i);
+                         long realY = raw.dim.width * ((y * previewFactor) + i);
                          yk++;
                          for (int k = 0; k < previewFactor; k++)
                          {

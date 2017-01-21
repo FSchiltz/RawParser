@@ -56,8 +56,8 @@ namespace RawNet.Decoder
             if (!reader.IsValid(off, size))
                 throw new RawDecoderException("ORF Decoder: Truncated file");
 
-            Int32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
-            Int32 height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+            uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
 
             rawImage.raw.dim = new Point2D(width, height);
             rawImage.Init();
@@ -78,7 +78,7 @@ namespace RawNet.Decoder
             }
         }
 
-        private void DecodeUncompressed(TIFFBinaryReader s, int w, int h, uint size, Endianness endian)
+        private void DecodeUncompressed(TIFFBinaryReader s, uint w, uint h, long size, Endianness endian)
         {
             if ((hints.ContainsKey("packed_with_control")))
                 Decode12BitRawWithControl(s, w, h);
@@ -110,7 +110,7 @@ namespace RawNet.Decoder
          * Also there is no way to multithread this code, since prediction
          * is based on the output of all previous pixel (bar the first four)
          */
-        private unsafe void DecodeCompressed(TIFFBinaryReader s, Int32 w, Int32 h)
+        private unsafe void DecodeCompressed(TIFFBinaryReader s, uint w, uint h)
         {
             int nbits, sign, low, high, left0, nw0, left1, nw1, i;
             long[] acarry0 = new long[3], acarry1 = new long[3];

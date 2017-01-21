@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace RawNet
+namespace RawNet.Decoder.Decompressor
 {
 
     // Note: Allocated buffer MUST be at least size+sizeof(uint) large.
@@ -17,16 +17,16 @@ namespace RawNet
         int stuffed = 0;
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpMSB(TIFFBinaryReader s) : this(s, (uint)s.Position, (uint)(s.BaseStream.Length - s.Position)) { }
+        public BitPumpMSB(TIFFBinaryReader reader) : this(reader, (uint)reader.Position, (uint)(reader.BaseStream.Length - reader.Position)) { }
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpMSB(TIFFBinaryReader s, uint offset, uint count)
+        public BitPumpMSB(TIFFBinaryReader reader, uint offset, uint count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
             size = count + sizeof(uint);
             buffer = new byte[size];
-            s.BaseStream.Position = offset;
-            s.BaseStream.Read(buffer, 0, (int)count);
+            reader.BaseStream.Position = offset;
+            reader.BaseStream.Read(buffer, 0, (int)count);
             Init();
         }
 

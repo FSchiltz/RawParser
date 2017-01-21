@@ -19,6 +19,7 @@ namespace RawNet.Decoder.Decompressor
             HuffmanTable dctbl1 = huff[0];
 
             /* Attempt to read huffman table, if found in makernote */
+
             Tag t = root.GetEntryRecursive((TagType)0x220);
             if (t != null)
             {
@@ -97,15 +98,12 @@ namespace RawNet.Decoder.Decompressor
             pentaxBits = new BitPumpMSB(input, offset, size);
             unsafe
             {
-
-                Int32 w = raw.raw.dim.width;
-                Int32 h = raw.raw.dim.height;
                 int[] pUp1 = { 0, 0 };
                 int[] pUp2 = { 0, 0 };
                 int pLeft1 = 0;
                 int pLeft2 = 0;
 
-                for (int y = 0; y < h; y++)
+                for (int y = 0; y < raw.raw.dim.height; y++)
                 {
                     pentaxBits.CheckPos();
                     fixed (UInt16* dest = &raw.raw.data[y * raw.raw.dim.width])
@@ -115,7 +113,7 @@ namespace RawNet.Decoder.Decompressor
                         pUp2[y & 1] += HuffDecodePentax();
                         dest[0] = (ushort)(pLeft1 = pUp1[y & 1]);
                         dest[1] = (ushort)(pLeft2 = pUp2[y & 1]);
-                        for (int x = 2; x < w; x += 2)
+                        for (int x = 2; x < raw.raw.dim.width; x += 2)
                         {
                             pLeft1 += HuffDecodePentax();
                             pLeft2 += HuffDecodePentax();

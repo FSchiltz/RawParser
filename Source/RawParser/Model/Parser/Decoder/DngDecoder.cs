@@ -11,7 +11,7 @@ namespace RawNet.Decoder
     class DngStrip
     {
         public DngStrip() { offset = count = offsetY = 0; h = 0; }
-        public int h;
+        public uint h;
         public uint offset; // Offset in bytes
         public uint count;
         public uint offsetY;
@@ -124,8 +124,8 @@ namespace RawNet.Decoder
             {
                 rawImage.raw.dim = new Point2D()
                 {
-                    width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0),
-                    height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0)
+                    width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0),
+                    height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0)
                 };
             }
             catch (RawDecoderException)
@@ -155,9 +155,9 @@ namespace RawNet.Decoder
 
                         Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
                         Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
-                        int yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetInt(0);
-                        int width = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
-                        int height = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+                        uint yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+                        uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+                        uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
 
                         if (counts.dataCount != offsets.dataCount)
                         {
@@ -175,11 +175,11 @@ namespace RawNet.Decoder
                                 offsetY = offY
                             };
                             if (offY + yPerSlice > height)
-                                slice.h = (int)(height - offY);
+                                slice.h = height - offY;
                             else
                                 slice.h = yPerSlice;
 
-                            offY += (uint)yPerSlice;
+                            offY += yPerSlice;
 
                             if (reader.IsValid(slice.offset, slice.count)) // Only decode if size is valid
                                 slices.Add(slice);
@@ -189,8 +189,8 @@ namespace RawNet.Decoder
                         {
                             DngStrip slice = slices[i];
                             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, slice.offset);
-                            Point2D size = new Point2D((int)width, (int)slice.h);
-                            Point2D pos = new Point2D(0, (int)slice.offsetY);
+                            Point2D size = new Point2D(width, slice.h);
+                            Point2D pos = new Point2D(0, slice.offsetY);
 
                             bool big_endian = (raw.endian == Endianness.Big);
                             // DNG spec says that if not 8 or 16 bit/sample, always use big endian
@@ -234,9 +234,9 @@ namespace RawNet.Decoder
                             if (tilew == 0 || tileh == 0)
                                 throw new RawDecoderException("DNG Decoder: Invalid tile size");
 
-                            int tilesX = (rawImage.raw.dim.width + tilew - 1) / tilew;
-                            int tilesY = (rawImage.raw.dim.height + tileh - 1) / tileh;
-                            int nTiles = tilesX * tilesY;
+                            long tilesX = (rawImage.raw.dim.width + tilew - 1) / tilew;
+                            long tilesY = (rawImage.raw.dim.height + tileh - 1) / tileh;
+                            long nTiles = tilesX * tilesY;
 
                             Tag offsets = raw.GetEntry(TagType.TILEOFFSETS);
                             Tag counts = raw.GetEntry(TagType.TILEBYTECOUNTS);
@@ -249,7 +249,7 @@ namespace RawNet.Decoder
                             {
                                 for (int x = 0; x < tilesX; x++)
                                 {
-                                    DngSliceElement e = new DngSliceElement(offsets.GetUInt(x + y * tilesX), counts.GetUInt(x + y * tilesX), (uint)(tilew * x), (uint)(tileh * y))
+                                    DngSliceElement e = new DngSliceElement(offsets.GetUInt((int)(x + y * tilesX)), counts.GetUInt((int)(x + y * tilesX)), (uint)(tilew * x), (uint)(tileh * y))
                                     {
                                         mUseBigtable = tilew * tileh > 1024 * 1024
                                     };
@@ -285,13 +285,12 @@ namespace RawNet.Decoder
                                     slices.AddSlice(e);
                             }
                         }
-                        int nSlices = slices.slices.Count;
-                        if (nSlices == 0)
+                        if (slices.slices.Count == 0)
                             throw new RawDecoderException("DNG Decoder: No valid slices found.");
 
                         slices.DecodeSlice();
 
-                        if (rawImage.errors.Count >= nSlices)
+                        if (rawImage.errors.Count >= slices.slices.Count)
                             throw new RawDecoderException("DNG Decoding: Too many errors encountered. Giving up.\nFirst Error:" + rawImage.errors[0]);
                     }
                     catch (RawDecoderException)
@@ -345,12 +344,12 @@ namespace RawNet.Decoder
                     throw new RawDecoderException("DNG: active area has " + active_area.dataCount + " values instead of 4");
 
                 //active_area.GetIntArray(out int[] corners, 4);
-                if (new Point2D(active_area.GetInt(1), active_area.GetInt(0)).IsThisInside(rawImage.raw.dim))
+                if (new Point2D(active_area.GetUInt(1), active_area.GetUInt(0)).IsThisInside(rawImage.raw.dim))
                 {
-                    if (new Point2D(active_area.GetInt(3), active_area.GetInt(2)).IsThisInside(rawImage.raw.dim))
+                    if (new Point2D(active_area.GetUInt(3), active_area.GetUInt(2)).IsThisInside(rawImage.raw.dim))
                     {
-                        Rectangle2D crop = new Rectangle2D(active_area.GetInt(1), active_area.GetInt(0),
-                            active_area.GetInt(3) - active_area.GetInt(1), active_area.GetInt(2) - active_area.GetInt(0));
+                        Rectangle2D crop = new Rectangle2D(active_area.GetUInt(1), active_area.GetUInt(0),
+                            active_area.GetUInt(3) - active_area.GetUInt(1), active_area.GetUInt(2) - active_area.GetUInt(0));
                         rawImage.Crop(crop);
                     }
                 }
@@ -362,15 +361,14 @@ namespace RawNet.Decoder
             {
                 Rectangle2D cropped = new Rectangle2D(0, 0, rawImage.raw.dim.width, rawImage.raw.dim.height);
                 /* Read crop position (sometimes is rational so use float) */
-                origin_entry.GetFloatArray(out float[] tl, 2);
-                if (new Point2D((int)tl[0], (int)tl[1]).IsThisInside(rawImage.raw.dim))
-                    cropped = new Rectangle2D((int)tl[0], (int)tl[1], 0, 0);
+
+                if (new Point2D(origin_entry.GetUInt(0), origin_entry.GetUInt(1)).IsThisInside(rawImage.raw.dim))
+                    cropped = new Rectangle2D(origin_entry.GetUInt(0), origin_entry.GetUInt(1), 0, 0);
 
                 cropped.Dimension = rawImage.raw.dim - cropped.Position;
                 /* Read size (sometimes is rational so use float) */
-
-                size_entry.GetFloatArray(out float[] sz, 2);
-                Point2D size = new Point2D((int)sz[0], (int)sz[1]);
+                
+                Point2D size = new Point2D(size_entry.GetUInt(0), size_entry.GetUInt(1));
                 if ((size + cropped.Position).IsThisInside(rawImage.raw.dim))
                     cropped.Dimension = size;
 
@@ -434,10 +432,10 @@ namespace RawNet.Decoder
             double coeff = maxVal / (rawImage.whitePoint - rawImage.blackLevelSeparate[0]);
             Parallel.For(rawImage.raw.offset.height, rawImage.raw.dim.height + rawImage.raw.offset.height, y =>
             {
-                int realY = y * rawImage.raw.dim.width;
-                for (int x = rawImage.raw.offset.width; x < rawImage.raw.dim.width + rawImage.raw.offset.width; x++)
+                long realY = y * rawImage.raw.dim.width;
+                for (uint x = rawImage.raw.offset.width; x < rawImage.raw.dim.width + rawImage.raw.offset.width; x++)
                 {
-                    int pos = realY + x;
+                    long pos = realY + x;
                     double val;
                     //Linearisation
                     if (rawImage.table != null)
@@ -517,8 +515,7 @@ namespace RawNet.Decoder
                 return false;
 
             /* Since we may both have short or int, copy it to int array. */
-
-            masked.GetIntArray(out Int32[] rects, nrects * 4);
+            masked.GetUIntArray(out uint[] rects, nrects * 4);
 
             Point2D top = rawImage.raw.offset;
 
@@ -547,7 +544,7 @@ namespace RawNet.Decoder
             {
                 if (bleveldim.dataCount != 2)
                     return false;
-                blackdim = new Point2D(bleveldim.GetInt(0), bleveldim.GetInt(1));
+                blackdim = new Point2D(bleveldim.GetUInt(0), bleveldim.GetUInt(1));
             }
 
             if (blackdim.width == 0 || blackdim.height == 0)
@@ -579,7 +576,7 @@ namespace RawNet.Decoder
                 for (int y = 0; y < 2; y++)
                 {
                     for (int x = 0; x < 2; x++)
-                        rawImage.blackLevelSeparate[y * 2 + x] = (int)black_entry.GetFloat(y * blackdim.width + x);
+                        rawImage.blackLevelSeparate[y * 2 + x] = (int)black_entry.GetFloat((int)(y * blackdim.width + x));
                 }
             }
 
@@ -636,14 +633,14 @@ namespace RawNet.Decoder
             Tag pDim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
             var cPat = raw.GetEntry(TagType.CFAPATTERN).data;     // Does NOT contain dimensions as some documents state
 
-            Point2D cfaSize = new Point2D(pDim.GetInt(1), pDim.GetInt(0));
+            Point2D cfaSize = new Point2D(pDim.GetUInt(1), pDim.GetUInt(0));
             rawImage.colorFilter.SetSize(cfaSize);
             if (cfaSize.Area() != raw.GetEntry(TagType.CFAPATTERN).dataCount)
                 throw new RawDecoderException("DNG Decoder: CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
 
-            for (int y = 0; y < cfaSize.height; y++)
+            for (uint y = 0; y < cfaSize.height; y++)
             {
-                for (int x = 0; x < cfaSize.width; x++)
+                for (uint x = 0; x < cfaSize.width; x++)
                 {
                     int c1 = Convert.ToInt32(cPat[x + y * cfaSize.width]);
                     CFAColor c2;

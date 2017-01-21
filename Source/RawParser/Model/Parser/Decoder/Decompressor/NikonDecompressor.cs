@@ -111,7 +111,7 @@ namespace RawNet.Decoder.Decompressor
                 pUp2[y & 1] += HuffDecodeNikon(bits);
                 pLeft1 = pUp1[y & 1];
                 pLeft2 = pUp2[y & 1];
-                int dest = y * raw.raw.dim.width;
+                long dest = y * raw.raw.dim.width;
                 raw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), raw.raw.data, dest++, ref random);
                 raw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), raw.raw.data, dest++, ref random);
                 for (int x = 1; x < raw.raw.dim.width / 2; x++)

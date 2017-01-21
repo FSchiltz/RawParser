@@ -11,9 +11,9 @@ namespace RawNet.Decoder
     internal class NefSlice
     {
         public NefSlice() { h = offset = count = 0; }
-        public UInt32 h;
-        public UInt32 offset;
-        public UInt32 count;
+        public uint h;
+        public uint offset;
+        public uint count;
     };
 
     internal class NefDecoder : TiffDecoder
@@ -59,8 +59,8 @@ namespace RawNet.Decoder
                 uint bps = ifd.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
                 Point2D dim = new Point2D()
                 {
-                    width = ifd.GetEntry(TagType.IMAGEWIDTH).GetInt(0),
-                    height = ifd.GetEntry(TagType.IMAGELENGTH).GetInt(0)
+                    width = ifd.GetEntry(TagType.IMAGEWIDTH).GetUInt(0),
+                    height = ifd.GetEntry(TagType.IMAGELENGTH).GetUInt(0)
                 };
 
                 // Uncompressed
@@ -140,7 +140,7 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("NEF Decoder: Unsupported compression");
 
             rawImage.ColorDepth = raw.GetEntry(TagType.BITSPERSAMPLE).GetUShort(0);
-            rawImage.raw.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetInt(0));
+            rawImage.raw.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
 
             data = ifd.GetIFDsWithTag((TagType)0x8c);
 
@@ -182,7 +182,7 @@ namespace RawNet.Decoder
         are only needed for the D100, thanks to a bug in some cameras
         that tags all images as "compressed".
         */
-        bool D100IsCompressed(UInt32 offset)
+        bool D100IsCompressed(uint offset)
         {
             int i;
             reader.Position = offset;
@@ -197,9 +197,9 @@ namespace RawNet.Decoder
         bool NEFIsUncompressed(IFD raw)
         {
             Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
-            UInt32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-            UInt32 height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-            UInt32 bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+            uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
+            uint bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
 
             return counts.GetInt(0) == width * height * bitPerPixel / 8;
         }
@@ -210,8 +210,8 @@ namespace RawNet.Decoder
         bool NEFIsUncompressedRGB(IFD raw)
         {
             Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
-            UInt32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-            UInt32 height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
+            uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
 
             return counts.GetInt(0) == width * height * 3;
         }
@@ -236,16 +236,16 @@ namespace RawNet.Decoder
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.CFAPATTERN);
             IFD raw = FindBestImage(data);
-            UInt32 nslices = raw.GetEntry(TagType.STRIPOFFSETS).dataCount;
+            uint nslices = raw.GetEntry(TagType.STRIPOFFSETS).dataCount;
             Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
             Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
-            UInt32 yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
-            UInt32 width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-            UInt32 height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-            UInt32 bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+            uint yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+            uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
+            uint bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
 
             List<NefSlice> slices = new List<NefSlice>();
-            UInt32 offY = 0;
+            uint offY = 0;
 
             for (int s = 0; s < nslices; s++)
             {
@@ -268,7 +268,7 @@ namespace RawNet.Decoder
             if (0 == slices.Count)
                 throw new RawDecoderException("NEF Decoder: No valid slices found. File probably truncated.");
 
-            rawImage.raw.dim = new Point2D((int)width, (int)offY);
+            rawImage.raw.dim = new Point2D(width, offY);
             if (bitPerPixel == 14 && width * slices[0].h * 2 == slices[0].count)
                 bitPerPixel = 16; // D3 & D810
             hints.TryGetValue("real_bpp", out string v);
@@ -290,8 +290,8 @@ namespace RawNet.Decoder
             {
                 NefSlice slice = slices[i];
                 TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, slice.offset);
-                Point2D size = new Point2D((int)width, (int)slice.h);
-                Point2D pos = new Point2D(0, (int)offY);
+                Point2D size = new Point2D(width, slice.h);
+                Point2D pos = new Point2D(0, offY);
                 try
                 {
                     hints.TryGetValue("coolpixmangled", out string mangled);
@@ -323,10 +323,10 @@ namespace RawNet.Decoder
 
         void ReadCoolpixMangledRaw(TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
-            // UInt32 outPitch = rawImage.pitch;
-            int w = size.width;
-            int h = size.height;
-            int cpp = (int)rawImage.cpp;
+            // uint outPitch = rawImage.pitch;
+            uint w = size.width;
+            long h = size.height;
+            uint cpp = rawImage.cpp;
             if (input.RemainingSize < (inputPitch * h))
             {
                 if (input.RemainingSize > inputPitch)
@@ -340,7 +340,7 @@ namespace RawNet.Decoder
             if (offset.width + size.width > rawImage.raw.dim.width)
                 throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
 
-            int y = offset.height;
+            uint y = offset.height;
             h = Math.Min(h + offset.height, rawImage.raw.dim.height);
             w *= cpp;
             BitPumpMSB32 inputMSB = new BitPumpMSB32(input);
@@ -356,10 +356,10 @@ namespace RawNet.Decoder
 
         void ReadCoolpixSplitRaw(TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
-            //UInt32 outPitch = rawImage.pitch;
-            int w = size.width;
-            int h = size.height;
-            int cpp = (int)rawImage.cpp;
+            //uint outPitch = rawImage.pitch;
+            uint w = size.width;
+            long h = size.height;
+            uint cpp = rawImage.cpp;
             if (input.RemainingSize < (inputPitch * h))
             {
                 if (input.RemainingSize > inputPitch)
@@ -373,21 +373,21 @@ namespace RawNet.Decoder
             if (offset.width + size.width > rawImage.raw.dim.width)
                 throw new RawDecoderException("readCoolpixSplitRaw: Invalid x offset");
 
-            UInt32 y = (uint)offset.height;
+            uint y = (uint)offset.height;
             h = Math.Min(h + offset.height, rawImage.raw.dim.height);
             w *= cpp;
             h /= 2;
             BitPumpMSB inputMSB = new BitPumpMSB(input);
             for (; y < h; y++)
             {
-                for (UInt32 x = 0; x < w; x++)
+                for (uint x = 0; x < w; x++)
                 {
                     rawImage.raw.data[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
             for (y = (uint)offset.height; y < h; y++)
             {
-                for (UInt32 x = 0; x < w; x++)
+                for (uint x = 0; x < w; x++)
                 {
                     rawImage.raw.data[x + (offset.width * sizeof(UInt16) * cpp + (y * 2 + 1) * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
                 }
@@ -403,10 +403,10 @@ namespace RawNet.Decoder
 
             IFD rawIFD = data[1];
 
-            UInt32 offset = rawIFD.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
+            uint offset = rawIFD.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
             // Hardcode the sizes as at least the width is not correctly reported
-            int w = 3040;
-            int h = 2024;
+            uint w = 3040;
+            uint h = 2024;
             rawImage.ColorDepth = 12;
             rawImage.raw.dim = new Point2D(w, h);
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset);
@@ -417,11 +417,11 @@ namespace RawNet.Decoder
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.CFAPATTERN);
             IFD raw = FindBestImage(data);
-            UInt32 offset = raw.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
-            UInt32 w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-            UInt32 h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
+            uint offset = raw.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
+            uint w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
 
-            rawImage.raw.dim = new Point2D((int)w, (int)h);
+            rawImage.raw.dim = new Point2D(w, h);
             rawImage.cpp = 3;
             rawImage.isCFA = false;
             rawImage.ColorDepth = 12;
@@ -436,7 +436,7 @@ namespace RawNet.Decoder
             List<IFD> data = ifd.GetIFDsWithTag(TagType.CFAPATTERN);
             IFD raw = FindBestImage(data);
             int compression = raw.GetEntry(TagType.COMPRESSION).GetInt(0);
-            UInt32 bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+            uint bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
 
             if (NEFIsUncompressedRGB(raw))
                 mode += "sNEF-uncompressed";
@@ -518,8 +518,8 @@ namespace RawNet.Decoder
                 {
                     if (wb.dataCount > 4)
                     {
-                        UInt32 version = 0;
-                        for (UInt32 i = 0; i < 4; i++)
+                        uint version = 0;
+                        for (uint i = 0; i < 4; i++)
                             version = (version << 4) + Convert.ToUInt32(wb.data[i]) - '0';
                         if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == TiffDataType.UNDEFINED)
                         {
@@ -542,8 +542,8 @@ namespace RawNet.Decoder
                                 Tag serial = ifd.GetEntryRecursive((TagType)0x001d);
                                 if (serial != null)
                                 {
-                                    UInt32 serialno = 0;
-                                    for (UInt32 i = 0; i < serial.dataCount; i++)
+                                    uint serialno = 0;
+                                    for (uint i = 0; i < serial.dataCount; i++)
                                     {
                                         if ((byte)serial.data[i] == 0) break;
                                         if ((byte)serial.data[i] >= (byte)'0' && (byte)serial.data[i] <= (byte)'9')
@@ -556,7 +556,7 @@ namespace RawNet.Decoder
                                     Tag key = ifd.GetEntryRecursive((TagType)0x00a7);
                                     if (key != null)
                                     {
-                                        UInt32 keyno = (uint)key.data[0] ^ (uint)key.data[1] ^ (uint)key.data[2] ^ (uint)key.data[3];
+                                        uint keyno = (uint)key.data[0] ^ (uint)key.data[1] ^ (uint)key.data[2] ^ (uint)key.data[3];
 
                                         // "Decrypt" the block using the serial and key
                                         uint bitOff = 4;
@@ -566,11 +566,11 @@ namespace RawNet.Decoder
                                         byte cj = keymap[keyno & 0xff];
                                         byte ck = 0x60;
 
-                                        for (UInt32 i = 0; i < 280; i++)
+                                        for (uint i = 0; i < 280; i++)
                                             wb.data[i + bitOff] = (byte)((byte)wb.data[i + bitOff] ^ (cj += (byte)(ci * ck++)));
 
                                         // Finally set the WB coeffs
-                                        UInt32 off = (uint)((version == 0x204) ? 6 : 14);
+                                        uint off = (uint)((version == 0x204) ? 6 : 14);
                                         off += bitOff;
                                         rawImage.metadata.WbCoeffs[0] = wb.Get2BE(off);
                                         rawImage.metadata.WbCoeffs[1] = wb.Get2BE(off + 2);
@@ -588,15 +588,15 @@ namespace RawNet.Decoder
                     {
                         if (wb.dataCount == 2560 && wb.dataType == TiffDataType.UNDEFINED)
                         {
-                            UInt32 red = (uint)wb.data[1249] | (((UInt32)wb.data[1248]) << 8);
-                            UInt32 blue = (uint)wb.data[1251] | (((UInt32)wb.data[1250]) << 8);
+                            uint red = (uint)wb.data[1249] | (((UInt32)wb.data[1248]) << 8);
+                            uint blue = (uint)wb.data[1251] | (((UInt32)wb.data[1250]) << 8);
                             rawImage.metadata.WbCoeffs[0] = red / 256.0f;
                             rawImage.metadata.WbCoeffs[1] = 1.0f;
                             rawImage.metadata.WbCoeffs[2] = blue / 256.0f;
                         }
                         else if (wb.DataAsString.StartsWith("NRW "))
                         {
-                            UInt32 offset = 0;
+                            uint offset = 0;
                             if (((string)(wb.DataAsString.Skip(4)) == "0100") && wb.dataCount > 72)
                                 offset = 56;
                             else if (wb.dataCount > 1572)
@@ -652,11 +652,11 @@ namespace RawNet.Decoder
         // We un-apply the whitebalance, so output matches lossless.
         // Note that values are scaled. See comment below on details.
         // TODO: It would be trivial to run this multithreaded.
-        void DecodeNikonSNef(TIFFBinaryReader input, UInt32 w, UInt32 h)
+        void DecodeNikonSNef(TIFFBinaryReader input, uint w, uint h)
         {
             if (w < 6) throw new IOException("NEF: got a " + w + " wide sNEF, aborting");
 
-            //UInt32 pitch = rawImage.pitch;
+            //uint pitch = rawImage.pitch;
             if (input.RemainingSize < (w * h * 3))
             {
                 if ((UInt32)input.RemainingSize > w * 3)
@@ -708,16 +708,16 @@ namespace RawNet.Decoder
                 uint a1 = input.ReadByte();
                 uint a2 = input.ReadByte();
                 uint a3 = input.ReadByte();
-                UInt32 random = a1 + (a2 << 8) + (a3 << 16);
+                uint random = a1 + (a2 << 8) + (a3 << 16);
                 for (int x = 0; x < w * 3; x += 6)
                 {
                     input.Position -= 3;
-                    UInt32 g1 = input.ReadByte();
-                    UInt32 g2 = input.ReadByte();
-                    UInt32 g3 = input.ReadByte();
-                    UInt32 g4 = input.ReadByte();
-                    UInt32 g5 = input.ReadByte();
-                    UInt32 g6 = input.ReadByte();
+                    uint g1 = input.ReadByte();
+                    uint g2 = input.ReadByte();
+                    uint g3 = input.ReadByte();
+                    uint g4 = input.ReadByte();
+                    uint g5 = input.ReadByte();
+                    uint g6 = input.ReadByte();
 
                     input.Position += 6;
                     float y1 = g1 | ((g2 & 0x0f) << 8);

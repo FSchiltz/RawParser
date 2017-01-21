@@ -10,8 +10,8 @@ namespace RawNet.Decoder
 {
     class Cr2Slice
     {
-        public int w;
-        public int h;
+        public uint w;
+        public uint h;
         public uint offset;
         public uint count;
     };
@@ -71,8 +71,8 @@ namespace RawNet.Decoder
 
                 var b = new TIFFBinaryReader(reader.BaseStream, off + 41);
 
-                int height = b.ReadInt16();
-                int width = b.ReadInt16();
+                uint height = b.ReadUInt16();
+                uint width = b.ReadUInt16();
 
                 // Every two lines can be encoded as a single line, probably to try and get
                 // better compression by getting the same RGBG sequence in every line
@@ -152,7 +152,7 @@ namespace RawNet.Decoder
             };
 
             List<Cr2Slice> slices = new List<Cr2Slice>();
-            int completeH = 0;
+            uint completeH = 0;
             bool doubleHeight = false;
             rawImage.ColorDepth = 14;
             try
@@ -170,7 +170,7 @@ namespace RawNet.Decoder
                     SOFInfo sof = new SOFInfo();
                     LJpegPlain l = new LJpegPlain(reader, rawImage);
                     l.GetSOF(sof, slice.offset, slice.count);
-                    slice.w = (int)(sof.w * sof.cps);
+                    slice.w = (uint)(sof.w * sof.cps);
                     slice.h = sof.h;
                     if (sof.cps == 4 && slice.w > slice.h * 4)
                     {
@@ -221,8 +221,8 @@ namespace RawNet.Decoder
                     if (hints.ContainsKey("wrapped_cr2_slices") && raw.tags.ContainsKey(TagType.IMAGEWIDTH) && raw.tags.ContainsKey(TagType.IMAGELENGTH))
                     {
                         wrappedCr2Slices = true;
-                        int w = raw.GetEntry(TagType.IMAGEWIDTH).GetInt(0);
-                        int h = raw.GetEntry(TagType.IMAGELENGTH).GetInt(0);
+                        uint w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+                        uint h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
                         if (w * h != rawImage.raw.dim.width * rawImage.raw.dim.height)
                         {
                             throw new RawDecoderException("CR2 Decoder: Wrapped slices don't match image size");
@@ -233,7 +233,7 @@ namespace RawNet.Decoder
                 flipDims = rawImage.raw.dim.width < rawImage.raw.dim.height;
                 if (flipDims)
                 {
-                    int w = rawImage.raw.dim.width;
+                    uint w = rawImage.raw.dim.width;
                     rawImage.raw.dim.width = rawImage.raw.dim.height;
                     rawImage.raw.dim.height = w;
                 }
@@ -241,15 +241,15 @@ namespace RawNet.Decoder
 
             rawImage.Init();
 
-            List<int> s_width = new List<int>();
+            List<uint> s_width = new List<uint>();
             if (raw.tags.ContainsKey(TagType.CANONCR2SLICE))
             {
                 Tag ss = raw.GetEntry(TagType.CANONCR2SLICE);
                 for (int i = 0; i < ss.GetShort(0); i++)
                 {
-                    s_width.Add(ss.GetShort(1));
+                    s_width.Add(ss.GetUShort(1));
                 }
-                s_width.Add(ss.GetShort(2));
+                s_width.Add(ss.GetUShort(2));
             }
             else
             {
@@ -518,7 +518,7 @@ namespace RawNet.Decoder
         }
 
         #region sraw
-        int GetHue()
+        uint GetHue()
         {
             if (hints.ContainsKey("old_sraw_hue"))
                 return (rawImage.metadata.Subsampling.height * rawImage.metadata.Subsampling.width);
@@ -597,11 +597,11 @@ namespace RawNet.Decoder
 
         // sRaw interpolators - ugly as sin, but does the job in reasonably speed
         // Note: Thread safe.
-        unsafe void Interpolate_422(int width, int height)
+        unsafe void Interpolate_422(uint width,uint height)
         {
             // Last pixel should not be interpolated
             width--;
-            int hue = -GetHue() + 16384;
+            int hue = -(int)GetHue() + 16384;
             Parallel.For(0, height, (y) =>
              {
                  fixed (UInt16* c_line = &rawImage.raw.data[y * rawImage.raw.dim.width])
@@ -638,14 +638,14 @@ namespace RawNet.Decoder
         }
 
         // Note: Not thread safe, since it writes inplace.
-        unsafe void Interpolate_420(int width, int height)
+        unsafe void Interpolate_420(uint width,uint height)
         {
             // Last pixel should not be interpolated
             width--;
             bool atLastLine = false;
 
             int off, r, g, b, Y, Cb, Cr;
-            int hue = -GetHue() + 16384;
+            int hue = -(int)GetHue() + 16384;
             for (int y = 0; y < height; y++)
             {
                 fixed (UInt16* c_line = &rawImage.raw.data[y * 2 * rawImage.raw.dim.width], n_line = &rawImage.raw.data[(y * 2 + 1) * rawImage.raw.dim.width], nn_line = &rawImage.raw.data[(y * 2 + 2) * rawImage.raw.dim.width])
@@ -742,11 +742,11 @@ namespace RawNet.Decoder
         }
 
         // Note: Thread safe.
-        unsafe void Interpolate_422_old(int width, int height)
+        unsafe void Interpolate_422_old(long width, long height)
         {
             // Last pixel should not be interpolated
             width--;
-            int hue = -GetHue() + 16384;
+            int hue = 16384 - (int)GetHue();
             Parallel.For(0, height, (y) =>
             {
                 fixed (UInt16* c_line = &(rawImage.raw.data[y * rawImage.raw.dim.width]))
@@ -791,13 +791,13 @@ namespace RawNet.Decoder
             r >>= 8; g >>= 8; b >>= 8;
         }
 
-        unsafe void Interpolate_422_new(int width, int height)
+        unsafe void Interpolate_422_new(uint width,uint height)
         {
             // Last pixel should not be interpolated
             width--;
 
             // Current line
-            int hue = -GetHue() + 16384;
+            int hue = -(int)GetHue() + 16384;
             for (int y = 0; y < height; y++)
             {
                 fixed (UInt16* c_line = &rawImage.raw.data[y * rawImage.raw.dim.width])
@@ -834,13 +834,13 @@ namespace RawNet.Decoder
         }
 
         // Note: Not thread safe, since it writes inplace.
-        unsafe void Interpolate_420_new(int width, int height)
+        unsafe void Interpolate_420_new(uint width,uint height)
         {
             // Last pixel should not be interpolated
             width--;
             bool atLastLine = false;
 
-            int hue = -GetHue() + 16384;
+            int hue = -(int)GetHue() + 16384;
             int off, r, g, b, Y, Cb, Cr;
             for (int y = 0; y < height; y++)
             {

@@ -167,7 +167,7 @@ namespace RawNet.DNG
 
         public override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
         {
-            Rectangle2D crop = new Rectangle2D((int)mLeft, (int)mTop, (int)(mRight - mLeft), (int)(mBottom - mTop));
+            Rectangle2D crop = new Rectangle2D((uint)mLeft, (uint)mTop, (uint)(mRight - mLeft), (uint)(mBottom - mTop));
             output.raw.offset = crop.TopLeft;
             output.raw.dim = crop.BottomRight;
         }
@@ -184,10 +184,10 @@ namespace RawNet.DNG
         {
             if (param_max_bytes < 36)
                 throw new RawDecoderException("OpcodeMapTable: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
-            int h1 = (int)parameters.ReadUInt32();
-            int w1 = (int)parameters.ReadUInt32();
-            int h2 = (int)parameters.ReadUInt32();
-            int w2 = (int)parameters.ReadUInt32();
+            uint h1 = parameters.ReadUInt32();
+            uint w1 = parameters.ReadUInt32();
+            uint h2 = parameters.ReadUInt32();
+            uint w2 = parameters.ReadUInt32();
             aoi.SetAbsolute(w1, h1, w2, h2);
             firstPlane = parameters.ReadUInt32();
             planes = parameters.ReadUInt32();
@@ -262,10 +262,10 @@ namespace RawNet.DNG
         {
             if (param_max_bytes < 36)
                 throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
-            int h1 = (int)parameters.ReadUInt32();
-            int w1 = (int)parameters.ReadUInt32();
-            int h2 = (int)parameters.ReadUInt32();
-            int w2 = (int)parameters.ReadUInt32();
+            uint h1 = parameters.ReadUInt32();
+            uint w1 = parameters.ReadUInt32();
+            uint h2 = parameters.ReadUInt32();
+            uint w2 = parameters.ReadUInt32();
             aoi.SetAbsolute(w1, h1, w2, h2);
             mFirstPlane = parameters.ReadUInt32();
             mPlanes = parameters.ReadUInt32();
@@ -344,10 +344,10 @@ namespace RawNet.DNG
         {
             if (param_max_bytes < 36)
                 throw new RawDecoderException("OpcodeGainMap: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
-            int h1 = (int)parameters.ReadUInt32();
-            int w1 = (int)parameters.ReadUInt32();
-            int h2 = (int)parameters.ReadUInt32();
-            int w2 = (int)parameters.ReadUInt32();
+            uint h1 = parameters.ReadUInt32();
+            uint w1 = parameters.ReadUInt32();
+            uint h2 = parameters.ReadUInt32();
+            uint w2 = parameters.ReadUInt32();
             aoi.SetAbsolute(w1, h1, w2, h2);
             firstPlane = parameters.ReadUInt32();
             planes = parameters.ReadUInt32();

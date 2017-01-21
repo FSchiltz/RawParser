@@ -2,14 +2,13 @@
 
 namespace RawNet.Decoder.Decompressor
 {
-    internal class PanaBitpump
+    class PanaBitpump
     {
         TIFFBinaryReader input;
         byte[] buf = new byte[0x4000];
         int vbits;
         int load_flags;
-
-        public PanaBitpump(TIFFBinaryReader _input, uint load)
+        internal PanaBitpump(TIFFBinaryReader _input, uint load)
         {
             input = _input;
             vbits = 0;
@@ -36,8 +35,8 @@ namespace RawNet.Decoder.Decompressor
                 */
                 if (input.RemainingSize < 0x4000 - load_flags)
                 {
-                    Common.Memcopy(buf, input.ReadBytes(input.RemainingSize), (uint)input.RemainingSize, load_flags, 0);
-                    input.ReadBytes(input.RemainingSize);
+                    Common.Memcopy(buf, input.ReadBytes((int)input.RemainingSize), (uint)input.RemainingSize, load_flags, 0);
+                    input.ReadBytes((int)input.RemainingSize);
                 }
                 else
                 {
@@ -45,8 +44,8 @@ namespace RawNet.Decoder.Decompressor
                     input.ReadBytes(0x4000 - load_flags);
                     if (input.RemainingSize < load_flags)
                     {
-                        Common.Memcopy(buf, input.ReadBytes(input.RemainingSize), (uint)input.RemainingSize);
-                        input.ReadBytes(input.RemainingSize);
+                        Common.Memcopy(buf, input.ReadBytes((int)input.RemainingSize), (uint)input.RemainingSize);
+                        input.ReadBytes((int)input.RemainingSize);
                     }
                     else
                     {

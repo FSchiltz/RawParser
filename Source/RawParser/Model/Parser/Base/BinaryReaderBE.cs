@@ -41,7 +41,7 @@ namespace RawNet
             BaseStream.Position -= 1;
         }
 
-        public int RemainingSize { get { return (int)(BaseStream.Length - Position); } }
+        public long RemainingSize { get { return BaseStream.Length - Position; } }
 
         public virtual double ReadRational()
         {
@@ -50,7 +50,7 @@ namespace RawNet
              double d1 = BitConverter.ToInt32(part1, 0);
              double d2 = BitConverter.ToInt32(part2, 0);*/
             return base.ReadInt32() / (double)base.ReadInt32();
-        }       
+        }
 
         public bool IsValid(uint offset, uint count)
         {
@@ -60,6 +60,11 @@ namespace RawNet
         public bool IsValid(uint offset)
         {
             return offset <= this.BaseStream.Length;
+        }
+
+        public bool IsValid(uint offset, long count)
+        {
+            return offset + count <= this.BaseStream.Length;
         }
 
         protected static Stream StreamFromArray(byte[] data)

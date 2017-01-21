@@ -382,11 +382,11 @@ namespace RawEditor.View.Pages
             {
                 if (raw.Rotation == 1 || raw.Rotation == 3)
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, dim.height, dim.width);
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)dim.height, (int)dim.width);
                 }
                 else
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, dim.width, dim.height);
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)dim.width, (int)dim.height);
                 }
             });
             if (histo)
@@ -524,7 +524,7 @@ namespace RawEditor.View.Pages
                 CropGrid.Visibility = Visibility.Visible;
                 //wait for accept or reset pressed
 
-                int h, w;
+                uint h, w;
                 if (raw.Rotation == 1 || raw.Rotation == 3)
                 {
                     h = raw.preview.uncroppedDim.width;
@@ -561,11 +561,11 @@ namespace RawEditor.View.Pages
             double bottom = CropUI.Bottom;
             if (raw?.raw != null && raw?.preview != null)
             {
-                raw.raw.offset = new Point2D((int)(raw.raw.uncroppedDim.width * left), (int)(raw.raw.uncroppedDim.height * top));
-                raw.raw.dim = new Point2D((int)(raw.raw.uncroppedDim.width * right), (int)(raw.raw.uncroppedDim.height * bottom));
+                raw.raw.offset = new Point2D((uint)(raw.raw.uncroppedDim.width * left), (uint)(raw.raw.uncroppedDim.height * top));
+                raw.raw.dim = new Point2D((uint)(raw.raw.uncroppedDim.width * right), (uint)(raw.raw.uncroppedDim.height * bottom));
 
-                raw.preview.offset = new Point2D((int)(raw.preview.uncroppedDim.width * left), (int)(raw.preview.uncroppedDim.height * top));
-                raw.preview.dim = new Point2D((int)(raw.preview.uncroppedDim.width * right), (int)(raw.preview.uncroppedDim.height * bottom));
+                raw.preview.offset = new Point2D((uint)(raw.preview.uncroppedDim.width * left), (uint)(raw.preview.uncroppedDim.height * top));
+                raw.preview.dim = new Point2D((uint)(raw.preview.uncroppedDim.width * right), (uint)(raw.preview.uncroppedDim.height * bottom));
 
                 UpdatePreview(true);
             }

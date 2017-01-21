@@ -36,13 +36,7 @@ namespace RawNet
             if (cfa != null)
                 Common.Memcopy(cfa, other.cfa, Size.Area());
         }
-
-        // FC macro from dcraw outputs, given the filters definition, the dcraw color
-        // number for that given position in the CFA pattern
-        protected static uint FC(uint filters, int row, int col)
-        {
-            return ((filters) >> ((((row) << 1 & 14) + ((col) & 1)) << 1) & 3);
-        }
+        /*
 
         public ColorFilterArray(uint filters)
         {
@@ -50,15 +44,22 @@ namespace RawNet
             cfa = null;
             SetSize(Size);
 
-            for (int x = 0; x < 8; x++)
+            for (uint x = 0; x < 8; x++)
             {
-                for (int y = 0; y < 2; y++)
+                for (uint y = 0; y < 2; y++)
                 {
                     CFAColor c = (CFAColor)FC(filters, y, x);
                     SetColorAt(new Point2D(x, y), c);
                 }
             }
         }
+
+        // FC macro from dcraw outputs, given the filters definition, the dcraw color
+        // number for that given position in the CFA pattern
+        protected static uint FC(uint filters, uint row, uint col)
+        {
+            return ((filters) >> ((((row) << 1 & 14) + ((col) & 1)) << 1) & 3);
+        }*/
 
         public ColorFilterArray Equal(ColorFilterArray other)
         {
@@ -106,34 +107,34 @@ namespace RawNet
             cfa[3] = color4;
         }
 
-        public void ShiftLeft(int count)
+        public void ShiftLeft(uint count)
         {
             if (Size.width == 0)
             {
                 throw new RawDecoderException("ColorFilterArray:shiftLeft: No CFA size set (or set to zero)");
             }
             //Debug.Write("Shift left:" + n + "\n");
-            int shift = count % Size.width;
+            uint shift = count % Size.width;
             if (0 == shift)
                 return;
             CFAColor[] tmp = new CFAColor[Size.width];
             for (int y = 0; y < Size.height; y++)
             {
-                CFAColor[] old = cfa.Skip(y * Size.width).ToArray();
-                Common.Memcopy(tmp, old, (uint)((Size.width - shift) * sizeof(CFAColor)), 0, shift);
-                Common.Memcopy(tmp, old, (uint)(shift * sizeof(CFAColor)), Size.width - shift, 0);
+                CFAColor[] old = cfa.Skip((int)(y * Size.width)).ToArray();
+                Common.Memcopy(tmp, old, (uint)((Size.width - shift) * sizeof(CFAColor)), 0, (int)shift);
+                Common.Memcopy(tmp, old, (uint)(shift * sizeof(CFAColor)), (int)(Size.width - shift), 0);
                 Common.Memcopy(old, tmp, (uint)(Size.width * sizeof(CFAColor)));
             }
         }
 
-        public void ShiftDown(int count)
+        public void ShiftDown(uint count)
         {
             if (Size.height == 0)
             {
                 throw new RawDecoderException("ColorFilterArray:shiftDown: No CFA size set (or set to zero)");
             }
             //Debug.Write("Shift down:" + n + "\n");
-            int shift = count % Size.height;
+            uint shift = count % Size.height;
             if (0 == shift)
                 return;
             CFAColor[] tmp = new CFAColor[Size.height];
