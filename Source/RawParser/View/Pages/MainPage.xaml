@@ -107,10 +107,10 @@
 						<!--The histogram-->
 						<TextBlock Foreground="Black" HorizontalAlignment="Left" FontSize="14" x:Uid="Histogram" />
 						<Grid>
-							<Polygon x:Name="RedHisto" Opacity="0.4" Stretch="Fill" Fill="#FFCF0000" Width="260" Height="120" />
-							<Polygon x:Name="GreenHisto" Opacity="0.4" Stretch="Fill" Fill="#FF00B200" Width="260" Height="120" />
-							<Polygon x:Name="BlueHisto" Opacity="0.4" Stretch="Fill" Fill="#FF000083" Width="260" Height="120" />
-							<Polygon x:Name="LumaHisto" Opacity="0.9" Stretch="Fill" Fill="#FF555555" Width="260" Height="120" />
+							<Polygon Points="{x:Bind Histo.PointsL }"  Opacity="0.4" Stretch="Fill" Fill="#FFCF0000" Width="260" Height="120" />
+                            <Polygon Points="{x:Bind Histo.PointsR }" Opacity="0.4" Stretch="Fill" Fill="#FF00B200" Width="260" Height="120" />
+                            <Polygon Points="{x:Bind Histo.PointsG }" Opacity="0.4" Stretch="Fill" Fill="#FF000083" Width="260" Height="120" />
+                            <Polygon Points="{x:Bind Histo.PointsB }" Opacity="0.9" Stretch="Fill" Fill="#FF555555" Width="260" Height="120" />
 						</Grid>
 						<Button Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="{x:Bind ResetControls}" Padding="8,2" IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}">Reset</Button>
 						<TextBlock FontSize="16" x:Uid="ExplosureSettings" />

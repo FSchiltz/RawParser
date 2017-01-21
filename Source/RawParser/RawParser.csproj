@@ -141,7 +141,6 @@
     <Compile Include="Model\Effect\ImageEffect.cs" />
     <Compile Include="Model\Parser\Encoder\SaveHelper.cs" />
     <Compile Include="Model\Parser\Base\Endianness.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\BitPump.cs" />
     <Compile Include="Model\Parser\Decoder\CamRGB.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />

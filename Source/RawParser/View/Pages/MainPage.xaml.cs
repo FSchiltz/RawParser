@@ -41,6 +41,7 @@ namespace RawEditor.View.Pages
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
         public Bindable<bool> feedbacksupport = new Bindable<bool>(StoreServicesFeedbackLauncher.IsSupported());
+        public Histogram Histo { get; set; } = new Histogram();
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
@@ -84,12 +85,8 @@ namespace RawEditor.View.Pages
             ExifSource?.Clear();
             //empty the histogram
             ControlVisibilty.Value = false;
-            LumaHisto.Points = null;
-            RedHisto.Points = null;
-            GreenHisto.Points = null;
-            BlueHisto.Points = null;
             ResetControls();
-
+            Histo.ClearAsync();
             GC.Collect();
         }
 
@@ -214,14 +211,14 @@ namespace RawEditor.View.Pages
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
-                    UpdatePreview(true);
-                    thumbnail = null;
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         raw.ParseExif(ExifSource);
                         ResetControls();
                         ControlVisibilty.Value = true;
                     });
+                    UpdatePreview(true);
+                    thumbnail = null;
                 }
                 catch (Exception e)
                 {
@@ -348,16 +345,7 @@ namespace RawEditor.View.Pages
             {
                 var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.dim, raw.preview.offset, raw.preview.uncroppedDim, raw.ColorDepth, true);
                 DisplayImage(result.Item2, reset);
-
-                var histo = new Histogram();
-                histo.FillAsync(result.Item1, (uint)raw.preview.dim.height, (uint)raw.preview.dim.width);
-                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    LumaHisto.Points = histo.PointsL;
-                    RedHisto.Points = histo.PointsR;
-                    GreenHisto.Points = histo.PointsG;
-                    BlueHisto.Points = histo.PointsB;
-                });
+                Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
             });
         }
 
