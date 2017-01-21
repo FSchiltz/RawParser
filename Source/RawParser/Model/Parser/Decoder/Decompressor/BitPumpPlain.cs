@@ -1,11 +1,11 @@
 using System;
+using System.IO;
 
 namespace RawNet.Decoder.Decompressor
 {
     // Note: Allocated buffer MUST be at least size+sizeof(int) large.
     internal class BitPumpPlain : BitPump
     {
-        public override uint GetOffset() { return off >> 3; }
         /*** Used for entropy encoded sections ***/
         public BitPumpPlain(TIFFBinaryReader s) : this(s, (uint)s.Position, (uint)s.RemainingSize) { }
 
@@ -109,13 +109,14 @@ namespace RawNet.Decoder.Decompressor
             CheckPos();
         }
 
-        #region abstract
+        public override uint GetOffset() { return off >> 3; }       
 
         public override void CheckPos()
         {
-            throw new NotImplementedException();
+            if (off >= size) throw new IOException("Out of buffer read");
         }
 
+        #region abstract
         public override void Fill()
         {
             throw new NotImplementedException();
@@ -138,7 +139,7 @@ namespace RawNet.Decoder.Decompressor
 
         public override void Init()
         {
-            throw new NotImplementedException();
+            //no need for init
         }
 
         public override uint PeekBitsNoFill(uint nbits)

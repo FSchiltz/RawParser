@@ -153,7 +153,7 @@ namespace RawNet.Decoder.Decompressor
 
         public override uint GetBits(uint nbits)
         {
-            Fill();
+            FillCheck();
             return GetBitsNoFill(nbits);
         }
 
@@ -180,13 +180,13 @@ namespace RawNet.Decoder.Decompressor
 
         public override uint PeekBits(uint nbits)
         {
-            Fill();
+            FillCheck();
             return PeekBitsNoFill(nbits);
         }
 
         public override uint PeekByte()
         {
-            Fill();
+            FillCheck();
             if (off > size)
                 throw new IOException("Out of buffer read");
 
@@ -198,7 +198,7 @@ namespace RawNet.Decoder.Decompressor
             int skipn = (int)nbits;
             while (skipn != 0)
             {
-                Fill();
+                FillCheck();
                 CheckPos();
                 int n = Math.Min(skipn, mLeft);
                 mLeft -= n;
@@ -213,7 +213,7 @@ namespace RawNet.Decoder.Decompressor
 
         public override byte GetByte()
         {
-            Fill();
+            FillCheck();
             mLeft -= 8;
             int shift = mLeft;
             uint ret = current_buffer[shift >> 3];
@@ -223,7 +223,7 @@ namespace RawNet.Decoder.Decompressor
 
         public override uint GetBitSafe()
         {
-            Fill();
+            FillCheck();
             CheckPos();
             return GetBitNoFill();
         }
@@ -233,14 +233,14 @@ namespace RawNet.Decoder.Decompressor
             if (nbits > MIN_GET_BITS)
                 throw new IOException("Too many bits requested");
 
-            Fill();
+            FillCheck();
             CheckPos();
             return GetBitsNoFill(nbits);
         }
 
         public override byte GetByteSafe()
         {
-            Fill();
+            FillCheck();
             CheckPos();
             return (byte)GetBitsNoFill(8);
         }
