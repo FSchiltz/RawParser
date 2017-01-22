@@ -200,6 +200,7 @@ namespace RawNet
 
         public void ScaleValues()
         {
+            ushort maxValue = (ushort)((1 << ColorDepth) - 1);
             if (whitePoint == 0)
             {
                 whitePoint = (1 << ColorDepth) - 1;
@@ -215,15 +216,17 @@ namespace RawNet
                     }
                     BlackLevel /= blackLevelSeparate.Length;
                 }
-                if (BlackLevel != 0 || whitePoint != ((1 << ColorDepth) - 1))
+                if (BlackLevel != 0 || whitePoint != maxValue)
                 {
-                    double factor = ((1 << ColorDepth) - 1.0) / (((1 << ColorDepth) - 1.0) - BlackLevel);
+                    double factor = (double)maxValue / (maxValue - BlackLevel);
                     Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
                     {
                         long v = y * raw.uncroppedDim.width * cpp;
                         for (uint x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
                         {
-                            raw.data[x + v] = (ushort)((raw.data[x + v] - BlackLevel) * factor);
+                            ulong value = (ulong)((raw.data[x + v] - BlackLevel) * factor);
+                            if (value > maxValue) value = maxValue;
+                            raw.data[x + v] = (ushort)value;
                         }
                     });
                 }
@@ -511,6 +514,11 @@ namespace RawNet
             exif.Add(new ExifValue("Black level", "" + BlackLevel));
             exif.Add(new ExifValue("White level", "" + whitePoint));
             exif.Add(new ExifValue("Color depth", "" + ColorDepth + " bits"));
+
+            if (isCFA)
+            {
+                exif.Add(new ExifValue("CFA pattern", colorFilter.ToString()));
+            }
         }
     }
 }

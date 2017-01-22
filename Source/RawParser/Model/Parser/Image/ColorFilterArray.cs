@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 namespace RawNet
 {
@@ -35,6 +36,16 @@ namespace RawNet
             SetSize(other.Size);
             if (cfa != null)
                 Common.Memcopy(cfa, other.cfa, Size.Area());
+        }
+
+        public override string ToString()
+        {
+            string val = "";
+            for (int i = 0; i < (Size.height * Size.width); i++)
+            {
+                val += cfa[i].ToString() + " ";
+            }
+            return val;
         }
         /*
 

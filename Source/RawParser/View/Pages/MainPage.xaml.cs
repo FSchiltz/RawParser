@@ -131,7 +131,7 @@ namespace RawEditor.View.Pages
             HideCropUI();
             if (raw != null)
             {
-                UpdatePreview(false);
+                UpdatePreview();
             }
         }
 
@@ -177,16 +177,17 @@ namespace RawEditor.View.Pages
                             thumbnail = decoder.DecodeThumb();
                             Task.Run(() =>
                             {
-                                DisplayImage(thumbnail?.GetSoftwareBitmap(), true);
+                                var result = thumbnail?.GetSoftwareBitmap();
+                                DisplayImage(result);
                             });
                         }
-                        catch (Exception) { }                            //since thumbnail are optionnal, we ignore all errors                         
+                        //since thumbnail are optionnal, we ignore all errors           
+                        catch (Exception) { }
 
                         decoder.DecodeRaw();
                         decoder.DecodeMetadata();
                         raw = decoder.rawImage;
-                        //if (decoder.ScaleValue)
-                        //raw.ScaleValues();
+                        //if (decoder.ScaleValue) raw.ScaleValues();
                         raw.metadata.FileName = file.DisplayName;
                         raw.metadata.FileNameComplete = file.Name;
                         raw.metadata.FileExtension = file.FileType;
@@ -231,13 +232,14 @@ namespace RawEditor.View.Pages
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
+
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         raw.ParseExif(ExifSource);
                         ResetControls();
                         ControlVisibilty.Value = true;
+                        SetScrollProperty(raw.preview.dim.width, raw.preview.dim.height);
                     });
-                    UpdatePreview(true);
                     thumbnail = null;
                 }
                 catch (Exception e)
@@ -319,7 +321,7 @@ namespace RawEditor.View.Pages
             }
         }
 
-        private void DisplayImage(SoftwareBitmap image, bool reset)
+        private void DisplayImage(SoftwareBitmap image)
         {
             if (image != null)
             {
@@ -332,23 +334,22 @@ namespace RawEditor.View.Pages
                     image.CopyToBuffer(bitmap.PixelBuffer);
                     image.Dispose();
                     ImageBox.Source = bitmap;
-                    if (reset)
-                        SetScrollProperty(bitmap.PixelWidth, bitmap.PixelHeight);
                 });
             }
         }
 
-        private void SetScrollProperty(int w, int h)
+        private void SetScrollProperty(uint? width, uint? height)
         {
+            if (width == null || height == null) { return; }
             float x = 0;
             double relativeBorder = SettingStorage.ImageBoxBorder;
-            if (w / h > ImageDisplay.ActualWidth / ImageDisplay.ActualHeight)
+            if (width / height > ImageDisplay.ActualWidth / ImageDisplay.ActualHeight)
             {
-                x = (float)(ImageDisplay.ActualWidth / (w * (1 + relativeBorder)));
+                x = (float)(ImageDisplay.ActualWidth / (width * (1 + relativeBorder)));
             }
             else
             {
-                x = (float)(ImageDisplay.ActualHeight / (h * (1 + relativeBorder)));
+                x = (float)(ImageDisplay.ActualHeight / (height * (1 + relativeBorder)));
             }
             if (x < 0.1) x = 0.1f;
             else if (x > 1) x = (float)(1 - relativeBorder);
@@ -358,13 +359,13 @@ namespace RawEditor.View.Pages
             ZoomSlider.Value = x;
         }
 
-        private void UpdatePreview(bool reset)
+        private void UpdatePreview()
         {
             //display the histogram                  
             Task.Run(async () =>
             {
                 var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.dim, raw.preview.offset, raw.preview.uncroppedDim, raw.ColorDepth, true);
-                DisplayImage(result.Item2, reset);
+                DisplayImage(result.Item2);
                 Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
             });
         }
@@ -439,7 +440,7 @@ namespace RawEditor.View.Pages
             cameraWBCheck.IsEnabled = false;
             //TODO move slider to the camera WB
             SetWBAsync();
-            UpdatePreview(false);
+            UpdatePreview();
         }
         #endregion
 
@@ -447,7 +448,7 @@ namespace RawEditor.View.Pages
         { //history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.saturation });
 
             ResetButtonVisibility.Value = true;
-            UpdatePreview(false);
+            UpdatePreview();
         }
 
         private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
@@ -611,7 +612,8 @@ namespace RawEditor.View.Pages
                 raw.preview.offset = new Point2D((uint)(raw.preview.uncroppedDim.width * left), (uint)(raw.preview.uncroppedDim.height * top));
                 raw.preview.dim = new Point2D((uint)(raw.preview.uncroppedDim.width * right), (uint)(raw.preview.uncroppedDim.height * bottom));
 
-                UpdatePreview(true);
+                UpdatePreview();
+                SetScrollProperty(raw.preview.dim.width, raw.preview.dim.height);
             }
             //var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
             //history.Add(t)

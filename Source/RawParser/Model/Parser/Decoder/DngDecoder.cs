@@ -24,6 +24,7 @@ namespace RawNet.Decoder
         //DNG thumbnail are tiff so no need to override 
         internal DngDecoder(Stream file) : base(file)
         {
+            ScaleValue = true;
             List<IFD> data = ifd.GetIFDsWithTag(TagType.DNGVERSION);
             /*
             if (data.Count != 0)
