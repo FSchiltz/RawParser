@@ -414,20 +414,13 @@ namespace RawNet
             {
                 if (raw.dim.height > raw.dim.width)
                 {
-                    previewFactor = (uint)(raw.dim.height / viewHeight);
+                    previewFactor = (uint)((raw.dim.height / viewHeight) * 0.9);
                 }
                 else
                 {
-                    previewFactor = (uint)(raw.dim.width / viewWidth);
+                    previewFactor = (uint)((raw.dim.width / viewWidth) * 0.9);
                 }
-                if (previewFactor > 1)
-                {
-                    uint start = 1;
-                    for (; previewFactor > (start << 1); start <<= 1) ;
-                    if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
-                    else previewFactor <<= 1;
-                }
-                else
+                if (previewFactor < 1)
                 {
                     previewFactor = 1;
                 }
@@ -463,11 +456,6 @@ namespace RawNet
                              g += raw.data[realX + 1];
                              b += raw.data[realX + 2];
                          }
-                     }
-
-                     if (xk != doubleFactor || yk != previewFactor)
-                     {
-                         Debug.WriteLine("yk :" + yk + " xk: " + xk + " doubleFactor:" + doubleFactor);
                      }
                      r = (ushort)(r / doubleFactor);
                      g = (ushort)(g / doubleFactor);

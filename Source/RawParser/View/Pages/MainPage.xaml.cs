@@ -24,6 +24,10 @@ using Windows.System;
 using RawEditor.Base;
 using RawEditor.View.UIHelper;
 using RawEditor.Settings;
+using Microsoft.Graphics.Canvas.Effects;
+using Windows.UI.Composition;
+using Windows.UI.Xaml.Hosting;
+using System.Numerics;
 
 namespace RawEditor.View.Pages
 {
@@ -41,7 +45,20 @@ namespace RawEditor.View.Pages
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
         public Bindable<bool> feedbacksupport = new Bindable<bool>(StoreServicesFeedbackLauncher.IsSupported());
+        private SpriteVisual _pivotGridSprite;
+        private Compositor _compositor;
+        private CompositionEffectBrush brush;
         public Histogram Histo { get; set; } = new Histogram();
+        private float blurAmount = 5;
+        private GaussianBlurEffect graphicsEffect = new GaussianBlurEffect()
+        {
+            Name = "Blur",
+            BlurAmount = 0f,
+            Source = new CompositionEffectSourceParameter("ImageSource"),
+            Optimization = EffectOptimization.Balanced,
+            BorderMode = EffectBorderMode.Hard,
+        };
+        private TimeSpan animationDuration = TimeSpan.FromMilliseconds(300);
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
@@ -522,6 +539,30 @@ namespace RawEditor.View.Pages
             {
                 CropUI.SetThumbAsync(null);
                 Load.ShowLoad();
+
+
+                // Get the current compositor
+                _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+                // Create the destinatio sprite, sized to cover the entire list
+                _pivotGridSprite = _compositor.CreateSpriteVisual();
+                _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
+                ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
+                // Create the effect factory and instantiate a brush
+                CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
+                brush = _effectFactory.CreateBrush();
+                // Set the destination brush as the source of the image content
+                brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
+                // Update the destination layer with the fully configured brush
+                _pivotGridSprite.Brush = brush;
+
+                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                blurAnimation.InsertKeyFrame(0.0f, 0.0f);
+                blurAnimation.InsertKeyFrame(1.0f, blurAmount);
+                blurAnimation.Duration = animationDuration;
+                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                blurAnimation.IterationCount = 1;
+                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+
                 ControlVisibilty.Value = false;
                 //display the crop UI
                 CropGrid.Visibility = Visibility.Visible;
@@ -581,6 +622,16 @@ namespace RawEditor.View.Pages
         {
             if (CropGrid.Visibility == Visibility.Visible)
             {
+                // Update the destination layer with the fully configured brush
+                _pivotGridSprite.Brush = brush;
+                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                blurAnimation.InsertKeyFrame(0.0f, blurAmount);
+                blurAnimation.InsertKeyFrame(1.0f, 0.0f);
+                blurAnimation.Duration = animationDuration;
+                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                blurAnimation.IterationCount = 1;
+                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+
                 Load.HideLoad();
                 CropGrid.Visibility = Visibility.Collapsed;
                 ControlVisibilty.Value = true;
