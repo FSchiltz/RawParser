@@ -40,7 +40,14 @@ namespace RawEditor.View.UIHelper
 
         private void Header_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            IsOpen = !IsOpen;
+            if (Container.Visibility == Visibility.Collapsed)
+            {
+                Container.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                Container.Visibility = Visibility.Collapsed;
+            }
         }
     }
 }
