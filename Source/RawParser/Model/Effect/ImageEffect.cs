@@ -64,8 +64,6 @@ namespace RawEditor.Effect
             if (ReverseGamma)
             {
                 double param = 1 / gamma;
-
-                param += contrast;
                 for (int i = 0; i < curve.Length; i++)
                 {
                     double normal = curve[i] / maxValue;

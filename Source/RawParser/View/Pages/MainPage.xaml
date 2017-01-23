@@ -166,7 +166,6 @@
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14" x:Uid="Temperature" />
-
                                     <Button IsEnabled="False" Click="CameraWBCheck_Click" FontSize="12" Grid.Column="1"
                                             x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton"
                                             Margin="0,0,0,10" />
@@ -201,8 +200,8 @@
 
                                     <TextBlock FontSize="14" x:Uid="Saturation" />
                                     <Slider x:Name="saturationSlider"
-                                            PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="-100"
-                                            Maximum="100" LargeChange="10" SmallChange="5"
+                                            PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0"
+                                            Maximum="200" LargeChange="10" SmallChange="5" Value="100"
                                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
                                     <!-- 
                                     <TextBlock FontSize="12">Vibrance</TextBlock>
