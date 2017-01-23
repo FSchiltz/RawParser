@@ -1,16 +1,27 @@
+using RawNet.Decoder.HuffmanCompressor;
 using System;
 
 namespace RawNet.Decoder.Decompressor
 {
-
-    /******************
-     * Decompresses Lossless non subsampled JPEGs, with 2-4 components
-     *****************/
-
-    internal unsafe class LJpegPlain : LJpegDecompressor
+    //Decompresses Lossless non subsampled JPEGs, with 2-4 components
+    internal unsafe class LJPEGPlain : JPEGDecompressor
     {
-        public LJpegPlain(TIFFBinaryReader file, RawImage img) : base(file, img) { }
-        public LJpegPlain(byte[] data, RawImage img) : base(new TIFFBinaryReader(data), img) { }
+        public bool CanonFlipDim { get; set; }    // Fix Canon 6D mRaw where width/height is flipped
+        public bool CanonDoubleHeight { get; set; }  // Fix Canon double height on 4 components (EOS 5DS R)
+        public bool WrappedCr2Slices { get; set; } // Fix Canon 80D mRaw where the slices are wrapped
+
+        public LJPEGPlain(byte[] data, RawImage img, bool UseBigTable, bool DNGCompatible) : this(new TIFFBinaryReader(data), img, UseBigTable, DNGCompatible) { }
+        public LJPEGPlain(TIFFBinaryReader file, RawImage img, bool UseBigTable, bool DNGCompatible) : base(file, img, DNGCompatible, UseBigTable)
+        {
+            CanonFlipDim = false;
+            CanonDoubleHeight = false;
+            huff = new HuffmanTable[4] {
+                new HuffmanTable(UseBigTable, DNGCompatible),
+                new HuffmanTable(UseBigTable, DNGCompatible) ,
+                new HuffmanTable(UseBigTable, DNGCompatible) ,
+                new HuffmanTable(UseBigTable, DNGCompatible)
+            };
+        }
 
         public override void DecodeScan()
         {
@@ -18,58 +29,58 @@ namespace RawNet.Decoder.Decompressor
             // We temporarily swap width and height for cropping.
             if (CanonFlipDim)
             {
-                uint w = frame.w;
-                frame.w = frame.h;
-                frame.h = w;
+                uint w = frame.width;
+                frame.width = frame.height;
+                frame.height = w;
             }
 
             // If image attempts to decode beyond the image bounds, strip it.
-            if ((frame.w * frame.cps + offX * raw.cpp) > raw.raw.dim.width * raw.cpp)
-                skipX = (uint)(((frame.w * frame.cps + offX * raw.cpp) - raw.raw.dim.width * raw.cpp) / frame.cps);
-            if (frame.h + offY > (UInt32)raw.raw.dim.height)
-                skipY = (uint)(frame.h + offY - raw.raw.dim.height);
+            if ((frame.width * frame.numComponents + offX * raw.cpp) > raw.raw.dim.width * raw.cpp)
+                skipX = ((frame.width * frame.numComponents + offX * raw.cpp) - raw.raw.dim.width * raw.cpp) / frame.numComponents;
+            if (frame.height + offY > raw.raw.dim.height)
+                skipY = frame.height + offY - raw.raw.dim.height;
 
             // Swap back (see above)
             if (CanonFlipDim)
             {
-                uint w = frame.w;
-                frame.w = frame.h;
-                frame.h = w;
+                uint w = frame.width;
+                frame.width = frame.height;
+                frame.height = w;
             }
 
             /* Correct wrong slice count (Canon G16) */
             if (slicesW.Count == 1)
-                slicesW[0] = frame.w * frame.cps;
+                slicesW[0] = frame.width * frame.numComponents;
 
             if (slicesW.Count == 0)
-                slicesW.Add(frame.w * frame.cps);
+                slicesW.Add(frame.width * frame.numComponents);
 
-            if (0 == frame.h || 0 == frame.w)
+            if (0 == frame.height || 0 == frame.width)
                 throw new RawDecoderException("decodeScan: Image width or height set to zero");
 
-            for (UInt32 i = 0; i < frame.cps; i++)
+            for (UInt32 i = 0; i < frame.numComponents; i++)
             {
-                if (frame.CompInfo[i].superH != 1 || frame.CompInfo[i].superV != 1)
+                if (frame.ComponentInfo[i].superH != 1 || frame.ComponentInfo[i].superV != 1)
                 {
                     if (raw.isCFA)
                         throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot decode subsampled image to CFA data");
 
-                    if (raw.cpp != frame.cps)
+                    if (raw.cpp != frame.numComponents)
                         throw new RawDecoderException("LJpegDecompressor::decodeScan: Subsampled component count does not match image.");
 
-                    if (pred == 1)
+                    if (predictor == 1)
                     {
-                        if (frame.CompInfo[0].superH == 2 && frame.CompInfo[0].superV == 2 &&
-                            frame.CompInfo[1].superH == 1 && frame.CompInfo[1].superV == 1 &&
-                            frame.CompInfo[2].superH == 1 && frame.CompInfo[2].superV == 1)
+                        if (frame.ComponentInfo[0].superH == 2 && frame.ComponentInfo[0].superV == 2 &&
+                            frame.ComponentInfo[1].superH == 1 && frame.ComponentInfo[1].superV == 1 &&
+                            frame.ComponentInfo[2].superH == 1 && frame.ComponentInfo[2].superV == 1)
                         {
                             // Something like Cr2 sRaw1, use fast decoder
                             DecodeScanLeft4_2_0();
                             return;
                         }
-                        else if (frame.CompInfo[0].superH == 2 && frame.CompInfo[0].superV == 1 &&
-                                 frame.CompInfo[1].superH == 1 && frame.CompInfo[1].superV == 1 &&
-                                 frame.CompInfo[2].superH == 1 && frame.CompInfo[2].superV == 1)
+                        else if (frame.ComponentInfo[0].superH == 2 && frame.ComponentInfo[0].superV == 1 &&
+                                 frame.ComponentInfo[1].superH == 1 && frame.ComponentInfo[1].superV == 1 &&
+                                 frame.ComponentInfo[2].superH == 1 && frame.ComponentInfo[2].superV == 1)
                         {
                             // Something like Cr2 sRaw2, use fast decoder
                             if (CanonFlipDim)
@@ -79,8 +90,8 @@ namespace RawNet.Decoder.Decompressor
                         }
                         else
                         {
-                            throw new RawDecoderException("LJpegDecompressor::decodeScan: Unsupported subsampling");
-                            //decodeScanLeftGeneric();                            
+                            raw.errors.Add("LJpegDecompressor::decodeScan: Unsupported subsampling");
+                            DecodeScanLeftGeneric();
                         }
                     }
                     else
@@ -90,7 +101,7 @@ namespace RawNet.Decoder.Decompressor
                 }
             }
 
-            if (pred == 1)
+            if (predictor == 1)
             {
                 if (CanonFlipDim)
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot flip non subsampled images.");
@@ -99,11 +110,11 @@ namespace RawNet.Decoder.Decompressor
                     DecodeScanLeftGeneric();
                     return;
                 }
-                if (frame.cps == 2)
+                if (frame.numComponents == 2)
                     DecodeScanLeft2Comps();
-                else if (frame.cps == 3)
+                else if (frame.numComponents == 3)
                     DecodeScanLeft3Comps();
-                else if (frame.cps == 4)
+                else if (frame.numComponents == 4)
                     DecodeScanLeft4Comps();
                 else
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Unsupported component direction count.");
@@ -130,7 +141,7 @@ namespace RawNet.Decoder.Decompressor
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
             //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
 
-            UInt32 comps = frame.cps;  // Components
+            UInt32 comps = frame.numComponents;  // Components
             HuffmanTable[] dctbl = new HuffmanTable[4];   // Tables for up to 4 components
             UInt16* predict;         // Prediction pointer
                                      /* Fast access to supersampling component settings
@@ -150,12 +161,12 @@ namespace RawNet.Decoder.Decompressor
 
                 for (UInt32 i = 0; i < comps; i++)
                 {
-                    dctbl[i] = huff[frame.CompInfo[i].dcTblNo];
-                    samplesH[i] = frame.CompInfo[i].superH;
+                    dctbl[i] = huff[frame.ComponentInfo[i].dcTblNo];
+                    samplesH[i] = frame.ComponentInfo[i].superH;
                     if (!Common.IsPowerOfTwo(samplesH[i]))
                         throw new RawDecoderException("decodeScanLeftGeneric: Horizontal sampling is not power of two.");
                     maxSuperH = Math.Max(samplesH[i], maxSuperH);
-                    samplesV[i] = frame.CompInfo[i].superV;
+                    samplesV[i] = frame.ComponentInfo[i].superV;
                     if (!Common.IsPowerOfTwo(samplesV[i]))
                         throw new RawDecoderException("decodeScanLeftGeneric: Vertical sampling is not power of two.");
                     maxSuperV = Math.Max(samplesV[i], maxSuperV);
@@ -167,7 +178,7 @@ namespace RawNet.Decoder.Decompressor
                 raw.metadata.Subsampling.height = maxSuperV;
 
                 //Prepare slices (for CR2)
-                Int32 slices = slicesW.Count * (int)((frame.h - skipY) / maxSuperV);
+                Int32 slices = slicesW.Count * (int)((frame.height - skipY) / maxSuperV);
                 UInt16** imagePos = stackalloc UInt16*[(slices + 1)];
                 int[] sliceWidth = new int[(slices + 1)];
 
@@ -197,7 +208,7 @@ namespace RawNet.Decoder.Decompressor
                     imagePos[slice] = (UInt16*)&draw[(t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)];
                     sliceWidth[slice] = slice_width[t_s];
                     t_y += maxSuperV;
-                    if (t_y >= (frame.h - skipY))
+                    if (t_y >= (frame.height - skipY))
                     {
                         t_y = 0;
                         t_x += (uint)slice_width[t_s++];
@@ -236,12 +247,12 @@ namespace RawNet.Decoder.Decompressor
                             // First pixel is not predicted, all other are.
                             if (y2 == 0 && x2 == 0)
                             {
-                                p[i] = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl[i]);
+                                p[i] = (1 << (int)(frame.precision - Pt - 1)) + dctbl[i].Decode();
                                 dest[0] = (ushort)p[i];
                             }
                             else
                             {
-                                p[i] += HuffDecode(dctbl[i]);
+                                p[i] += dctbl[i].Decode();
                                 //_ASSERTE(p[i] >= 0 && p[i] < 65536);
                                 dest[x2 * comps + y2 * pitch_s] = (ushort)p[i];
                             }
@@ -257,8 +268,8 @@ namespace RawNet.Decoder.Decompressor
                 x = maxSuperH;
                 pixInSlice -= maxSuperH;
 
-                UInt32 cw = (uint)(frame.w - skipX);
-                for (Int32 y = 0; y < (frame.h - skipY); y += (int)maxSuperV)
+                UInt32 cw = frame.width - skipX;
+                for (Int32 y = 0; y < (frame.height - skipY); y += (int)maxSuperV)
                 {
                     for (; x < cw; x += maxSuperH)
                     {
@@ -282,7 +293,7 @@ namespace RawNet.Decoder.Decompressor
                             {
                                 for (Int32 x2 = 0; x2 < samplesH[i]; x2++)
                                 {
-                                    p[i] += HuffDecode(dctbl[i]);
+                                    p[i] += dctbl[i].Decode();
                                     //_ASSERTE(p[i] >= 0 && p[i] < 65536);
                                     dest[x2 * comps + y2 * pitch_s] = (ushort)p[i];
                                 }
@@ -299,7 +310,7 @@ namespace RawNet.Decoder.Decompressor
                         {
                             for (UInt32 i = 0; i < comps; i++)
                             {
-                                HuffDecode(dctbl[i]);
+                                dctbl[i].Decode();
                             }
                         }
                     }
@@ -320,11 +331,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-
-        /*************************************************************************/
-        /* These are often used compression schemes, heavily optimized to decode */
-        /* that specfic kind of images.                                          */
-        /*************************************************************************/
+        //These are often used compression schemes, heavily optimized to decode
         unsafe void DecodeScanLeft4_2_0()
         {
             uint COMPS = 3;
@@ -339,9 +346,9 @@ namespace RawNet.Decoder.Decompressor
             //_ASSERTE(frame.cps == COMPS);
             //_ASSERTE(skipX == 0);
 
-            HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
-            HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
-            HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.ComponentInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.ComponentInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.ComponentInfo[2].dcTblNo];
 
             UInt16* predict;      // Prediction pointer
 
@@ -352,7 +359,7 @@ namespace RawNet.Decoder.Decompressor
                 //TODO remove this hack
                 byte* draw = (byte*)d;
                 // Fix for Canon 6D raw, which has flipped width & height
-                UInt32 real_h = (uint)(CanonFlipDim ? frame.w : frame.h);
+                UInt32 real_h = CanonFlipDim ? frame.width : frame.height;
 
                 //Prepare slices (for CR2)
                 int slices = slicesW.Count * (int)(real_h - skipY) / 2;
@@ -379,7 +386,7 @@ namespace RawNet.Decoder.Decompressor
                     if (t_y >= (real_h - skipY))
                     {
                         t_y = 0;
-                        t_x += (uint)slice_width[t_s++];
+                        t_x += slice_width[t_s++];
                     }
                 }
 
@@ -399,20 +406,20 @@ namespace RawNet.Decoder.Decompressor
 
                 // Always points to next slice
                 slice = 1;
-                UInt32 pixInSlice = (uint)slice_width[0];
+                UInt32 pixInSlice = slice_width[0];
 
                 // Initialize predictors and decode one group.
                 int x = 0, p1, p2, p3;
                 // First pixel is not predicted, all other are.
-                p1 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl1);
+                p1 = (1 << (int)(frame.precision - Pt - 1)) + dctbl1.Decode();
                 *dest = (ushort)p1;
-                p1 = dest[COMPS] = (ushort)(p1 + HuffDecode(dctbl1));
-                p1 = dest[pitch_s] = (ushort)(p1 + HuffDecode(dctbl1));
-                p1 = dest[COMPS + pitch_s] = (ushort)(p1 + HuffDecode(dctbl1));
+                p1 = dest[COMPS] = (ushort)(p1 + dctbl1.Decode());
+                p1 = dest[pitch_s] = (ushort)(p1 + dctbl1.Decode());
+                p1 = dest[COMPS + pitch_s] = (ushort)(p1 + dctbl1.Decode());
                 predict = dest;
-                p2 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl2);
+                p2 = (1 << (int)(frame.precision - Pt - 1)) + dctbl2.Decode();
                 dest[1] = (ushort)p2;
-                p3 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl3);
+                p3 = (1 << (int)(frame.precision - Pt - 1)) + dctbl3.Decode();
                 dest[2] = (ushort)p3;
 
                 // Skip next
@@ -421,8 +428,8 @@ namespace RawNet.Decoder.Decompressor
                 x = 2;
                 pixInSlice -= 2;
 
-                UInt32 cw = (uint)(frame.w - skipX);
-                for (int y = 0; y < (frame.h - skipY); y += 2)
+                UInt32 cw = frame.width - skipX;
+                for (int y = 0; y < (frame.height - skipY); y += 2)
                 {
                     for (; x < cw; x += 2)
                     {
@@ -436,7 +443,7 @@ namespace RawNet.Decoder.Decompressor
                                                                     //_ASSERTE((o & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                             if ((o & 0x0fffffff) > raw.pitch * raw.raw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
-                            pixInSlice = (uint)slice_width[o >> 28];
+                            pixInSlice = slice_width[o >> 28];
 
                             // If new are at the start of a new line, also update predictors.
                             if (x == 0)
@@ -444,18 +451,18 @@ namespace RawNet.Decoder.Decompressor
                                 predict = dest;
                             }
                         }
-                        p1 += HuffDecode(dctbl1);
+                        p1 += dctbl1.Decode();
                         *dest = (ushort)p1;
-                        p1 += HuffDecode(dctbl1);
+                        p1 += dctbl1.Decode();
                         dest[COMPS] = (ushort)p1;
-                        p1 += HuffDecode(dctbl1);
+                        p1 += dctbl1.Decode();
                         dest[pitch_s] = (ushort)p1;
-                        p1 += HuffDecode(dctbl1);
+                        p1 += dctbl1.Decode();
                         dest[pitch_s + COMPS] = (ushort)p1;
 
-                        p2 = p2 + HuffDecode(dctbl2);
+                        p2 = p2 + dctbl2.Decode();
                         dest[1] = (ushort)p2;
-                        p3 = p3 + HuffDecode(dctbl3);
+                        p3 = p3 + dctbl3.Decode();
                         dest[2] = (ushort)p2;
 
                         dest += COMPS * 2;
@@ -488,9 +495,9 @@ namespace RawNet.Decoder.Decompressor
             //_ASSERTE(frame.cps == COMPS);
             //_ASSERTE(skipX == 0);
             int COMPS = 3;
-            HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
-            HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
-            HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.ComponentInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.ComponentInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.ComponentInfo[2].dcTblNo];
 
             raw.metadata.Subsampling.width = 2;
             raw.metadata.Subsampling.height = 1;
@@ -503,7 +510,7 @@ namespace RawNet.Decoder.Decompressor
                 byte* draw = (byte*)d;
 
                 //Prepare slices (for CR2)
-                Int32 slices = slicesW.Count * (int)(frame.h - skipY);
+                Int32 slices = slicesW.Count * (int)(frame.height - skipY);
 
                 long[] offset = new long[(slices + 1)];
 
@@ -522,10 +529,10 @@ namespace RawNet.Decoder.Decompressor
                     offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y++;
-                    if (t_y >= (frame.h - skipY))
+                    if (t_y >= (frame.height - skipY))
                     {
                         t_y = 0;
-                        t_x += (uint)slice_width[t_s++];
+                        t_x += slice_width[t_s++];
                     }
                 }
                 if ((offset[slices - 1] & 0x0fffffff) >= raw.pitch * raw.raw.dim.height)
@@ -543,7 +550,7 @@ namespace RawNet.Decoder.Decompressor
 
                 // Always points to next slice
                 slice = 1;
-                UInt32 pixInSlice = (uint)slice_width[0];
+                UInt32 pixInSlice = slice_width[0];
 
                 // Initialize predictors and decode one group.
                 UInt32 x = 0;
@@ -551,14 +558,14 @@ namespace RawNet.Decoder.Decompressor
                 int p2;
                 int p3;
                 // First pixel is not predicted, all other are.
-                p1 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl1);
+                p1 = (1 << (int)(frame.precision - Pt - 1)) + dctbl1.Decode();
                 *dest = (ushort)p1;
-                p1 = p1 + HuffDecode(dctbl1);
+                p1 = p1 + dctbl1.Decode();
                 dest[COMPS] = (ushort)p1;
                 predict = dest;
-                p2 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl2);
+                p2 = (1 << (int)(frame.precision - Pt - 1)) + dctbl2.Decode();
                 dest[1] = (ushort)p2;
-                p3 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl3);
+                p3 = (1 << (int)(frame.precision - Pt - 1)) + dctbl3.Decode();
                 dest[2] = (ushort)p3;
 
                 // Skip to next
@@ -567,8 +574,8 @@ namespace RawNet.Decoder.Decompressor
                 x = 2;
                 pixInSlice -= 2;
 
-                UInt32 cw = (uint)(frame.w - skipX);
-                for (int y = 0; y < (frame.h - skipY); y++)
+                UInt32 cw = frame.width - skipX;
+                for (int y = 0; y < (frame.height - skipY); y++)
                 {
                     for (; x < cw; x += 2)
                     {
@@ -581,7 +588,7 @@ namespace RawNet.Decoder.Decompressor
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
                             if ((o & 0x0fffffff) > raw.pitch * raw.raw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
-                            pixInSlice = (uint)slice_width[o >> 28];
+                            pixInSlice = slice_width[o >> 28];
 
                             // If new are at the start of a new line, also update predictors.
                             if (x == 0)
@@ -589,13 +596,13 @@ namespace RawNet.Decoder.Decompressor
                                 predict = dest;
                             }
                         }
-                        p1 += HuffDecode(dctbl1);
+                        p1 += dctbl1.Decode();
                         *dest = (ushort)p1;
-                        p1 += HuffDecode(dctbl1);
+                        p1 += dctbl1.Decode();
                         dest[COMPS] = (ushort)p1;
-                        p2 = p2 + HuffDecode(dctbl2);
+                        p2 = p2 + dctbl2.Decode();
                         dest[1] = (ushort)p2;
-                        p3 = p3 + HuffDecode(dctbl3);
+                        p3 = p3 + dctbl3.Decode();
                         dest[2] = (ushort)p3;
 
                         dest += COMPS * 2;
@@ -624,27 +631,27 @@ namespace RawNet.Decoder.Decompressor
                 //TODO remove this hack
                 byte* draw = (byte*)d;
                 // First line
-                HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
-                HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
+                HuffmanTable dctbl1 = huff[frame.ComponentInfo[0].dcTblNo];
+                HuffmanTable dctbl2 = huff[frame.ComponentInfo[1].dcTblNo];
 
                 //Prepare slices (for CR2)
-                Int32 slices = slicesW.Count * (int)(frame.h - skipY);
+                Int32 slices = slicesW.Count * (int)(frame.height - skipY);
                 long[] offset = new long[(slices + 1)];
 
                 UInt32 t_y = 0;
                 UInt32 t_x = 0;
                 UInt32 t_s = 0;
                 UInt32 slice = 0;
-                UInt32 cw = (uint)(frame.w - skipX);
+                UInt32 cw = frame.width - skipX;
                 for (slice = 0; slice < slices; slice++)
                 {
                     offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y++;
-                    if (t_y == (frame.h - skipY))
+                    if (t_y == (frame.height - skipY))
                     {
                         t_y = 0;
-                        t_x += (uint)slicesW[(int)t_s++];
+                        t_x += slicesW[(int)t_s++];
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
@@ -668,27 +675,27 @@ namespace RawNet.Decoder.Decompressor
                 int p2;
                 UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
                 UInt16* predict = dest;
-                p1 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl1);
+                p1 = (1 << (int)(frame.precision - Pt - 1)) + dctbl1.Decode();
                 *dest++ = (ushort)p1;
-                p2 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl2);
+                p2 = (1 << (int)(frame.precision - Pt - 1)) + dctbl2.Decode();
                 *dest++ = (ushort)p2;
 
                 slice = 1;    // Always points to next slice
-                UInt32 pixInSlice = (uint)slice_width[0] - 1;  // Skip first pixel
+                UInt32 pixInSlice = slice_width[0] - 1;  // Skip first pixel
 
                 int x = 1;                            // Skip first pixels on first line.
-                for (int y = 0; y < (frame.h - skipY); y++)
+                for (int y = 0; y < (frame.height - skipY); y++)
                 {
                     for (; x < cw; x++)
                     {
-                        int diff = HuffDecode(dctbl1);
+                        int diff = dctbl1.Decode();
                         p1 += diff;
-                        *dest++ = (UInt16)p1;
+                        *dest++ = (ushort)p1;
                         //    //_ASSERTE(p1 >= 0 && p1 < 65536);
 
-                        diff = HuffDecode(dctbl2);
+                        diff = dctbl2.Decode();
                         p2 += diff;
-                        *dest++ = (UInt16)p2;
+                        *dest++ = (ushort)p2;
                         //      //_ASSERTE(p2 >= 0 && p2 < 65536);
 
                         if (0 == --pixInSlice)
@@ -699,7 +706,7 @@ namespace RawNet.Decoder.Decompressor
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
                             if ((o & 0x0fffffff) > raw.pitch * raw.raw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
-                            pixInSlice = (uint)slice_width[o >> 28];
+                            pixInSlice = slice_width[o >> 28];
                         }
                     }
 
@@ -707,8 +714,8 @@ namespace RawNet.Decoder.Decompressor
                     {
                         for (UInt32 i = 0; i < skipX; i++)
                         {
-                            HuffDecode(dctbl1);
-                            HuffDecode(dctbl2);
+                            dctbl1.Decode();
+                            dctbl2.Decode();
                         }
                     }
 
@@ -729,12 +736,12 @@ namespace RawNet.Decoder.Decompressor
                 //TODO remove this hack
                 byte* draw = (byte*)d;
                 // First line
-                HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
-                HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
-                HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
+                HuffmanTable dctbl1 = huff[frame.ComponentInfo[0].dcTblNo];
+                HuffmanTable dctbl2 = huff[frame.ComponentInfo[1].dcTblNo];
+                HuffmanTable dctbl3 = huff[frame.ComponentInfo[2].dcTblNo];
 
                 //Prepare slices (for CR2)
-                Int32 slices = slicesW.Count * (int)(frame.h - skipY);
+                Int32 slices = slicesW.Count * (int)(frame.height - skipY);
                 long[] offset = new long[(slices + 1)];
 
                 UInt32 t_y = 0;
@@ -746,7 +753,7 @@ namespace RawNet.Decoder.Decompressor
                     offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y++;
-                    if (t_y == (frame.h - skipY))
+                    if (t_y == (frame.height - skipY))
                     {
                         t_y = 0;
                         t_x += slicesW[(int)t_s++];
@@ -775,30 +782,30 @@ namespace RawNet.Decoder.Decompressor
                 int p3;
                 UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
                 UInt16* predict = dest;
-                p1 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl1);
+                p1 = (1 << (int)(frame.precision - Pt - 1)) + dctbl1.Decode();
                 *dest++ = (ushort)p1;
-                p2 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl2);
+                p2 = (1 << (int)(frame.precision - Pt - 1)) + dctbl2.Decode();
                 *dest++ = (ushort)p2;
-                p3 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl3);
+                p3 = (1 << (int)(frame.precision - Pt - 1)) + dctbl3.Decode();
                 *dest++ = (ushort)p3;
 
                 slice = 1;
-                UInt32 pixInSlice = (uint)slice_width[0] - 1;
+                UInt32 pixInSlice = slice_width[0] - 1;
 
-                UInt32 cw = (uint)(frame.w - skipX);
+                UInt32 cw = frame.width - skipX;
                 UInt32 x = 1;                            // Skip first pixels on first line.
 
-                for (int y = 0; y < (frame.h - skipY); y++)
+                for (int y = 0; y < (frame.height - skipY); y++)
                 {
                     for (; x < cw; x++)
                     {
-                        p1 += HuffDecode(dctbl1);
+                        p1 += dctbl1.Decode();
                         *dest++ = (UInt16)p1;
 
-                        p2 += HuffDecode(dctbl2);
+                        p2 += dctbl2.Decode();
                         *dest++ = (UInt16)p2;
 
-                        p3 += HuffDecode(dctbl3);
+                        p3 += dctbl3.Decode();
                         *dest++ = (UInt16)p3;
 
                         if (0 == --pixInSlice)
@@ -810,7 +817,7 @@ namespace RawNet.Decoder.Decompressor
                             if ((o & 0x0fffffff) > raw.pitch * raw.raw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
                             //_ASSERTE((o >> 28) < slicesW.Count);
-                            pixInSlice = (uint)slice_width[o >> 28];
+                            pixInSlice = slice_width[o >> 28];
                         }
                     }
 
@@ -818,9 +825,9 @@ namespace RawNet.Decoder.Decompressor
                     {
                         for (int i = 0; i < skipX; i++)
                         {
-                            HuffDecode(dctbl1);
-                            HuffDecode(dctbl2);
-                            HuffDecode(dctbl3);
+                            dctbl1.Decode();
+                            dctbl2.Decode();
+                            dctbl3.Decode();
                         }
                     }
 
@@ -839,15 +846,15 @@ namespace RawNet.Decoder.Decompressor
         {
             uint COMPS = 4;
             // First line
-            HuffmanTable dctbl1 = huff[frame.CompInfo[0].dcTblNo];
-            HuffmanTable dctbl2 = huff[frame.CompInfo[1].dcTblNo];
-            HuffmanTable dctbl3 = huff[frame.CompInfo[2].dcTblNo];
-            HuffmanTable dctbl4 = huff[frame.CompInfo[3].dcTblNo];
+            HuffmanTable dctbl1 = huff[frame.ComponentInfo[0].dcTblNo];
+            HuffmanTable dctbl2 = huff[frame.ComponentInfo[1].dcTblNo];
+            HuffmanTable dctbl3 = huff[frame.ComponentInfo[2].dcTblNo];
+            HuffmanTable dctbl4 = huff[frame.ComponentInfo[3].dcTblNo];
 
             if (CanonDoubleHeight)
             {
-                frame.h *= 2;
-                raw.raw.dim = new Point2D(frame.w * 2, frame.h);
+                frame.height *= 2;
+                raw.raw.dim = new Point2D(frame.width * 2, frame.height);
             }
             fixed (ushort* d = raw.raw.data)
             {
@@ -855,7 +862,7 @@ namespace RawNet.Decoder.Decompressor
                 byte* draw = (byte*)d;
 
                 //Prepare slices (for CR2)
-                Int32 slices = slicesW.Count * (int)(frame.h - skipY);
+                Int32 slices = slicesW.Count * (int)(frame.height - skipY);
                 long[] offset = new long[(slices + 1)];
 
                 UInt32 t_y = 0;
@@ -867,10 +874,10 @@ namespace RawNet.Decoder.Decompressor
                     offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
                     //_ASSERTE((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.y);
                     t_y++;
-                    if (t_y == (frame.h - skipY))
+                    if (t_y == (frame.height - skipY))
                     {
                         t_y = 0;
-                        t_x += (uint)slicesW[(int)t_s++];
+                        t_x += slicesW[(int)t_s++];
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
@@ -896,38 +903,38 @@ namespace RawNet.Decoder.Decompressor
                 int p4;
                 UInt16* dest = (UInt16*)&draw[offset[0] & 0x0fffffff];
                 UInt16* predict = dest;
-                p1 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl1);
+                p1 = (1 << (int)(frame.precision - Pt - 1)) + dctbl1.Decode();
                 *dest++ = (ushort)p1;
-                p2 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl2);
+                p2 = (1 << (int)(frame.precision - Pt - 1)) + dctbl2.Decode();
                 *dest++ = (ushort)p2;
-                p3 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl3);
+                p3 = (1 << (int)(frame.precision - Pt - 1)) + dctbl3.Decode();
                 *dest++ = (ushort)p3;
-                p4 = (1 << (int)(frame.prec - Pt - 1)) + HuffDecode(dctbl4);
+                p4 = (1 << (int)(frame.precision - Pt - 1)) + dctbl4.Decode();
                 *dest++ = (ushort)p4;
 
                 slice = 1;
-                UInt32 pixInSlice = (uint)slice_width[0] - 1;
+                UInt32 pixInSlice = slice_width[0] - 1;
 
-                UInt32 cw = (uint)(frame.w - skipX);
+                UInt32 cw = frame.width - skipX;
                 UInt32 x = 1;                            // Skip first pixels on first line.
 
                 if (CanonDoubleHeight)
-                    skipY = (uint)frame.h >> 1;
+                    skipY = frame.height >> 1;
 
-                for (UInt32 y = 0; y < (frame.h - skipY); y++)
+                for (UInt32 y = 0; y < (frame.height - skipY); y++)
                 {
                     for (; x < cw; x++)
                     {
-                        p1 += HuffDecode(dctbl1);
+                        p1 += dctbl1.Decode();
                         *dest++ = (UInt16)p1;
 
-                        p2 += HuffDecode(dctbl2);
+                        p2 += dctbl2.Decode();
                         *dest++ = (UInt16)p2;
 
-                        p3 += HuffDecode(dctbl3);
+                        p3 += dctbl3.Decode();
                         *dest++ = (UInt16)p3;
 
-                        p4 += HuffDecode(dctbl4);
+                        p4 += dctbl4.Decode();
                         *dest++ = (UInt16)p4;
 
                         if (0 == --pixInSlice)
@@ -938,17 +945,17 @@ namespace RawNet.Decoder.Decompressor
                             dest = (UInt16*)&draw[o & 0x0fffffff];  // Adjust destination for next pixel
                             if ((o & 0x0fffffff) > raw.pitch * raw.raw.dim.height)
                                 throw new RawDecoderException("decodeScanLeft: Offset out of bounds");
-                            pixInSlice = (uint)slice_width[o >> 28];
+                            pixInSlice = slice_width[o >> 28];
                         }
                     }
                     if (skipX != 0)
                     {
                         for (UInt32 i = 0; i < skipX; i++)
                         {
-                            HuffDecode(dctbl1);
-                            HuffDecode(dctbl2);
-                            HuffDecode(dctbl3);
-                            HuffDecode(dctbl4);
+                            dctbl1.Decode();
+                            dctbl2.Decode();
+                            dctbl3.Decode();
+                            dctbl4.Decode();
                         }
                     }
                     bits.CheckPos();

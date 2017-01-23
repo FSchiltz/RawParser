@@ -1,6 +1,7 @@
 ﻿using RawEditor.View.UIHelper;
 using RawNet;
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -25,7 +26,7 @@ namespace RawEditor.Effect
         //public double tint = 1;
         //public double gamma = 0;
         public double contrast = 0;
-      //  public double brightness = 0;
+        //  public double brightness = 0;
         public double hightlight = 1;
         public double shadow = 1;
         public float[] mul;
@@ -54,7 +55,7 @@ namespace RawEditor.Effect
             yCurve[0] = ((shadow - contrast) * (maxValue / 200)) * exposure;
             //hightlight
             xCurve[2] = maxValue;
-            yCurve[2] = (maxValue + ((contrast- hightlight) * (maxValue / 200))) * exposure;
+            yCurve[2] = (maxValue + ((contrast - hightlight) * (maxValue / 200))) * exposure;
             maxValue--;
 
             var curve = Curve.CubicSpline(xCurve, yCurve);
@@ -125,9 +126,11 @@ namespace RawEditor.Effect
                         long realPix = realY + (3 * (x + off.width));
                         long bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
                         double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
+                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                         Luminance.Clip(ref l);
                         l = curve[(uint)(l * maxValue)] / maxValue;
+                        Luminance.Clip(ref l);
                         s *= saturation;
                         Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
                         Luminance.Clip(ref red, ref green, ref blue, maxValue);
@@ -172,6 +175,7 @@ namespace RawEditor.Effect
                         long realPix = realY + (3 * (x + off.width));
                         long bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
                         double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
+                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
                         // Luminance.Clip(ref red, ref green, ref blue, maxValue);                           
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                         //vignet correction
@@ -180,8 +184,11 @@ namespace RawEditor.Effect
                         //var v = Math.Abs(xV - (uncrop.width / 2.0)) / uncrop.width;
                         //l *= 1 + (vignet * Math.Sin((xV - uncrop.width / 2) / uncrop.width) + Math.Sin((yV - uncrop.height / 2) / uncrop.width));
                         Luminance.Clip(ref l);
-
+                        if (Double.IsNaN(l)) {
+                            Debug.Write("error");
+                        }
                         l = curve[(uint)(l * maxValue)] / maxValue;
+                        Luminance.Clip(ref l);
                         s *= saturation;
                         // s += vibrance;
                         Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);

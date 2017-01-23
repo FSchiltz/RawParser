@@ -7,9 +7,9 @@ using System.IO;
 
 namespace RawNet.Decoder
 {
-    class PefDecoder : TiffDecoder
+    class PEFDecoder : TIFFDecoder
     {
-        public PefDecoder(Stream stream) : base(stream) { }
+        public PEFDecoder(Stream stream) : base(stream) { }
 
         public override void DecodeRaw()
         {

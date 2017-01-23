@@ -5,16 +5,28 @@ namespace RawNet.Decoder.Decompressor
 {
 
     // Note: Allocated buffer MUST be at least size+sizeof(uint) large.
-    internal class BitPumpMSB
+    internal class BitPumpMSB : BitPump
     {
-        int BITS_PER_LONG = (8 * sizeof(uint));
-        int MIN_GET_BITS; /* max value for long getBuffer */
         byte[] current_buffer;
-        byte[] buffer;
-        uint size = 0;            // This if the end of buffer.
-        public byte left = 0;
-        uint off;                  // Offset in bytes
-        int stuffed = 0;
+
+        public override int Offset
+        {
+            get
+            {
+                return off - (left >> 3);
+            }
+
+            set
+            {
+                if (value >= size)
+                    throw new IOException("Offset set out of buffer");
+
+                left = 0;
+                stuffed = 0;
+                off = value;
+                Fill();
+            }
+        }
 
         /*** Used for entropy encoded sections ***/
         public BitPumpMSB(TIFFBinaryReader reader) : this(reader, (uint)reader.Position, (uint)(reader.BaseStream.Length - reader.Position)) { }
@@ -37,13 +49,13 @@ namespace RawNet.Decoder.Decompressor
             Init();
         }
 
-        public void Init()
+        public override void Init()
         {
             current_buffer = new byte[24];
-            FillCheck();
+            Fill();
         }
 
-        public void Fill()
+        private void FillNoCheck()
         {
             // Fill in 96 bits
             //uint[] b = Common.convertByteToUInt(current_buffer);
@@ -51,7 +63,7 @@ namespace RawNet.Decoder.Decompressor
             {
                 while (left <= 64 && off < size)
                 {
-                    for (int i = (left >> 3); i >= 0; i--)
+                    for (int i = left >> 3; i >= 0; i--)
                         current_buffer[i + 1] = current_buffer[i];
                     current_buffer[0] = buffer[off++];
                     left += 8;
@@ -82,7 +94,6 @@ namespace RawNet.Decoder.Decompressor
                 }
                 return;
             }
-
             current_buffer[15] = current_buffer[3];
             current_buffer[14] = current_buffer[2];
             current_buffer[13] = current_buffer[1];
@@ -108,25 +119,20 @@ namespace RawNet.Decoder.Decompressor
             left += 96;
         }
 
-        public uint GetOffset()
-        {
-            return (uint)(off - (left >> 3));
-        }
-
-        public void CheckPos()
+        public override void CheckPos()
         {
             if (stuffed > 8)
                 throw new IOException("Out of buffer read");
         }        // Check if we have a valid position
 
         // Fill the buffer with at least 24 bits
-        public void FillCheck()
+        public override void Fill()
         {
-            if (left < 25) Fill();
+            if (left < 25) FillNoCheck();
         }
 
         //get the nbits as an int32
-        public uint PeekBitsNoFill(uint nbits)
+        public override uint PeekBitsNoFill(int nbits)
         {
             int shift = (int)(left - nbits);
             uint ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
@@ -134,7 +140,7 @@ namespace RawNet.Decoder.Decompressor
             return (uint)(ret & ((1 << (int)nbits) - 1));
         }
 
-        public uint GetBit()
+        public override uint GetBit()
         {
             if (left == 0) Fill();
             left--;
@@ -142,33 +148,33 @@ namespace RawNet.Decoder.Decompressor
             return (uint)(current_buffer[_byte] >> (left & 0x7)) & 1;
         }
 
-        public uint GetBitsNoFill(uint nbits)
+        public override uint GetBitsNoFill(int nbits)
         {
             uint ret = PeekBitsNoFill(nbits);
             left -= (byte)nbits;
             return ret;
         }
 
-        public uint GetBits(uint nbits)
+        public override uint GetBits(int nbits)
         {
-            FillCheck();
+            Fill();
             return GetBitsNoFill(nbits);
         }
 
-        public uint PeekBit()
+        public override uint PeekBit()
         {
             if (left == 0) Fill();
             return (uint)(current_buffer[(left - 1) >> 3] >> ((left - 1) & 0x7)) & 1;
         }
 
-        public uint GetBitNoFill()
+        public override uint GetBitNoFill()
         {
             left--;
             uint ret = (uint)(current_buffer[left >> 3] >> (left & 0x7)) & 1;
             return ret;
         }
 
-        public uint PeekByteNoFill()
+        public override uint PeekByteNoFill()
         {
             int shift = left - 8;
             uint ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
@@ -176,27 +182,27 @@ namespace RawNet.Decoder.Decompressor
             return ret & 0xff;
         }
 
-        public uint PeekBits(uint nbits)
+        public override uint PeekBits(int nbits)
         {
-            FillCheck();
+            Fill();
             return PeekBitsNoFill(nbits);
         }
 
-        public uint PeekByte()
+        public override uint PeekByte()
         {
-            FillCheck();
+            Fill();
             if (off > size)
                 throw new IOException("Out of buffer read");
 
             return PeekByteNoFill();
         }
 
-        public void SkipBits(uint nbits)
+        public override void SkipBits(int nbits)
         {
             int skipn = (int)nbits;
             while (skipn != 0)
             {
-                FillCheck();
+                Fill();
                 CheckPos();
                 int n = Math.Min(skipn, left);
                 left -= (byte)n;
@@ -204,14 +210,14 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public void SkipBitsNoFill(uint nbits)
+        public override void SkipBitsNoFill(int nbits)
         {
             left -= (byte)nbits;
         }
 
-        public byte GetByte()
+        public override byte GetByte()
         {
-            FillCheck();
+            Fill();
             left -= 8;
             int shift = left;
             uint ret = current_buffer[shift >> 3];
@@ -219,42 +225,29 @@ namespace RawNet.Decoder.Decompressor
             return (byte)(ret & 0xff);
         }
 
-        public uint GetBitSafe()
+        public override uint GetBitSafe()
         {
-            FillCheck();
+            Fill();
             CheckPos();
 
             return GetBitNoFill();
         }
 
-        public uint GetBitsSafe(uint nbits)
+        public override uint GetBitsSafe(int nbits)
         {
             if (nbits > MIN_GET_BITS)
                 throw new IOException("Too many bits requested");
 
-            FillCheck();
+            Fill();
             CheckPos();
             return GetBitsNoFill(nbits);
         }
 
-        public byte GetByteSafe()
+        public override byte GetByteSafe()
         {
-            FillCheck();
+            Fill();
             CheckPos();
             return (byte)GetBitsNoFill(8);
         }
-
-        public void SetAbsoluteOffset(uint offset)
-        {
-            if (offset >= size)
-                throw new IOException("Offset set out of buffer");
-
-            left = 0;
-            stuffed = 0;
-            off = offset;
-            FillCheck();
-        }
     }
 }
-
-

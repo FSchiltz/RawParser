@@ -34,7 +34,7 @@ namespace RawNet.DNG
         List<DngOpcode> opcodes = new List<DngOpcode>();
         static UInt32 GetULong(byte[] ptr)
         {
-            return (UInt32)ptr[1] << 24 | (UInt32)ptr[2] << 16 | (UInt32)ptr[3] << 8 | (UInt32)ptr[4];
+            return (UInt32)ptr[1] << 24 | (UInt32)ptr[2] << 16 | (UInt32)ptr[3] << 8 | ptr[4];
             //return (UInt32)ptr[0] << 24 | (UInt32)ptr[1] << 16 | (UInt32)ptr[2] << 8 | (UInt32)ptr[3];
         }
 
@@ -121,7 +121,7 @@ namespace RawNet.DNG
                     throw new RawDecoderException("DngOpcodes: Area of interest not inside image!");
                 if (opcodes[i].aoi.HasPositiveArea())
                 {
-                    opcodes[i].Apply(img, ref img_out, (uint)opcodes[i].aoi.Top, (uint)opcodes[i].aoi.Bottom);
+                    opcodes[i].Apply(img, ref img_out, opcodes[i].aoi.Top, opcodes[i].aoi.Bottom);
                     img = img_out;
                 }
             }
@@ -222,10 +222,10 @@ namespace RawNet.DNG
 
         public override RawImage CreateOutput(RawImage input)
         {
-            if (firstPlane > (ulong)input.cpp)
+            if (firstPlane > input.cpp)
                 throw new RawDecoderException("OpcodeMapTable: Not that many planes in actual image");
 
-            if (firstPlane + planes > (ulong)input.cpp)
+            if (firstPlane + planes > input.cpp)
                 throw new RawDecoderException("OpcodeMapTable: Not that many planes in actual image");
 
             return input;
@@ -240,11 +240,11 @@ namespace RawNet.DNG
                     var src = t;
                     // Add offset, so this is always first plane
                     src += firstPlane;
-                    for (ulong x = 0; x < (ulong)aoi.Width; x += colPitch)
+                    for (ulong x = 0; x < aoi.Width; x += colPitch)
                     {
                         for (uint p = 0; p < planes; p++)
                         {
-                            src[x * (uint)output.cpp + p] = Lookup[src[x * (uint)output.cpp + p]];
+                            src[x * output.cpp + p] = Lookup[src[x * output.cpp + p]];
                         }
                     }
                 }
@@ -293,10 +293,10 @@ namespace RawNet.DNG
 
         public override RawImage CreateOutput(RawImage input)
         {
-            if (mFirstPlane > (uint)input.cpp)
+            if (mFirstPlane > input.cpp)
                 throw new RawDecoderException("OpcodeMapPolynomial: Not that many planes in actual image");
 
-            if (mFirstPlane + mPlanes > (uint)input.cpp)
+            if (mFirstPlane + mPlanes > input.cpp)
                 throw new RawDecoderException("OpcodeMapPolynomial: Not that many planes in actual image");
 
             // Create lookup
@@ -320,11 +320,11 @@ namespace RawNet.DNG
                     var src = t;
                     // Add offset, so this is always first plane
                     src += mFirstPlane;
-                    for (UInt64 x = 0; x < (UInt64)aoi.Width; x += mColPitch)
+                    for (UInt64 x = 0; x < aoi.Width; x += mColPitch)
                     {
                         for (UInt64 p = 0; p < mPlanes; p++)
                         {
-                            src[x * (uint)output.cpp + p] = mLookup[src[x * (uint)output.cpp + p]];
+                            src[x * output.cpp + p] = mLookup[src[x * output.cpp + p]];
                         }
                     }
                 }
@@ -385,10 +385,10 @@ namespace RawNet.DNG
 
         public override RawImage CreateOutput(RawImage input)
         {
-            if (firstPlane > (uint)input.cpp)
+            if (firstPlane > input.cpp)
                 throw new RawDecoderException("OpcodeGainMap: Not that many planes in actual image");
 
-            if (firstPlane + planes > (uint)input.cpp)
+            if (firstPlane + planes > input.cpp)
                 throw new RawDecoderException("OpcodeGainMap: Not that many planes in actual image");
 
             /*
@@ -414,7 +414,7 @@ namespace RawNet.DNG
                     var src = t;
                     // Add offset, so this is always first plane
                     src += firstPlane;
-                    for (UInt64 x = 0; x < (UInt64)aoi.Width; x += colPitch)
+                    for (UInt64 x = 0; x < aoi.Width; x += colPitch)
                     {
                         for (UInt64 p = 0; p < planes; p++)
                         {
