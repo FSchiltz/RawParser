@@ -124,7 +124,7 @@
         <Pivot x:Name="PivotGrid" RelativePanel.AlignRightWithPanel="True" RelativePanel.AlignBottomWithPanel="True">
             <PivotItem x:Uid="ProcessingHeader">
                 <ScrollViewer VerticalContentAlignment="Stretch">
-                    <StackPanel>
+                    <StackPanel Margin="0,0,40,0">
                         <!--The histogram-->
                         <Grid Margin="0,5,0,0">
                             <Polygon Points="{x:Bind Histo.PointsL }" Opacity="0.4" Stretch="Fill" Fill="#FFCF0000"
