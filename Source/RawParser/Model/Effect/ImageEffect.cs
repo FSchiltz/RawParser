@@ -40,6 +40,8 @@ namespace RawEditor.Effect
         public double gMul;
         public double bMul;
         public int rotation;
+        public double gamma;
+
         //internal double vignet;
 
         internal double[] CreateCurve()
@@ -61,7 +63,7 @@ namespace RawEditor.Effect
             var curve = Curve.CubicSpline(xCurve, yCurve);
             if (ReverseGamma)
             {
-                double param = 1 / 1.8;
+                double param = 1 / gamma;
 
                 param += contrast;
                 for (int i = 0; i < curve.Length; i++)
@@ -78,25 +80,6 @@ namespace RawEditor.Effect
                     curve[i] *= maxValue;
                 }
             }
-            /*
-            {
-                double param = 2.4;
-
-                param += contrast;
-                for (int i = 0; i < curve.Length; i++)
-                {
-                    double normal = curve[i] / maxValue;
-                    if (normal <= 0.04045)
-                    {
-                        curve[i] = normal / 12.92;
-                    }
-                    else
-                    {
-                        curve[i] = Math.Pow((normal+0.055)/1.055, param);
-                    }
-                    curve[i] *= maxValue;
-                }
-            }*/
             return curve;
         }
 
@@ -183,10 +166,7 @@ namespace RawEditor.Effect
                         //int yV = (y + off.height);
                         //var v = Math.Abs(xV - (uncrop.width / 2.0)) / uncrop.width;
                         //l *= 1 + (vignet * Math.Sin((xV - uncrop.width / 2) / uncrop.width) + Math.Sin((yV - uncrop.height / 2) / uncrop.width));
-                        Luminance.Clip(ref l);
-                        if (Double.IsNaN(l)) {
-                            Debug.Write("error");
-                        }
+                        Luminance.Clip(ref l);                        
                         l = curve[(uint)(l * maxValue)] / maxValue;
                         Luminance.Clip(ref l);
                         s *= saturation;
