@@ -344,7 +344,7 @@ namespace RawEditor.View.Pages
                 }
             });
         }
-        private void CenterImage()
+        private void CenterImageBindable()
         {
             CenterImage((int)ImageBox.ActualWidth, (int)ImageBox.ActualHeight);
         }
