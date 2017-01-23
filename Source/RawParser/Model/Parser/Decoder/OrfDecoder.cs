@@ -6,9 +6,9 @@ using System.IO;
 
 namespace RawNet.Decoder
 {
-    class OrfDecoder : TiffDecoder
+    class ORFDecoder : TIFFDecoder
     {
-        internal OrfDecoder(Stream file) : base(file) { }
+        internal ORFDecoder(Stream file) : base(file) { }
 
         public override Thumbnail DecodeThumb()
         {
@@ -143,7 +143,7 @@ namespace RawNet.Decoder
                     for (int x = 0; x < w; x++)
                     {
                         bits.CheckPos();
-                        bits.FillCheck();
+                        bits.Fill();
 
                         if (acarry0[2] < 3) i = 2;
                         else i = 0;
@@ -159,14 +159,14 @@ namespace RawNet.Decoder
                         if (high == 12)
                         {
                             bits.SkipBitsNoFill(15);
-                            high = (int)bits.GetBits((uint)(16 - nbits)) >> 1;
+                            high = (int)bits.GetBits(16 - nbits) >> 1;
                         }
                         else
                         {
-                            bits.SkipBitsNoFill((uint)high + 1 + 3);
+                            bits.SkipBitsNoFill(high + 1 + 3);
                         }
 
-                        acarry0[0] = (uint)(high << nbits) | bits.GetBits((uint)nbits);
+                        acarry0[0] = (uint)(high << nbits) | bits.GetBits(nbits);
                         diff = (int)((acarry0[0] ^ sign) + acarry0[1]);
                         acarry0[1] = (diff * 3 + acarry0[1]) >> 5;
                         acarry0[2] = acarry0[0] > 16 ? 0 : acarry0[2] + 1;
@@ -213,7 +213,7 @@ namespace RawNet.Decoder
 
                         // ODD PIXELS
                         x += 1;
-                        bits.FillCheck();
+                        bits.Fill();
                         if (acarry1[2] < 3) i = 2;
                         else i = 0;
                         for (nbits = 2 + i; (UInt16)acarry1[0] >> (nbits + i) != 0; nbits++) ;
@@ -226,14 +226,14 @@ namespace RawNet.Decoder
                         if (high == 12)
                         {
                             bits.SkipBitsNoFill(15);
-                            high = (int)bits.GetBits((uint)(16 - nbits)) >> 1;
+                            high = (int)bits.GetBits(16 - nbits) >> 1;
                         }
                         else
                         {
-                            bits.SkipBitsNoFill((uint)high + 1 + 3);
+                            bits.SkipBitsNoFill(high + 1 + 3);
                         }
 
-                        acarry1[0] = (uint)(high << nbits) | bits.GetBits((uint)nbits);
+                        acarry1[0] = (uint)(high << nbits) | bits.GetBits(nbits);
                         diff = (int)((acarry1[0] ^ sign) + acarry1[1]);
                         acarry1[1] = (diff * 3 + acarry1[1]) >> 5;
                         acarry1[2] = acarry1[0] > 16 ? 0 : acarry1[2] + 1;

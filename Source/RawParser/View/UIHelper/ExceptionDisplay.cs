@@ -17,7 +17,7 @@ namespace RawEditor.View.UIHelper
                     Title = "Error"
                 };
                 dialog.Commands.Add(new UICommand { Label = "Ok", Id = 0 });
-                var res = await dialog.ShowAsync();
+                dialog.ShowAsync();
             });
         }
     }

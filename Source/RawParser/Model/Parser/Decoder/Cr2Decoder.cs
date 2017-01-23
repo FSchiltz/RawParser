@@ -1,5 +1,6 @@
 using RawNet.Decoder.Decompressor;
 using RawNet.Format.TIFF;
+using RawNet.JPEG;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,7 +17,7 @@ namespace RawNet.Decoder
         public uint count;
     };
 
-    internal class Cr2Decoder : TiffDecoder
+    internal class Cr2Decoder : TIFFDecoder
     {
         int[] sraw_coeffs = new int[3];
 
@@ -88,7 +89,7 @@ namespace RawNet.Decoder
                 }
 
                 rawImage.Init();
-                LJpegPlain l = new LJpegPlain(reader, rawImage);
+                LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
                 try
                 {
                     l.StartDecoder(off, (uint)(reader.BaseStream.Length - off), 0, 0);
@@ -106,9 +107,7 @@ namespace RawNet.Decoder
                     RawImage procRaw = new RawImage();
                     procRaw.raw.dim = final_size;
                     procRaw.metadata = rawImage.metadata;
-
                     procRaw.Init();
-                    //procRaw.copyErrorsFrom(rawImage);
 
                     for (int y = 0; y < height; y++)
                     {
@@ -162,23 +161,22 @@ namespace RawNet.Decoder
                 // Iterate through all slices
                 for (int s = 0; s < offsets.dataCount; s++)
                 {
+                    SOFInfo sof = new SOFInfo();
+                    LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
                     Cr2Slice slice = new Cr2Slice()
                     {
                         offset = Convert.ToUInt32(offsets.data[s]),
                         count = Convert.ToUInt32(counts.data[s])
                     };
-                    SOFInfo sof = new SOFInfo();
-                    LJpegPlain l = new LJpegPlain(reader, rawImage);
                     l.GetSOF(sof, slice.offset, slice.count);
-                    slice.w = (uint)(sof.w * sof.cps);
-                    slice.h = sof.h;
-                    if (sof.cps == 4 && slice.w > slice.h * 4)
+                    slice.w = sof.width * sof.numComponents;
+                    slice.h = sof.height;
+                    if (sof.numComponents == 4 && slice.w > slice.h * 4)
                     {
                         doubleHeight = true;
                     }
-                    if (slices.Count != 0)
-                        if (slices[0].w != slice.w)
-                            throw new RawDecoderException("CR2 Decoder: Slice width does not match.");
+                    if (slices.Count != 0 && slices[0].w != slice.w)
+                        throw new RawDecoderException("CR2 Decoder: Slice width does not match.");
 
                     if (reader.IsValid(slice.offset, slice.count)) // Only decode if size is valid
                         slices.Add(slice);
@@ -256,27 +254,22 @@ namespace RawNet.Decoder
                 s_width.Add(slices[0].w);
             }
             uint offY = 0;
-
-            if (s_width.Count > 15)
-                throw new RawDecoderException("CR2 Decoder: No more than 15 slices supported");
-            //_RPT1(0, "Org slices:%d\n", s_width.size());
             for (int i = 0; i < slices.Count; i++)
             {
                 Cr2Slice slice = slices[i];
                 try
                 {
-                    LJpegPlain l = new LJpegPlain(reader, rawImage);
-                    l.AddSlices(s_width);
-                    l.UseBigtable = true;
-                    l.CanonFlipDim = flipDims;
-                    l.CanonDoubleHeight = doubleHeight;
-                    l.WrappedCr2Slices = wrappedCr2Slices;
-                    l.StartDecoder(slice.offset, slice.count, 0, offY);
+                    new LJPEGPlain(reader, rawImage, true, false)
+                    {
+                        slicesW = s_width,
+                        CanonFlipDim = flipDims,
+                        CanonDoubleHeight = doubleHeight,
+                        WrappedCr2Slices = wrappedCr2Slices
+                    }.StartDecoder(slice.offset, slice.count, 0, offY);
                 }
                 catch (RawDecoderException e)
                 {
-                    if (i == 0)
-                        throw;
+                    if (i == 0) throw;
                     // These may just be single slice error - store the error and move on
                     rawImage.errors.Add(e.Message);
                 }
@@ -285,7 +278,7 @@ namespace RawNet.Decoder
                     // Let's try to ignore this - it might be truncated data, so something might be useful.
                     rawImage.errors.Add(e.Message);
                 }
-                offY += (uint)slice.w;
+                offY += slice.w;
             }
 
             if (rawImage.metadata.Subsampling.width > 1 || rawImage.metadata.Subsampling.height > 1)
@@ -597,7 +590,7 @@ namespace RawNet.Decoder
 
         // sRaw interpolators - ugly as sin, but does the job in reasonably speed
         // Note: Thread safe.
-        unsafe void Interpolate_422(uint width,uint height)
+        unsafe void Interpolate_422(uint width, uint height)
         {
             // Last pixel should not be interpolated
             width--;
@@ -638,7 +631,7 @@ namespace RawNet.Decoder
         }
 
         // Note: Not thread safe, since it writes inplace.
-        unsafe void Interpolate_420(uint width,uint height)
+        unsafe void Interpolate_420(uint width, uint height)
         {
             // Last pixel should not be interpolated
             width--;
@@ -791,7 +784,7 @@ namespace RawNet.Decoder
             r >>= 8; g >>= 8; b >>= 8;
         }
 
-        unsafe void Interpolate_422_new(uint width,uint height)
+        unsafe void Interpolate_422_new(uint width, uint height)
         {
             // Last pixel should not be interpolated
             width--;
@@ -834,7 +827,7 @@ namespace RawNet.Decoder
         }
 
         // Note: Not thread safe, since it writes inplace.
-        unsafe void Interpolate_420_new(uint width,uint height)
+        unsafe void Interpolate_420_new(uint width, uint height)
         {
             // Last pixel should not be interpolated
             width--;

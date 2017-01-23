@@ -6,12 +6,12 @@ using System.Linq;
 
 namespace RawNet.Decoder
 {
-    class RafDecoder : TiffDecoder
+    class RAFDecoder : TIFFDecoder
     {
         //bool alt_layout;
         uint relativeOffset;
 
-        public RafDecoder(Stream file) : base(file, true)
+        public RAFDecoder(Stream file) : base(file, true)
         {
             //alt_layout = false;
             rawImage.IsGammaCorrected = false;

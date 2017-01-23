@@ -16,7 +16,7 @@ namespace RawNet.Decoder
         public uint count;
     };
 
-    internal class NefDecoder : TiffDecoder
+    internal class NefDecoder : TIFFDecoder
     {
         public NefDecoder(Stream file) : base(file)
         {
@@ -373,7 +373,7 @@ namespace RawNet.Decoder
             if (offset.width + size.width > rawImage.raw.dim.width)
                 throw new RawDecoderException("readCoolpixSplitRaw: Invalid x offset");
 
-            uint y = (uint)offset.height;
+            uint y = offset.height;
             h = Math.Min(h + offset.height, rawImage.raw.dim.height);
             w *= cpp;
             h /= 2;
@@ -385,7 +385,7 @@ namespace RawNet.Decoder
                     rawImage.raw.data[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
-            for (y = (uint)offset.height; y < h; y++)
+            for (y = offset.height; y < h; y++)
             {
                 for (uint x = 0; x < w; x++)
                 {

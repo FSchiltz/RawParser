@@ -172,7 +172,7 @@ namespace RawNet
                 if (bitPerPixel > 16)
                     throw new RawDecoderException("readUncompressedRaw: Unsupported bit depth");
 
-                uint skipBits = (uint)(inputPitch - w * rawImage.cpp * bitPerPixel / 8);  // Skip per line
+                int skipBits = (int)(inputPitch - w * rawImage.cpp * bitPerPixel / 8);  // Skip per line
                 if (offset.height > rawImage.raw.dim.height)
                     throw new RawDecoderException("readUncompressedRaw: Invalid y offset");
                 if (offset.width + size.width > rawImage.raw.dim.width)
@@ -199,7 +199,7 @@ namespace RawNet
                         bits.CheckPos();
                         for (uint x = 0; x < w; x++)
                         {
-                            uint b = bits.GetBits((uint)bitPerPixel);
+                            uint b = bits.GetBits(bitPerPixel);
                             rawImage.raw.data[x + (offset.width * rawImage.cpp + y * rawImage.raw.dim.width * rawImage.cpp)] = (ushort)b;
                         }
                         bits.SkipBits(skipBits);
@@ -215,7 +215,7 @@ namespace RawNet
                         bits.CheckPos();
                         for (uint x = 0; x < w; x++)
                         {
-                            uint b = bits.GetBits((uint)bitPerPixel);
+                            uint b = bits.GetBits(bitPerPixel);
                             dest[x] = (ushort)b;
                         }
                         bits.SkipBits(skipBits);
@@ -231,7 +231,7 @@ namespace RawNet
                         bits.CheckPos();
                         for (uint x = 0; x < w; x++)
                         {
-                            uint b = bits.GetBits((uint)bitPerPixel);
+                            uint b = bits.GetBits(bitPerPixel);
                             dest[x] = (ushort)b;
                         }
                         bits.SkipBits(skipBits);
@@ -257,7 +257,7 @@ namespace RawNet
                         bits.CheckPos();
                         for (uint x = 0; x < w; x++)
                         {
-                            uint b = bits.GetBits((uint)bitPerPixel);
+                            uint b = bits.GetBits(bitPerPixel);
                             dest[x] = (ushort)b;
                         }
                         bits.SkipBits(skipBits);

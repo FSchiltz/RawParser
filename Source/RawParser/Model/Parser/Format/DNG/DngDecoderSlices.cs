@@ -59,12 +59,6 @@ namespace RawNet.DNG
             compression = _compression;
         }
 
-
-        public void AddSlice(DngSliceElement slice)
-        {
-            slices.Add(slice);
-        }
-
         public void DecodeSlice()
         {
             //first read data for each slice
@@ -79,11 +73,7 @@ namespace RawNet.DNG
                 Parallel.For(0, slices.Count, (i) =>
                 {
                     DngSliceElement e = slices[i];
-                    LJpegPlain l = new LJpegPlain(e.data, raw)
-                    {
-                        DNGCompatible = FixLjpeg,
-                        UseBigtable = e.mUseBigtable
-                    };
+                    LJPEGPlain l = new LJPEGPlain(e.data, raw, e.mUseBigtable, FixLjpeg);
 
                     try
                     {

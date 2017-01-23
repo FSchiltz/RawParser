@@ -7,16 +7,16 @@ using Windows.Graphics.Imaging;
 
 namespace RawNet.Decoder
 {
-    internal class TiffDecoder : RawDecoder
+    internal class TIFFDecoder : RawDecoder
     {
         public IFD ifd = null;
 
-        public TiffDecoder(Stream stream) : base(stream)
+        public TIFFDecoder(Stream stream) : base(stream)
         {
             Parse(0);
         }
         //fuji are special Tiff so we need to first remove uncorrect data before parsing the ifd
-        public TiffDecoder(Stream stream, bool isFuji) : base(stream) { }
+        public TIFFDecoder(Stream stream, bool isFuji) : base(stream) { }
 
         protected void Parse(uint offset)
         {
