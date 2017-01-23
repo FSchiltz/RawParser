@@ -113,7 +113,7 @@ namespace RawEditor.View.Pages
             ShadowSlider.Value = 0;
             HighLightSlider.Value = 0;
             contrastSlider.Value = 0;
-            saturationSlider.Value = 0;
+            saturationSlider.Value = 100;
             CropUI.ResetCrop();
             CropUI.SetThumbAsync(null);
             //VignetSlider.Value = 0;
@@ -383,10 +383,10 @@ namespace RawEditor.View.Pages
                 effect.rMul = ColorTempSlider.Value;
                 effect.gMul = ColorTintSlider.Value;
                 effect.bMul = ColorTintBlueSlider.Value;
-                effect.contrast = contrastSlider.Value / 10;
+                effect.contrast = contrastSlider.Value *5;
                 effect.shadow = ShadowSlider.Value;
                 effect.hightlight = HighLightSlider.Value;
-                effect.saturation = 1 + saturationSlider.Value / 100;
+                effect.saturation = saturationSlider.Value / 100;
                 //effect.vignet = VignetSlider.Value;
                 effect.ReverseGamma = (bool)GammaToggle.IsChecked;
                 if ((bool)LowGamma.IsChecked) { effect.gamma = 1.8; }
