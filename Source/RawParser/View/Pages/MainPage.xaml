@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:rawnet="using:RawNet"
-        xmlns:uihelper="using:RawEditor.View.UIHelper" mc:Ignorable="d">
+        xmlns:uihelper="using:RawEditor.View.UIHelper" mc:Ignorable="d" SizeChanged="{x:Bind CenterImage}">
     <Page.BottomAppBar>
         <CommandBar x:Name="commandBar" VerticalContentAlignment="Top" VerticalAlignment="Stretch"
                 HorizontalContentAlignment="Left">
@@ -136,7 +136,7 @@
                             <Polygon Points="{x:Bind Histo.PointsB }" Opacity="0.9" Stretch="Fill" Fill="#FF555555"
                                     Width="260" Height="120" />
                         </Grid>
-                        <Button Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="{x:Bind ResetControls}"
+                        <Button Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="{x:Bind ResetUpdateControls}"
                                 Padding="8,2" IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}">Reset</Button>
                         <uihelper:Sepparator />
 
@@ -203,9 +203,11 @@
                                             PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0"
                                             Maximum="200" LargeChange="10" SmallChange="5" Value="100"
                                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-                                    <!-- 
-                                    <TextBlock FontSize="12">Vibrance</TextBlock>
-                                <Slider x:Name="vibranceSlider" PointerCaptureLost="Slider_PointerCaptureLost"  Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False"/>-->
+
+                                    <TextBlock FontSize="14">Vibrance</TextBlock>
+                                    <Slider x:Name="vibranceSlider" PointerCaptureLost="{x:Bind EditingControlChanged}"
+                                            Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256"
+                                            IsEnabled="False" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -234,17 +236,21 @@
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
 
-                        <!--
-                            <TextBlock Foreground="Black" FontSize="16"  x:Uid="CameraProfile"/>
-                            <TextBlock FontSize="12">Vignet</TextBlock>
-                            <Slider x:Name="VignetSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-                            <TextBlock FontSize="12">Sharpness</TextBlock>
-                            <Slider x:Name="NoiseSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-                            <TextBlock FontSize="12">Noise reduction</TextBlock>
-                            <Slider x:Name="SharpenSlider"  PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-
-                             <uihelper:Sepparator />
-                            -->
+                        <uihelper:CollapsibleBox x:Uid="CameraProfile">
+                            <uihelper:CollapsibleBox.MainContent>
+                                <StackPanel>
+                                    <TextBlock FontSize="14">Vignet</TextBlock>
+                                    <Slider x:Name="VignetSlider" PointerCaptureLost="{x:Bind EditingControlChanged}"
+                                            Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                                    <TextBlock FontSize="14">Sharpness</TextBlock>
+                                    <Slider x:Name="NoiseSlider" PointerCaptureLost="{x:Bind EditingControlChanged}"
+                                            Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                                    <TextBlock FontSize="14">Noise reduction</TextBlock>
+                                    <Slider x:Name="SharpenSlider" PointerCaptureLost="{x:Bind EditingControlChanged}"
+                                            Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                                </StackPanel>
+                            </uihelper:CollapsibleBox.MainContent>
+                        </uihelper:CollapsibleBox>
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
@@ -304,8 +310,8 @@
                             IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None"
                             HorizontalAlignment="Left" FontSize="14">Memory usage</TextBlock>
                     <uihelper:MemoryBar></uihelper:MemoryBar>
-                    <Button Margin="0,10,0,0" Tapped="{x:Bind EmptyImage}"
-                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}">Free image</Button>
+                    <Button Margin="0,20,0,0" Tapped="{x:Bind EmptyImage}"
+                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center">Free image</Button>
                 </StackPanel>
             </PivotItem>
         </Pivot>
