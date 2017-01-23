@@ -117,7 +117,7 @@ namespace RawEditor.View.Pages
             CropUI.ResetCrop();
             CropUI.SetThumbAsync(null);
             //VignetSlider.Value = 0;
-            GammaToggle.IsChecked = raw?.IsGammaCorrected ?? true;
+            GammaToggle.IsChecked = raw?.IsGammaCorrected ?? false;
             if (raw != null)
             {
                 raw.raw.offset = new Point2D(0, 0);
@@ -163,6 +163,7 @@ namespace RawEditor.View.Pages
                 EmptyImage();
             }
             Load.ShowLoad();
+            Blur(true);
             Task.Run(async () =>
             {
                 try
@@ -261,6 +262,7 @@ namespace RawEditor.View.Pages
                     ExceptionDisplay.Display(str);
                 }
                 Load.HideLoadAsync();
+                Blur(false);
                 ImageSelected = false;
             });
         }
@@ -370,9 +372,7 @@ namespace RawEditor.View.Pages
             });
         }
 
-        /**
-         * Apply the change over the image preview
-         */
+        //Apply the change over the image preview       
         async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, Point2D offset, Point2D uncrop, int colorDepth, bool histo)
         {
             ImageEffect effect = new ImageEffect();
@@ -389,6 +389,9 @@ namespace RawEditor.View.Pages
                 effect.saturation = 1 + saturationSlider.Value / 100;
                 //effect.vignet = VignetSlider.Value;
                 effect.ReverseGamma = (bool)GammaToggle.IsChecked;
+                if ((bool)LowGamma.IsChecked) { effect.gamma = 1.8; }
+                else if ((bool)HighGamma.IsChecked) { effect.gamma = 2.8; }
+                else if ((bool)MediumGamma.IsChecked) { effect.gamma = 2.4; }
             });
 
             effect.mul = raw.metadata.WbCoeffs;
@@ -540,30 +543,7 @@ namespace RawEditor.View.Pages
             {
                 CropUI.SetThumbAsync(null);
                 Load.ShowLoad();
-
-
-                // Get the current compositor
-                _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
-                // Create the destinatio sprite, sized to cover the entire list
-                _pivotGridSprite = _compositor.CreateSpriteVisual();
-                _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
-                ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
-                // Create the effect factory and instantiate a brush
-                CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
-                brush = _effectFactory.CreateBrush();
-                // Set the destination brush as the source of the image content
-                brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
-                // Update the destination layer with the fully configured brush
-                _pivotGridSprite.Brush = brush;
-
-                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
-                blurAnimation.InsertKeyFrame(0.0f, 0.0f);
-                blurAnimation.InsertKeyFrame(1.0f, blurAmount);
-                blurAnimation.Duration = animationDuration;
-                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
-                blurAnimation.IterationCount = 1;
-                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
-
+                Blur(true);
                 ControlVisibilty.Value = false;
                 //display the crop UI
                 CropGrid.Visibility = Visibility.Visible;
@@ -620,9 +600,32 @@ namespace RawEditor.View.Pages
             ResetButtonVisibility.Value = true;
         }
 
-        private void HideCropUI()
+        private void Blur(bool visibility)
         {
-            if (CropGrid.Visibility == Visibility.Visible)
+            if (visibility)
+            { // Get the current compositor
+                _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+                // Create the destinatio sprite, sized to cover the entire list
+                _pivotGridSprite = _compositor.CreateSpriteVisual();
+                _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
+                ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
+                // Create the effect factory and instantiate a brush
+                CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
+                brush = _effectFactory.CreateBrush();
+                // Set the destination brush as the source of the image content
+                brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
+                // Update the destination layer with the fully configured brush
+                _pivotGridSprite.Brush = brush;
+
+                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                blurAnimation.InsertKeyFrame(0.0f, 0.0f);
+                blurAnimation.InsertKeyFrame(1.0f, blurAmount);
+                blurAnimation.Duration = animationDuration;
+                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                blurAnimation.IterationCount = 1;
+                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+            }
+            else
             {
                 // Update the destination layer with the fully configured brush
                 _pivotGridSprite.Brush = brush;
@@ -633,7 +636,14 @@ namespace RawEditor.View.Pages
                 blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
                 blurAnimation.IterationCount = 1;
                 brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+            }
+        }
 
+        private void HideCropUI()
+        {
+            if (CropGrid.Visibility == Visibility.Visible)
+            {
+                Blur(false);
                 Load.HideLoad();
                 CropGrid.Visibility = Visibility.Collapsed;
                 ControlVisibilty.Value = true;

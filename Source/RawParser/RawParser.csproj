@@ -201,6 +201,9 @@
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\UIHelper\CollapsibleBox.xaml.cs">
+      <DependentUpon>CollapsibleBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\UIHelper\CropUIHelper.xaml.cs">
       <DependentUpon>CropUIHelper.xaml</DependentUpon>
     </Compile>
@@ -215,6 +218,9 @@
     </Compile>
     <Compile Include="View\UIHelper\MemoryBar.xaml.cs">
       <DependentUpon>MemoryBar.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\UIHelper\Sepparator.xaml.cs">
+      <DependentUpon>Sepparator.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -287,6 +293,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="View\UIHelper\CollapsibleBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\UIHelper\CropUIHelper.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -296,6 +306,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\UIHelper\MemoryBar.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\UIHelper\Sepparator.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
