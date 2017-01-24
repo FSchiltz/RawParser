@@ -126,23 +126,32 @@
                 <ScrollViewer VerticalContentAlignment="Stretch">
                     <StackPanel Margin="0,0,40,0">
                         <!--The histogram-->
-                        <Grid Margin="0,5,0,0">
-                            <Polygon Points="{x:Bind Histo.PointsL }" Opacity="0.4" Stretch="Fill" Fill="#FFCF0000"
-                                    Width="260" Height="120" />
-                            <Polygon Points="{x:Bind Histo.PointsR }" Opacity="0.4" Stretch="Fill" Fill="#FF00B200"
-                                    Width="260" Height="120" />
-                            <Polygon Points="{x:Bind Histo.PointsG }" Opacity="0.4" Stretch="Fill" Fill="#FF000083"
-                                    Width="260" Height="120" />
-                            <Polygon Points="{x:Bind Histo.PointsB }" Opacity="0.9" Stretch="Fill" Fill="#FF555555"
-                                    Width="260" Height="120" />
-                        </Grid>
-                        <Button Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="{x:Bind ResetUpdateControls}"
-                                Padding="8,2" IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}">Reset</Button>
-                        <uihelper:Sepparator />
+                        <uihelper:CollapsibleBox x:Uid="Histogram">
+                            <uihelper:CollapsibleBox.MainContent>
+                                <StackPanel>
+                                    <Grid Margin="0,5,0,0">
+                                        <Polygon Points="{x:Bind Histo.PointsL }" Opacity="0.4" Stretch="Fill"
+                                                Fill="#FFCF0000" Width="260" Height="120" />
+                                        <Polygon Points="{x:Bind Histo.PointsR }" Opacity="0.4" Stretch="Fill"
+                                                Fill="#FF00B200" Width="260" Height="120" />
+                                        <Polygon Points="{x:Bind Histo.PointsG }" Opacity="0.4" Stretch="Fill"
+                                                Fill="#FF000083" Width="260" Height="120" />
+                                        <Polygon Points="{x:Bind Histo.PointsB }" Opacity="0.9" Stretch="Fill"
+                                                Fill="#FF555555" Width="260" Height="120" />
+                                    </Grid>
+                                    <Button Margin="0,10,0,5" HorizontalAlignment="Center"
+                                            Tapped="{x:Bind ResetUpdateControls}"
+                                            IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}">Reset</Button>
+                                </StackPanel>
+                            </uihelper:CollapsibleBox.MainContent>
+                        </uihelper:CollapsibleBox>
 
                         <uihelper:CollapsibleBox x:Uid="ExposureSettings">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
+                                    <Button IsEnabled="False" FontSize="14" x:Name="AutoCorrectButton"
+                                            HorizontalAlignment="Center" Margin="0,0,0,10">Histogram equalization</Button>
+
                                     <TextBlock FontSize="14" x:Uid="Exposure" />
                                     <Slider x:Name="exposureSlider" PointerCaptureLost="{x:Bind EditingControlChanged}"
                                             Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3"
@@ -166,10 +175,11 @@
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14" x:Uid="Temperature" />
-                                    <Button IsEnabled="False" Click="CameraWBCheck_Click" FontSize="12" Grid.Column="1"
-                                            x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton"
-                                            Margin="0,0,0,10" />
-                                    <Grid>
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                            Tapped="{x:Bind SetWBUpdate}" FontSize="12" x:Name="cameraWBCheck"
+                                            HorizontalAlignment="Center" x:Uid="WBButton" Margin="0,5,0,5" />
+
+                                    <Grid Margin="0,5,0,5">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"></ColumnDefinition>
                                             <ColumnDefinition Width="6*"></ColumnDefinition>
@@ -181,19 +191,22 @@
                                         </Grid.RowDefinitions>
                                         <TextBlock FontSize="12" Grid.Column="0" HorizontalAlignment="Left"
                                                 VerticalAlignment="Center">Red</TextBlock>
-                                        <Slider x:Name="ColorTempSlider" PointerCaptureLost="WBSlider_DragStop"
-                                                Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255"
+                                        <Slider x:Name="ColorTempSlider"
+                                                PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765"
+                                                Minimum="1" LargeChange="50" SmallChange="5" Value="255"
                                                 IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Grid.Column="1" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center"
                                                 HorizontalAlignment="Left">Green</TextBlock>
-                                        <Slider x:Name="ColorTintSlider" PointerCaptureLost="WBSlider_DragStop"
-                                                Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255"
+                                        <Slider x:Name="ColorTintSlider"
+                                                PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765"
+                                                Minimum="1" LargeChange="50" SmallChange="5" Value="255"
                                                 IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Grid.Column="1"
                                                 Grid.Row="1" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left"
                                                 VerticalAlignment="Center">Blue</TextBlock>
-                                        <Slider x:Name="ColorTintBlueSlider" PointerCaptureLost="WBSlider_DragStop"
-                                                Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255"
+                                        <Slider x:Name="ColorTintBlueSlider"
+                                                PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765"
+                                                Minimum="1" LargeChange="50" SmallChange="5" Value="255"
                                                 IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Grid.Column="1"
                                                 Grid.Row="2" />
                                     </Grid>
@@ -219,18 +232,18 @@
                                     <Slider x:Name="contrastSlider" PointerCaptureLost="{x:Bind EditingControlChanged}"
                                             Maximum="5" LargeChange="1" Value="0" Minimum="-5"
                                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-                                    <ToggleButton x:Name="GammaToggle"
-                                            IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}" IsChecked="False"
-                                            Tapped="{x:Bind EditingControlChanged}" Margin="0,10,0,5"
-                                            HorizontalAlignment="Center">Apply gamma curve</ToggleButton>
+                                    <ToggleSwitch x:Name="GammaToggle"
+                                            IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}" IsOn="False"
+                                            Toggled="{x:Bind EditingControlChanged}" Margin="0,10,0,5" FontSize="14"
+                                            HorizontalAlignment="Center">Apply gamma curve</ToggleSwitch>
                                     <RadioButton x:Name="HighGamma" IsChecked="False" GroupName="Gamma"
-                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsChecked, Mode=OneWay}"
+                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}"
                                             Tapped="{x:Bind EditingControlChanged}" FontSize="12">High</RadioButton>
                                     <RadioButton x:Name="MediumGamma" IsChecked="True" GroupName="Gamma"
-                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsChecked, Mode=OneWay}"
+                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}"
                                             Tapped="{x:Bind EditingControlChanged}" FontSize="12">Medium</RadioButton>
                                     <RadioButton x:Name="LowGamma" IsChecked="False" GroupName="Gamma"
-                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsChecked, Mode=OneWay}"
+                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}"
                                             Tapped="{x:Bind EditingControlChanged}" FontSize="12">Low</RadioButton>
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
@@ -315,7 +328,7 @@
                 </ScrollViewer>
             </PivotItem>
             <PivotItem x:Uid="Presets" IsEnabled="False">
-                <GridView ></GridView>
+                <GridView></GridView>
             </PivotItem>
         </Pivot>
     </Grid>

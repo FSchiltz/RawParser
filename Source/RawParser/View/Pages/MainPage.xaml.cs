@@ -38,7 +38,6 @@ namespace RawEditor.View.Pages
     {
         public RawImage raw;
         public bool ImageSelected { set; get; } = false;
-        bool cameraWB = true;
         public Thumbnail thumbnail;
         public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
@@ -118,7 +117,8 @@ namespace RawEditor.View.Pages
             CropUI.ResetCrop();
             CropUI.SetThumbAsync(null);
             //VignetSlider.Value = 0;
-            GammaToggle.IsChecked = raw?.IsGammaCorrected ?? false;
+            //Cause problem (double update of preview)
+            GammaToggle.IsOn = raw?.IsGammaCorrected ?? false;
             if (raw != null)
             {
                 raw.raw.offset = new Point2D(0, 0);
@@ -139,6 +139,13 @@ namespace RawEditor.View.Pages
             {
                 UpdatePreview(false);
             }
+        }
+
+
+        private void SetWBUpdate()
+        {
+            SetWBAsync();
+            UpdatePreview(false);
         }
 
         private async void SetWBAsync()
@@ -381,13 +388,15 @@ namespace RawEditor.View.Pages
 
         private void UpdatePreview(bool move)
         {
-            //display the histogram                  
-            Task.Run(async () =>
-            {
-                var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.dim, raw.preview.offset, raw.preview.uncroppedDim, raw.ColorDepth, true);
-                DisplayImage(result.Item2, move);
-                Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
-            });
+            Debug.WriteLine("Updated");
+            if (raw?.preview?.data != null)
+                //display the histogram                  
+                Task.Run(async () =>
+                {
+                    var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.dim, raw.preview.offset, raw.preview.uncroppedDim, raw.ColorDepth, true);
+                    DisplayImage(result.Item2, move);
+                    Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
+                });
         }
 
         //Apply the change over the image preview       
@@ -398,22 +407,19 @@ namespace RawEditor.View.Pages
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 effect.exposure = exposureSlider.Value;
-                effect.rMul = ColorTempSlider.Value;
-                effect.gMul = ColorTintSlider.Value;
-                effect.bMul = ColorTintBlueSlider.Value;
+                effect.rMul = ColorTempSlider.Value / 255;
+                effect.gMul = ColorTintSlider.Value / 255;
+                effect.bMul = ColorTintBlueSlider.Value / 255;
                 effect.contrast = contrastSlider.Value * 5;
                 effect.shadow = ShadowSlider.Value;
                 effect.hightlight = HighLightSlider.Value;
                 effect.saturation = saturationSlider.Value / 100;
                 //effect.vignet = VignetSlider.Value;
-                effect.ReverseGamma = (bool)GammaToggle.IsChecked;
+                effect.ReverseGamma = (bool)GammaToggle.IsOn;
                 if ((bool)LowGamma.IsChecked) { effect.gamma = 1.8; }
                 else if ((bool)HighGamma.IsChecked) { effect.gamma = 2.8; }
                 else if ((bool)MediumGamma.IsChecked) { effect.gamma = 2.4; }
             });
-
-            effect.mul = raw.metadata.WbCoeffs;
-            effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             //effect.camCurve = raw.curve;
             effect.rotation = raw.Rotation;
@@ -443,32 +449,9 @@ namespace RawEditor.View.Pages
             }
         }
 
-        #region WBSlider
-        private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (raw?.preview.data != null)
-            {
-                cameraWB = false;
-                //history.Add(new HistoryObject() { oldValue = 0, value = colorTempSlider.Value, target = EffectObject.red });
-                cameraWBCheck.IsEnabled = true;
-                EditingControlChanged();
-            }
-        }
-
-        private void CameraWBCheck_Click(object sender, RoutedEventArgs e)
-        {
-            cameraWB = true;
-            cameraWBCheck.IsEnabled = false;
-            //TODO move slider to the camera WB
-            SetWBAsync();
-            UpdatePreview(false);
-        }
-        #endregion
-
         private void EditingControlChanged()
         {
             history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.Saturation });
-
             ResetButtonVisibility.Value = true;
             UpdatePreview(false);
         }
