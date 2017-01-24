@@ -328,7 +328,8 @@
                 </ScrollViewer>
             </PivotItem>
             <PivotItem x:Uid="Presets" IsEnabled="False">
-                <GridView></GridView>
+                <GridView>
+                </GridView>
             </PivotItem>
         </Pivot>
     </Grid>
