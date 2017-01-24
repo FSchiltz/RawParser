@@ -254,32 +254,6 @@
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
-            <!-- <PivotItem x:Uid="Tools">
-                        <StackPanel Background="#FFF0F0F0">
-                            <Button>Save Thumbnail</Button>
-                        </StackPanel>
-                    </PivotItem>
-                    <PivotItem x:Uid="Presets">
-                        <GridView Background="White" ></GridView>
-                    </PivotItem>
-                <PivotItem x:Uid="History">
-                    <ScrollViewer VerticalContentAlignment="Stretch">
-                        <ListView ItemsSource="{x:Bind history,Mode=OneWay}" VerticalAlignment="Top" HorizontalAlignment="Left" >
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition />
-                                            <ColumnDefinition />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Target}" TextWrapping="Wrap" Margin="0,0,5,0" HorizontalAlignment="Left" />
-                                        <TextBlock Grid.Column="1" Text="{Binding ValueAsString}" TextWrapping="Wrap" HorizontalAlignment="Right" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </ScrollViewer>
-                </PivotItem>-->
             <PivotItem x:Uid="Exifs">
                 <ScrollViewer VerticalContentAlignment="Stretch">
                     <StackPanel>
@@ -304,7 +278,7 @@
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
-            <PivotItem x:Uid="System">
+            <PivotItem x:Uid="Tools">
                 <StackPanel>
                     <TextBlock Foreground="Black" IsDoubleTapEnabled="False" IsHoldingEnabled="False"
                             IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None"
@@ -313,9 +287,35 @@
                     <Button Margin="0,20,0,0" Tapped="{x:Bind EmptyImage}"
                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center">Free image</Button>
 
-                    <Button Margin="0,20,0,0" 
-                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center" Tapped="Button_Tapped">Recreate preview</Button>
+                    <Button Margin="0,20,0,0" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                            HorizontalAlignment="Center" Tapped="Button_Tapped">Recreate preview</Button>
+
+                    <Button Margin="0,20,0,0" IsEnabled="False" HorizontalAlignment="Center">Save Thumbnail</Button>
                 </StackPanel>
+            </PivotItem>
+            <PivotItem x:Uid="History" IsEnabled="False">
+                <ScrollViewer VerticalContentAlignment="Stretch">
+                    <ListView ItemsSource="{x:Bind history,Mode=OneWay}" VerticalAlignment="Top"
+                            HorizontalAlignment="Left">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Target}" TextWrapping="Wrap"
+                                            Margin="0,0,5,0" HorizontalAlignment="Left" />
+                                    <TextBlock Grid.Column="1" Text="{Binding ValueAsString}" TextWrapping="Wrap"
+                                            HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </ScrollViewer>
+            </PivotItem>
+            <PivotItem x:Uid="Presets" IsEnabled="False">
+                <GridView Background="White"></GridView>
             </PivotItem>
         </Pivot>
     </Grid>
