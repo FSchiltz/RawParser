@@ -55,7 +55,7 @@ namespace RawEditor.Effect
             yCurve[0] = ((shadow - contrast) * (maxValue / 200)) * exposure;
             //hightlight
             xCurve[2] = maxValue;
-            yCurve[2] = (maxValue + ((contrast - hightlight) * (maxValue / 200))) * exposure;
+            yCurve[2] = (maxValue + ((contrast + hightlight) * (maxValue / 200))) * exposure;
             maxValue--;
 
             var curve = Curve.CubicSpline(xCurve, yCurve);
