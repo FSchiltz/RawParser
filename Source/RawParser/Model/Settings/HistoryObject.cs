@@ -13,6 +13,7 @@
         Saturation,
         Crop
     }
+
     public class HistoryObject
     {
         public double value;

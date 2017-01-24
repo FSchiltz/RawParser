@@ -40,7 +40,7 @@ namespace RawEditor.View.Pages
         public bool ImageSelected { set; get; } = false;
         bool cameraWB = true;
         public Thumbnail thumbnail;
-        //public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
+        public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
@@ -466,7 +466,8 @@ namespace RawEditor.View.Pages
         #endregion
 
         private void EditingControlChanged()
-        { //history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.saturation });
+        {
+            history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.Saturation });
 
             ResetButtonVisibility.Value = true;
             UpdatePreview(false);
@@ -482,8 +483,7 @@ namespace RawEditor.View.Pages
             if (raw != null)
             {
                 raw.Rotation++;
-                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.rotate };
-
+                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.Rotate };
                 t.value = raw.Rotation;
                 history.Add(t);*/
                 EditingControlChanged();
@@ -495,9 +495,8 @@ namespace RawEditor.View.Pages
             if (raw != null)
             {
                 raw.Rotation--;
-                /*
-                var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.rotate };
 
+                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.Rotate };
                 t.value = raw.Rotation;
                 history.Add(t);*/
                 EditingControlChanged();
@@ -612,8 +611,8 @@ namespace RawEditor.View.Pages
 
                 UpdatePreview(true);
             }
-            //var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
-            //history.Add(t)
+            var t = new HistoryObject() { oldValue = 0, target = EffectObject.Crop };
+            history.Add(t);
             ResetButtonVisibility.Value = true;
         }
 
@@ -675,6 +674,7 @@ namespace RawEditor.View.Pages
         {
             Load.Show();
             raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+            UpdatePreview(true);
             Load.Hide();
         }
     }
