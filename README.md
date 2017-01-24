@@ -32,7 +32,6 @@ Support for Xbox and hololens could be added if someone can test them.
 - Png 
 - BMP
 - ICO
-
 - DNG (uncompressed and Ljpeg)  
 - NEF (Nikon raw)
 - PEF (Pentax raw)
