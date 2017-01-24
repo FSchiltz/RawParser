@@ -225,13 +225,13 @@
                                             HorizontalAlignment="Center">Apply gamma curve</ToggleButton>
                                     <RadioButton x:Name="HighGamma" IsChecked="False" GroupName="Gamma"
                                             IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsChecked, Mode=OneWay}"
-                                            Tapped="{x:Bind EditingControlChanged}">High</RadioButton>
+                                            Tapped="{x:Bind EditingControlChanged}" FontSize="12">High</RadioButton>
                                     <RadioButton x:Name="MediumGamma" IsChecked="True" GroupName="Gamma"
                                             IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsChecked, Mode=OneWay}"
-                                            Tapped="{x:Bind EditingControlChanged}">Medium</RadioButton>
+                                            Tapped="{x:Bind EditingControlChanged}" FontSize="12">Medium</RadioButton>
                                     <RadioButton x:Name="LowGamma" IsChecked="False" GroupName="Gamma"
                                             IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsChecked, Mode=OneWay}"
-                                            Tapped="{x:Bind EditingControlChanged}">Low</RadioButton>
+                                            Tapped="{x:Bind EditingControlChanged}" FontSize="12">Low</RadioButton>
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -312,6 +312,9 @@
                     <uihelper:MemoryBar></uihelper:MemoryBar>
                     <Button Margin="0,20,0,0" Tapped="{x:Bind EmptyImage}"
                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center">Free image</Button>
+
+                    <Button Margin="0,20,0,0" 
+                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center" Tapped="Button_Tapped">Recreate preview</Button>
                 </StackPanel>
             </PivotItem>
         </Pivot>
