@@ -168,7 +168,7 @@ namespace RawEditor.View.Pages
             {
                 EmptyImage();
             }
-            Load.ShowLoad();
+            Load.Show();
             Blur(true);
             Task.Run(async () =>
             {
@@ -267,8 +267,11 @@ namespace RawEditor.View.Pages
                     var str = loader.GetString("ExceptionText");
                     ExceptionDisplay.Display(str);
                 }
-                Load.HideLoadAsync();
-                Blur(false);
+                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Blur(false);
+                    Load.Hide();
+                });
                 ImageSelected = false;
             });
         }
@@ -295,6 +298,7 @@ namespace RawEditor.View.Pages
         {
             if (raw?.raw.data != null)
             {
+                Blur(true);
                 var savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
@@ -308,7 +312,7 @@ namespace RawEditor.View.Pages
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
 
-                Load.ShowLoad();
+                Load.Show();
                 var task = Task.Run(async () =>
                 {
                     try
@@ -324,7 +328,11 @@ namespace RawEditor.View.Pages
                         ExceptionDisplay.Display("An error occured while saving");
 #endif
                     }
-                    Load.HideLoadAsync();
+                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        Blur(false);
+                        Load.Hide();
+                    });
                 });
             }
         }
@@ -337,13 +345,14 @@ namespace RawEditor.View.Pages
                 if (image != null)
                 {
                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
-                    image.CopyToBuffer(bitmap.PixelBuffer);                    
+                    image.CopyToBuffer(bitmap.PixelBuffer);
                     ImageBox.Source = bitmap;
                     if (move) CenterImage(image.PixelWidth, image.PixelHeight);
                     image.Dispose();
                 }
             });
         }
+
         private void CenterImageBindable()
         {
             CenterImage((int)ImageBox.ActualWidth, (int)ImageBox.ActualHeight);
@@ -512,7 +521,7 @@ namespace RawEditor.View.Pages
                 var deferal = request.GetDeferral();
                 //TODO regionalise text
                 //generate the bitmap
-                Load.ShowLoad();
+                Load.Show();
                 var result = await ApplyUserModifAsync(raw.raw.data, raw.raw.dim, raw.raw.offset, raw.raw.uncroppedDim, raw.ColorDepth, false);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
@@ -525,7 +534,7 @@ namespace RawEditor.View.Pages
                 await encoder.FlushAsync();
                 encoder = null;
                 result.Item2.Dispose();
-                Load.HideLoad();
+                Load.Hide();
 
                 request.Data.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
                 deferal.Complete();
@@ -551,7 +560,7 @@ namespace RawEditor.View.Pages
             if (raw?.raw != null)
             {
                 CropUI.SetThumbAsync(null);
-                Load.ShowLoad();
+                Load.Show();
                 Blur(true);
                 ControlVisibilty.Value = false;
                 //display the crop UI
@@ -612,7 +621,7 @@ namespace RawEditor.View.Pages
         {
             if (visibility)
             {
-
+                PivotGrid.IsEnabled = false;
                 // Get the current compositor
                 _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
                 // Create the destinatio sprite, sized to cover the entire list
@@ -637,6 +646,8 @@ namespace RawEditor.View.Pages
             }
             else
             {
+
+                PivotGrid.IsEnabled = true;
                 // Update the destination layer with the fully configured brush
                 _pivotGridSprite.Brush = brush;
                 ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
@@ -654,10 +665,17 @@ namespace RawEditor.View.Pages
             if (CropGrid.Visibility == Visibility.Visible)
             {
                 Blur(false);
-                Load.HideLoad();
+                Load.Hide();
                 CropGrid.Visibility = Visibility.Collapsed;
                 ControlVisibilty.Value = true;
             }
+        }
+
+        private void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            Load.Show();
+            raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+            Load.Hide();
         }
     }
 }
