@@ -315,7 +315,7 @@
                 </ScrollViewer>
             </PivotItem>
             <PivotItem x:Uid="Presets" IsEnabled="False">
-                <GridView Background="White"></GridView>
+                <GridView ></GridView>
             </PivotItem>
         </Pivot>
     </Grid>
