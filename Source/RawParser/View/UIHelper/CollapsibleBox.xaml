@@ -6,7 +6,7 @@
         d:DesignWidth="400" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
         VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
     <StackPanel>
-       <StackPanel Tapped="Header_Tapped" Orientation="Horizontal" Margin="0,0,0,5">
+       <StackPanel Tapped="Header_Tapped" Orientation="Horizontal" Margin="0,0,0,10">
             <SymbolIcon x:Name="icon" Symbol="BackToWindow" Width="20" Height="20">                
             </SymbolIcon>
             <TextBlock x:Name="Header" FontSize="16" Margin="5,0,0,0"></TextBlock>
