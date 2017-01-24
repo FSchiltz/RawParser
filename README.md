@@ -55,8 +55,8 @@ If you have already installed directly from the appx, please uninstall before in
 You need to activate the developper mode and download the .appxbundle file and open it from the file explorer on your device (on phone the installation will be done in the background).
  You can get release from the github release (those are the build pushed on the store) or on appveyor build (more advanced but not tested).
  
- ## The parser
- This is a C# library for use in any UWP application.
+## The parser
+This is a C# library for use in any UWP application.
 It can read the exif, the thumbnail and the raw image from a lot of camera model
 
 It's made from my own work, from dcraw.c(https://www.cybercom.net/~dcoffin/dcraw/) and from RawSpeed(https://github.com/klauspost/rawspeed)
