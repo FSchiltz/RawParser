@@ -127,7 +127,7 @@ namespace RawNet.Decoder
                 }
                 ifd.subIFD.Add(tempIFD);
             }
-            catch (IOException e)
+            catch (IOException)
             {
                 throw new RawDecoderException("ParseFuji: IO error occurred during parsing. Skipping the rest");
             }

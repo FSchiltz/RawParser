@@ -17,16 +17,16 @@ namespace RawNet
         public Point2D BottomRight { get { return Dimension + Position; } set { Dimension = new Point2D(value) - Position; } }
 
         public Rectangle2D() { }
-        public Rectangle2D(uint w, uint h) { Dimension = new Point2D(w, h); }
-        public Rectangle2D(uint xPos, uint yPos, uint w, uint h) { Dimension = new Point2D(w, h); Position = new Point2D(xPos, yPos); }
-        public Rectangle2D(Rectangle2D r)
+        public Rectangle2D(uint width, uint height) { Dimension = new Point2D(width, height); }
+        public Rectangle2D(uint xPos, uint yPos, uint width, uint height) { Dimension = new Point2D(width, height); Position = new Point2D(xPos, yPos); }
+        public Rectangle2D(Rectangle2D rectangle)
         {
-            Dimension = new Point2D(r.Dimension); Position = new Point2D(r.Position);
+            Dimension = new Point2D(rectangle.Dimension); Position = new Point2D(rectangle.Position);
         }
-        public Rectangle2D(Point2D pos, Point2D size)
+        public Rectangle2D(Point2D position, Point2D size)
         {
             Dimension = size;
-            Position = pos;
+            Position = position;
         }
 
         public UInt32 Area() { return Dimension.Area(); }
