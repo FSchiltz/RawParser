@@ -231,10 +231,11 @@ namespace RawEditor.View.Pages
                         }
                         Demosaic.Demos(raw, algo);
                     }
+                    /*
                     if (raw.convertionM != null)
                     {
                         raw.ConvertRGB();
-                    }
+                    }*/
                     raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
                     //check if enough memory
