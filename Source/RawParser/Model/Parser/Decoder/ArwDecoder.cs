@@ -7,7 +7,7 @@ using System.IO;
 
 namespace RawNet.Decoder
 {
-    class ArwDecoder : TiffDecoder
+    class ArwDecoder : TIFFDecoder
     {
         internal ArwDecoder(Stream file) : base(file) { }
 
@@ -254,15 +254,15 @@ namespace RawNet.Decoder
                     for (int y = 0; y < h + 1; y += 2)
                     {
                         bits.CheckPos();
-                        bits.FillCheck();
+                        bits.Fill();
                         if (y == h) y = 1;
-                        uint len = 4 - bits.GetBitsNoFill(2);
+                        int len = 4 - (int)bits.GetBitsNoFill(2);
                         if (len == 3 && bits.GetBitNoFill() != 0) len = 0;
                         if (len == 4)
                             while (len < 17 && bits.GetBitNoFill() == 0) len++;
                         uint diff = bits.GetBits(len);
-                        if (len != 0 && (diff & (1 << (int)(len - 1))) == 0)
-                            diff -= (uint)(1 << (int)len) - 1;
+                        if (len != 0 && (diff & (1 << (len - 1))) == 0)
+                            diff -= (uint)(1 << len) - 1;
                         sum += (int)diff;
                         // Debug.Assert((sum >> 12) == 0);
                         if (y < h) dest[x + y * rawImage.raw.dim.width] = (ushort)sum;
@@ -284,7 +284,7 @@ namespace RawNet.Decoder
                 for (uint y = 0; y < rawImage.raw.dim.height; y++)
                 {
                     // Realign
-                    bits.SetAbsoluteOffset((uint)(rawImage.raw.dim.width * 8 * y) >> 3);
+                    bits.Offset = (int)(rawImage.raw.dim.width * 8 * y) >> 3;
                     uint random = bits.PeekBits(24);
 
                     // Process 32 pixels (16x2) per loop.

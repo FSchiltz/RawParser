@@ -6,12 +6,12 @@ using System.IO;
 
 namespace RawNet.Decoder
 {
-    class Rw2Decoder : TiffDecoder
+    class RW2Decoder : TIFFDecoder
     {
         UInt32 load_flags;
         TIFFBinaryReader input_start;
 
-        internal Rw2Decoder(Stream reader) : base(reader) { }
+        internal RW2Decoder(Stream reader) : base(reader) { }
 
         public override Thumbnail DecodeThumb()
         {

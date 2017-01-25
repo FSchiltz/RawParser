@@ -200,6 +200,7 @@ namespace RawNet
 
         public void ScaleValues()
         {
+            ushort maxValue = (ushort)((1 << ColorDepth) - 1);
             if (whitePoint == 0)
             {
                 whitePoint = (1 << ColorDepth) - 1;
@@ -215,15 +216,17 @@ namespace RawNet
                     }
                     BlackLevel /= blackLevelSeparate.Length;
                 }
-                if (BlackLevel != 0 || whitePoint != ((1 << ColorDepth) - 1))
+                if (BlackLevel != 0 || whitePoint != maxValue)
                 {
-                    double factor = ((1 << ColorDepth) - 1.0) / (((1 << ColorDepth) - 1.0) - BlackLevel);
+                    double factor = (double)maxValue / (maxValue - BlackLevel);
                     Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
                     {
                         long v = y * raw.uncroppedDim.width * cpp;
                         for (uint x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
                         {
-                            raw.data[x + v] = (ushort)((raw.data[x + v] - BlackLevel) * factor);
+                            ulong value = (ulong)((raw.data[x + v] - BlackLevel) * factor);
+                            if (value > maxValue) value = maxValue;
+                            raw.data[x + v] = (ushort)value;
                         }
                     });
                 }
@@ -414,20 +417,13 @@ namespace RawNet
             {
                 if (raw.dim.height > raw.dim.width)
                 {
-                    previewFactor = (uint)(raw.dim.height / viewHeight);
+                    previewFactor = (uint)((raw.dim.height / viewHeight) * 0.9);
                 }
                 else
                 {
-                    previewFactor = (uint)(raw.dim.width / viewWidth);
+                    previewFactor = (uint)((raw.dim.width / viewWidth) * 0.9);
                 }
-                if (previewFactor > 1)
-                {
-                    uint start = 1;
-                    for (; previewFactor > (start << 1); start <<= 1) ;
-                    if ((previewFactor - start) < ((start << 1) - previewFactor)) previewFactor = start;
-                    else previewFactor <<= 1;
-                }
-                else
+                if (previewFactor < 1)
                 {
                     previewFactor = 1;
                 }
@@ -463,11 +459,6 @@ namespace RawNet
                              g += raw.data[realX + 1];
                              b += raw.data[realX + 2];
                          }
-                     }
-
-                     if (xk != doubleFactor || yk != previewFactor)
-                     {
-                         Debug.WriteLine("yk :" + yk + " xk: " + xk + " doubleFactor:" + doubleFactor);
                      }
                      r = (ushort)(r / doubleFactor);
                      g = (ushort)(g / doubleFactor);
@@ -523,6 +514,11 @@ namespace RawNet
             exif.Add(new ExifValue("Black level", "" + BlackLevel));
             exif.Add(new ExifValue("White level", "" + whitePoint));
             exif.Add(new ExifValue("Color depth", "" + ColorDepth + " bits"));
+
+            if (isCFA)
+            {
+                exif.Add(new ExifValue("CFA pattern", colorFilter.ToString()));
+            }
         }
     }
 }

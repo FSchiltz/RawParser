@@ -17,13 +17,14 @@ namespace RawNet.Decoder
         public uint offsetY;
     };
 
-    internal class DngDecoder : TiffDecoder
+    internal class DNGDecoder : TIFFDecoder
     {
         bool mFixLjpeg;
 
         //DNG thumbnail are tiff so no need to override 
-        internal DngDecoder(Stream file) : base(file)
+        internal DNGDecoder(Stream file) : base(file)
         {
+            ScaleValue = true;
             List<IFD> data = ifd.GetIFDsWithTag(TagType.DNGVERSION);
             /*
             if (data.Count != 0)
@@ -198,7 +199,7 @@ namespace RawNet.Decoder
                                 big_endian = true;
                             try
                             {
-                                ReadUncompressedRaw(input, size, pos, (int)(rawImage.cpp * width * bps / 8), (int)bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
+                                ReadUncompressedRaw(input, size, pos, (int)(rawImage.cpp * width * bps / 8), bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
                             }
                             catch (IOException ex)
                             {
@@ -253,7 +254,7 @@ namespace RawNet.Decoder
                                     {
                                         mUseBigtable = tilew * tileh > 1024 * 1024
                                     };
-                                    slices.AddSlice(e);
+                                    slices.slices.Add(e);
                                 }
                             }
                         }
@@ -282,7 +283,7 @@ namespace RawNet.Decoder
                                 offY += yPerSlice;
 
                                 if (reader.IsValid(e.byteOffset, e.byteCount)) // Only decode if size is valid
-                                    slices.AddSlice(e);
+                                    slices.slices.Add(e);
                             }
                         }
                         if (slices.slices.Count == 0)

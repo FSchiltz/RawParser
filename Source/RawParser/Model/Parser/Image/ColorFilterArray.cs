@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 namespace RawNet
 {
@@ -35,6 +36,16 @@ namespace RawNet
             SetSize(other.Size);
             if (cfa != null)
                 Common.Memcopy(cfa, other.cfa, Size.Area());
+        }
+
+        public override string ToString()
+        {
+            string val = "";
+            for (int i = 0; i < (Size.height * Size.width); i++)
+            {
+                val += cfa[i].ToString() + " ";
+            }
+            return val;
         }
         /*
 
@@ -86,10 +97,10 @@ namespace RawNet
         {
             if (cfa == null)
                 throw new RawDecoderException("ColorFilterArray:getColorAt: No CFA size set");
-            if (x >= (uint)Size.width || y >= (uint)Size.height)
+            if (x >= Size.width || y >= Size.height)
             {
-                x = (uint)(x % Size.width);
-                y = (uint)(y % Size.height);
+                x = x % Size.width;
+                y = y % Size.height;
             }
             return cfa[x + y * Size.width];
         }
@@ -121,9 +132,9 @@ namespace RawNet
             for (int y = 0; y < Size.height; y++)
             {
                 CFAColor[] old = cfa.Skip((int)(y * Size.width)).ToArray();
-                Common.Memcopy(tmp, old, (uint)((Size.width - shift) * sizeof(CFAColor)), 0, (int)shift);
-                Common.Memcopy(tmp, old, (uint)(shift * sizeof(CFAColor)), (int)(Size.width - shift), 0);
-                Common.Memcopy(old, tmp, (uint)(Size.width * sizeof(CFAColor)));
+                Common.Memcopy(tmp, old, (Size.width - shift) * sizeof(CFAColor), 0, (int)shift);
+                Common.Memcopy(tmp, old, shift * sizeof(CFAColor), (int)(Size.width - shift), 0);
+                Common.Memcopy(old, tmp, Size.width * sizeof(CFAColor));
             }
         }
 

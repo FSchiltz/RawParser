@@ -20,7 +20,7 @@ namespace RawNet
 
         public Point2D() { width = height = 0; }
         public Point2D(uint width, uint height) { this.width = width; this.height = height; }
-        public Point2D(Point2D pt) { width = pt.width; height = pt.height; }
+        public Point2D(Point2D point) { width = point.width; height = point.height; }
         
         static public Point2D operator -(Point2D a, Point2D b)
         {
