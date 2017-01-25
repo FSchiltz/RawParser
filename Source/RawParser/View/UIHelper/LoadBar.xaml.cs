@@ -17,7 +17,7 @@ namespace RawEditor.View.UIHelper
             InitializeComponent();
         }
 
-        public void ShowLoad()
+        public void Show()
         {
             displayMutex++;
             if (displayMutex > 0)
@@ -26,26 +26,13 @@ namespace RawEditor.View.UIHelper
             }
         }
 
-        public void HideLoad()
+        public void Hide()
         {
             displayMutex--;
             if (displayMutex <= 0)
             {
                 displayMutex = 0;
                 ProgressDisplay.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        public async void HideLoadAsync()
-        {
-            displayMutex--;
-            if (displayMutex <= 0)
-            {
-                displayMutex = 0;
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    ProgressDisplay.Visibility = Visibility.Collapsed;
-                });
             }
         }
     }

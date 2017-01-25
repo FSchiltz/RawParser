@@ -1,6 +1,7 @@
 ﻿using RawEditor.View.UIHelper;
 using RawNet;
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -25,11 +26,9 @@ namespace RawEditor.Effect
         //public double tint = 1;
         //public double gamma = 0;
         public double contrast = 0;
-      //  public double brightness = 0;
+        //  public double brightness = 0;
         public double hightlight = 1;
         public double shadow = 1;
-        public float[] mul;
-        public bool cameraWB;
         public bool ReverseGamma = true;
         public uint maxValue;
         public double saturation = 1;
@@ -39,6 +38,8 @@ namespace RawEditor.Effect
         public double gMul;
         public double bMul;
         public int rotation;
+        public double gamma;
+
         //internal double vignet;
 
         internal double[] CreateCurve()
@@ -54,15 +55,13 @@ namespace RawEditor.Effect
             yCurve[0] = ((shadow - contrast) * (maxValue / 200)) * exposure;
             //hightlight
             xCurve[2] = maxValue;
-            yCurve[2] = (maxValue + ((contrast- hightlight) * (maxValue / 200))) * exposure;
+            yCurve[2] = (maxValue + ((contrast + hightlight) * (maxValue / 200))) * exposure;
             maxValue--;
 
             var curve = Curve.CubicSpline(xCurve, yCurve);
             if (ReverseGamma)
             {
-                double param = 1 / 1.8;
-
-                param += contrast;
+                double param = 1 / gamma;
                 for (int i = 0; i < curve.Length; i++)
                 {
                     double normal = curve[i] / maxValue;
@@ -77,25 +76,6 @@ namespace RawEditor.Effect
                     curve[i] *= maxValue;
                 }
             }
-            /*
-            {
-                double param = 2.4;
-
-                param += contrast;
-                for (int i = 0; i < curve.Length; i++)
-                {
-                    double normal = curve[i] / maxValue;
-                    if (normal <= 0.04045)
-                    {
-                        curve[i] = normal / 12.92;
-                    }
-                    else
-                    {
-                        curve[i] = Math.Pow((normal+0.055)/1.055, param);
-                    }
-                    curve[i] *= maxValue;
-                }
-            }*/
             return curve;
         }
 
@@ -109,13 +89,6 @@ namespace RawEditor.Effect
             {
                 int startIndex = buffer.GetPlaneDescription(0).StartIndex;
                 ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                if (!cameraWB)
-                {
-                    mul = new float[4];
-                    mul[0] = (float)(rMul / 255);
-                    mul[1] = (float)(gMul / 255);
-                    mul[2] = (float)(bMul / 255);
-                }
                 double[] curve = CreateCurve();
                 Parallel.For(0, dim.height, y =>
                 {
@@ -124,10 +97,12 @@ namespace RawEditor.Effect
                     {
                         long realPix = realY + (3 * (x + off.width));
                         long bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
-                        double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
+                        double red = image[realPix] * rMul, green = image[realPix + 1] * gMul, blue = image[realPix + 2] * bMul;
+                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                         Luminance.Clip(ref l);
                         l = curve[(uint)(l * maxValue)] / maxValue;
+                        Luminance.Clip(ref l);
                         s *= saturation;
                         Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
                         Luminance.Clip(ref red, ref green, ref blue, maxValue);
@@ -149,13 +124,6 @@ namespace RawEditor.Effect
             {
                 int startIndex = buffer.GetPlaneDescription(0).StartIndex;
                 ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                if (!cameraWB)
-                {
-                    mul = new float[4];
-                    mul[0] = (float)(rMul / 255);
-                    mul[1] = (float)(gMul / 255);
-                    mul[2] = (float)(bMul / 255);
-                }
                 double[] curve = CreateCurve();
                 HistoRaw value = new HistoRaw()
                 {
@@ -171,8 +139,8 @@ namespace RawEditor.Effect
                     {
                         long realPix = realY + (3 * (x + off.width));
                         long bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
-                        double red = image[realPix] * mul[0], green = image[realPix + 1] * mul[1], blue = image[realPix + 2] * mul[2];
-                        // Luminance.Clip(ref red, ref green, ref blue, maxValue);                           
+                        double red = image[realPix] * rMul, green = image[realPix + 1] * gMul, blue = image[realPix + 2] * bMul;
+                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                         //vignet correction
                         //int xV = (x + off.width);
@@ -180,8 +148,8 @@ namespace RawEditor.Effect
                         //var v = Math.Abs(xV - (uncrop.width / 2.0)) / uncrop.width;
                         //l *= 1 + (vignet * Math.Sin((xV - uncrop.width / 2) / uncrop.width) + Math.Sin((yV - uncrop.height / 2) / uncrop.width));
                         Luminance.Clip(ref l);
-
                         l = curve[(uint)(l * maxValue)] / maxValue;
+                        Luminance.Clip(ref l);
                         s *= saturation;
                         // s += vibrance;
                         Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);

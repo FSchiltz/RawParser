@@ -24,6 +24,10 @@ using Windows.System;
 using RawEditor.Base;
 using RawEditor.View.UIHelper;
 using RawEditor.Settings;
+using Microsoft.Graphics.Canvas.Effects;
+using Windows.UI.Composition;
+using Windows.UI.Xaml.Hosting;
+using System.Numerics;
 
 namespace RawEditor.View.Pages
 {
@@ -34,14 +38,26 @@ namespace RawEditor.View.Pages
     {
         public RawImage raw;
         public bool ImageSelected { set; get; } = false;
-        bool cameraWB = true;
         public Thumbnail thumbnail;
-        //public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
+        public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
         public Bindable<bool> feedbacksupport = new Bindable<bool>(StoreServicesFeedbackLauncher.IsSupported());
+        private SpriteVisual _pivotGridSprite;
+        private Compositor _compositor;
+        private CompositionEffectBrush brush;
         public Histogram Histo { get; set; } = new Histogram();
+        private float blurAmount = 5;
+        private GaussianBlurEffect graphicsEffect = new GaussianBlurEffect()
+        {
+            Name = "Blur",
+            BlurAmount = 0f,
+            Source = new CompositionEffectSourceParameter("ImageSource"),
+            Optimization = EffectOptimization.Balanced,
+            BorderMode = EffectBorderMode.Soft
+        };
+        private TimeSpan animationDuration = TimeSpan.FromMilliseconds(300);
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
@@ -86,6 +102,7 @@ namespace RawEditor.View.Pages
             //empty the histogram
             ControlVisibilty.Value = false;
             ResetControls();
+            DisplayImage(null, false); ;
             Histo.ClearAsync();
             GC.Collect();
         }
@@ -96,11 +113,12 @@ namespace RawEditor.View.Pages
             ShadowSlider.Value = 0;
             HighLightSlider.Value = 0;
             contrastSlider.Value = 0;
-            saturationSlider.Value = 0;
+            saturationSlider.Value = 100;
             CropUI.ResetCrop();
             CropUI.SetThumbAsync(null);
             //VignetSlider.Value = 0;
-            GammaToggle.IsChecked = raw?.IsGammaCorrected ?? true;
+            //Cause problem (double update of preview)
+            GammaToggle.IsOn = raw?.IsGammaCorrected ?? false;
             if (raw != null)
             {
                 raw.raw.offset = new Point2D(0, 0);
@@ -112,10 +130,22 @@ namespace RawEditor.View.Pages
             SetWBAsync();
             ResetButtonVisibility.Value = false;
             HideCropUI();
+        }
+
+        private void ResetUpdateControls()
+        {
+            ResetControls();
             if (raw != null)
             {
                 UpdatePreview(false);
             }
+        }
+
+
+        private void SetWBUpdate()
+        {
+            SetWBAsync();
+            UpdatePreview(false);
         }
 
         private async void SetWBAsync()
@@ -145,7 +175,8 @@ namespace RawEditor.View.Pages
             {
                 EmptyImage();
             }
-            Load.ShowLoad();
+            Load.Show();
+            Blur(true);
             Task.Run(async () =>
             {
                 try
@@ -160,16 +191,17 @@ namespace RawEditor.View.Pages
                             thumbnail = decoder.DecodeThumb();
                             Task.Run(() =>
                             {
-                                DisplayImage(thumbnail?.GetSoftwareBitmap(), true);
+                                var result = thumbnail?.GetSoftwareBitmap();
+                                DisplayImage(result, true);
                             });
                         }
-                        catch (Exception) { }                            //since thumbnail are optionnal, we ignore all errors                         
+                        //since thumbnail are optionnal, we ignore all errors           
+                        catch (Exception) { }
 
                         decoder.DecodeRaw();
                         decoder.DecodeMetadata();
                         raw = decoder.rawImage;
-                        //if (decoder.ScaleValue)
-                        //raw.ScaleValues();
+                        //if (decoder.ScaleValue) raw.ScaleValues();
                         raw.metadata.FileName = file.DisplayName;
                         raw.metadata.FileNameComplete = file.Name;
                         raw.metadata.FileExtension = file.FileType;
@@ -199,10 +231,11 @@ namespace RawEditor.View.Pages
                         }
                         Demosaic.Demos(raw, algo);
                     }
+                    /*
                     if (raw.convertionM != null)
                     {
                         raw.ConvertRGB();
-                    }
+                    }*/
                     raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
                     //check if enough memory
@@ -214,13 +247,14 @@ namespace RawEditor.View.Pages
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
+
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         raw.ParseExif(ExifSource);
                         ResetControls();
+                        UpdatePreview(true);
                         ControlVisibilty.Value = true;
                     });
-                    UpdatePreview(true);
                     thumbnail = null;
                 }
                 catch (Exception e)
@@ -241,7 +275,11 @@ namespace RawEditor.View.Pages
                     var str = loader.GetString("ExceptionText");
                     ExceptionDisplay.Display(str);
                 }
-                Load.HideLoadAsync();
+                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Blur(false);
+                    Load.Hide();
+                });
                 ImageSelected = false;
             });
         }
@@ -268,6 +306,7 @@ namespace RawEditor.View.Pages
         {
             if (raw?.raw.data != null)
             {
+                Blur(true);
                 var savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
@@ -281,7 +320,7 @@ namespace RawEditor.View.Pages
                 StorageFile file = await savePicker.PickSaveFileAsync();
                 if (file == null) return;
 
-                Load.ShowLoad();
+                Load.Show();
                 var task = Task.Run(async () =>
                 {
                     try
@@ -297,64 +336,71 @@ namespace RawEditor.View.Pages
                         ExceptionDisplay.Display("An error occured while saving");
 #endif
                     }
-                    Load.HideLoadAsync();
+                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        Blur(false);
+                        Load.Hide();
+                    });
                 });
             }
         }
 
-        private void DisplayImage(SoftwareBitmap image, bool reset)
+        private void DisplayImage(SoftwareBitmap image, bool move)
         {
-            if (image != null)
+            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                ImageBox.Source = null;
+                if (image != null)
                 {
-                    //Do some UI-code that must be run on the UI thread.
-                    //display the image preview
-                    ImageBox.Source = null;
                     WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                     image.CopyToBuffer(bitmap.PixelBuffer);
-                    image.Dispose();
                     ImageBox.Source = bitmap;
-                    if (reset)
-                        SetScrollProperty(bitmap.PixelWidth, bitmap.PixelHeight);
-                });
-            }
-        }
-
-        private void SetScrollProperty(int w, int h)
-        {
-            float x = 0;
-            double relativeBorder = SettingStorage.ImageBoxBorder;
-            if (w / h > ImageDisplay.ActualWidth / ImageDisplay.ActualHeight)
-            {
-                x = (float)(ImageDisplay.ActualWidth / (w * (1 + relativeBorder)));
-            }
-            else
-            {
-                x = (float)(ImageDisplay.ActualHeight / (h * (1 + relativeBorder)));
-            }
-            if (x < 0.1) x = 0.1f;
-            else if (x > 1) x = (float)(1 - relativeBorder);
-            ImageDisplay.MinZoomFactor = 0.1f;
-            ImageDisplay.MaxZoomFactor = 2;
-            ImageDisplay.ChangeView(null, null, x);
-            ZoomSlider.Value = x;
-        }
-
-        private void UpdatePreview(bool reset)
-        {
-            //display the histogram                  
-            Task.Run(async () =>
-            {
-                var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.dim, raw.preview.offset, raw.preview.uncroppedDim, raw.ColorDepth, true);
-                DisplayImage(result.Item2, reset);
-                Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
+                    if (move) CenterImage(image.PixelWidth, image.PixelHeight);
+                    image.Dispose();
+                }
             });
         }
 
-        /**
-         * Apply the change over the image preview
-         */
+        private void CenterImageBindable()
+        {
+            CenterImage((int)ImageBox.ActualWidth, (int)ImageBox.ActualHeight);
+        }
+
+        private void CenterImage(int width, int height)
+        {
+            if (width == 0 || height == 0) return;
+            float ZeroFactor = 0;
+            double relativeBorder = SettingStorage.ImageBoxBorder;
+            if (width / height > ImageDisplay.ActualWidth / ImageDisplay.ActualHeight)
+            {
+                ZeroFactor = (float)(ImageDisplay.ActualWidth / (width * (1 + relativeBorder)));
+            }
+            else
+            {
+                ZeroFactor = (float)(ImageDisplay.ActualHeight / (height * (1 + relativeBorder)));
+            }
+            if (ZeroFactor < 0.1) ZeroFactor = 0.1f;
+            else if (ZeroFactor > 1) ZeroFactor = (float)(1 - relativeBorder);
+            ImageDisplay.MinZoomFactor = 0.1f;
+            ImageDisplay.MaxZoomFactor = 2;
+            ZoomSlider.Value = ZeroFactor;
+            ImageDisplay.ChangeView(0, 0, ZeroFactor);
+        }
+
+        private void UpdatePreview(bool move)
+        {
+            Debug.WriteLine("Updated");
+            if (raw?.preview?.data != null)
+                //display the histogram                  
+                Task.Run(async () =>
+                {
+                    var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.dim, raw.preview.offset, raw.preview.uncroppedDim, raw.ColorDepth, true);
+                    DisplayImage(result.Item2, move);
+                    Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
+                });
+        }
+
+        //Apply the change over the image preview       
         async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, Point2D offset, Point2D uncrop, int colorDepth, bool histo)
         {
             ImageEffect effect = new ImageEffect();
@@ -362,19 +408,19 @@ namespace RawEditor.View.Pages
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 effect.exposure = exposureSlider.Value;
-                effect.rMul = ColorTempSlider.Value;
-                effect.gMul = ColorTintSlider.Value;
-                effect.bMul = ColorTintBlueSlider.Value;
-                effect.contrast = contrastSlider.Value / 10;
+                effect.rMul = ColorTempSlider.Value / 255;
+                effect.gMul = ColorTintSlider.Value / 255;
+                effect.bMul = ColorTintBlueSlider.Value / 255;
+                effect.contrast = contrastSlider.Value * 5;
                 effect.shadow = ShadowSlider.Value;
                 effect.hightlight = HighLightSlider.Value;
-                effect.saturation = 1 + saturationSlider.Value / 100;
+                effect.saturation = saturationSlider.Value / 100;
                 //effect.vignet = VignetSlider.Value;
-                effect.ReverseGamma = (bool)GammaToggle.IsChecked;
+                effect.ReverseGamma = (bool)GammaToggle.IsOn;
+                if ((bool)LowGamma.IsChecked) { effect.gamma = 1.8; }
+                else if ((bool)HighGamma.IsChecked) { effect.gamma = 2.8; }
+                else if ((bool)MediumGamma.IsChecked) { effect.gamma = 2.4; }
             });
-
-            effect.mul = raw.metadata.WbCoeffs;
-            effect.cameraWB = cameraWB;
             effect.exposure = Math.Pow(2, effect.exposure);
             //effect.camCurve = raw.curve;
             effect.rotation = raw.Rotation;
@@ -404,31 +450,9 @@ namespace RawEditor.View.Pages
             }
         }
 
-        #region WBSlider
-        private void WBSlider_DragStop(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (raw?.preview.data != null)
-            {
-                cameraWB = false;
-                //history.Add(new HistoryObject() { oldValue = 0, value = colorTempSlider.Value, target = EffectObject.red });
-                cameraWBCheck.IsEnabled = true;
-                EditingControlChanged();
-            }
-        }
-
-        private void CameraWBCheck_Click(object sender, RoutedEventArgs e)
-        {
-            cameraWB = true;
-            cameraWBCheck.IsEnabled = false;
-            //TODO move slider to the camera WB
-            SetWBAsync();
-            UpdatePreview(false);
-        }
-        #endregion
-
         private void EditingControlChanged()
-        { //history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.saturation });
-
+        {
+            history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.Saturation });
             ResetButtonVisibility.Value = true;
             UpdatePreview(false);
         }
@@ -443,8 +467,7 @@ namespace RawEditor.View.Pages
             if (raw != null)
             {
                 raw.Rotation++;
-                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.rotate };
-
+                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.Rotate };
                 t.value = raw.Rotation;
                 history.Add(t);*/
                 EditingControlChanged();
@@ -456,9 +479,8 @@ namespace RawEditor.View.Pages
             if (raw != null)
             {
                 raw.Rotation--;
-                /*
-                var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.rotate };
 
+                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.Rotate };
                 t.value = raw.Rotation;
                 history.Add(t);*/
                 EditingControlChanged();
@@ -482,7 +504,7 @@ namespace RawEditor.View.Pages
                 var deferal = request.GetDeferral();
                 //TODO regionalise text
                 //generate the bitmap
-                Load.ShowLoad();
+                Load.Show();
                 var result = await ApplyUserModifAsync(raw.raw.data, raw.raw.dim, raw.raw.offset, raw.raw.uncroppedDim, raw.ColorDepth, false);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
@@ -495,7 +517,7 @@ namespace RawEditor.View.Pages
                 await encoder.FlushAsync();
                 encoder = null;
                 result.Item2.Dispose();
-                Load.HideLoad();
+                Load.Hide();
 
                 request.Data.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
                 deferal.Complete();
@@ -521,7 +543,8 @@ namespace RawEditor.View.Pages
             if (raw?.raw != null)
             {
                 CropUI.SetThumbAsync(null);
-                Load.ShowLoad();
+                Load.Show();
+                Blur(true);
                 ControlVisibilty.Value = false;
                 //display the crop UI
                 CropGrid.Visibility = Visibility.Visible;
@@ -572,19 +595,71 @@ namespace RawEditor.View.Pages
 
                 UpdatePreview(true);
             }
-            //var t = new HistoryObject() { oldValue = 0, target = EffectObject.crop };
-            //history.Add(t)
+            var t = new HistoryObject() { oldValue = 0, target = EffectObject.Crop };
+            history.Add(t);
             ResetButtonVisibility.Value = true;
+        }
+
+        private void Blur(bool visibility)
+        {
+            if (visibility)
+            {
+                PivotGrid.IsEnabled = false;
+                // Get the current compositor
+                _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+                // Create the destinatio sprite, sized to cover the entire list
+                _pivotGridSprite = _compositor.CreateSpriteVisual();
+                _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
+                ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
+                // Create the effect factory and instantiate a brush
+                CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
+                brush = _effectFactory.CreateBrush();
+                // Set the destination brush as the source of the image content
+                brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
+                // Update the destination layer with the fully configured brush
+                _pivotGridSprite.Brush = brush;
+
+                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                blurAnimation.InsertKeyFrame(0.0f, 0.0f);
+                blurAnimation.InsertKeyFrame(1.0f, blurAmount);
+                blurAnimation.Duration = animationDuration;
+                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                blurAnimation.IterationCount = 1;
+                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+            }
+            else
+            {
+
+                PivotGrid.IsEnabled = true;
+                // Update the destination layer with the fully configured brush
+                _pivotGridSprite.Brush = brush;
+                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                blurAnimation.InsertKeyFrame(0.0f, blurAmount);
+                blurAnimation.InsertKeyFrame(1.0f, 0.0f);
+                blurAnimation.Duration = animationDuration;
+                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                blurAnimation.IterationCount = 1;
+                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+            }
         }
 
         private void HideCropUI()
         {
             if (CropGrid.Visibility == Visibility.Visible)
             {
-                Load.HideLoad();
+                Blur(false);
+                Load.Hide();
                 CropGrid.Visibility = Visibility.Collapsed;
                 ControlVisibilty.Value = true;
             }
+        }
+
+        private void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            Load.Show();
+            raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+            UpdatePreview(true);
+            Load.Hide();
         }
     }
 }

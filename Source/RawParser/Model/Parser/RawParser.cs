@@ -217,20 +217,20 @@ namespace RawNet
                 case ".ARW":
                     return new ArwDecoder(stream);
                 case ".PEF":
-                    return new PefDecoder(stream);
+                    return new PEFDecoder(stream);
                 case ".DNG":
-                    return new DngDecoder(stream);
+                    return new DNGDecoder(stream);
                 case ".ORF":
-                    return new OrfDecoder(stream);
+                    return new ORFDecoder(stream);
                 case ".RAW":
-                    return new Rw2Decoder(stream);
+                    return new RW2Decoder(stream);
                 case ".RAF":
-                    return new RafDecoder(stream);
+                    return new RAFDecoder(stream);
 
                 //other raw format
                 case ".TIFF":
                 case ".TIF":
-                    return new TiffDecoder(stream);
+                    return new TIFFDecoder(stream);
 
                 case ".JPG":
                 case ".JPEG":

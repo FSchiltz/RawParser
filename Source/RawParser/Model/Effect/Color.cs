@@ -7,15 +7,15 @@ namespace RawEditor.Effect
     {
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RgbToHsl(double r, double g, double b, uint maxValue, out double h, out double s, out double l)
+        public static void RgbToHsl(double red, double green, double blue, uint maxValue, out double h, out double s, out double l)
         {
-            r /= maxValue;
-            g /= maxValue;
-            b /= maxValue;
-            double max = Math.Max(r, g);
-            max = Math.Max(max, b);
-            double min = Math.Min(r, g);
-            min = Math.Min(min, b);
+            red /= maxValue;
+            green /= maxValue;
+            blue /= maxValue;
+            double max = Math.Max(red, green);
+            max = Math.Max(max, blue);
+            double min = Math.Min(red, green);
+            min = Math.Min(min, blue);
             l = (max + min) / 2.0;
 
             if (max == min)
@@ -26,17 +26,17 @@ namespace RawEditor.Effect
             {
                 var d = max - min;
                 s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
-                if (r == max)
+                if (red == max)
                 {
-                    h = (g - b) / d + (g < b ? 6 : 0);
+                    h = (green - blue) / d + (green < blue ? 6 : 0);
                 }
-                else if (g == max)
+                else if (green == max)
                 {
-                    h = (b - r) / d + 2.0;
+                    h = (blue - red) / d + 2.0;
                 }
-                else if (b == max)
+                else if (blue == max)
                 {
-                    h = (r - g) / d + 4.0;
+                    h = (red - green) / d + 4.0;
                 }
                 else
                 {
@@ -48,23 +48,23 @@ namespace RawEditor.Effect
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void HslToRgb(double h, double s, double l, uint maxValue, ref double r, ref double g, ref double b)
+        public static void HslToRgb(double h, double s, double l, uint maxValue, ref double red, ref double green, ref double blue)
         {
             if (s == 0)
             {
-                r = g = b = l; // achromatic
+                red = green = blue = l; // achromatic
             }
             else
             {
                 var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
                 var p = 2 * l - q;
-                r = Hue2Rgb(p, q, h + 1 / 3.0);
-                g = Hue2Rgb(p, q, h);
-                b = Hue2Rgb(p, q, h - 1 / 3.0);
+                red = Hue2Rgb(p, q, h + 1 / 3.0);
+                green = Hue2Rgb(p, q, h);
+                blue = Hue2Rgb(p, q, h - 1 / 3.0);
             }
-            r *= maxValue;
-            g *= maxValue;
-            b *= maxValue;
+            red *= maxValue;
+            green *= maxValue;
+            blue *= maxValue;
         }
 
 
