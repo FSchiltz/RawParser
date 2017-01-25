@@ -55,7 +55,7 @@ namespace RawEditor.View.UIHelper
                     To = 0,
                     From = height,
                     EnableDependentAnimation = true,
-                    Duration = new Duration(new TimeSpan(0,0,0,0,100))
+                    Duration = new Duration(new TimeSpan(0, 0, 0, 0, 100))
                 };
                 Storyboard.SetTargetProperty(animation, "Height");
                 Storyboard.SetTarget(animation, Container);
