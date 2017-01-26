@@ -21,26 +21,27 @@ namespace RawEditor.Effect
 
     class ImageEffect
     {
-        public double exposure = 0;
         //public double temperature = 1;
         //public double tint = 1;
         //public double gamma = 0;
+        //public double brightness = 0;
+        //public double vibrance = 0;
+        //public double vignet;
+        //public double[] camCurve;
+
         public double contrast = 0;
-        //  public double brightness = 0;
         public double hightlight = 1;
         public double shadow = 1;
         public bool ReverseGamma = true;
         public uint maxValue;
         public double saturation = 1;
-        //public double vibrance = 0;
-        //public double[] camCurve;
+        public double exposure = 0;
         public double rMul;
         public double gMul;
         public double bMul;
         public int rotation;
         public double gamma;
-
-        //internal double vignet;
+        public bool histoEqual;
 
         internal double[] CreateCurve()
         {
@@ -79,43 +80,7 @@ namespace RawEditor.Effect
             return curve;
         }
 
-        //ugly code
-        public unsafe void ApplyModification(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap)
-        {
-            int shift = colorDepth - 8;
-            maxValue = (uint)(1 << colorDepth);
-            using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
-            using (var reference = buffer.CreateReference())
-            {
-                int startIndex = buffer.GetPlaneDescription(0).StartIndex;
-                ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                double[] curve = CreateCurve();
-                Parallel.For(0, dim.height, y =>
-                {
-                    long realY = (y + off.height) * uncrop.width * 3;
-                    for (int x = 0; x < dim.width; x++)
-                    {
-                        long realPix = realY + (3 * (x + off.width));
-                        long bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
-                        double red = image[realPix] * rMul, green = image[realPix + 1] * gMul, blue = image[realPix + 2] * bMul;
-                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
-                        Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
-                        Luminance.Clip(ref l);
-                        l = curve[(uint)(l * maxValue)] / maxValue;
-                        Luminance.Clip(ref l);
-                        s *= saturation;
-                        Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
-                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
-                        temp[bufferPix] = (byte)((int)blue >> shift);
-                        temp[bufferPix + 1] = (byte)((int)green >> shift);
-                        temp[bufferPix + 2] = (byte)((int)red >> shift);
-                        temp[bufferPix + 3] = 255; //set transparency to 255 else image will be blank
-                    }
-                });
-            }
-        }
-
-        public unsafe HistoRaw ApplyModificationHisto(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap)
+        public unsafe HistoRaw Apply(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap)
         {
             int shift = colorDepth - 8;
             maxValue = (uint)(1 << colorDepth);
@@ -150,6 +115,7 @@ namespace RawEditor.Effect
                         Luminance.Clip(ref l);
                         l = curve[(uint)(l * maxValue)] / maxValue;
                         Luminance.Clip(ref l);
+                        Interlocked.Increment(ref value.luma[(int)(l * 255)]);
                         s *= saturation;
                         // s += vibrance;
                         Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
@@ -162,9 +128,42 @@ namespace RawEditor.Effect
                         Interlocked.Increment(ref value.red[(int)red >> shift]);
                         Interlocked.Increment(ref value.green[(int)green >> shift]);
                         Interlocked.Increment(ref value.blue[(int)blue >> shift]);
-                        Interlocked.Increment(ref value.luma[(((int)red >> shift) + ((int)green >> shift) + ((int)blue >> shift)) / 3]);
                     }
                 });
+
+                if (histoEqual)
+                {
+                    //apply histogram equalisation if needed using the histogram
+                    //create a lookup table
+                    byte[] lut = new byte[256];
+                    double pixelCount = dim.height * dim.width;
+
+                    int sum = 0;
+                    // build a LUT containing scale factor
+                    for (int i = 0; i < 256; ++i)
+                    {
+                        sum += value.luma[i];
+                        lut[i] = (byte)(sum * 255 / pixelCount);
+                        /*
+                        double val = (byte)(value.luma[i] / pixelCount);
+                        if (val > 255) val = 255;
+                        lut[i] = (byte)val;*/
+
+                    }
+
+                    // transform image using sum histogram as a LUT
+                    Parallel.For(0, buffer.GetPlaneDescription(0).Height, y =>
+                     {
+                         int realY = y * buffer.GetPlaneDescription(0).Width;
+                         for (int x = 0; x < buffer.GetPlaneDescription(0).Width; x++)
+                         {
+                             int realX = (realY + x) * 4;
+                             temp[realX] = lut[temp[realX]];
+                             temp[realX + 1] = lut[temp[realX + 1]];
+                             temp[realX + 2] = lut[temp[realX + 2]];
+                         }
+                     });
+                }
                 return value;
             }
         }

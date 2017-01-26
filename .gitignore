@@ -294,3 +294,4 @@ Source/RawParser/Package.appxmanifest
 *.appx
 
 Source/RawParser/project.lock.json
+/Source/Appx
