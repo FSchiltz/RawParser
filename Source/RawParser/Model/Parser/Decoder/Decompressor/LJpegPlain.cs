@@ -855,6 +855,7 @@ namespace RawNet.Decoder.Decompressor
             {
                 frame.height *= 2;
                 raw.raw.dim = new Point2D(frame.width * 2, frame.height);
+                raw.Init();
             }
             fixed (ushort* d = raw.raw.data)
             {
