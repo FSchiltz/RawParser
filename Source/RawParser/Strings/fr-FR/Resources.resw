@@ -231,4 +231,7 @@
   <data name="WBButton.Content" xml:space="preserve">
     <value>Balance des blancs de l'appareil</value>
   </data>
+  <data name="WelcomeText" xml:space="preserve">
+    <value>Bonjour, Ceci est une version beta et il se peut qu'elle ne fonctionne pas encore.</value>
+  </data>
 </root>
