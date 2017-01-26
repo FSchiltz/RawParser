@@ -142,7 +142,7 @@
     <value>Algorithme de dématriçage</value>
   </data>
   <data name="DemosWarningText.Text" xml:space="preserve">
-    <value>Attention, ne pas changer sauf si vous savez ce que vous faites. Certain des algorithmes peuvent ne pas etre fonctionnels et ne feront donc rien. Deflate ne dematrice pas et transforme l'image en une image RGB sans remplir les pixels manquants.</value>
+    <value>Attention, ne pas changer sauf si vous savez ce que vous faites. Certain des algorithmes peuvent ne pas etre fonctionnels et ne feront donc rien. Deflate ne dématrice pas et transforme l'image en une image RGB sans remplir les pixels manquants.</value>
   </data>
   <data name="Display.Text" xml:space="preserve">
     <value>Affichage</value>
@@ -151,7 +151,7 @@
     <value>Options d'affichage</value>
   </data>
   <data name="ExceptionText" xml:space="preserve">
-    <value>L'image n'est pas un format supporté, vous pouvez laisser une issue sur le github.</value>
+    <value>L'image n'est pas un format supporté, vous pouvez signaler un problème  sur le github.</value>
   </data>
   <data name="Exifs.Header" xml:space="preserve">
     <value>Exifs</value>
