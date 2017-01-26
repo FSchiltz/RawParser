@@ -90,7 +90,7 @@ namespace RawEditor.Effect
                 int startIndex = buffer.GetPlaneDescription(0).StartIndex;
                 ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
                 double[] curve = CreateCurve();
-                HistoRaw value = new HistoRaw()
+                HistoRaw histogram = new HistoRaw()
                 {
                     luma = new int[256],
                     red = new int[256],
@@ -115,7 +115,7 @@ namespace RawEditor.Effect
                         Luminance.Clip(ref l);
                         l = curve[(uint)(l * maxValue)] / maxValue;
                         Luminance.Clip(ref l);
-                        Interlocked.Increment(ref value.luma[(int)(l * 255)]);
+                        Interlocked.Increment(ref histogram.luma[(int)(l * 255)]);
                         s *= saturation;
                         // s += vibrance;
                         Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
@@ -125,9 +125,9 @@ namespace RawEditor.Effect
                         temp[bufferPix + 1] = (byte)((int)green >> shift);
                         temp[bufferPix + 2] = (byte)((int)red >> shift);
                         temp[bufferPix + 3] = 255; //set transparency to 255 else image will be blank
-                        Interlocked.Increment(ref value.red[(int)red >> shift]);
-                        Interlocked.Increment(ref value.green[(int)green >> shift]);
-                        Interlocked.Increment(ref value.blue[(int)blue >> shift]);
+                        Interlocked.Increment(ref histogram.red[(int)red >> shift]);
+                        Interlocked.Increment(ref histogram.green[(int)green >> shift]);
+                        Interlocked.Increment(ref histogram.blue[(int)blue >> shift]);
                     }
                 });
 
@@ -142,7 +142,7 @@ namespace RawEditor.Effect
                     // build a LUT containing scale factor
                     for (int i = 0; i < 256; ++i)
                     {
-                        sum += value.luma[i];
+                        sum += histogram.luma[i];
                         lut[i] = (byte)(sum * 255 / pixelCount);
                         /*
                         double val = (byte)(value.luma[i] / pixelCount);
@@ -150,6 +150,14 @@ namespace RawEditor.Effect
                         lut[i] = (byte)val;*/
 
                     }
+                    //reset the histogram
+                    histogram = new HistoRaw()
+                    {
+                        luma = new int[256],
+                        red = new int[256],
+                        blue = new int[256],
+                        green = new int[256]
+                    };
 
                     // transform image using sum histogram as a LUT
                     Parallel.For(0, buffer.GetPlaneDescription(0).Height, y =>
@@ -158,13 +166,25 @@ namespace RawEditor.Effect
                          for (int x = 0; x < buffer.GetPlaneDescription(0).Width; x++)
                          {
                              int realX = (realY + x) * 4;
-                             temp[realX] = lut[temp[realX]];
-                             temp[realX + 1] = lut[temp[realX + 1]];
-                             temp[realX + 2] = lut[temp[realX + 2]];
+
+                             double red = temp[realX], green = temp[realX + 1], blue = temp[realX + 2];
+                             Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
+                             Interlocked.Increment(ref histogram.luma[(int)(l * 255)]);
+                             l = lut[(int)(l * 255.0)] / 255.0;
+                             Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+                             Luminance.Clip(ref red, ref green, ref blue, 255);
+
+                             temp[realX] = (byte)(red);
+                             temp[realX + 1] = (byte)(green);
+                             temp[realX + 2] = (byte)(blue);
+                             //update the histogram
+                             Interlocked.Increment(ref histogram.red[(int)red]);
+                             Interlocked.Increment(ref histogram.green[(int)green]);
+                             Interlocked.Increment(ref histogram.blue[(int)blue]);
                          }
                      });
                 }
-                return value;
+                return histogram;
             }
         }
 
