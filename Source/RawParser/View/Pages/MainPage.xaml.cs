@@ -342,7 +342,7 @@ namespace RawEditor.View.Pages
 #if DEBUG
                         TextDisplay.DisplayError(ex.Message);
 #else
-                        ExceptionDisplay.Display("An error occured while saving");
+                        TextDisplay.DisplayError("An error occured while saving");
 #endif
                     }
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
