@@ -65,14 +65,14 @@ It's made from my own work, from dcraw.c(https://www.cybercom.net/~dcoffin/dcraw
 ####Setup
 Just add the folder Parser to your project and include the namespace RawNet
 ####Open the image
-To opne and image, call the function:
+To open an image, call the function:
 ```
 public static RawDecoder GetDecoder(ref Stream stream, string fileType)
 ```
 Where stream is any Stream object supported by the C# framework opened over the file and fileType is the extension of the file starting with a dot (it's not case sensitive).
 example:
 ```
-RawDecoder decoder = RawParser.GetDecoder(ref stream, file.FileType);
+RawDecoder decoder = RawParser.GetDecoder(ref stream, ".NEF");
 ```
 ####Get and display the thumbnail
 To get the thumbnailobject representing the thumbnail of the file, call the DecodeThumb() function of the opened decoder. It will return null if the file doesn't contain any thumbnail or if it's not yet supported. If thethumbnail is not null, call the GetSoftwareBitmap() function of the thumbanil to return a bitmap object that can be used inside the application.
