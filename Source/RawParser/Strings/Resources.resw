@@ -231,4 +231,7 @@
   <data name="WBButton.Content" xml:space="preserve">
     <value>Use camera white balance</value>
   </data>
+  <data name="WelcomeText" xml:space="preserve">
+    <value>Hello and welcome, this is a preliminary version so it may not work correctly</value>
+  </data>
 </root>

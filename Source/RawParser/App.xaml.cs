@@ -112,7 +112,7 @@ namespace RawEditor
         /// <param name="e">Détails relatifs à l'échec de navigation</param>
         void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
-            ExceptionDisplay.Display("Failed to load Page " + e.SourcePageType.FullName);
+            TextDisplay.DisplayError("Failed to load Page " + e.SourcePageType.FullName);
         }
 
         /// <summary>

@@ -28,6 +28,7 @@ using Microsoft.Graphics.Canvas.Effects;
 using Windows.UI.Composition;
 using Windows.UI.Xaml.Hosting;
 using System.Numerics;
+using Windows.Foundation.Collections;
 
 namespace RawEditor.View.Pages
 {
@@ -66,6 +67,15 @@ namespace RawEditor.View.Pages
             InitializeComponent();
             NavigationCacheMode = NavigationCacheMode.Required;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
+            IPropertySet roamingProperties = ApplicationData.Current.RoamingSettings.Values;
+            if (!roamingProperties.ContainsKey("HasBeenHereBefore"))
+            {
+                // The first-time case
+                //show a greeting pop up
+                var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                TextDisplay.Display(loader.GetString("WelcomeText"), "Welcome", "Ok");
+                roamingProperties["HasBeenHereBefore"] = bool.TrueString; // Doesn't really matter what
+            }
         }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
@@ -142,7 +152,6 @@ namespace RawEditor.View.Pages
             }
         }
 
-
         private void SetWBUpdate()
         {
             SetWBAsync();
@@ -208,7 +217,7 @@ namespace RawEditor.View.Pages
                         raw.metadata.FileExtension = file.FileType;
                         if (raw.errors.Count > 0)
                         {
-                            ExceptionDisplay.Display("This file is not fully supported, it may appear incorrectly");
+                            TextDisplay.DisplayWarning("This file is not fully supported, it may appear incorrectly");
 #if !DEBUG
                                 //send an event with file extension and camera model and make if any                   
                                 logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + ""+raw.errors.Count);
@@ -242,7 +251,7 @@ namespace RawEditor.View.Pages
                     //check if enough memory
                     if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < (ulong)raw.raw.data.Length || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                     {
-                        ExceptionDisplay.Display("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
+                        TextDisplay.DisplayWarning("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                     }
 #if !DEBUG
                     //send an event with file extension, camera model and make
@@ -273,8 +282,7 @@ namespace RawEditor.View.Pages
                     });
                     ImageSelected = false;
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
-                    var str = loader.GetString("ExceptionText");
-                    ExceptionDisplay.Display(str);
+                    TextDisplay.DisplayError(loader.GetString("ExceptionText"));
                 }
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -332,7 +340,7 @@ namespace RawEditor.View.Pages
                     catch (Exception ex)
                     {
 #if DEBUG
-                        ExceptionDisplay.Display(ex.Message);
+                        TextDisplay.DisplayError(ex.Message);
 #else
                         ExceptionDisplay.Display("An error occured while saving");
 #endif
@@ -526,7 +534,7 @@ namespace RawEditor.View.Pages
             }
             catch (Exception e)
             {
-                ExceptionDisplay.Display(e.Message);
+                TextDisplay.DisplayError(e.Message);
             }
         }
 
