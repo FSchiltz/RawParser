@@ -119,6 +119,7 @@ namespace RawEditor.View.Pages
             //VignetSlider.Value = 0;
             //Cause problem (double update of preview)
             GammaToggle.IsOn = raw?.IsGammaCorrected ?? false;
+            AutoCorrectToggle.IsOn = false;
             if (raw != null)
             {
                 raw.raw.offset = new Point2D(0, 0);
@@ -416,7 +417,8 @@ namespace RawEditor.View.Pages
                 effect.hightlight = HighLightSlider.Value;
                 effect.saturation = saturationSlider.Value / 100;
                 //effect.vignet = VignetSlider.Value;
-                effect.ReverseGamma = (bool)GammaToggle.IsOn;
+                effect.ReverseGamma = GammaToggle.IsOn;
+                effect.histoEqual = AutoCorrectToggle.IsOn;
                 if ((bool)LowGamma.IsChecked) { effect.gamma = 1.8; }
                 else if ((bool)HighGamma.IsChecked) { effect.gamma = 2.8; }
                 else if ((bool)MediumGamma.IsChecked) { effect.gamma = 2.4; }
@@ -440,12 +442,12 @@ namespace RawEditor.View.Pages
             });
             if (histo)
             {
-                var tmp = effect.ApplyModificationHisto(image, dim, offset, uncrop, colorDepth, bitmap);
+                var tmp = effect.Apply(image, dim, offset, uncrop, colorDepth, bitmap);
                 return Tuple.Create(tmp, bitmap);
             }
             else
             {
-                effect.ApplyModification(image, dim, offset, uncrop, colorDepth, bitmap);
+                effect.Apply(image, dim, offset, uncrop, colorDepth, bitmap);
                 return Tuple.Create(new HistoRaw(), bitmap);
             }
         }
