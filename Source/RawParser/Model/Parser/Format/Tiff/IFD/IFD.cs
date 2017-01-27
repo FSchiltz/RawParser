@@ -15,6 +15,7 @@ namespace RawNet.Format.TIFF
         public Endianness endian = Endianness.Unknown;
         public int Depth { private set; get; }
         public int RelativeOffset { protected set; get; }
+        public IFDType type;
 
         protected static char[] fuji_signature = {
           'F', 'U', 'J', 'I', 'F', 'I', 'L', 'M', (char)0x0c,(char) 0x00,(char) 0x00,(char) 0x00
@@ -32,10 +33,14 @@ namespace RawNet.Format.TIFF
             Depth = depth + 1;
         }
 
-        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(fileStream, offset, endian, depth, 0) { }
+        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(IFDType.Plain, fileStream, offset, endian, depth, 0) { }
+        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset) : this(IFDType.Plain, fileStream, offset, endian, depth, relativeOffset) { }
+        public IFD(IFDType type, TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(type, fileStream, offset, endian, depth, 0) { }
 
-        public IFD(TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset) : this(endian, depth)
+        public IFD(IFDType type, TIFFBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset) : this(endian, depth)
         {
+            this.type = type;
+
             if (relativeOffset >= 0)
                 fileStream.Position = offset + relativeOffset;
             else
@@ -104,13 +109,12 @@ namespace RawNet.Format.TIFF
                         case TagType.NIKONTHUMB:
                         case TagType.SUBIFDS:
                         case TagType.EXIFIFDPOINTER:
-
                             long p = fileStream.Position;
                             try
                             {
                                 for (Int32 k = 0; k < temp.dataCount; k++)
                                 {
-                                    subIFD.Add(new IFD(fileStream, Convert.ToUInt32(temp.data[k]), endian, Depth, RelativeOffset));
+                                    subIFD.Add(new IFD(IFDType.Plain, fileStream, Convert.ToUInt32(temp.data[k]), endian, Depth, RelativeOffset));
                                 }
                             }
                             catch (RawDecoderException)
@@ -122,6 +126,9 @@ namespace RawNet.Format.TIFF
 
                             }
                             fileStream.BaseStream.Position = p;
+                            break;
+                        case TagType.GPSINFOIFDPOINTER:
+                            subIFD.Add(new IFD(IFDType.GPS, fileStream, Convert.ToUInt32(temp.data[0]), endian, Depth, RelativeOffset));
                             break;
                     }
 
@@ -339,6 +346,17 @@ namespace RawNet.Format.TIFF
                 }
             }
             return matchingIFDs;
+        }
+
+        public IFD GetIFDWithType(IFDType t)
+        {
+            if (type == t) return this;
+            foreach (IFD i in subIFD)
+            {
+                var l = i.GetIFDWithType(t);
+                if (l != null) { return l; }
+            }
+            return null;
         }
 
         protected void MergeIFD(IFD other_tiff)

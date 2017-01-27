@@ -78,7 +78,7 @@ namespace RawNet.Decoder
             if (!ifd.tags.TryGetValue((TagType)0x0116, out var rowPerStripTag)) throw new FormatException("File not correct");
             if (!ifd.tags.TryGetValue((TagType)0x0117, out var stripSizeTag)) throw new FormatException("File not correct");
 
-            if ((ushort)photoMetricTag.data[0] == 2)
+            if (photoMetricTag.GetInt(0) == 2)
             {
                 if (!ifd.tags.TryGetValue((TagType)0x0102, out var bitPerSampleTag)) throw new FormatException("File not correct");
                 if (!ifd.tags.TryGetValue((TagType)0x0115, out var samplesPerPixel)) throw new FormatException("File not correct");
@@ -88,12 +88,12 @@ namespace RawNet.Decoder
                 rawImage.raw.dim = new Point2D(width, height);
                 rawImage.raw.uncroppedDim = rawImage.raw.dim;
                 //suppose that image are always 8,8,8 or 16,16,16
-                rawImage.ColorDepth = (ushort)bitPerSampleTag.data[0];
+                rawImage.ColorDepth = bitPerSampleTag.GetUShort(0);
                 rawImage.cpp = 3;
                 rawImage.Init();
                 rawImage.IsGammaCorrected = false;
-                long strips = height / Convert.ToInt64(rowPerStripTag.data[0]), lastStrip = height % Convert.ToInt64(rowPerStripTag.data[0]);
-                long rowperstrip = Convert.ToInt64(rowPerStripTag.data[0]);
+                long strips = height / rowPerStripTag.GetLong(0), lastStrip = height % rowPerStripTag.GetLong(0);
+                long rowperstrip = rowPerStripTag.GetLong(0);
                 uint compression = imageCompressedTag.GetUInt(0);
                 if (compression == 1)
                 {
@@ -102,7 +102,7 @@ namespace RawNet.Decoder
                     {
                         //for each complete strip
                         //move to the offset
-                        reader.Position = Convert.ToInt64(imageOffsetTag.data[i]);
+                        reader.Position = imageOffsetTag.GetLong(i);
                         for (int y = 0; y < rowperstrip && !(i == strips && y <= lastStrip); y++)
                         {
                             for (int x = 0; x < width; x++)
@@ -114,7 +114,7 @@ namespace RawNet.Decoder
                                 rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = reader.ReadByte();
                                 //blue 
                                 rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = reader.ReadByte();
-                                for (int z = 0; z < (Convert.ToInt32(samplesPerPixel.data[0]) - 3); z++)
+                                for (int z = 0; z < (samplesPerPixel.GetInt(0) - 3); z++)
                                 {
                                     //pass the other pixel if more light
                                     reader.ReadByte();
@@ -139,7 +139,7 @@ namespace RawNet.Decoder
                     {
                         //for each complete strip
                         //move to the offset
-                        reader.Position = Convert.ToInt64(imageOffsetTag.data[i]);
+                        reader.Position = imageOffsetTag.GetLong(i);
                         for (int y = 0; y < rowperstrip && !(i == strips && y < lastStrip); y++)
                         {
                             //uncompress line by line of pixel
@@ -177,7 +177,7 @@ namespace RawNet.Decoder
                                 rawImage.raw.data[(y + i * rowperstrip) * width + x * 3 + 1] = temp[x * 3 + 1];
                                 //blue 
                                 rawImage.raw.data[(y + i * rowperstrip) * width + x * 3 + 2] = temp[x * 3 + 2];
-                                for (int z = 0; z < ((int)samplesPerPixel.data[0] - 3); z++)
+                                for (int z = 0; z < (samplesPerPixel.GetInt(0) - 3); z++)
                                 {
                                     //pass the other pixel if more light
                                     reader.ReadByte();
@@ -312,6 +312,21 @@ namespace RawNet.Decoder
             }
             rawImage.metadata.OriginalRotation = rawImage.Rotation;
             rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.width, rawImage.raw.uncroppedDim.height);
+
+            //gps info
+            var gps = ifd.GetIFDWithType(IFDType.GPS);
+            if (gps != null)
+            {
+                rawImage.metadata.Gps = new GPSInfo()
+                {
+                    longitude = gps.GetEntry((TagType)0x02).GetAsDoubleArray(),
+                    lattitude = gps.GetEntry((TagType)0x02).GetAsDoubleArray(),
+                    longitudeRef = gps.GetEntry((TagType)0x02).DataAsString,
+                    lattitudeRef = gps.GetEntry((TagType)0x02).DataAsString,
+                    altitude = gps.GetEntry((TagType)0x02).GetFloat(0),
+                    altitudeRef = gps.GetEntry((TagType)0x02).GetInt(0)
+                };
+            }
         }
 
         public override Thumbnail DecodeThumb()
@@ -375,10 +390,10 @@ namespace RawNet.Decoder
 
                             Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
                             if (makerNoteOffsetTag == null) return null;
-                            reader.Position = (uint)(offset.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
+                            reader.Position = offset.GetUInt(0) + 10 + makerNoteOffsetTag.dataOffset;
                             Thumbnail temp = new Thumbnail()
                             {
-                                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                                data = reader.ReadBytes(size.GetInt(0)),
                                 Type = ThumbnailType.JPEG,
                                 dim = new Point2D()
                             };

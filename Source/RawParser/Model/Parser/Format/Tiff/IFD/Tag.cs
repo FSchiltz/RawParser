@@ -253,32 +253,36 @@ namespace RawNet.Format.TIFF
             return size;
         }
 
-        internal void GetShortArray(out ushort[] array, int count)
+        internal ushort[] GetUShortArray()
         {
-            array = new ushort[count];
-            for (int i = 0; i < count; i++)
+            var array = new ushort[data.Length];
+            for (int i = 0; i < data.Length; i++)
                 array[i] = Convert.ToUInt16(data[i]);
+            return array;
         }
 
-        internal void GetIntArray(out int[] array, int count)
+        internal int[] GetIntArray()
         {
-            array = new int[count];
-            for (int i = 0; i < count; i++)
+            var array = new int[data.Length];
+            for (int i = 0; i < data.Length; i++)
                 array[i] = Convert.ToInt32(data[i]);
+            return array;
         }
 
-        internal void GetUIntArray(out uint[] array, int count)
+        internal uint[] GetUIntArray()
         {
-            array = new uint[count];
-            for (int i = 0; i < count; i++)
+            var array = new uint[data.Length];
+            for (int i = 0; i < data.Length; i++)
                 array[i] = Convert.ToUInt32(data[i]);
+            return array;
         }
 
-        internal void GetFloatArray(out float[] array, int count)
+        internal float[] GetFloatArray()
         {
-            array = new float[count];
-            for (int i = 0; i < count; i++)
+            var array = new float[data.Length];
+            for (int i = 0; i < data.Length; i++)
                 array[i] = Convert.ToSingle(data[i]);
+            return array;
         }
 
         internal byte[] GetByteArray()
@@ -289,6 +293,18 @@ namespace RawNet.Format.TIFF
             return array;
         }
 
+        internal double[] GetAsDoubleArray()
+        {
+            var array = new double[data.Length];
+            for (int i = 0; i < data.Length; i++)
+                array[i] = Convert.ToDouble(data[i]);
+            return array;
+        }
+
+        internal byte GetByte(int pos) { return Convert.ToByte(data[pos]); }
+
+        internal sbyte GetSByte(int pos) { return Convert.ToSByte(data[pos]); }
+
         internal short GetShort(int pos) { return Convert.ToInt16(data[pos]); }
 
         internal ushort GetUShort(int pos) { return Convert.ToUInt16(data[pos]); }
@@ -296,6 +312,8 @@ namespace RawNet.Format.TIFF
         internal int GetInt(int pos) { return Convert.ToInt32(data[pos]); }
 
         internal uint GetUInt(int pos) { return Convert.ToUInt32(data[pos]); }
+
+        internal long GetLong(int pos) { return Convert.ToInt64(data[pos]); }
 
         internal double GetDouble(int pos) { return Convert.ToDouble(data[pos]); }
 

@@ -8,8 +8,8 @@ namespace RawNet
         public double[] lattitude;
         public int altitudeRef;
         public double altitude;
-        public char lattitudeRef;
-        public char longitudeRef;
+        public string lattitudeRef;
+        public string longitudeRef;
         public string LattitudeAsString => lattitude[0] + "°" + lattitude[1] + "'" + lattitude[2] + "\"" + lattitudeRef;
         public string LongitudeAsString => longitude[0] + "°" + longitude[1] + "'" + longitude[2] + "\"" + longitudeRef;
         public string AltitudeAsString => Math.Sign(altitudeRef) * altitude + "";

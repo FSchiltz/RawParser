@@ -362,10 +362,10 @@ namespace RawNet.Decoder
             if (size == null || thumb == null) return null;
 
 
-            reader.Position = (uint)(thumb.data[0]) + preview.RelativeOffset;
+            reader.Position = thumb.GetUInt(0) + preview.RelativeOffset;
             Thumbnail temp = new Thumbnail()
             {
-                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                data = reader.ReadBytes(size.GetInt(0)),
                 Type = ThumbnailType.JPEG,
                 dim = new Point2D()
             };

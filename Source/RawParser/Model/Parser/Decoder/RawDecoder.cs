@@ -90,8 +90,8 @@ namespace RawNet
             {
                 RawSlice slice = new RawSlice()
                 {
-                    offset = (uint)offsets.data[s],
-                    count = (uint)counts.data[s]
+                    offset = offsets.GetUInt(s),
+                    count = counts.GetUInt(s)
                 };
                 if (offY + yPerSlice > height)
                     slice.h = height - offY;
@@ -394,7 +394,7 @@ namespace RawNet
         protected void Decode12BitRawBE(TIFFBinaryReader input, long width, long height)
         {
             if (width < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
-            
+
             if (input.RemainingSize < ((width * 12 / 8) * height))
             {
                 if (input.RemainingSize > (width * 12 / 8))
@@ -421,7 +421,7 @@ namespace RawNet
         protected void Decode12BitRawBEInterlaced(TIFFBinaryReader input, long width, long height)
         {
             if (width < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
-            
+
             if (input.RemainingSize < ((width * 12 / 8) * height))
             {
                 if (input.RemainingSize > (width * 12 / 8))

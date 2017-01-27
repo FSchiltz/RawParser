@@ -25,10 +25,10 @@ namespace RawNet.Decoder
             var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
             if (size == null || thumb == null) return null;
 
-            reader.Position = (uint)(thumb.data[0]);
+            reader.Position = thumb.GetUInt(0);
             Thumbnail temp = new Thumbnail()
             {
-                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                data = reader.ReadBytes(size.GetInt(0)),
                 Type = ThumbnailType.JPEG,
                 dim = new Point2D()
             };

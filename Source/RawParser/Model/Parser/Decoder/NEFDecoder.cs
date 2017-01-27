@@ -44,7 +44,7 @@ namespace RawNet.Decoder
 
                 Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
                 if (makerNoteOffsetTag == null) return null;
-                reader.Position = (uint)(thumb.data[0]) + 10 + makerNoteOffsetTag.dataOffset;
+                reader.Position = thumb.GetUInt(0) + 10 + makerNoteOffsetTag.dataOffset;
                 Thumbnail temp = new Thumbnail()
                 {
                     data = reader.ReadBytes(size.GetInt(0)),
@@ -475,7 +475,7 @@ namespace RawNet.Decoder
             {
                 int version = 0;
                 for (int i = 0; i < 4; i++)
-                    version = version * 10 + (byte)(colorBalance.data[i]) - '0';
+                    version = version * 10 + colorBalance.GetByte(i) - '0';
                 if (version < 200)
                 {
                     //open a bitstream
@@ -561,23 +561,20 @@ namespace RawNet.Decoder
                     Tag key = ifd.GetEntryRecursive((TagType)0x00a7);
                     if (serial == null || key == null) throw new FormatException("File not correct");
 
-                    byte[] buff = new byte[324];
-                    for (int i = 0; i < 324; i++)
-                    {
-                        buff[i] = (byte)colorBalance.data[i + 1];
-                    }
+                    var colorInfo = colorBalance.GetByteArray();
 
                     uint serialno = 0;
-                    for (uint i = 0; i < serial.dataCount; i++)
+                    for (int i = 0; i < serial.dataCount; i++)
                     {
-                        if ((byte)serial.data[i] == 0) break;
-                        if ((byte)serial.data[i] >= (byte)'0' && (byte)serial.data[i] <= (byte)'9')
-                            serialno = serialno * 10 + (uint)serial.data[i] - '0';
+                        byte serialI = serial.GetByte(i);
+                        if (serialI == 0) break;
+                        if (serialI >= (byte)'0' && serialI <= (byte)'9')
+                            serialno = serialno * 10 + serialI - '0';
                         else
-                            serialno = serialno * 10 + (uint)serial.data[(int)i] % 10;
+                            serialno = serialno * 10 + ((uint)serialI % 10);
                     }
 
-                    uint keyno = (uint)key.data[0] ^ (uint)key.data[1] ^ (uint)key.data[2] ^ (uint)key.data[3];
+                    uint keyno = key.GetUInt(0) ^ key.GetUInt(1) ^ key.GetUInt(2) ^ key.GetUInt(3);
 
                     // "Decrypt" the block using the serial and key
                     uint bitOff = 4;
@@ -588,7 +585,7 @@ namespace RawNet.Decoder
                     byte ck = 0x60;
 
                     for (uint i = 0; i < 280; i++)
-                        colorBalance.data[i + bitOff] = (byte)((byte)colorBalance.data[i + bitOff] ^ (cj += (byte)(ci * ck++)));
+                        colorInfo[i + bitOff] = (byte)(colorInfo[i + bitOff] ^ (cj += (byte)(ci * ck++)));
 
                     // Finally set the WB coeffs
                     uint off = (uint)((version == 0x204) ? 6 : 14);
@@ -623,8 +620,8 @@ namespace RawNet.Decoder
             {
                 if (oldColorBalance.dataCount == 2560 && oldColorBalance.dataType == TiffDataType.UNDEFINED)
                 {
-                    uint red = (uint)oldColorBalance.data[1249] | (((UInt32)oldColorBalance.data[1248]) << 8);
-                    uint blue = (uint)oldColorBalance.data[1251] | (((UInt32)oldColorBalance.data[1250]) << 8);
+                    uint red = oldColorBalance.GetUInt(1249) | (oldColorBalance.GetUInt(1248) << 8);
+                    uint blue = oldColorBalance.GetUInt(1251) | (oldColorBalance.GetUInt(1250) << 8);
                     rawImage.metadata.WbCoeffs[0] = red / 256.0f;
                     rawImage.metadata.WbCoeffs[1] = 1.0f;
                     rawImage.metadata.WbCoeffs[2] = blue / 256.0f;
