@@ -37,7 +37,6 @@ namespace RawNet.Decoder
             var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
             if (size == null || thumb == null) return null;
 
-
             reader.Position = (uint)(thumb.data[0]);
             Thumbnail temp = new Thumbnail()
             {
@@ -210,7 +209,7 @@ namespace RawNet.Decoder
                 if (ss == 4)
                 {
                     rawImage.raw.dim.width /= 3;
-                    rawImage.cpp = (3);
+                    rawImage.cpp = 3;
                     rawImage.isCFA = false;
                     // Fix for Canon 80D rawImage format.
                     // In that format, the frame (as read by getSOF()) is 4032x3402, while the

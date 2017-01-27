@@ -1,5 +1,6 @@
 using RawNet.Decoder.HuffmanCompressor;
 using System;
+using System.Diagnostics;
 
 namespace RawNet.Decoder.Decompressor
 {
@@ -138,9 +139,6 @@ namespace RawNet.Decoder.Decompressor
         **/
         void DecodeScanLeftGeneric()
         {
-            //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
-            //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
-
             UInt32 comps = frame.numComponents;  // Components
             HuffmanTable[] dctbl = new HuffmanTable[4];   // Tables for up to 4 components
             UInt16* predict;         // Prediction pointer
@@ -150,62 +148,60 @@ namespace RawNet.Decoder.Decompressor
             UInt32[] samplesH = new UInt32[4];
             UInt32[] samplesV = new uint[4];
 
-            fixed (ushort* d = raw.raw.data)
+
+            UInt32 maxSuperH = 1;
+            UInt32 maxSuperV = 1;
+            UInt32[] samplesComp = new UInt32[4]; // How many samples per group does this component have
+            UInt32 pixGroup = 0;   // How many pixels per group.
+
+            for (UInt32 i = 0; i < comps; i++)
             {
-                //TODO remove this hack
-                byte* draw = (byte*)d;
-                UInt32 maxSuperH = 1;
-                UInt32 maxSuperV = 1;
-                UInt32[] samplesComp = new UInt32[4]; // How many samples per group does this component have
-                UInt32 pixGroup = 0;   // How many pixels per group.
+                dctbl[i] = huff[frame.ComponentInfo[i].dcTblNo];
+                samplesH[i] = frame.ComponentInfo[i].superH;
+                if (!Common.IsPowerOfTwo(samplesH[i]))
+                    throw new RawDecoderException("decodeScanLeftGeneric: Horizontal sampling is not power of two.");
+                maxSuperH = Math.Max(samplesH[i], maxSuperH);
+                samplesV[i] = frame.ComponentInfo[i].superV;
+                if (!Common.IsPowerOfTwo(samplesV[i]))
+                    throw new RawDecoderException("decodeScanLeftGeneric: Vertical sampling is not power of two.");
+                maxSuperV = Math.Max(samplesV[i], maxSuperV);
+                samplesComp[i] = samplesV[i] * samplesH[i];
+                pixGroup += samplesComp[i];
+            }
 
-                for (UInt32 i = 0; i < comps; i++)
-                {
-                    dctbl[i] = huff[frame.ComponentInfo[i].dcTblNo];
-                    samplesH[i] = frame.ComponentInfo[i].superH;
-                    if (!Common.IsPowerOfTwo(samplesH[i]))
-                        throw new RawDecoderException("decodeScanLeftGeneric: Horizontal sampling is not power of two.");
-                    maxSuperH = Math.Max(samplesH[i], maxSuperH);
-                    samplesV[i] = frame.ComponentInfo[i].superV;
-                    if (!Common.IsPowerOfTwo(samplesV[i]))
-                        throw new RawDecoderException("decodeScanLeftGeneric: Vertical sampling is not power of two.");
-                    maxSuperV = Math.Max(samplesV[i], maxSuperV);
-                    samplesComp[i] = samplesV[i] * samplesH[i];
-                    pixGroup += samplesComp[i];
-                }
+            raw.metadata.Subsampling.width = maxSuperH;
+            raw.metadata.Subsampling.height = maxSuperV;
 
-                raw.metadata.Subsampling.width = maxSuperH;
-                raw.metadata.Subsampling.height = maxSuperV;
+            //Prepare slices (for CR2)
+            Int32 slices = slicesW.Count * (int)((frame.height - skipY) / maxSuperV);
+            UInt16** imagePos = stackalloc UInt16*[(slices + 1)];
+            int[] sliceWidth = new int[(slices + 1)];
 
-                //Prepare slices (for CR2)
-                Int32 slices = slicesW.Count * (int)((frame.height - skipY) / maxSuperV);
-                UInt16** imagePos = stackalloc UInt16*[(slices + 1)];
-                int[] sliceWidth = new int[(slices + 1)];
+            UInt32 t_y = 0;
+            UInt32 t_x = 0;
+            UInt32 t_s = 0;
+            UInt32 slice = 0;
+            UInt32 pitch_s = raw.pitch / 2;  // Pitch in shorts 
 
-                UInt32 t_y = 0;
-                UInt32 t_x = 0;
-                UInt32 t_s = 0;
-                UInt32 slice = 0;
-                UInt32 pitch_s = raw.pitch / 2;  // Pitch in shorts 
+            int[] slice_width = new int[slices];
 
-                int[] slice_width = new int[slices];
+            // This is divided by comps, since comps pixels are processed at the time
+            for (Int32 i = 0; i < slicesW.Count; i++)
+                slice_width[i] = (int)(slicesW[i] / pixGroup / maxSuperH); // This is a guess, but works for sRaw1+2.
 
-                // This is divided by comps, since comps pixels are processed at the time
-                for (Int32 i = 0; i < slicesW.Count; i++)
-                    slice_width[i] = (int)(slicesW[i] / pixGroup / maxSuperH); // This is a guess, but works for sRaw1+2.
-
-                if (skipX != 0 && (maxSuperV > 1 || maxSuperH > 1))
-                {
-                    throw new RawDecoderException("decodeScanLeftGeneric: Cannot skip right border in subsampled mode");
-                }
-                if (skipX != 0)
-                {
-                    slice_width[slicesW.Count - 1] -= (int)skipX;
-                }
-
+            if (skipX != 0 && (maxSuperV > 1 || maxSuperH > 1))
+            {
+                throw new RawDecoderException("decodeScanLeftGeneric: Cannot skip right border in subsampled mode");
+            }
+            if (skipX != 0)
+            {
+                slice_width[slicesW.Count - 1] -= (int)skipX;
+            }
+            fixed (ushort* draw = raw.raw.data)
+            {
                 for (slice = 0; slice < slices; slice++)
                 {
-                    imagePos[slice] = (UInt16*)&draw[(t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)];
+                    imagePos[slice] = &draw[t_x + offX + ((offY + t_y) * raw.raw.dim.width)];
                     sliceWidth[slice] = slice_width[t_s];
                     t_y += maxSuperV;
                     if (t_y >= (frame.height - skipY))
@@ -214,120 +210,120 @@ namespace RawNet.Decoder.Decompressor
                         t_x += (uint)slice_width[t_s++];
                     }
                 }
-                slice_width = null;
+            }
+            slice_width = null;
 
-                // We check the final position. If bad slice sizes are given we risk writing outside the image
-                fixed (ushort* t = &raw.raw.data[raw.pitch * raw.raw.dim.height])
+            // We check the final position. If bad slice sizes are given we risk writing outside the image
+            /*fixed (ushort* t = &raw.raw.data[raw.raw.dim.width * (raw.raw.dim.height - 1)])
+            {
+                if (imagePos[slices - 1] >= t)
                 {
-                    if (imagePos[slices - 1] >= t)
+                    throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
+                }
+            }*/
+            imagePos[slices] = imagePos[slices - 1];      // Extra offset to avoid branch in loop.
+            sliceWidth[slices] = sliceWidth[slices - 1];        // Extra offset to avoid branch in loop.
+
+            // Predictors for components
+            int[] p = new int[4];
+            UInt16* dest = imagePos[0];
+
+            // Always points to next slice
+            slice = 1;
+            UInt32 pixInSlice = (uint)sliceWidth[0];
+
+            // Initialize predictors and decode one group.
+            UInt32 x = 0;
+            predict = dest;
+            for (UInt32 i = 0; i < comps; i++)
+            {
+                for (UInt32 y2 = 0; y2 < samplesV[i]; y2++)
+                {
+                    for (UInt32 x2 = 0; x2 < samplesH[i]; x2++)
                     {
-                        throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
+                        // First pixel is not predicted, all other are.
+                        if (y2 == 0 && x2 == 0)
+                        {
+                            p[i] = (1 << (int)(frame.precision - Pt - 1)) + dctbl[i].Decode();
+                            dest[0] = (ushort)p[i];
+                        }
+                        else
+                        {
+                            p[i] += dctbl[i].Decode();
+                            Debug.Assert(p[i] >= 0 && p[i] < 65536);
+                            dest[x2 * comps + y2 * pitch_s] = (ushort)p[i];
+                        }
                     }
                 }
-                imagePos[slices] = imagePos[slices - 1];      // Extra offset to avoid branch in loop.
-                sliceWidth[slices] = sliceWidth[slices - 1];        // Extra offset to avoid branch in loop.
+                // Set predictor for this component
+                // Next component
+                dest++;
+            }
 
-                // Predictors for components
-                int[] p = new int[4];
-                UInt16* dest = imagePos[0];
+            // Increment destination to next group
+            dest += (maxSuperH - 1) * comps;
+            x = maxSuperH;
+            pixInSlice -= maxSuperH;
 
-                // Always points to next slice
-                slice = 1;
-                UInt32 pixInSlice = (uint)sliceWidth[0];
-
-                // Initialize predictors and decode one group.
-                UInt32 x = 0;
-                predict = dest;
-                for (UInt32 i = 0; i < comps; i++)
+            UInt32 cw = frame.width - skipX;
+            for (Int32 y = 0; y < (frame.height - skipY); y += (int)maxSuperV)
+            {
+                for (; x < cw; x += maxSuperH)
                 {
-                    for (UInt32 y2 = 0; y2 < samplesV[i]; y2++)
+
+                    if (0 == pixInSlice)
+                    { // Next slice
+                        if (slice > slices)
+                            throw new RawDecoderException("decodeScanLeft: Ran out of slices");
+                        pixInSlice = (uint)sliceWidth[slice];
+                        dest = imagePos[slice];  // Adjust destination for next pixel
+
+                        slice++;
+                        // If new are at the start of a new line, also update predictors.
+                        if (x == 0)
+                            predict = dest;
+                    }
+
+                    for (Int32 i = 0; i < comps; i++)
                     {
-                        for (UInt32 x2 = 0; x2 < samplesH[i]; x2++)
+                        for (Int32 y2 = 0; y2 < samplesV[i]; y2++)
                         {
-                            // First pixel is not predicted, all other are.
-                            if (y2 == 0 && x2 == 0)
-                            {
-                                p[i] = (1 << (int)(frame.precision - Pt - 1)) + dctbl[i].Decode();
-                                dest[0] = (ushort)p[i];
-                            }
-                            else
+                            for (Int32 x2 = 0; x2 < samplesH[i]; x2++)
                             {
                                 p[i] += dctbl[i].Decode();
-                                //_ASSERTE(p[i] >= 0 && p[i] < 65536);
+                                Debug.Assert(p[i] >= 0 && p[i] < 65536);
                                 dest[x2 * comps + y2 * pitch_s] = (ushort)p[i];
                             }
                         }
+                        dest++;
                     }
-                    // Set predictor for this component
-                    // Next component
-                    dest++;
+                    dest += (maxSuperH * comps) - comps;
+                    pixInSlice -= maxSuperH;
                 }
 
-                // Increment destination to next group
-                dest += (maxSuperH - 1) * comps;
-                x = maxSuperH;
-                pixInSlice -= maxSuperH;
-
-                UInt32 cw = frame.width - skipX;
-                for (Int32 y = 0; y < (frame.height - skipY); y += (int)maxSuperV)
+                if (skipX != 0)
                 {
-                    for (; x < cw; x += maxSuperH)
+                    for (UInt32 sx = 0; sx < skipX; sx++)
                     {
-
-                        if (0 == pixInSlice)
-                        { // Next slice
-                            if (slice > slices)
-                                throw new RawDecoderException("decodeScanLeft: Ran out of slices");
-                            pixInSlice = (uint)sliceWidth[slice];
-                            dest = imagePos[slice];  // Adjust destination for next pixel
-
-                            slice++;
-                            // If new are at the start of a new line, also update predictors.
-                            if (x == 0)
-                                predict = dest;
-                        }
-
-                        for (Int32 i = 0; i < comps; i++)
+                        for (UInt32 i = 0; i < comps; i++)
                         {
-                            for (Int32 y2 = 0; y2 < samplesV[i]; y2++)
-                            {
-                                for (Int32 x2 = 0; x2 < samplesH[i]; x2++)
-                                {
-                                    p[i] += dctbl[i].Decode();
-                                    //_ASSERTE(p[i] >= 0 && p[i] < 65536);
-                                    dest[x2 * comps + y2 * pitch_s] = (ushort)p[i];
-                                }
-                            }
-                            dest++;
-                        }
-                        dest += (maxSuperH * comps) - comps;
-                        pixInSlice -= maxSuperH;
-                    }
-
-                    if (skipX != 0)
-                    {
-                        for (UInt32 sx = 0; sx < skipX; sx++)
-                        {
-                            for (UInt32 i = 0; i < comps; i++)
-                            {
-                                dctbl[i].Decode();
-                            }
+                            dctbl[i].Decode();
                         }
                     }
-
-                    // Update predictors
-                    for (UInt32 i = 0; i < comps; i++)
-                    {
-                        p[i] = predict[i];
-                        // Ensure, that there is a slice shift at new line
-                        if (!(pixInSlice == 0 || maxSuperV == 1))
-                            throw new RawDecoderException("decodeScanLeftGeneric: Slice not placed at new line");
-                    }
-                    // Check if we are still within the file.
-                    bits.CheckPos();
-                    predict = dest;
-                    x = 0;
                 }
+
+                // Update predictors
+                for (UInt32 i = 0; i < comps; i++)
+                {
+                    p[i] = predict[i];
+                    // Ensure, that there is a slice shift at new line
+                    if (!(pixInSlice == 0 || maxSuperV == 1))
+                        throw new RawDecoderException("decodeScanLeftGeneric: Slice not placed at new line");
+                }
+                // Check if we are still within the file.
+                bits.CheckPos();
+                predict = dest;
+                x = 0;
             }
         }
 

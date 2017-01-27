@@ -49,9 +49,9 @@ namespace RawNet.Decoder.HuffmanCompressor
                            0x00000003, 0x00000001
                         };
 
-        public HuffmanTable(bool DNGCompatible, bool UseBigtable)
+        public HuffmanTable(bool DNGCompatible, bool UseBigTable)
         {
-            this.UseBigTable = UseBigtable;
+            this.UseBigTable = UseBigTable;
             this.DNGCompatible = DNGCompatible;
 
             //init to maxvalue
@@ -68,6 +68,7 @@ namespace RawNet.Decoder.HuffmanCompressor
             int p, i, l, lastp, si;
             byte[] huffsize = new byte[257];
             UInt16[] huffcode = new ushort[257];
+            //for (int k = 0; k < huffcode.Length; k++) { huffcode[k] = 52428; }
             UInt16 code;
             int size;
             int value, ll, ul;

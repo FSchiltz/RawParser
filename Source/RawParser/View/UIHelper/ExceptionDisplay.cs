@@ -7,12 +7,12 @@ namespace RawEditor.View.UIHelper
 {
     class TextDisplay
     {
-        public static void DisplayWarning(string message)
+        public static void DisplayError(string message)
         {
             Display(message, "Error", "Ok");
         }
 
-        public static void DisplayError(string message)
+        public static void DisplayWarning(string message)
         {
             Display(message, "Warning", "Ok");
         }
