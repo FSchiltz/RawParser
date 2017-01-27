@@ -459,160 +459,197 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("NEF Support: Make name not found");
             if (rawImage.metadata.Model.Contains("NIKON")) rawImage.metadata.Model = rawImage.metadata.Model.Substring(6);
 
-            // Read the whitebalance
-            // We use this for the D50 and D2X whacky WB "encryption"
-            byte[] serialmap = {
-                  0xc1,0xbf,0x6d,0x0d,0x59,0xc5,0x13,0x9d,0x83,0x61,0x6b,0x4f,0xc7,0x7f,0x3d,0x3d,
-                  0x53,0x59,0xe3,0xc7,0xe9,0x2f,0x95,0xa7,0x95,0x1f,0xdf,0x7f,0x2b,0x29,0xc7,0x0d,
-                  0xdf,0x07,0xef,0x71,0x89,0x3d,0x13,0x3d,0x3b,0x13,0xfb,0x0d,0x89,0xc1,0x65,0x1f,
-                  0xb3,0x0d,0x6b,0x29,0xe3,0xfb,0xef,0xa3,0x6b,0x47,0x7f,0x95,0x35,0xa7,0x47,0x4f,
-                  0xc7,0xf1,0x59,0x95,0x35,0x11,0x29,0x61,0xf1,0x3d,0xb3,0x2b,0x0d,0x43,0x89,0xc1,
-                  0x9d,0x9d,0x89,0x65,0xf1,0xe9,0xdf,0xbf,0x3d,0x7f,0x53,0x97,0xe5,0xe9,0x95,0x17,
-                  0x1d,0x3d,0x8b,0xfb,0xc7,0xe3,0x67,0xa7,0x07,0xf1,0x71,0xa7,0x53,0xb5,0x29,0x89,
-                  0xe5,0x2b,0xa7,0x17,0x29,0xe9,0x4f,0xc5,0x65,0x6d,0x6b,0xef,0x0d,0x89,0x49,0x2f,
-                  0xb3,0x43,0x53,0x65,0x1d,0x49,0xa3,0x13,0x89,0x59,0xef,0x6b,0xef,0x65,0x1d,0x0b,
-                  0x59,0x13,0xe3,0x4f,0x9d,0xb3,0x29,0x43,0x2b,0x07,0x1d,0x95,0x59,0x59,0x47,0xfb,
-                  0xe5,0xe9,0x61,0x47,0x2f,0x35,0x7f,0x17,0x7f,0xef,0x7f,0x95,0x95,0x71,0xd3,0xa3,
-                  0x0b,0x71,0xa3,0xad,0x0b,0x3b,0xb5,0xfb,0xa3,0xbf,0x4f,0x83,0x1d,0xad,0xe9,0x2f,
-                  0x71,0x65,0xa3,0xe5,0x07,0x35,0x3d,0x0d,0xb5,0xe9,0xe5,0x47,0x3b,0x9d,0xef,0x35,
-                  0xa3,0xbf,0xb3,0xdf,0x53,0xd3,0x97,0x53,0x49,0x71,0x07,0x35,0x61,0x71,0x2f,0x43,
-                  0x2f,0x11,0xdf,0x17,0x97,0xfb,0x95,0x3b,0x7f,0x6b,0xd3,0x25,0xbf,0xad,0xc7,0xc5,
-                  0xc5,0xb5,0x8b,0xef,0x2f,0xd3,0x07,0x6b,0x25,0x49,0x95,0x25,0x49,0x6d,0x71,0xc7
-            };
-            byte[] keymap = {
-                  0xa7,0xbc,0xc9,0xad,0x91,0xdf,0x85,0xe5,0xd4,0x78,0xd5,0x17,0x46,0x7c,0x29,0x4c,
-                  0x4d,0x03,0xe9,0x25,0x68,0x11,0x86,0xb3,0xbd,0xf7,0x6f,0x61,0x22,0xa2,0x26,0x34,
-                  0x2a,0xbe,0x1e,0x46,0x14,0x68,0x9d,0x44,0x18,0xc2,0x40,0xf4,0x7e,0x5f,0x1b,0xad,
-                  0x0b,0x94,0xb6,0x67,0xb4,0x0b,0xe1,0xea,0x95,0x9c,0x66,0xdc,0xe7,0x5d,0x6c,0x05,
-                  0xda,0xd5,0xdf,0x7a,0xef,0xf6,0xdb,0x1f,0x82,0x4c,0xc0,0x68,0x47,0xa1,0xbd,0xee,
-                  0x39,0x50,0x56,0x4a,0xdd,0xdf,0xa5,0xf8,0xc6,0xda,0xca,0x90,0xca,0x01,0x42,0x9d,
-                  0x8b,0x0c,0x73,0x43,0x75,0x05,0x94,0xde,0x24,0xb3,0x80,0x34,0xe5,0x2c,0xdc,0x9b,
-                  0x3f,0xca,0x33,0x45,0xd0,0xdb,0x5f,0xf5,0x52,0xc3,0x21,0xda,0xe2,0x22,0x72,0x6b,
-                  0x3e,0xd0,0x5b,0xa8,0x87,0x8c,0x06,0x5d,0x0f,0xdd,0x09,0x19,0x93,0xd0,0xb9,0xfc,
-                  0x8b,0x0f,0x84,0x60,0x33,0x1c,0x9b,0x45,0xf1,0xf0,0xa3,0x94,0x3a,0x12,0x77,0x33,
-                  0x4d,0x44,0x78,0x28,0x3c,0x9e,0xfd,0x65,0x57,0x16,0x94,0x6b,0xfb,0x59,0xd0,0xc8,
-                  0x22,0x36,0xdb,0xd2,0x63,0x98,0x43,0xa1,0x04,0x87,0x86,0xf7,0xa6,0x26,0xbb,0xd6,
-                  0x59,0x4d,0xbf,0x6a,0x2e,0xaa,0x2b,0xef,0xe6,0x78,0xb6,0x4e,0xe0,0x2f,0xdc,0x7c,
-                  0xbe,0x57,0x19,0x32,0x7e,0x2a,0xd0,0xb8,0xba,0x29,0x00,0x3c,0x52,0x7d,0xa8,0x49,
-                  0x3b,0x2d,0xeb,0x25,0x49,0xfa,0xa3,0xaa,0x39,0xa7,0xc5,0xa7,0x50,0x11,0x36,0xfb,
-                  0xc6,0x67,0x4a,0xf5,0xa5,0x12,0x65,0x7e,0xb0,0xdf,0xaf,0x4e,0xb3,0x61,0x7f,0x2f
-            };
-
-            List<IFD> note = ifd.GetIFDsWithTag((TagType)12);
-            if (note.Count != 0)
+            //get the colorBalance
+            Tag colorBalance = ifd.GetEntryRecursive((TagType)0x97);
+            Tag oldColorBalance = ifd.GetEntryRecursive((TagType)0x0014);
+            Tag colorLevel = ifd.GetEntryRecursive((TagType)0xc);
+            //first get the matrix of level for each pixel (a 2*2 array corresponding to the rgb bayer matrice used     
+            if (colorLevel != null)
             {
-                Tag wb = note[0].GetEntry((TagType)12);
-                if (wb.dataCount == 4)
-                {
-                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0);
-                    rawImage.metadata.WbCoeffs[1] = Convert.ToSingle(wb.data[2]);
-                    rawImage.metadata.WbCoeffs[2] = Convert.ToSingle(wb.data[1]);
-                    if (rawImage.metadata.WbCoeffs[1] == 0.0f)
-                        rawImage.metadata.WbCoeffs[1] = 1.0f;
-                }
+                rawImage.metadata.WbCoeffs[0] = colorLevel.GetFloat(0);
+                rawImage.metadata.WbCoeffs[1] = colorLevel.GetFloat(2);
+                rawImage.metadata.WbCoeffs[2] = colorLevel.GetFloat(1);
+                if (rawImage.metadata.WbCoeffs[1] == 0.0f) rawImage.metadata.WbCoeffs[1] = 1.0f;
             }
-            else
+            else if (colorBalance != null)
             {
-                Tag wb = ifd.GetEntryRecursive((TagType)0x0097);
-                if (wb != null)
+                int version = 0;
+                for (int i = 0; i < 4; i++)
+                    version = version * 10 + (byte)(colorBalance.data[i]) - '0';
+                if (version < 200)
                 {
-                    if (wb.dataCount > 4)
+                    //open a bitstream
+                    TIFFBinaryReader reader;
+                    if (ifd.endian == Endianness.Big)
                     {
-                        uint version = 0;
-                        for (uint i = 0; i < 4; i++)
-                            version = (version << 4) + Convert.ToUInt32(wb.data[i]) - '0';
-                        if (version == 0x100 && wb.dataCount >= 80 && wb.dataType == TiffDataType.UNDEFINED)
-                        {
-                            rawImage.metadata.WbCoeffs[0] = wb.GetShort(36);
-                            rawImage.metadata.WbCoeffs[2] = wb.GetShort(37);
-                            rawImage.metadata.WbCoeffs[1] = wb.GetShort(38);
-                        }
-                        else if (version == 0x103 && wb.dataCount >= 26 && wb.dataType == TiffDataType.UNDEFINED)
-                        {
-                            rawImage.metadata.WbCoeffs[0] = wb.GetShort(10);
-                            rawImage.metadata.WbCoeffs[1] = wb.GetShort(11);
-                            rawImage.metadata.WbCoeffs[2] = wb.GetShort(12);
-                        }
-                        else
-                        {
-                            if (((version == 0x204 && wb.dataCount >= 564) ||
-                                (version == 0x205 && wb.dataCount >= 284)))
-                            {
-                                // Get the serial number
-                                Tag serial = ifd.GetEntryRecursive((TagType)0x001d);
-                                if (serial != null)
-                                {
-                                    uint serialno = 0;
-                                    for (uint i = 0; i < serial.dataCount; i++)
-                                    {
-                                        if ((byte)serial.data[i] == 0) break;
-                                        if ((byte)serial.data[i] >= (byte)'0' && (byte)serial.data[i] <= (byte)'9')
-                                            serialno = serialno * 10 + (uint)serial.data[i] - '0';
-                                        else
-                                            serialno = serialno * 10 + (uint)serial.data[(int)i] % 10;
-                                    }
-
-                                    // Get the decryption key
-                                    Tag key = ifd.GetEntryRecursive((TagType)0x00a7);
-                                    if (key != null)
-                                    {
-                                        uint keyno = (uint)key.data[0] ^ (uint)key.data[1] ^ (uint)key.data[2] ^ (uint)key.data[3];
-
-                                        // "Decrypt" the block using the serial and key
-                                        uint bitOff = 4;
-                                        if (version == 0x204)
-                                            bitOff += 280;
-                                        byte ci = serialmap[serialno & 0xff];
-                                        byte cj = keymap[keyno & 0xff];
-                                        byte ck = 0x60;
-
-                                        for (uint i = 0; i < 280; i++)
-                                            wb.data[i + bitOff] = (byte)((byte)wb.data[i + bitOff] ^ (cj += (byte)(ci * ck++)));
-
-                                        // Finally set the WB coeffs
-                                        uint off = (uint)((version == 0x204) ? 6 : 14);
-                                        off += bitOff;
-                                        rawImage.metadata.WbCoeffs[0] = wb.Get2BE(off);
-                                        rawImage.metadata.WbCoeffs[1] = wb.Get2BE(off + 2);
-                                        rawImage.metadata.WbCoeffs[2] = wb.Get2BE(off + 6);
-                                    }
-                                }
-                            }
-                        }
+                        reader = new TIFFBinaryReaderRE(colorBalance.GetByteArray());
                     }
+                    else
+                    {
+                        reader = new TIFFBinaryReader(colorBalance.GetByteArray());
+                    }
+                    switch (version)
+                    {
+                        case 100:
+                            reader.Position = 72;
+                            for (int c = 0; c < 4; c++)
+                            {
+                                rawImage.metadata.WbCoeffs[(c >> 1) | ((c & 1) << 1)] = reader.ReadUInt16();
+                            }
+                            break;
+                        case 102:
+                            reader.Position = 10;
+                            for (int c = 0; c < 4; c++)
+                            {
+                                rawImage.metadata.WbCoeffs[c ^ (c >> 1)] = reader.ReadUInt16();
+                            }
+                            break;
+                        case 103:
+                            reader.Position = 20;
+                            for (int c = 0; c < 3; c++)
+                            {
+                                rawImage.metadata.WbCoeffs[c] = reader.ReadUInt16();
+                            }
+                            break;
+                    }
+                    reader.Dispose();
                 }
                 else
                 {
-                    wb = ifd.GetEntryRecursive((TagType)0x0014);
-                    if (wb != null)
-                    {
-                        if (wb.dataCount == 2560 && wb.dataType == TiffDataType.UNDEFINED)
-                        {
-                            uint red = (uint)wb.data[1249] | (((UInt32)wb.data[1248]) << 8);
-                            uint blue = (uint)wb.data[1251] | (((UInt32)wb.data[1250]) << 8);
-                            rawImage.metadata.WbCoeffs[0] = red / 256.0f;
-                            rawImage.metadata.WbCoeffs[1] = 1.0f;
-                            rawImage.metadata.WbCoeffs[2] = blue / 256.0f;
-                        }
-                        else if (wb.DataAsString.StartsWith("NRW "))
-                        {
-                            uint offset = 0;
-                            if (((string)(wb.DataAsString.Skip(4)) == "0100") && wb.dataCount > 72)
-                                offset = 56;
-                            else if (wb.dataCount > 1572)
-                                offset = 1556;
+                    // Read the whitebalance
+                    // We use this for the D50 and D2X whacky WB "encryption"
+                    byte[] serialmap = {
+                        0xc1,0xbf,0x6d,0x0d,0x59,0xc5,0x13,0x9d,0x83,0x61,0x6b,0x4f,0xc7,0x7f,0x3d,0x3d,
+                        0x53,0x59,0xe3,0xc7,0xe9,0x2f,0x95,0xa7,0x95,0x1f,0xdf,0x7f,0x2b,0x29,0xc7,0x0d,
+                        0xdf,0x07,0xef,0x71,0x89,0x3d,0x13,0x3d,0x3b,0x13,0xfb,0x0d,0x89,0xc1,0x65,0x1f,
+                        0xb3,0x0d,0x6b,0x29,0xe3,0xfb,0xef,0xa3,0x6b,0x47,0x7f,0x95,0x35,0xa7,0x47,0x4f,
+                        0xc7,0xf1,0x59,0x95,0x35,0x11,0x29,0x61,0xf1,0x3d,0xb3,0x2b,0x0d,0x43,0x89,0xc1,
+                        0x9d,0x9d,0x89,0x65,0xf1,0xe9,0xdf,0xbf,0x3d,0x7f,0x53,0x97,0xe5,0xe9,0x95,0x17,
+                        0x1d,0x3d,0x8b,0xfb,0xc7,0xe3,0x67,0xa7,0x07,0xf1,0x71,0xa7,0x53,0xb5,0x29,0x89,
+                        0xe5,0x2b,0xa7,0x17,0x29,0xe9,0x4f,0xc5,0x65,0x6d,0x6b,0xef,0x0d,0x89,0x49,0x2f,
+                        0xb3,0x43,0x53,0x65,0x1d,0x49,0xa3,0x13,0x89,0x59,0xef,0x6b,0xef,0x65,0x1d,0x0b,
+                        0x59,0x13,0xe3,0x4f,0x9d,0xb3,0x29,0x43,0x2b,0x07,0x1d,0x95,0x59,0x59,0x47,0xfb,
+                        0xe5,0xe9,0x61,0x47,0x2f,0x35,0x7f,0x17,0x7f,0xef,0x7f,0x95,0x95,0x71,0xd3,0xa3,
+                        0x0b,0x71,0xa3,0xad,0x0b,0x3b,0xb5,0xfb,0xa3,0xbf,0x4f,0x83,0x1d,0xad,0xe9,0x2f,
+                        0x71,0x65,0xa3,0xe5,0x07,0x35,0x3d,0x0d,0xb5,0xe9,0xe5,0x47,0x3b,0x9d,0xef,0x35,
+                        0xa3,0xbf,0xb3,0xdf,0x53,0xd3,0x97,0x53,0x49,0x71,0x07,0x35,0x61,0x71,0x2f,0x43,
+                        0x2f,0x11,0xdf,0x17,0x97,0xfb,0x95,0x3b,0x7f,0x6b,0xd3,0x25,0xbf,0xad,0xc7,0xc5,
+                        0xc5,0xb5,0x8b,0xef,0x2f,0xd3,0x07,0x6b,0x25,0x49,0x95,0x25,0x49,0x6d,0x71,0xc7
+                    };
+                    byte[] keymap = {
+                        0xa7,0xbc,0xc9,0xad,0x91,0xdf,0x85,0xe5,0xd4,0x78,0xd5,0x17,0x46,0x7c,0x29,0x4c,
+                        0x4d,0x03,0xe9,0x25,0x68,0x11,0x86,0xb3,0xbd,0xf7,0x6f,0x61,0x22,0xa2,0x26,0x34,
+                        0x2a,0xbe,0x1e,0x46,0x14,0x68,0x9d,0x44,0x18,0xc2,0x40,0xf4,0x7e,0x5f,0x1b,0xad,
+                        0x0b,0x94,0xb6,0x67,0xb4,0x0b,0xe1,0xea,0x95,0x9c,0x66,0xdc,0xe7,0x5d,0x6c,0x05,
+                        0xda,0xd5,0xdf,0x7a,0xef,0xf6,0xdb,0x1f,0x82,0x4c,0xc0,0x68,0x47,0xa1,0xbd,0xee,
+                        0x39,0x50,0x56,0x4a,0xdd,0xdf,0xa5,0xf8,0xc6,0xda,0xca,0x90,0xca,0x01,0x42,0x9d,
+                        0x8b,0x0c,0x73,0x43,0x75,0x05,0x94,0xde,0x24,0xb3,0x80,0x34,0xe5,0x2c,0xdc,0x9b,
+                        0x3f,0xca,0x33,0x45,0xd0,0xdb,0x5f,0xf5,0x52,0xc3,0x21,0xda,0xe2,0x22,0x72,0x6b,
+                        0x3e,0xd0,0x5b,0xa8,0x87,0x8c,0x06,0x5d,0x0f,0xdd,0x09,0x19,0x93,0xd0,0xb9,0xfc,
+                        0x8b,0x0f,0x84,0x60,0x33,0x1c,0x9b,0x45,0xf1,0xf0,0xa3,0x94,0x3a,0x12,0x77,0x33,
+                        0x4d,0x44,0x78,0x28,0x3c,0x9e,0xfd,0x65,0x57,0x16,0x94,0x6b,0xfb,0x59,0xd0,0xc8,
+                        0x22,0x36,0xdb,0xd2,0x63,0x98,0x43,0xa1,0x04,0x87,0x86,0xf7,0xa6,0x26,0xbb,0xd6,
+                        0x59,0x4d,0xbf,0x6a,0x2e,0xaa,0x2b,0xef,0xe6,0x78,0xb6,0x4e,0xe0,0x2f,0xdc,0x7c,
+                        0xbe,0x57,0x19,0x32,0x7e,0x2a,0xd0,0xb8,0xba,0x29,0x00,0x3c,0x52,0x7d,0xa8,0x49,
+                        0x3b,0x2d,0xeb,0x25,0x49,0xfa,0xa3,0xaa,0x39,0xa7,0xc5,0xa7,0x50,0x11,0x36,0xfb,
+                        0xc6,0x67,0x4a,0xf5,0xa5,0x12,0x65,0x7e,0xb0,0xdf,0xaf,0x4e,0xb3,0x61,0x7f,0x2f
+                    };
 
-                            if (offset != 0)
-                            {
-                                //TODO check iftag is byte type
-                                rawImage.metadata.WbCoeffs[0] = wb.Get4LE(offset) << 2;
-                                rawImage.metadata.WbCoeffs[1] = wb.Get4LE(offset + 4) + wb.Get4LE(offset + 8);
-                                rawImage.metadata.WbCoeffs[2] = wb.Get4LE(offset + 12) << 2;
-                            }
-                        }
+                    // Get the serial number
+                    Tag serial = ifd.GetEntryRecursive((TagType)0x001d);
+                    // Get the decryption key
+                    Tag key = ifd.GetEntryRecursive((TagType)0x00a7);
+                    if (serial == null || key == null) throw new FormatException("File not correct");
+
+                    byte[] buff = new byte[324];
+                    for (int i = 0; i < 324; i++)
+                    {
+                        buff[i] = (byte)colorBalance.data[i + 1];
+                    }
+
+                    uint serialno = 0;
+                    for (uint i = 0; i < serial.dataCount; i++)
+                    {
+                        if ((byte)serial.data[i] == 0) break;
+                        if ((byte)serial.data[i] >= (byte)'0' && (byte)serial.data[i] <= (byte)'9')
+                            serialno = serialno * 10 + (uint)serial.data[i] - '0';
+                        else
+                            serialno = serialno * 10 + (uint)serial.data[(int)i] % 10;
+                    }
+
+                    uint keyno = (uint)key.data[0] ^ (uint)key.data[1] ^ (uint)key.data[2] ^ (uint)key.data[3];
+
+                    // "Decrypt" the block using the serial and key
+                    uint bitOff = 4;
+                    if (version == 0x204)
+                        bitOff += 280;
+                    byte ci = serialmap[serialno & 0xff];
+                    byte cj = keymap[keyno & 0xff];
+                    byte ck = 0x60;
+
+                    for (uint i = 0; i < 280; i++)
+                        colorBalance.data[i + bitOff] = (byte)((byte)colorBalance.data[i + bitOff] ^ (cj += (byte)(ci * ck++)));
+
+                    // Finally set the WB coeffs
+                    uint off = (uint)((version == 0x204) ? 6 : 14);
+                    off += bitOff;
+                    rawImage.metadata.WbCoeffs[0] = colorBalance.Get2BE(off);
+                    rawImage.metadata.WbCoeffs[1] = colorBalance.Get2BE(off + 2);
+                    rawImage.metadata.WbCoeffs[2] = colorBalance.Get2BE(off + 6);
+
+                    /*
+                    //DCRAW decompression,may be better
+                    byte ci, cj, ck;
+                    ci = xlat[0][serialno & 0xff];
+                    byte[] shutterAsByte = BitConverter.GetBytes((uint)shutterCountTag.data[0]);
+                    cj = xlat[1][shutterAsByte[0] ^ shutterAsByte[1] ^ shutterAsByte[2] ^ shutterAsByte[3]];
+                    ck = 0x60;
+                    for (int i = 0; i < 324; i++)
+                    {
+                        buff[i] ^= (cj += (byte)(ci * ck++));
+                    }
+                    int offset = "66666>666;6A;:;55"[version - 200] - '0';
+                    for (int c = 0; c < 4; c++)
+                    {
+                        camMul[c ^ (c >> 1) ^ (offset & 1)] = fileStream.readUshortFromArray(ref buff, (offset & -2) + c * 2);
+                    }
+                    for (int c = 0; c < 4; c++)
+                    {
+                        camMul[c] = (camMul[c] / 0.93783628940582275) * 65535.0 / 16383;
+                    }*/
+                }
+            }
+            else if (oldColorBalance != null)
+            {
+                if (oldColorBalance.dataCount == 2560 && oldColorBalance.dataType == TiffDataType.UNDEFINED)
+                {
+                    uint red = (uint)oldColorBalance.data[1249] | (((UInt32)oldColorBalance.data[1248]) << 8);
+                    uint blue = (uint)oldColorBalance.data[1251] | (((UInt32)oldColorBalance.data[1250]) << 8);
+                    rawImage.metadata.WbCoeffs[0] = red / 256.0f;
+                    rawImage.metadata.WbCoeffs[1] = 1.0f;
+                    rawImage.metadata.WbCoeffs[2] = blue / 256.0f;
+                }
+                else if (oldColorBalance.DataAsString.StartsWith("NRW "))
+                {
+                    uint offset = 0;
+                    if (((string)(oldColorBalance.DataAsString.Skip(4)) == "0100") && oldColorBalance.dataCount > 72)
+                        offset = 56;
+                    else if (oldColorBalance.dataCount > 1572)
+                        offset = 1556;
+
+                    if (offset != 0)
+                    {
+                        //TODO check if  tag is byte type
+                        rawImage.metadata.WbCoeffs[0] = oldColorBalance.Get4LE(offset) << 2;
+                        rawImage.metadata.WbCoeffs[1] = oldColorBalance.Get4LE(offset + 4) + colorBalance.Get4LE(offset + 8);
+                        rawImage.metadata.WbCoeffs[2] = oldColorBalance.Get4LE(offset + 12) << 2;
                     }
                 }
             }
+            //normalize white balance
+            rawImage.metadata.WbCoeffs[0] /= rawImage.metadata.WbCoeffs[1];
+            rawImage.metadata.WbCoeffs[2] /= rawImage.metadata.WbCoeffs[1];
+            rawImage.metadata.WbCoeffs[1] = 1.0f;
 
             string mode = GetMode();
             SetMetadata(rawImage.metadata.Model);
