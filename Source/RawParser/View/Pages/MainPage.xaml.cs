@@ -270,7 +270,7 @@ namespace RawEditor.View.Pages
                 catch (Exception e)
                 {
 #if DEBUG
-                    Debug.WriteLine(e.Message);
+                    Debug.WriteLine(e.StackTrace);
 #else
                                                 //send an event with file extension and camera model and make if any                   
                     logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
