@@ -15,6 +15,7 @@ namespace RawNet.Format.TIFF
         public Endianness endian = Endianness.Unknown;
         public int Depth { private set; get; }
         public int RelativeOffset { protected set; get; }
+        public uint Offset { protected set; get; }
         public IFDType type;
 
         protected static char[] fuji_signature = {
@@ -41,12 +42,13 @@ namespace RawNet.Format.TIFF
         {
             this.type = type;
 
-            if (relativeOffset >= 0)
+            if (relativeOffset > 0)
                 fileStream.Position = offset + relativeOffset;
             else
                 fileStream.Position = offset;
 
-            this.RelativeOffset = relativeOffset;
+            Offset = offset;
+            RelativeOffset = relativeOffset;
             if (depth < IFD.MaxRecursion)
             {
                 Parse(fileStream);
@@ -114,7 +116,7 @@ namespace RawNet.Format.TIFF
                             {
                                 for (Int32 k = 0; k < temp.dataCount; k++)
                                 {
-                                    subIFD.Add(new IFD(IFDType.Plain, fileStream, Convert.ToUInt32(temp.data[k]), endian, Depth, RelativeOffset));
+                                    subIFD.Add(new IFD(IFDType.Plain, fileStream, temp.GetUInt(k), endian, Depth, RelativeOffset));
                                 }
                             }
                             catch (RawDecoderException)
@@ -128,7 +130,15 @@ namespace RawNet.Format.TIFF
                             fileStream.BaseStream.Position = p;
                             break;
                         case TagType.GPSINFOIFDPOINTER:
-                            subIFD.Add(new IFD(IFDType.GPS, fileStream, Convert.ToUInt32(temp.data[0]), endian, Depth, RelativeOffset));
+
+                            long pos = fileStream.Position;
+                            try
+                            {
+                                subIFD.Add(new IFD(IFDType.GPS, fileStream, temp.GetUInt(0), endian, Depth, (int)Offset));
+                            }
+                            catch (Exception e) { }
+
+                            fileStream.BaseStream.Position = pos;
                             break;
                     }
 
