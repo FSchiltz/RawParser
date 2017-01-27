@@ -312,21 +312,24 @@ namespace RawNet.Decoder
             }
             rawImage.metadata.OriginalRotation = rawImage.Rotation;
             rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.width, rawImage.raw.uncroppedDim.height);
-
-            //gps info
-            var gps = ifd.GetIFDWithType(IFDType.GPS);
-            if (gps != null)
+            try
             {
-                rawImage.metadata.Gps = new GPSInfo()
+                //gps info
+                var gps = ifd.GetIFDWithType(IFDType.GPS);
+                if (gps != null)
                 {
-                    longitude = gps.GetEntry((TagType)0x02).GetAsDoubleArray(),
-                    lattitude = gps.GetEntry((TagType)0x02).GetAsDoubleArray(),
-                    longitudeRef = gps.GetEntry((TagType)0x02).DataAsString,
-                    lattitudeRef = gps.GetEntry((TagType)0x02).DataAsString,
-                    altitude = gps.GetEntry((TagType)0x02).GetFloat(0),
-                    altitudeRef = gps.GetEntry((TagType)0x02).GetInt(0)
-                };
+                    rawImage.metadata.Gps = new GPSInfo()
+                    {
+                        longitude = gps.GetEntry((TagType)0x02).GetAsDoubleArray(),
+                        lattitude = gps.GetEntry((TagType)0x02).GetAsDoubleArray(),
+                        longitudeRef = gps.GetEntry((TagType)0x02).DataAsString,
+                        lattitudeRef = gps.GetEntry((TagType)0x02).DataAsString,
+                        altitude = gps.GetEntry((TagType)0x02).GetFloat(0),
+                        altitudeRef = gps.GetEntry((TagType)0x02).GetInt(0)
+                    };
+                }
             }
+            catch (Exception e) { }
         }
 
         public override Thumbnail DecodeThumb()
