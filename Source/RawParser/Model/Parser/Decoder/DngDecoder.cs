@@ -34,14 +34,14 @@ namespace RawNet.Decoder
                 if (Convert.ToInt32(c[0]) > 1)
                     throw new RawDecoderException("DNG version too new.");            
             }*/
-            var v = data[0].GetEntry(TagType.DNGVERSION).data;
+            var v = data[0].GetEntry(TagType.DNGVERSION).GetIntArray();
 
-            if ((byte)v[0] != 1)
-                throw new RawDecoderException("Not a supported DNG image format: " + (int)v[0] + (int)v[1] + (int)v[2] + (int)v[3]);
-            if ((byte)v[1] > 4)
-                throw new RawDecoderException("Not a supported DNG image format: " + (int)v[0] + (int)v[1] + (int)v[2] + (int)v[3]);
+            if (v[0] != 1)
+                throw new RawDecoderException("Not a supported DNG image format: " + v[0] + v[1] + v[2] + v[3]);
+            if (v[1] > 4)
+                throw new RawDecoderException("Not a supported DNG image format: " + v[0] + v[1] + v[2] + v[3]);
 
-            if (((byte)v[0] <= 1) && ((byte)v[1] < 1))  // Prior to v1.1.xxx  fix LJPEG encoding bug
+            if ((v[0] <= 1) && (v[1] < 1))  // Prior to v1.1.xxx  fix LJPEG encoding bug
                 mFixLjpeg = true;
             else
                 mFixLjpeg = false;
@@ -60,7 +60,7 @@ namespace RawNet.Decoder
                 {
                     for (int k = 0; k < 3; k++)
                     {
-                        rawImage.convertionM[i, k] = Convert.ToDouble(matrix.data[i * 3 + k]);
+                        rawImage.convertionM[i, k] = matrix.GetDouble(i * 3 + k);
                     }
                 }
             }
@@ -315,7 +315,7 @@ namespace RawNet.Decoder
                 if (as_shot_neutral.dataCount == 3)
                 {
                     for (int i = 0; i < 3; i++)
-                        rawImage.metadata.WbCoeffs[i] = 1.0f / Convert.ToSingle(as_shot_neutral.data[i]);
+                        rawImage.metadata.WbCoeffs[i] = 1.0f / as_shot_neutral.GetFloat(i);
                 }
             }
             else
@@ -368,7 +368,7 @@ namespace RawNet.Decoder
 
                 cropped.Dimension = rawImage.raw.dim - cropped.Position;
                 /* Read size (sometimes is rational so use float) */
-                
+
                 Point2D size = new Point2D(size_entry.GetUInt(0), size_entry.GetUInt(1));
                 if ((size + cropped.Position).IsThisInside(rawImage.raw.dim))
                     cropped.Dimension = size;
@@ -407,9 +407,8 @@ namespace RawNet.Decoder
             Tag lintable = raw.GetEntry(TagType.LINEARIZATIONTABLE);
             if (lintable != null)
             {
-                uint len = lintable.dataCount;
-                lintable.GetShortArray(out ushort[] table, (int)len);
-                rawImage.SetTable(table, (int)len, true);
+                var table = lintable.GetUShortArray();
+                rawImage.SetTable(table, (int)lintable.dataCount, true);
 
                 //mRaw.sixteenBitLookup();
                 //mRaw.table = (null);
@@ -516,7 +515,7 @@ namespace RawNet.Decoder
                 return false;
 
             /* Since we may both have short or int, copy it to int array. */
-            masked.GetUIntArray(out uint[] rects, nrects * 4);
+            var rects = masked.GetUIntArray();
 
             Point2D top = rawImage.raw.offset;
 
@@ -632,7 +631,7 @@ namespace RawNet.Decoder
             if (cfadim.dataCount != 2)
                 throw new RawDecoderException("DNG Decoder: Couldn't read CFA pattern dimension");
             Tag pDim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
-            var cPat = raw.GetEntry(TagType.CFAPATTERN).data;     // Does NOT contain dimensions as some documents state
+            var cPat = raw.GetEntry(TagType.CFAPATTERN).GetIntArray();     // Does NOT contain dimensions as some documents state
 
             Point2D cfaSize = new Point2D(pDim.GetUInt(1), pDim.GetUInt(0));
             rawImage.colorFilter.SetSize(cfaSize);
@@ -643,7 +642,7 @@ namespace RawNet.Decoder
             {
                 for (uint x = 0; x < cfaSize.width; x++)
                 {
-                    int c1 = Convert.ToInt32(cPat[x + y * cfaSize.width]);
+                    int c1 = cPat[x + y * cfaSize.width];
                     CFAColor c2;
                     switch (c1)
                     {

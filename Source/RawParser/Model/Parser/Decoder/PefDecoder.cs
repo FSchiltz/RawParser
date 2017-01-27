@@ -42,7 +42,7 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("PEF Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
             }
             if (!reader.IsValid(offsets.GetUInt(0), counts.GetUInt(0)))
-                throw new RawDecoderException("PEF Decoder: Truncated file.");            
+                throw new RawDecoderException("PEF Decoder: Truncated file.");
 
             rawImage.raw.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
             rawImage.Init();
@@ -163,10 +163,10 @@ namespace RawNet.Decoder
             var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
             if (size == null || thumb == null) return null;
 
-            reader.Position = (uint)(thumb.data[0]);
+            reader.Position = thumb.GetUInt(0);
             Thumbnail temp = new Thumbnail()
             {
-                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                data = reader.ReadBytes(size.GetInt(0)),
                 Type = ThumbnailType.JPEG,
                 dim = new Point2D()
             };

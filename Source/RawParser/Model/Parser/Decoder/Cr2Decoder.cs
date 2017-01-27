@@ -37,10 +37,10 @@ namespace RawNet.Decoder
             var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
             if (size == null || thumb == null) return null;
 
-            reader.Position = (uint)(thumb.data[0]);
+            reader.Position = thumb.GetUInt(0);
             Thumbnail temp = new Thumbnail()
             {
-                data = reader.ReadBytes(Convert.ToInt32(size.data[0])),
+                data = reader.ReadBytes(size.GetInt(0)),
                 Type = ThumbnailType.JPEG,
                 dim = new Point2D()
             };
@@ -123,8 +123,7 @@ namespace RawNet.Decoder
                     if (curve.dataType == TiffDataType.SHORT && curve.dataCount == 4096)
                     {
                         Tag linearization = ifd.GetEntryRecursive((TagType)0x123);
-                        uint len = linearization.dataCount;
-                        linearization.GetShortArray(out var table, (int)len);
+                        var table = linearization.GetUShortArray();
 
                         rawImage.SetTable(table, 4096, true);
                         // Apply table
@@ -164,8 +163,8 @@ namespace RawNet.Decoder
                     LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
                     Cr2Slice slice = new Cr2Slice()
                     {
-                        offset = Convert.ToUInt32(offsets.data[s]),
-                        count = Convert.ToUInt32(counts.data[s])
+                        offset = offsets.GetUInt(s),
+                        count = counts.GetUInt(s)
                     };
                     l.GetSOF(sof, slice.offset, slice.count);
                     slice.w = sof.width * sof.numComponents;
@@ -330,9 +329,9 @@ namespace RawNet.Decoder
                         }
 
                         offset /= 2;
-                        rawImage.metadata.WbCoeffs[0] = Convert.ToSingle(wb.data[offset + 0]);
-                        rawImage.metadata.WbCoeffs[1] = Convert.ToSingle(wb.data[offset + 1]);
-                        rawImage.metadata.WbCoeffs[2] = Convert.ToSingle(wb.data[offset + 3]);
+                        rawImage.metadata.WbCoeffs[0] = wb.GetFloat(offset + 0);
+                        rawImage.metadata.WbCoeffs[1] = wb.GetFloat(offset + 1);
+                        rawImage.metadata.WbCoeffs[2] = wb.GetFloat(offset + 3);
                     }
                     else
                     {
@@ -343,7 +342,7 @@ namespace RawNet.Decoder
                         Tag g9_wb = ifd.GetEntryRecursive(TagType.CANONPOWERSHOTG9WB);
                         if (shot_info != null && g9_wb != null)
                         {
-                            UInt16 wb_index = Convert.ToUInt16(shot_info.data[7]);
+                            UInt16 wb_index = shot_info.GetUShort(7);
                             int wb_offset = (wb_index < 18) ? "012347800000005896"[wb_index] - '0' : 0;
                             wb_offset = wb_offset * 8 + 2;
 
@@ -484,8 +483,8 @@ namespace RawNet.Decoder
                     case "PowerShot Pro70":
                         rawImage.raw.dim.height = 1024;
                         rawImage.raw.dim.width = 1552;
-                    //filters = 0x1e4b4e1b;
-                    canon_a5:
+                        //filters = 0x1e4b4e1b;
+                        canon_a5:
                         //colors = 4;
                         rawImage.ColorDepth = 10;
                         //load_raw = &CLASS packed_load_raw;
