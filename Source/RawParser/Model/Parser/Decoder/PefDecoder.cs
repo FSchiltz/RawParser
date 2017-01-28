@@ -45,7 +45,7 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("PEF Decoder: Truncated file.");
 
             rawImage.raw.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
-            rawImage.Init();
+            rawImage.Init(false);
             try
             {
                 PentaxDecompressor l = new PentaxDecompressor(reader, rawImage);

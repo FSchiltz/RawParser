@@ -235,7 +235,7 @@ namespace RawNet.DNG
         {
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
-                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.Left])
+                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.dim.width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
@@ -315,7 +315,7 @@ namespace RawNet.DNG
         {
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
-                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.dim.width + aoi.Left])
+                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.dim.width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
@@ -409,7 +409,7 @@ namespace RawNet.DNG
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
                 ulong realY = (y - startY);
-                fixed (UInt16* t = &output.raw.data[(int)y * output.raw.uncroppedDim.width + aoi.Left])
+                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.uncroppedDim.width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane

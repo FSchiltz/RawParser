@@ -66,7 +66,7 @@ namespace RawNet.Decoder
                     throw new RawDecoderException("Panasonic RAW Decoder: Invalid image data offset, cannot decode.");
 
                 rawImage.raw.dim = new Point2D(width, height);
-                rawImage.Init();
+                rawImage.Init(false);
 
                 UInt32 size = (uint)(reader.BaseStream.Length - off);
                 input_start = new TIFFBinaryReader(stream, off);
@@ -75,20 +75,20 @@ namespace RawNet.Decoder
                 {
                     // It's completely unpacked little-endian
                     Decode12BitRawUnpacked(input_start, width, height);
-                    rawImage.ColorDepth = 12;
+                    rawImage.raw.ColorDepth = 12;
                 }
                 else if (size >= width * height * 3 / 2)
                 {
                     // It's a packed format
                     Decode12BitRawWithControl(input_start, width, height);
-                    rawImage.ColorDepth = 12;
+                    rawImage.raw.ColorDepth = 12;
                 }
                 else
                 {
                     var colorTag = raw.GetEntry((TagType)5);
                     if (colorTag != null)
                     {
-                        rawImage.ColorDepth = colorTag.GetUShort(0);
+                        rawImage.raw.ColorDepth = colorTag.GetUShort(0);
                     }
                     else
                     {
@@ -102,7 +102,7 @@ namespace RawNet.Decoder
             else
             {
                 rawImage.raw.dim = new Point2D(width, height);
-                rawImage.Init();
+                rawImage.Init(false);
                 Tag offsets = raw.GetEntry(TagType.PANASONIC_STRIPOFFSET);
 
                 if (offsets.dataCount != 1)
@@ -170,7 +170,7 @@ namespace RawNet.Decoder
             List<Int32> zero_pos = new List<int>();
             for (int y = 0; y < rawImage.raw.dim.height; y++)
             {
-                fixed (UInt16* t = &rawImage.raw.data[y * rawImage.raw.dim.width])
+                fixed (UInt16* t = &rawImage.raw.rawView[y * rawImage.raw.dim.width])
                 {
                     UInt16* dest = t;
                     for (int x = 0; x < w; x++)
@@ -275,7 +275,7 @@ namespace RawNet.Decoder
         {
             float ratio = 3.0f / 2.0f;  // Default
 
-            if (rawImage.raw.data == null)
+            if (rawImage.raw.rawView == null)
                 return "";
 
             ratio = rawImage.raw.dim.width / (float)rawImage.raw.dim.height;

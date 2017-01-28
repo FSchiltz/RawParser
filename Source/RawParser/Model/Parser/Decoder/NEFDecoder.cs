@@ -33,9 +33,9 @@ namespace RawNet.Decoder
                 //no thumbnail
                 if (preview == null) return null;
 
-                var thumb = preview.GetEntry((TagType)0x0201);
-                var size = preview.GetEntry((TagType)0x0202);
-                if (size == null || thumb == null) return null;
+                var thumb = preview.GetEntry((TagType)0x0201)?.GetUInt(0) ?? 0;
+                var size = preview.GetEntry((TagType)0x0202)?.GetInt(0) ?? 0;
+                if (size == 0 || thumb == 0) return null;
 
                 //get the makernote offset
                 List<IFD> exifs = ifd.GetIFDsWithTag((TagType)0x927C);
@@ -44,10 +44,10 @@ namespace RawNet.Decoder
 
                 Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
                 if (makerNoteOffsetTag == null) return null;
-                reader.Position = thumb.GetUInt(0) + 10 + makerNoteOffsetTag.dataOffset;
+                reader.Position = thumb + 10 + makerNoteOffsetTag.dataOffset;
                 Thumbnail temp = new Thumbnail()
                 {
-                    data = reader.ReadBytes(size.GetInt(0)),
+                    data = reader.ReadBytes(size),
                     Type = ThumbnailType.JPEG,
                     dim = new Point2D()
                 };
@@ -56,11 +56,11 @@ namespace RawNet.Decoder
             else
             {
                 //no preview in the makernote, use the ifd0 preview
-                uint bps = ifd.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+                uint bps = ifd.GetEntry(TagType.BITSPERSAMPLE)?.GetUInt(0) ?? 8;
                 Point2D dim = new Point2D()
                 {
-                    width = ifd.GetEntry(TagType.IMAGEWIDTH).GetUInt(0),
-                    height = ifd.GetEntry(TagType.IMAGELENGTH).GetUInt(0)
+                    width = ifd.GetEntry(TagType.IMAGEWIDTH)?.GetUInt(0) ?? 0,
+                    height = ifd.GetEntry(TagType.IMAGELENGTH)?.GetUInt(0) ?? 0
                 };
 
                 // Uncompressed
@@ -68,17 +68,15 @@ namespace RawNet.Decoder
                 if (cpp > 4)
                     throw new RawDecoderException();
 
-                Tag offsets = ifd.GetEntry(TagType.STRIPOFFSETS);
-                Tag counts = ifd.GetEntry(TagType.STRIPBYTECOUNTS);
-                uint yPerSlice = ifd.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
-
-                reader.BaseStream.Position = offsets.GetInt(0);
+                var offset = ifd.GetEntry(TagType.STRIPOFFSETS).GetInt(0);
+                var count = ifd.GetEntry(TagType.STRIPBYTECOUNTS).GetInt(0);
+                reader.BaseStream.Position = offset;
 
                 Thumbnail thumb = new Thumbnail()
                 {
                     cpp = cpp,
                     dim = dim,
-                    data = reader.ReadBytes(counts.GetInt(0)),
+                    data = reader.ReadBytes(count),
                     Type = ThumbnailType.RAW
                 };
                 return thumb;
@@ -139,7 +137,7 @@ namespace RawNet.Decoder
             if (34713 != compression)
                 throw new RawDecoderException("NEF Decoder: Unsupported compression");
 
-            rawImage.ColorDepth = raw.GetEntry(TagType.BITSPERSAMPLE).GetUShort(0);
+            rawImage.raw.ColorDepth = raw.GetEntry(TagType.BITSPERSAMPLE).GetUShort(0);
             rawImage.raw.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
 
             data = ifd.GetIFDsWithTag((TagType)0x8c);
@@ -157,7 +155,7 @@ namespace RawNet.Decoder
                 meta = data[0].GetEntry((TagType)0x8c);  // Fall back
             }
 
-            rawImage.Init();
+            rawImage.Init(false);
             try
             {
                 NikonDecompressor decompressor = new NikonDecompressor(reader, rawImage);
@@ -277,7 +275,7 @@ namespace RawNet.Decoder
                 bitPerPixel = UInt32.Parse(v);
             }
 
-            rawImage.ColorDepth = (ushort)bitPerPixel;
+            rawImage.raw.ColorDepth = (ushort)bitPerPixel;
             bool bitorder = true;
             hints.TryGetValue("msb_override", out string v1);
             if (v1 != null)
@@ -285,7 +283,7 @@ namespace RawNet.Decoder
 
             offY = 0;
             //init the raw image
-            rawImage.Init();
+            rawImage.Init(false);
             for (Int32 i = 0; i < slices.Count; i++)
             {
                 NefSlice slice = slices[i];
@@ -349,7 +347,7 @@ namespace RawNet.Decoder
                 for (int x = 0; x < w; x++)
                 {
                     //TODO fix X
-                    rawImage.raw.data[x + (offset.width * sizeof(UInt16) * cpp + y * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
+                    rawImage.raw.rawView[x + (offset.width * sizeof(UInt16) * cpp + y * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
         }
@@ -382,14 +380,14 @@ namespace RawNet.Decoder
             {
                 for (uint x = 0; x < w; x++)
                 {
-                    rawImage.raw.data[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
+                    rawImage.raw.rawView[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
             for (y = offset.height; y < h; y++)
             {
                 for (uint x = 0; x < w; x++)
                 {
-                    rawImage.raw.data[x + (offset.width * sizeof(UInt16) * cpp + (y * 2 + 1) * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
+                    rawImage.raw.rawView[x + (offset.width * sizeof(UInt16) * cpp + (y * 2 + 1) * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
         }
@@ -407,7 +405,7 @@ namespace RawNet.Decoder
             // Hardcode the sizes as at least the width is not correctly reported
             uint w = 3040;
             uint h = 2024;
-            rawImage.ColorDepth = 12;
+            rawImage.raw.ColorDepth = 12;
             rawImage.raw.dim = new Point2D(w, h);
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset);
             Decode12BitRawBEWithControl(input, w, h);
@@ -424,7 +422,7 @@ namespace RawNet.Decoder
             rawImage.raw.dim = new Point2D(w, h);
             rawImage.cpp = 3;
             rawImage.isCFA = false;
-            rawImage.ColorDepth = 12;
+            rawImage.raw.ColorDepth = 12;
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset);
 
             DecodeNikonSNef(input, w, h);
@@ -664,8 +662,8 @@ namespace RawNet.Decoder
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
-            if (rawImage.whitePoint > (1 << rawImage.ColorDepth) - 1)
-                rawImage.whitePoint = (1 << rawImage.ColorDepth) - 1;
+            if (rawImage.whitePoint > (1 << rawImage.raw.ColorDepth) - 1)
+                rawImage.whitePoint = (1 << rawImage.raw.ColorDepth) - 1;
 
             //GPS data
             var gpsTag = ifd.GetEntry((TagType)0x0039);
@@ -781,26 +779,26 @@ namespace RawNet.Decoder
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 + 1.370705 * cr), 12), tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.raw.data[x + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.raw.rawView[x + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
 
-                    rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 - 0.337633 * cb - 0.698001 * cr), 12), rawImage.raw.data, x + 1, ref random);
+                    rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 - 0.337633 * cb - 0.698001 * cr), 12), rawImage.raw.rawView, x + 1, ref random);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 + 1.732446 * cb), 12), tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.raw.data[x + 2 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.raw.rawView[x + 2 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 + 1.370705 * cr2), 12), tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.raw.data[x + 3 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.raw.rawView[x + 3 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
 
-                    rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 - 0.337633 * cb2 - 0.698001 * cr2), 12), rawImage.raw.data, x + 4, ref random);
+                    rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 - 0.337633 * cb2 - 0.698001 * cr2), 12), rawImage.raw.rawView, x + 4, ref random);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 + 1.732446 * cb2), 12), tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.raw.data[x + 5 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.raw.rawView[x + 5 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                 }
             }
             rawImage.table = (null);

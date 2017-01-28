@@ -8,10 +8,33 @@ using System.Collections.ObjectModel;
 
 namespace RawNet
 {
-    public class Image
+    public class ImageComponent
     {
-        public ushort[] data;
+        public ushort[] red, blue, green, rawView;
+        public bool IsLumaOnly { get; set; }//if is true,only green is filled
         public Point2D dim, offset = new Point2D(), uncroppedDim;
+
+
+        public ImageComponent() { }
+        public ImageComponent(ImageComponent image)
+        {
+            red = image.red;
+            green = image.green;
+            blue = image.blue;
+            uncroppedDim = image.uncroppedDim;
+        }
+
+        public ushort ColorDepth { get; set; }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetSafeBound(long row, long col)
+        {
+            if (row < 0 || row >= dim.height || col < 0 || col >= dim.width)
+            {
+                return false;
+            }
+            else return true;
+        }
     }
 
     public class ExifValue
@@ -27,7 +50,7 @@ namespace RawNet
 
     public class RawImage
     {
-        public Image preview = new Image(), thumb, raw = new Image();
+        public ImageComponent preview = new ImageComponent(), thumb, raw = new ImageComponent();
         public ColorFilterArray colorFilter = new ColorFilterArray();
         public double[,] convertionM;
         public double[] camMul, curve;
@@ -44,7 +67,6 @@ namespace RawNet
         public int saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
         public bool DitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
-        public ushort ColorDepth { get; set; }
 
         public ImageMetadata metadata = new ImageMetadata();
         public uint cpp, pitch;
@@ -65,53 +87,32 @@ namespace RawNet
         public bool isFujiTrans = false;
         internal TableLookUp table;
         public ColorFilterArray UncroppedColorFilter;
-        public int Bpp { get { return (int)Math.Ceiling(ColorDepth / 8.0); } }
-
+        public int Bpp { get { return (int)Math.Ceiling(raw.ColorDepth / 8.0); } }
         public bool IsGammaCorrected { get; set; } = true;
 
         public RawImage()
         {
             //Set for 16bit image non demos           
             cpp = 1;
-            ColorDepth = 16;
+            raw.ColorDepth = 16;
         }
 
-        internal void Init()
+        internal void Init(bool RGB)
         {
             if (raw.dim.width > 65535 || raw.dim.height > 65535)
                 throw new RawDecoderException("RawImageData: Dimensions too large for allocation.");
             if (raw.dim.width <= 0 || raw.dim.height <= 0)
                 throw new RawDecoderException("RawImageData: Dimension of one sides is less than 1 - cannot allocate image.");
             pitch = (uint)(((raw.dim.width * Bpp) + 15) / 16) * 16;
-            raw.data = new ushort[raw.dim.width * raw.dim.height * cpp];
-            if (raw.data == null)
-                throw new RawDecoderException("RawImageData::createData: Memory Allocation failed.");
+            if (RGB)
+            {
+                raw.red = new ushort[raw.dim.width * raw.dim.height];
+                raw.green = new ushort[raw.dim.width * raw.dim.height];
+                raw.blue = new ushort[raw.dim.width * raw.dim.height];
+            }
+            else
+                raw.rawView = new ushort[raw.dim.width * raw.dim.height * cpp];
             raw.uncroppedDim = new Point2D(raw.dim.width, raw.dim.height);
-        }
-
-        /*
-         * Should not be used if possible
-         * not efficient but allows more concise code
-         * for demosaic
-         */
-        public ushort this[long row, long col]
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                var a = (row * raw.uncroppedDim.width) + col;
-                if (row < 0 || row >= raw.dim.height || col < 0 || col >= raw.dim.width)
-                {
-                    return 0;
-                }
-                else return raw.data[a];
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set
-            {
-                raw.data[(row * raw.dim.width) + col] = value;
-            }
         }
 
         public void SetTable(ushort[] table, int nfilled, bool dither)
@@ -198,6 +199,7 @@ namespace RawNet
             *dest = table.tables[value];
         }
 
+        /*
         public void ScaleValues()
         {
             ushort maxValue = (ushort)((1 << ColorDepth) - 1);
@@ -230,7 +232,7 @@ namespace RawNet
                         }
                     });
                 }
-                /*if (table != null)
+                if (table != null)
                 {
                     Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
                     {
@@ -240,7 +242,7 @@ namespace RawNet
                             raw.data[x + v] = table.tables[raw.data[x + v]];
                         }
                     });
-                }*/
+                }
             }
             catch (Exception ex)
             {
@@ -248,6 +250,7 @@ namespace RawNet
             }
         }
 
+        /*
         internal void ConvertRGB()
         {
             double[,] xyzToRGB = { { 0.412453, 0.357580, 0.180423 }, { 0.212671, 0.715160, 0.072169 }, { 0.019334, 0.119193, 0.950227 } };
@@ -281,8 +284,9 @@ namespace RawNet
                 }
             }
             return resultMatrix;
-        }
+        }*/
 
+        /*
         public void ScaleBlackWhite()
         {
             const int skipBorder = 250;
@@ -293,7 +297,7 @@ namespace RawNet
                 int m = 0;
                 for (int row = skipBorder; row < (raw.dim.height - skipBorder + raw.offset.height); row++)
                 {
-                    ushort[] pixel = raw.data.Skip((int)(skipBorder + row * raw.dim.width)).ToArray();
+                    ushort[] pixel = raw.green.Skip((int)(skipBorder + row * raw.dim.width)).ToArray();
                     int pix = 0;
                     for (int col = skipBorder; col < gw; col++)
                     {
@@ -309,17 +313,18 @@ namespace RawNet
                 //Debug.WriteLine("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + " Estimated white: " + whitePoint);
             }
 
-            /* Skip, if not needed */
+            // Skip, if not needed 
             if ((blackAreas.Count == 0 && BlackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || raw.dim.Area() <= 0)
                 return;
 
-            /* If filter has not set separate blacklevel, compute or fetch it */
+            // If filter has not set separate blacklevel, compute or fetch it 
             if (blackLevelSeparate[0] < 0)
                 CalculateBlackAreas();
 
             ScaleValues();
-        }
+        }*/
 
+        /*
         void CalculateBlackAreas()
         {
             int[] histogram = new int[4 * 65536 * sizeof(int)];
@@ -330,11 +335,11 @@ namespace RawNet
             {
                 BlackArea area = blackAreas[i];
 
-                /* Make sure area sizes are multiple of two, 
-                   so we have the same amount of pixels for each CFA group */
+                // Make sure area sizes are multiple of two, 
+                 //  so we have the same amount of pixels for each CFA group 
                 area.Size = area.Size - (area.Size & 1);
 
-                /* Process horizontal area */
+                // Process horizontal area 
                 if (!area.IsVertical)
                 {
                     if (area.Offset + area.Size > raw.uncroppedDim.height)
@@ -351,7 +356,7 @@ namespace RawNet
                     totalpixels += area.Size * raw.dim.width;
                 }
 
-                /* Process vertical area */
+                // Process vertical area 
                 if (area.IsVertical)
                 {
                     if (area.Offset + area.Size > raw.uncroppedDim.width)
@@ -376,8 +381,8 @@ namespace RawNet
                 return;
             }
 
-            /* Calculate median value of black areas for each component */
-            /* Adjust the number of total pixels so it is the same as the median of each histogram */
+            //Calculate median value of black areas for each component 
+            // Adjust the number of total pixels so it is the same as the median of each histogram 
             totalpixels /= 4 * 2;
 
             for (int i = 0; i < 4; i++)
@@ -393,7 +398,7 @@ namespace RawNet
                 blackLevelSeparate[i] = pixel_value;
             }
 
-            /* If this is not a CFA image, we do not use separate blacklevels, use average */
+            //If this is not a CFA image, we do not use separate blacklevels, use average 
             if (!isCFA)
             {
                 int total = 0;
@@ -403,6 +408,7 @@ namespace RawNet
                     blackLevelSeparate[i] = (total + 2) >> 2;
             }
         }
+    */
 
         /**
          * Create a preview of the raw image using the scaling factor
@@ -434,11 +440,15 @@ namespace RawNet
             }
 
             preview.dim = new Point2D(raw.dim.width / previewFactor, raw.dim.height / previewFactor);
+            preview.ColorDepth = raw.ColorDepth;
             preview.uncroppedDim = new Point2D(preview.dim.width, preview.dim.height);
             Debug.WriteLine("Preview of size w:" + preview.dim.width + "y:" + preview.dim.height);
-            preview.data = new ushort[preview.dim.height * preview.dim.width * cpp];
+            preview.green = new ushort[preview.dim.height * preview.dim.width];
+            preview.red = new ushort[preview.dim.height * preview.dim.width];
+            preview.blue = new ushort[preview.dim.height * preview.dim.width];
+
             uint doubleFactor = previewFactor * previewFactor;
-            ushort maxValue = (ushort)((1 << ColorDepth) - 1);
+            ushort maxValue = (ushort)((1 << raw.ColorDepth) - 1);
             //loop over each block
             Parallel.For(0, preview.dim.height, y =>
              {
@@ -454,10 +464,10 @@ namespace RawNet
                          for (int k = 0; k < previewFactor; k++)
                          {
                              xk++;
-                             UInt64 realX = (UInt64)(realY + (x * previewFactor + k)) * cpp;
-                             r += raw.data[realX];
-                             g += raw.data[realX + 1];
-                             b += raw.data[realX + 2];
+                             UInt64 realX = (UInt64)(realY + (x * previewFactor + k));
+                             r += raw.red[realX];
+                             g += raw.green[realX];
+                             b += raw.blue[realX];
                          }
                      }
                      r = (ushort)(r / doubleFactor);
@@ -466,9 +476,9 @@ namespace RawNet
                      if (r < 0) r = 0; else if (r > maxValue) r = maxValue;
                      if (g < 0) g = 0; else if (g > maxValue) g = maxValue;
                      if (b < 0) b = 0; else if (b > maxValue) b = maxValue;
-                     preview.data[((y * preview.dim.width) + x) * cpp] = (ushort)r;
-                     preview.data[(((y * preview.dim.width) + x) * cpp) + 1] = (ushort)g;
-                     preview.data[(((y * preview.dim.width) + x) * cpp) + 2] = (ushort)b;
+                     preview.red[(y * preview.dim.width) + x] = (ushort)r;
+                     preview.green[(y * preview.dim.width) + x] = (ushort)g;
+                     preview.blue[(y * preview.dim.width) + x] = (ushort)b;
                  }
              });
         }
@@ -513,7 +523,7 @@ namespace RawNet
             //more metadata
             exif.Add(new ExifValue("Black level", "" + BlackLevel));
             exif.Add(new ExifValue("White level", "" + whitePoint));
-            exif.Add(new ExifValue("Color depth", "" + ColorDepth + " bits"));
+            exif.Add(new ExifValue("Color depth", "" + raw.ColorDepth + " bits"));
 
             if (isCFA)
             {

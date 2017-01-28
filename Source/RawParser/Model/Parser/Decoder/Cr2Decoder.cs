@@ -87,7 +87,7 @@ namespace RawNet.Decoder
                     rawImage.raw.dim = new Point2D(width, height);
                 }
 
-                rawImage.Init();
+                rawImage.Init(false);
                 LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
                 try
                 {
@@ -106,12 +106,12 @@ namespace RawNet.Decoder
                     RawImage procRaw = new RawImage();
                     procRaw.raw.dim = final_size;
                     procRaw.metadata = rawImage.metadata;
-                    procRaw.Init();
+                    procRaw.Init(false);
 
                     for (int y = 0; y < height; y++)
                     {
                         for (int x = 0; x < width; x++)
-                            procRaw.raw.data[x] = rawImage.raw.data[((y % 2 == 0) ? 0 : width) + x];
+                            procRaw.raw.rawView[x] = rawImage.raw.rawView[((y % 2 == 0) ? 0 : width) + x];
                     }
                     rawImage = procRaw;
                 }
@@ -151,7 +151,7 @@ namespace RawNet.Decoder
             List<Cr2Slice> slices = new List<Cr2Slice>();
             uint completeH = 0;
             bool doubleHeight = false;
-            rawImage.ColorDepth = 14;
+            rawImage.raw.ColorDepth = 14;
             try
             {
                 Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
@@ -235,7 +235,7 @@ namespace RawNet.Decoder
                 }
             }
 
-            rawImage.Init();
+            rawImage.Init(false);
 
             List<uint> s_width = new List<uint>();
             if (raw.tags.ContainsKey(TagType.CANONCR2SLICE))
@@ -429,7 +429,7 @@ namespace RawNet.Decoder
                     rawImage.mOffset.y = 16;
                 }*/
             }
-            if (rawImage.ColorDepth == 15)
+            if (rawImage.raw.ColorDepth == 15)
             {
                 switch (rawImage.raw.dim.width)
                 {
@@ -486,7 +486,7 @@ namespace RawNet.Decoder
                         //filters = 0x1e4b4e1b;
                         canon_a5:
                         //colors = 4;
-                        rawImage.ColorDepth = 10;
+                        rawImage.raw.ColorDepth = 10;
                         //load_raw = &CLASS packed_load_raw;
                         //load_flags = 40;
                         break;
@@ -595,7 +595,7 @@ namespace RawNet.Decoder
             int hue = -(int)GetHue() + 16384;
             Parallel.For(0, height, (y) =>
              {
-                 fixed (UInt16* c_line = &rawImage.raw.data[y * rawImage.raw.dim.width])
+                 fixed (UInt16* c_line = &rawImage.raw.rawView[y * rawImage.raw.dim.width])
                  {
                      int r, g, b, Y, Cb, Cr, off = 0;
                      for (int x = 0; x < width; x++)
@@ -639,7 +639,7 @@ namespace RawNet.Decoder
             int hue = -(int)GetHue() + 16384;
             for (int y = 0; y < height; y++)
             {
-                fixed (UInt16* c_line = &rawImage.raw.data[y * 2 * rawImage.raw.dim.width], n_line = &rawImage.raw.data[(y * 2 + 1) * rawImage.raw.dim.width], nn_line = &rawImage.raw.data[(y * 2 + 2) * rawImage.raw.dim.width])
+                fixed (UInt16* c_line = &rawImage.raw.rawView[y * 2 * rawImage.raw.dim.width], n_line = &rawImage.raw.rawView[(y * 2 + 1) * rawImage.raw.dim.width], nn_line = &rawImage.raw.rawView[(y * 2 + 2) * rawImage.raw.dim.width])
                 {
                     off = 0;
                     for (int x = 0; x < width; x++)
@@ -693,7 +693,7 @@ namespace RawNet.Decoder
                 }
                 if (atLastLine)
                 {
-                    fixed (UInt16* c_line = &(rawImage.raw.data[(height * 2)]), n_line = &(rawImage.raw.data[(height * 2 + 1)]))
+                    fixed (UInt16* c_line = &(rawImage.raw.rawView[(height * 2)]), n_line = &(rawImage.raw.rawView[(height * 2 + 1)]))
                     {
                         off = 0;
                         // Last line
@@ -740,7 +740,7 @@ namespace RawNet.Decoder
             int hue = 16384 - (int)GetHue();
             Parallel.For(0, height, (y) =>
             {
-                fixed (UInt16* c_line = &(rawImage.raw.data[y * rawImage.raw.dim.width]))
+                fixed (UInt16* c_line = &(rawImage.raw.rawView[y * rawImage.raw.dim.width]))
                 {
                     int Y, Cb, Cr, r, g, b, off = 0;
                     for (int x = 0; x < width; x++)
@@ -791,7 +791,7 @@ namespace RawNet.Decoder
             int hue = -(int)GetHue() + 16384;
             for (int y = 0; y < height; y++)
             {
-                fixed (UInt16* c_line = &rawImage.raw.data[y * rawImage.raw.dim.width])
+                fixed (UInt16* c_line = &rawImage.raw.rawView[y * rawImage.raw.dim.width])
                 {
                     int r, g, b, Y, Cb, Cr, off = 0;
                     for (int x = 0; x < width; x++)
@@ -835,7 +835,7 @@ namespace RawNet.Decoder
             int off, r, g, b, Y, Cb, Cr;
             for (int y = 0; y < height; y++)
             {
-                fixed (UInt16* c_line = &rawImage.raw.data[y * 2 * rawImage.raw.dim.width], n_line = &rawImage.raw.data[(y * 2 + 1) * rawImage.raw.dim.width], nn_line = &rawImage.raw.data[(y * 2 + 2) * rawImage.raw.dim.width])
+                fixed (UInt16* c_line = &rawImage.raw.rawView[y * 2 * rawImage.raw.dim.width], n_line = &rawImage.raw.rawView[(y * 2 + 1) * rawImage.raw.dim.width], nn_line = &rawImage.raw.rawView[(y * 2 + 2) * rawImage.raw.dim.width])
                 {
                     off = 0;
                     for (int x = 0; x < width; x++)
@@ -890,7 +890,7 @@ namespace RawNet.Decoder
             }
             if (atLastLine)
             {
-                fixed (UInt16* c_line = &(rawImage.raw.data[(height * 2)]), n_line = &(rawImage.raw.data[(height * 2 + 1)]))
+                fixed (UInt16* c_line = &(rawImage.raw.rawView[(height * 2)]), n_line = &(rawImage.raw.rawView[(height * 2 + 1)]))
                 {
                     off = 0;
 

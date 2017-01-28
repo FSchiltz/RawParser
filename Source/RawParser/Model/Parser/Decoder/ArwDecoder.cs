@@ -56,7 +56,7 @@ namespace RawNet.Decoder
                     uint h = 2608;
 
                     rawImage.raw.dim = new Point2D(w, h);
-                    rawImage.Init();
+                    rawImage.Init(false);
                     reader = new TIFFBinaryReader(reader.BaseStream, offset);
 
                     try
@@ -110,7 +110,7 @@ namespace RawNet.Decoder
 
                     // And now decode as a normal 16bit raw
                     rawImage.raw.dim = new Point2D(w, h);
-                    rawImage.Init();
+                    rawImage.Init(false);
                     using (TIFFBinaryReader reader = new TIFFBinaryReader(imageData, len))
                     {
                         Decode16BitRawBEunpacked(reader, w, h);
@@ -156,7 +156,7 @@ namespace RawNet.Decoder
             uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
             uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
             int bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
-            rawImage.ColorDepth = (ushort)bitPerPixel;
+            rawImage.raw.ColorDepth = (ushort)bitPerPixel;
             // Sony E-550 marks compressed 8bpp ARW with 12 bit per pixel
             // this makes the compression detect it as a ARW v1.
             // This camera has however another MAKER entry, so we MAY be able
@@ -178,7 +178,7 @@ namespace RawNet.Decoder
                 height += 8;
 
             rawImage.raw.dim = new Point2D(width, height);
-            rawImage.Init();
+            rawImage.Init(false);
 
             UInt16[] curve = new UInt16[0x4001];
             Tag c = raw.GetEntry(TagType.SONY_CURVE);
@@ -233,7 +233,7 @@ namespace RawNet.Decoder
             uint off = raw.GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
 
             rawImage.raw.dim = new Point2D(width, height);
-            rawImage.Init();
+            rawImage.Init(false);
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, off);
 
             if (hints.ContainsKey("sr2_format"))
@@ -245,7 +245,7 @@ namespace RawNet.Decoder
         unsafe void DecodeARW(TIFFBinaryReader input, long w, long h)
         {
             BitPumpMSB bits = new BitPumpMSB(input);
-            fixed (UInt16* dest = rawImage.raw.data)
+            fixed (UInt16* dest = rawImage.raw.rawView)
             {
                 //uint pitch = rawImage.pitch / sizeof(UInt16);
                 int sum = 0;
@@ -308,7 +308,7 @@ namespace RawNet.Decoder
                                 if (p > 0x7ff)
                                     p = 0x7ff;
                             }
-                            rawImage.SetWithLookUp((ushort)(p << 1), rawImage.raw.data, (int)((y * rawImage.raw.dim.width) + x + i * 2), ref random);
+                            rawImage.SetWithLookUp((ushort)(p << 1), rawImage.raw.rawView, (int)((y * rawImage.raw.dim.width) + x + i * 2), ref random);
 
                         }
                         x += (x & 1) != 0 ? (uint)31 : 1;  // Skip to next 32 pixels
@@ -335,9 +335,9 @@ namespace RawNet.Decoder
                             {
                                 uint g1 = *(t2++);
                                 uint g2 = *(t2++);
-                                rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                                rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                                 uint g3 = *(t2++);
-                                rawImage.raw.data[y * rawImage.raw.dim.width + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                                rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                             }
 
                         }
@@ -428,7 +428,7 @@ namespace RawNet.Decoder
         {
             if (rawImage.raw.dim.width > 3888)
             {
-                rawImage.BlackLevel = 128 << (rawImage.ColorDepth - 12);
+                rawImage.BlackLevel = 128 << (rawImage.raw.ColorDepth - 12);
             }
 
             switch (rawImage.raw.dim.width)
@@ -451,7 +451,7 @@ namespace RawNet.Decoder
                 case 5504:
                     rawImage.raw.dim.width -= (uint)((rawImage.raw.dim.height > 3664) ? 8 : 32);
                     if (model.StartsWith("DSC"))
-                        rawImage.BlackLevel = 200 << (rawImage.ColorDepth - 12);
+                        rawImage.BlackLevel = 200 << (rawImage.raw.ColorDepth - 12);
                     break;
                 case 6048:
                     rawImage.raw.dim.width -= 24;
@@ -465,7 +465,7 @@ namespace RawNet.Decoder
                     rawImage.raw.dim.width -= 32;
                     if (model.StartsWith("DSC"))
                     {
-                        rawImage.ColorDepth = 14;
+                        rawImage.raw.ColorDepth = 14;
                         //load_raw = &CLASS unpacked_load_raw;
                         rawImage.BlackLevel = 512;
                     }

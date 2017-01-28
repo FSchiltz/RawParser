@@ -60,7 +60,7 @@ namespace RawNet.Decoder
             uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
 
             rawImage.raw.dim = new Point2D(width, height);
-            rawImage.Init();
+            rawImage.Init(false);
 
             // We add 3 bytes slack, since the bitpump might be a few bytes ahead.
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, off);
@@ -134,7 +134,7 @@ namespace RawNet.Decoder
 
             for (int y = 0; y < h; y++)
             {
-                fixed (UInt16* dest = &rawImage.raw.data[y * rawImage.raw.uncroppedDim.width])
+                fixed (UInt16* dest = &rawImage.raw.rawView[y * rawImage.raw.uncroppedDim.width])
                 {
                     acarry0 = new long[3];
                     acarry1 = new long[3];

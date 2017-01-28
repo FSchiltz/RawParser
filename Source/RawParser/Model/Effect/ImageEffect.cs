@@ -80,10 +80,10 @@ namespace RawEditor.Effect
             return curve;
         }
 
-        public unsafe HistoRaw Apply(ushort[] image, Point2D dim, Point2D off, Point2D uncrop, int colorDepth, SoftwareBitmap bitmap)
+        public unsafe HistoRaw Apply(ImageComponent image, SoftwareBitmap bitmap)
         {
-            int shift = colorDepth - 8;
-            maxValue = (uint)(1 << colorDepth);
+            int shift = image.ColorDepth - 8;
+            maxValue = (uint)(1 << image.ColorDepth);
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
             using (var reference = buffer.CreateReference())
             {
@@ -97,14 +97,14 @@ namespace RawEditor.Effect
                     blue = new int[256],
                     green = new int[256]
                 };
-                Parallel.For(0, dim.height, y =>
+                Parallel.For(0, image.dim.height, y =>
                 {
-                    long realY = (y + off.height) * uncrop.width * 3;
-                    for (int x = 0; x < dim.width; x++)
+                    long realY = (y + image.offset.height) * image.uncroppedDim.width;
+                    for (int x = 0; x < image.dim.width; x++)
                     {
-                        long realPix = realY + (3 * (x + off.width));
-                        long bufferPix = Rotate(x, y, dim.width, dim.height) * 4;
-                        double red = image[realPix] * rMul, green = image[realPix + 1] * gMul, blue = image[realPix + 2] * bMul;
+                        long realPix = realY + x;
+                        long bufferPix = Rotate(x, y, image.dim.width, image.dim.height) * 4;
+                        double red = image.red[realPix] * rMul, green = image.green[realPix] * gMul, blue = image.blue[realPix] * bMul;
                         Luminance.Clip(ref red, ref green, ref blue, maxValue);
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                         //vignet correction
@@ -136,7 +136,7 @@ namespace RawEditor.Effect
                     //apply histogram equalisation if needed using the histogram
                     //create a lookup table
                     byte[] lut = new byte[256];
-                    double pixelCount = dim.height * dim.width;
+                    double pixelCount = image.dim.height * image.dim.width;
 
                     int sum = 0;
                     // build a LUT containing scale factor
@@ -166,14 +166,12 @@ namespace RawEditor.Effect
                          for (int x = 0; x < buffer.GetPlaneDescription(0).Width; x++)
                          {
                              int realX = (realY + x) * 4;
-
                              double red = temp[realX], green = temp[realX + 1], blue = temp[realX + 2];
                              Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                              Interlocked.Increment(ref histogram.luma[(int)(l * 255)]);
                              l = lut[(int)(l * 255.0)] / 255.0;
                              Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
                              Luminance.Clip(ref red, ref green, ref blue, 255);
-
                              temp[realX] = (byte)(red);
                              temp[realX + 1] = (byte)(green);
                              temp[realX + 2] = (byte)(blue);

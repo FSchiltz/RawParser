@@ -197,7 +197,7 @@ namespace RawNet.Decoder.Decompressor
             {
                 slice_width[slicesW.Count - 1] -= (int)skipX;
             }
-            fixed (ushort* draw = raw.raw.data)
+            fixed (ushort* draw = raw.raw.rawView)
             {
                 for (slice = 0; slice < slices; slice++)
                 {
@@ -350,7 +350,7 @@ namespace RawNet.Decoder.Decompressor
 
             raw.metadata.Subsampling.width = 2;
             raw.metadata.Subsampling.height = 2;
-            fixed (ushort* d = raw.raw.data)
+            fixed (ushort* d = raw.raw.rawView)
             {
                 //TODO remove this hack
                 byte* draw = (byte*)d;
@@ -500,7 +500,7 @@ namespace RawNet.Decoder.Decompressor
 
             UInt16* predict;      // Prediction pointer
 
-            fixed (ushort* d = raw.raw.data)
+            fixed (ushort* d = raw.raw.rawView)
             {
                 //TODO remove this hack
                 byte* draw = (byte*)d;
@@ -622,7 +622,7 @@ namespace RawNet.Decoder.Decompressor
             uint COMPS = 2;
             //_ASSERTE(slicesW.Count < 16);  // We only have 4 bits for slice number.
             //_ASSERTE(!(slicesW.Count > 1 && skipX)); // Check if this is a valid state
-            fixed (ushort* d = raw.raw.data)
+            fixed (ushort* d = raw.raw.rawView)
             {
                 //TODO remove this hack
                 byte* draw = (byte*)d;
@@ -727,7 +727,7 @@ namespace RawNet.Decoder.Decompressor
         void DecodeScanLeft3Comps()
         {
             uint COMPS = 3;
-            fixed (ushort* d = raw.raw.data)
+            fixed (ushort* d = raw.raw.rawView)
             {
                 //TODO remove this hack
                 byte* draw = (byte*)d;
@@ -851,9 +851,9 @@ namespace RawNet.Decoder.Decompressor
             {
                 frame.height *= 2;
                 raw.raw.dim = new Point2D(frame.width * 2, frame.height);
-                raw.Init();
+                raw.Init(false);
             }
-            fixed (ushort* d = raw.raw.data)
+            fixed (ushort* d = raw.raw.rawView)
             {
                 //TODO remove this hack
                 byte* draw = (byte*)d;
