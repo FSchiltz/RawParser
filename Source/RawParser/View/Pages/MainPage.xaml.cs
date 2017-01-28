@@ -619,41 +619,54 @@ namespace RawEditor.View.Pages
             if (visibility)
             {
                 PivotGrid.IsEnabled = false;
-                // Get the current compositor
-                _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
-                // Create the destinatio sprite, sized to cover the entire list
-                _pivotGridSprite = _compositor.CreateSpriteVisual();
-                _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
-                ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
-                // Create the effect factory and instantiate a brush
-                CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
-                brush = _effectFactory.CreateBrush();
-                // Set the destination brush as the source of the image content
-                brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
-                // Update the destination layer with the fully configured brush
-                _pivotGridSprite.Brush = brush;
+                /* try
+                 {
+                     // Get the current compositor
+                     _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+                     // Create the destinatio sprite, sized to cover the entire list
+                     _pivotGridSprite = _compositor.CreateSpriteVisual();
+                     _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
+                     ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
+                     // Create the effect factory and instantiate a brush
+                     CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
+                     brush = _effectFactory.CreateBrush();
+                     // Set the destination brush as the source of the image content
+                     brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
+                     // Update the destination layer with the fully configured brush
+                     _pivotGridSprite.Brush = brush;
 
-                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
-                blurAnimation.InsertKeyFrame(0.0f, 0.0f);
-                blurAnimation.InsertKeyFrame(1.0f, blurAmount);
-                blurAnimation.Duration = animationDuration;
-                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
-                blurAnimation.IterationCount = 1;
-                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+                     ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                     blurAnimation.InsertKeyFrame(0.0f, 0.0f);
+                     blurAnimation.InsertKeyFrame(1.0f, blurAmount);
+                     blurAnimation.Duration = animationDuration;
+                     blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                     blurAnimation.IterationCount = 1;
+                     brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+                 }
+                 catch (Exception e)
+                 {
+                     //no blur if exception (bug on some phone)
+                 }*/
             }
             else
             {
 
                 PivotGrid.IsEnabled = true;
-                // Update the destination layer with the fully configured brush
-                _pivotGridSprite.Brush = brush;
-                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
-                blurAnimation.InsertKeyFrame(0.0f, blurAmount);
-                blurAnimation.InsertKeyFrame(1.0f, 0.0f);
-                blurAnimation.Duration = animationDuration;
-                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
-                blurAnimation.IterationCount = 1;
-                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+                /*            try
+                            {
+                                // Update the destination layer with the fully configured brush
+                                _pivotGridSprite.Brush = brush;
+                                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                                blurAnimation.InsertKeyFrame(0.0f, blurAmount);
+                                blurAnimation.InsertKeyFrame(1.0f, 0.0f);
+                                blurAnimation.Duration = animationDuration;
+                                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                                blurAnimation.IterationCount = 1;
+                                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+                            }
+                            catch (Exception e)
+                            {
+                            }*/
             }
         }
 
