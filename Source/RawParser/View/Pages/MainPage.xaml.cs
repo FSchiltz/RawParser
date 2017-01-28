@@ -219,8 +219,8 @@ namespace RawEditor.View.Pages
                         {
                             TextDisplay.DisplayWarning("This file is not fully supported, it may appear incorrectly");
 #if !DEBUG
-                                //send an event with file extension and camera model and make if any                   
-                                logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + ""+raw.errors.Count);
+                            //send an event with file extension and camera model and make if any                   
+                            logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + "" + raw.errors.Count);
 #endif
                         }
                         watch.Stop();
@@ -229,7 +229,7 @@ namespace RawEditor.View.Pages
                     if (raw.isCFA)
                     {
                         //get the algo from the settings
-                        DemosAlgorithm algo;
+                        DemosaicAlgorithm algo;
                         try
                         {
                             algo = SettingStorage.DemosAlgo;
@@ -237,7 +237,7 @@ namespace RawEditor.View.Pages
                         catch (Exception e)
                         {
                             Debug.WriteLine(e.Message);
-                            algo = DemosAlgorithm.Deflate;
+                            algo = DemosaicAlgorithm.Deflate;
                         }
                         Demosaic.Demos(raw, algo);
                     }
@@ -249,7 +249,7 @@ namespace RawEditor.View.Pages
                     raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
                     //check if enough memory
-                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < (ulong)raw.raw.data.Length || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
+                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)raw.raw.green.Length * 3) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                     {
                         TextDisplay.DisplayWarning("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                     }
@@ -272,7 +272,7 @@ namespace RawEditor.View.Pages
 #if DEBUG
                     Debug.WriteLine(e.StackTrace);
 #else
-                                                //send an event with file extension and camera model and make if any                   
+                    //send an event with file extension and camera model and make if any                   
                     logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
 
@@ -313,7 +313,7 @@ namespace RawEditor.View.Pages
 
         private async void SaveButtonClickAsync(object sender, RoutedEventArgs e)
         {
-            if (raw?.raw.data != null)
+            if (raw?.raw != null)
             {
                 Blur(true);
                 var savePicker = new FileSavePicker
@@ -334,7 +334,7 @@ namespace RawEditor.View.Pages
                 {
                     try
                     {
-                        var result = await ApplyUserModifAsync(raw.raw.data, raw.raw.dim, raw.raw.offset, raw.raw.uncroppedDim, raw.ColorDepth, false);
+                        var result = await ApplyUserModifAsync(raw.raw, false);
                         FormatHelper.SaveAsync(file, result.Item2);
                     }
                     catch (Exception ex)
@@ -399,18 +399,18 @@ namespace RawEditor.View.Pages
         private void UpdatePreview(bool move)
         {
             Debug.WriteLine("Updated");
-            if (raw?.preview?.data != null)
+            if (raw?.preview != null)
                 //display the histogram                  
                 Task.Run(async () =>
                 {
-                    var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.dim, raw.preview.offset, raw.preview.uncroppedDim, raw.ColorDepth, true);
+                    var result = await ApplyUserModifAsync(raw.preview, true);
                     DisplayImage(result.Item2, move);
                     Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
                 });
         }
 
         //Apply the change over the image preview       
-        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ushort[] image, Point2D dim, Point2D offset, Point2D uncrop, int colorDepth, bool histo)
+        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(RawNet.ImageComponent image, bool histo)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -441,21 +441,21 @@ namespace RawEditor.View.Pages
             {
                 if (raw.Rotation == 1 || raw.Rotation == 3)
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)dim.height, (int)dim.width);
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.height, (int)image.dim.width);
                 }
                 else
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)dim.width, (int)dim.height);
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.width, (int)image.dim.height);
                 }
             });
             if (histo)
             {
-                var tmp = effect.Apply(image, dim, offset, uncrop, colorDepth, bitmap);
+                var tmp = effect.Apply(image, bitmap);
                 return Tuple.Create(tmp, bitmap);
             }
             else
             {
-                effect.Apply(image, dim, offset, uncrop, colorDepth, bitmap);
+                effect.Apply(image, bitmap);
                 return Tuple.Create(new HistoRaw(), bitmap);
             }
         }
@@ -515,7 +515,7 @@ namespace RawEditor.View.Pages
                 //TODO regionalise text
                 //generate the bitmap
                 Load.Show();
-                var result = await ApplyUserModifAsync(raw.raw.data, raw.raw.dim, raw.raw.offset, raw.raw.uncroppedDim, raw.ColorDepth, false);
+                var result = await ApplyUserModifAsync(raw.raw, false);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -582,7 +582,11 @@ namespace RawEditor.View.Pages
                 }
                 CropUI.SetSize((int)(w * factor), (int)(h * factor), raw.Rotation);
                 //create a preview of the image
-                var result = await ApplyUserModifAsync(raw.preview.data, raw.preview.uncroppedDim, new Point2D(0, 0), raw.preview.uncroppedDim, raw.ColorDepth, false);
+                ImageComponent img = new ImageComponent(raw.preview)
+                {
+                    dim = raw.raw.uncroppedDim
+                };
+                var result = await ApplyUserModifAsync(img, false);
                 //display the preview
                 CropUI.SetThumbAsync(result.Item2);
             }

@@ -35,11 +35,11 @@ namespace RawEditor.Settings
             set { localSettings.Values["saveFormat"] = value; }
         }
 
-        public static DemosAlgorithm DemosAlgo
+        public static DemosaicAlgorithm DemosAlgo
         {
             get
             {
-                Enum.TryParse(GetStringSetting("demosAlgo"), out DemosAlgorithm res);
+                Enum.TryParse(GetStringSetting("demosAlgo"), out DemosaicAlgorithm res);
                 return res;
             }
             set { localSettings.Values["demosAlgo"] = value.ToString(); }
@@ -64,7 +64,7 @@ namespace RawEditor.Settings
             localSettings.Values["previewFactor" + def] = FactorValue.Auto.ToString();
             localSettings.Values["saveFormat" + def] = ".jpg";
             localSettings.Values["autoPreviewFormat" + def] = false;
-            localSettings.Values["demosAlgo" + def] = DemosAlgorithm.Bilinear.ToString();
+            localSettings.Values["demosAlgo" + def] = DemosaicAlgorithm.Bilinear.ToString();
             localSettings.Values["Theme" + def] = ThemeEnum.System.ToString();
             if (localSettings.Values["version"] == null || (uint)localSettings.Values["version"] < version)
                 Reset();

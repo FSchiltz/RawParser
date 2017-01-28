@@ -133,8 +133,8 @@ namespace RawNet.Decoder
             {
                 throw new RawDecoderException("DNG Decoder: Could not read basic image information.");
             }
-            rawImage.Init();
-            rawImage.ColorDepth = (ushort)bps;
+            rawImage.Init(false);
+            rawImage.raw.ColorDepth = (ushort)bps;
             int compression = -1;
 
             try
@@ -428,7 +428,7 @@ namespace RawNet.Decoder
             SetBlack(raw);
 
             //convert to linear value
-            double maxVal = Math.Pow(2, rawImage.ColorDepth);
+            double maxVal = Math.Pow(2, rawImage.raw.ColorDepth);
             double coeff = maxVal / (rawImage.whitePoint - rawImage.blackLevelSeparate[0]);
             Parallel.For(rawImage.raw.offset.height, rawImage.raw.dim.height + rawImage.raw.offset.height, y =>
             {
@@ -439,8 +439,8 @@ namespace RawNet.Decoder
                     double val;
                     //Linearisation
                     if (rawImage.table != null)
-                        val = rawImage.table.tables[rawImage.raw.data[pos]];
-                    else val = rawImage.raw.data[pos];
+                        val = rawImage.table.tables[rawImage.raw.rawView[pos]];
+                    else val = rawImage.raw.rawView[pos];
                     //Black sub
                     //val -= mRaw.blackLevelSeparate[offset + x % 2];
                     val -= rawImage.blackLevelSeparate[0];
@@ -452,7 +452,7 @@ namespace RawNet.Decoder
                     else if (val < 0) val = 0;
                     //val *= maxVal;
                     //rescale to colordepth of the original                        
-                    rawImage.raw.data[pos] = (ushort)val;
+                    rawImage.raw.rawView[pos] = (ushort)val;
                 }
             });
             //*/

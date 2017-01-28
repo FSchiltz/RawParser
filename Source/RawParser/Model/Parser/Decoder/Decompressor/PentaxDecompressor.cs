@@ -109,14 +109,14 @@ namespace RawNet.Decoder.Decompressor
                 var realY = y * raw.raw.dim.width;
                 pUp1[y & 1] += huff[0].Decode();
                 pUp2[y & 1] += huff[0].Decode();
-                raw.raw.data[realY] = (ushort)(pLeft1 = pUp1[y & 1]);
-                raw.raw.data[realY + 1] = (ushort)(pLeft2 = pUp2[y & 1]);
+                raw.raw.rawView[realY] = (ushort)(pLeft1 = pUp1[y & 1]);
+                raw.raw.rawView[realY + 1] = (ushort)(pLeft2 = pUp2[y & 1]);
                 for (int x = 2; x < raw.raw.dim.width; x += 2)
                 {
                     pLeft1 += huff[0].Decode();
                     pLeft2 += huff[0].Decode();
-                    raw.raw.data[realY + x] = (ushort)pLeft1;
-                    raw.raw.data[realY + x + 1] = (ushort)pLeft2;
+                    raw.raw.rawView[realY + x] = (ushort)pLeft1;
+                    raw.raw.rawView[realY + x + 1] = (ushort)pLeft2;
                 }
 
             }

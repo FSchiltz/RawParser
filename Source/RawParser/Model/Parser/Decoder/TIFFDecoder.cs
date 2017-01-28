@@ -70,168 +70,160 @@ namespace RawNet.Decoder
 
         public override void DecodeRaw()
         {
-            if (!ifd.tags.TryGetValue((TagType)0x0106, out var photoMetricTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue((TagType)0x0111, out var imageOffsetTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue((TagType)0x0100, out var imageWidthTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue((TagType)0x0101, out var imageHeightTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue((TagType)0x0103, out var imageCompressedTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue((TagType)0x0116, out var rowPerStripTag)) throw new FormatException("File not correct");
-            if (!ifd.tags.TryGetValue((TagType)0x0117, out var stripSizeTag)) throw new FormatException("File not correct");
+            int photoMetric = ifd.GetEntryRecursive((TagType)0x0106)?.GetInt(0) ?? throw new FormatException("File not correct"); ;
+            if (photoMetric != 2) { throw new FormatException("Photometric interpretation " + photoMetric + " not supported yet"); }
 
-            if (photoMetricTag.GetInt(0) == 2)
+            uint height = ifd.GetEntryRecursive((TagType)0x0101)?.GetUInt(0) ?? throw new FormatException("File not correct");
+            uint width = ifd.GetEntryRecursive((TagType)0x0100)?.GetUInt(0) ?? throw new FormatException("File not correct");
+            rawImage.isCFA = false;
+            rawImage.raw.dim = new Point2D(width, height);
+            rawImage.raw.uncroppedDim = rawImage.raw.dim;
+
+            rawImage.raw.ColorDepth = ifd.GetEntryRecursive((TagType)0x0102)?.GetUShort(0) ?? throw new FormatException("File not correct");
+            rawImage.cpp = 3;
+            rawImage.Init(true);
+            rawImage.IsGammaCorrected = false;
+            long rowperstrip = ifd.GetEntryRecursive((TagType)0x0116)?.GetLong(0) ?? throw new FormatException("File not correct");
+            long strips = height / rowperstrip;
+            long lastStrip = height % rowperstrip;
+            var imageOffsetTag = ifd.GetEntryRecursive((TagType)0x0111) ?? throw new FormatException("File not correct");
+            int cpp = ifd.GetEntryRecursive((TagType)0x0115)?.GetInt(0) ?? throw new FormatException("File not correct");
+
+            uint compression = ifd.GetEntryRecursive((TagType)0x0103)?.GetUInt(0) ?? throw new FormatException("File not correct");
+            if (compression == 1 && rawImage.raw.ColorDepth <= 8)
             {
-                if (!ifd.tags.TryGetValue((TagType)0x0102, out var bitPerSampleTag)) throw new FormatException("File not correct");
-                if (!ifd.tags.TryGetValue((TagType)0x0115, out var samplesPerPixel)) throw new FormatException("File not correct");
-                uint height = imageHeightTag.GetUInt(0);
-                uint width = imageWidthTag.GetUInt(0);
-                rawImage.isCFA = false;
-                rawImage.raw.dim = new Point2D(width, height);
-                rawImage.raw.uncroppedDim = rawImage.raw.dim;
-                //suppose that image are always 8,8,8 or 16,16,16
-                rawImage.ColorDepth = bitPerSampleTag.GetUShort(0);
-                rawImage.cpp = 3;
-                rawImage.Init();
-                rawImage.IsGammaCorrected = false;
-                long strips = height / rowPerStripTag.GetLong(0), lastStrip = height % rowPerStripTag.GetLong(0);
-                long rowperstrip = rowPerStripTag.GetLong(0);
-                uint compression = imageCompressedTag.GetUInt(0);
-                if (compression == 1)
+                //not compressed
+                for (int i = 0; i < strips + ((lastStrip == 0) ? 0 : 1); i++)
                 {
-                    //not compressed
-                    for (int i = 0; i < strips + ((lastStrip == 0) ? 0 : 1); i++)
+                    //for each complete strip
+                    //move to the offset
+                    reader.Position = imageOffsetTag.GetLong(i);
+                    for (int y = 0; y < rowperstrip && !(i == strips && y <= lastStrip); y++)
                     {
-                        //for each complete strip
-                        //move to the offset
-                        reader.Position = imageOffsetTag.GetLong(i);
-                        for (int y = 0; y < rowperstrip && !(i == strips && y <= lastStrip); y++)
+                        for (int x = 0; x < width; x++)
                         {
-                            for (int x = 0; x < width; x++)
+                            //get the pixel
+                            //red
+                            rawImage.raw.red[(y + i * rowperstrip) * width + x] = reader.ReadByte();
+                            //green
+                            rawImage.raw.green[(y + i * rowperstrip) * width + x] = reader.ReadByte();
+                            //blue 
+                            rawImage.raw.blue[(y + i * rowperstrip) * width + x] = reader.ReadByte();
+                            for (int z = 0; z < (cpp - 3); z++)
                             {
-                                //get the pixel
-                                //red
-                                rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3] = reader.ReadByte();
-                                //green
-                                rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3 + 1] = reader.ReadByte();
-                                //blue 
-                                rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3 + 2] = reader.ReadByte();
-                                for (int z = 0; z < (samplesPerPixel.GetInt(0) - 3); z++)
-                                {
-                                    //pass the other pixel if more light
-                                    reader.ReadByte();
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (compression == 32773)
-                {
-                    //compressed
-                    /*Loop until you get the number of unpacked bytes you are expecting:
-                    Read the next source byte into n.
-                    If n is between 0 and 127 inclusive, copy the next n+1 bytes literally.
-                    Else if n is between - 127 and - 1 inclusive, copy the next byte -n + 1
-                    times.
-                    Else if n is - 128, noop.
-                    Endloop
-                    */
-                    //not compressed
-                    for (int i = 0; i < strips + ((lastStrip == 0) ? 0 : 1); i++)
-                    {
-                        //for each complete strip
-                        //move to the offset
-                        reader.Position = imageOffsetTag.GetLong(i);
-                        for (int y = 0; y < rowperstrip && !(i == strips && y < lastStrip); y++)
-                        {
-                            //uncompress line by line of pixel
-                            ushort[] temp = new ushort[3 * width];
-                            short buffer = 0;
-                            int count = 0;
-                            for (int x = 0; x < width * 3;)
-                            {
-                                buffer = reader.ReadByte();
-                                count = 0;
-                                if (buffer >= 0)
-                                {
-                                    for (int k = 0; k < count; ++k, ++x)
-                                    {
-                                        temp[x] = reader.ReadByte();
-                                    }
-                                }
-                                else
-                                {
-                                    count = -buffer;
-                                    buffer = reader.ReadByte();
-                                    for (int k = 0; k < count; ++k, ++x)
-                                    {
-                                        temp[x] = (ushort)buffer;
-                                    }
-                                }
-                            }
-
-                            for (int x = 0; x < width * 3; x++)
-                            {
-
-                                //red
-                                rawImage.raw.data[(y + i * rowperstrip) * width * 3 + x * 3] = temp[x * 3];
-                                //green
-                                rawImage.raw.data[(y + i * rowperstrip) * width + x * 3 + 1] = temp[x * 3 + 1];
-                                //blue 
-                                rawImage.raw.data[(y + i * rowperstrip) * width + x * 3 + 2] = temp[x * 3 + 2];
-                                for (int z = 0; z < (samplesPerPixel.GetInt(0) - 3); z++)
-                                {
-                                    //pass the other pixel if more light
-                                    reader.ReadByte();
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    //we know it's tiff so tiff decoder id
-                    var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.TiffDecoderId, stream.AsRandomAccessStream()).AsTask();
-                    decoder.Wait();
-                    var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
-                    bitmapasync.Wait();
-                    rawImage.ColorDepth = 8;
-                    using (var img = bitmapasync.Result)
-                    using (BitmapBuffer buffer = img.LockBuffer(BitmapBufferAccessMode.Write))
-                    using (IMemoryBufferReference reference = buffer.CreateReference())
-                    {
-                        BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
-                        rawImage.raw.dim = new Point2D((uint)bufferLayout.Width, (uint)bufferLayout.Height);
-                        rawImage.Init();
-                        unsafe
-                        {
-                            ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                            for (int y = 0; y < rawImage.raw.dim.height; y++)
-                            {
-                                long realY = y * rawImage.raw.dim.width * 3;
-                                long bufferY = y * rawImage.raw.dim.width * 4 + +bufferLayout.StartIndex;
-                                for (int x = 0; x < rawImage.raw.dim.width; x++)
-                                {
-                                    long realPix = realY + (3 * x);
-                                    long bufferPix = bufferY + (4 * x);
-                                    rawImage.raw.data[realPix] = temp[bufferPix + 2];
-                                    rawImage.raw.data[realPix + 1] = temp[bufferPix + 1];
-                                    rawImage.raw.data[realPix + 2] = temp[bufferPix];
-                                }
+                                //pass the other pixel if more light
+                                reader.ReadByte();
                             }
                         }
                     }
                 }
             }
-            else throw new FormatException("Photometric interpretation " + photoMetricTag.DataAsString + " not supported yet");
+            else if (compression == 32773 && rawImage.raw.ColorDepth <= 8)
+            {
+                //compressed
+                /*Loop until you get the number of unpacked bytes you are expecting:
+                Read the next source byte into n.
+                If n is between 0 and 127 inclusive, copy the next n+1 bytes literally.
+                Else if n is between - 127 and - 1 inclusive, copy the next byte -n + 1
+                times.
+                Else if n is - 128, noop.
+                Endloop
+                */
+                //not compressed
+                for (int i = 0; i < strips + ((lastStrip == 0) ? 0 : 1); i++)
+                {
+                    //for each complete strip
+                    //move to the offset
+                    reader.Position = imageOffsetTag.GetLong(i);
+                    for (int y = 0; y < rowperstrip && !(i == strips && y < lastStrip); y++)
+                    {
+                        //uncompress line by line of pixel
+                        ushort[] temp = new ushort[3 * width];
+                        short buffer = 0;
+                        int count = 0;
+                        for (int x = 0; x < width * 3;)
+                        {
+                            buffer = reader.ReadByte();
+                            count = 0;
+                            if (buffer >= 0)
+                            {
+                                for (int k = 0; k < count; ++k, ++x)
+                                {
+                                    temp[x] = reader.ReadByte();
+                                }
+                            }
+                            else
+                            {
+                                count = -buffer;
+                                buffer = reader.ReadByte();
+                                for (int k = 0; k < count; ++k, ++x)
+                                {
+                                    temp[x] = (ushort)buffer;
+                                }
+                            }
+                        }
+
+                        for (int x = 0; x < width * 3; x++)
+                        {
+
+                            //red
+                            rawImage.raw.red[(y + i * rowperstrip) * width + x] = temp[x * 3];
+                            //green
+                            rawImage.raw.green[(y + i * rowperstrip) * width + x] = temp[x * 3 + 1];
+                            //blue 
+                            rawImage.raw.blue[(y + i * rowperstrip) * width + x] = temp[x * 3 + 2];
+                            for (int z = 0; z < (cpp - 3); z++)
+                            {
+                                //pass the other pixel if more light
+                                reader.ReadByte();
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                //we know it's tiff so tiff decoder id
+                var decoder = BitmapDecoder.CreateAsync(BitmapDecoder.TiffDecoderId, stream.AsRandomAccessStream()).AsTask();
+                decoder.Wait();
+                var bitmapasync = decoder.Result.GetSoftwareBitmapAsync().AsTask();
+                bitmapasync.Wait();
+                rawImage.raw.ColorDepth = 8;
+                using (var img = bitmapasync.Result)
+                using (BitmapBuffer buffer = img.LockBuffer(BitmapBufferAccessMode.Write))
+                using (IMemoryBufferReference reference = buffer.CreateReference())
+                {
+                    BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
+                    rawImage.raw.dim = new Point2D((uint)bufferLayout.Width, (uint)bufferLayout.Height);
+                    rawImage.Init(true);
+                    unsafe
+                    {
+                        ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
+                        for (int y = 0; y < rawImage.raw.dim.height; y++)
+                        {
+                            long realY = y * rawImage.raw.dim.width;
+                            long bufferY = y * rawImage.raw.dim.width * 4 + +bufferLayout.StartIndex;
+                            for (int x = 0; x < rawImage.raw.dim.width; x++)
+                            {
+                                long realPix = realY + x;
+                                long bufferPix = bufferY + (4 * x);
+                                rawImage.raw.red[realPix] = temp[bufferPix + 2];
+                                rawImage.raw.green[realPix] = temp[bufferPix + 1];
+                                rawImage.raw.blue[realPix] = temp[bufferPix];
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public override void DecodeMetadata()
         {
-            if (rawImage.ColorDepth == 0)
+            if (rawImage.raw.ColorDepth == 0)
             {
-                rawImage.ColorDepth = ifd.GetEntryRecursive(TagType.BITSPERSAMPLE).GetUShort(0);
+                rawImage.raw.ColorDepth = ifd.GetEntryRecursive(TagType.BITSPERSAMPLE)?.GetUShort(0) ?? 0;
             }
-            var isoTag = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS);
-            if (isoTag != null) rawImage.metadata.IsoSpeed = isoTag.GetInt(0);
+            rawImage.metadata.IsoSpeed = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS)?.GetInt(0) ?? 0;
             var fn = ifd.GetEntryRecursive(TagType.APERTUREVALUE);
             if (fn != null)
             {
@@ -243,8 +235,7 @@ namespace RawNet.Decoder
                 if (fn != null) rawImage.metadata.Aperture = fn.GetFloat(0);
             }
 
-            var exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME);
-            if (exposure != null) rawImage.metadata.Exposure = exposure.GetFloat(0);
+            rawImage.metadata.Exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME)?.GetFloat(0) ?? 0;
 
             if (rawImage.whitePoint == 0)
             {
@@ -255,18 +246,11 @@ namespace RawNet.Decoder
                 }
             }
 
-            var time = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL);
-            var timeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED);
-            if (time != null) rawImage.metadata.TimeTake = time.DataAsString;
-            if (timeModify != null) rawImage.metadata.TimeModify = timeModify.DataAsString;
+            rawImage.metadata.TimeTake = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL)?.DataAsString;
+            rawImage.metadata.TimeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED)?.DataAsString;
             // Set the make and model
-            var t = ifd.GetEntryRecursive(TagType.MAKE);
-            var t2 = ifd.GetEntryRecursive(TagType.MODEL);
-            if (t != null && t2 != null)
-            {
-                rawImage.metadata.Make = t.DataAsString.Trim();
-                rawImage.metadata.Model = t2.DataAsString.Trim();
-            }
+            rawImage.metadata.Make = ifd.GetEntryRecursive(TagType.MAKE)?.DataAsString.Trim();
+            rawImage.metadata.Model = ifd.GetEntryRecursive(TagType.MODEL)?.DataAsString.Trim();
 
             //rotation
             var rotateTag = ifd.GetEntryRecursive(TagType.ORIENTATION);

@@ -33,7 +33,7 @@ namespace RawEditor.View.Pages
         public SettingsView()
         {
             InitializeComponent();
-            var enumval = Enum.GetValues(typeof(DemosAlgorithm)).Cast<DemosAlgorithm>();
+            var enumval = Enum.GetValues(typeof(DemosaicAlgorithm)).Cast<DemosaicAlgorithm>();
             DemosComboBox.ItemsSource = enumval.ToList();
 
             var enumval2 = Enum.GetValues(typeof(FactorValue)).Cast<FactorValue>();
@@ -79,7 +79,7 @@ namespace RawEditor.View.Pages
 
         private void Algo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            SettingStorage.DemosAlgo = ((DemosAlgorithm)e.AddedItems[0]);
+            SettingStorage.DemosAlgo = ((DemosaicAlgorithm)e.AddedItems[0]);
         }
 
         private async void Button_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)

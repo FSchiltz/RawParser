@@ -43,7 +43,7 @@ namespace RawNet
             string val = "";
             for (int i = 0; i < (Size.height * Size.width); i++)
             {
-                val += cfa[i].ToString() + " ";
+                val += cfa[i].ToString().First();
             }
             return val;
         }

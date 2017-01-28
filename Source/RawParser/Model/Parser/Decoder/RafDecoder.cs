@@ -193,7 +193,7 @@ namespace RawNet.Decoder
             {
                 rawImage.errors.Add("BPS not found");
             }
-            rawImage.ColorDepth = bps;
+            rawImage.raw.ColorDepth = bps;
 
             // x-trans sensors report 14bpp, but data isn't packed so read as 16bpp
             if (bps == 14) bps = 16;
@@ -204,7 +204,7 @@ namespace RawNet.Decoder
             bool double_width = hints.ContainsKey("double_width_unpacked");
 
             rawImage.raw.dim = new Point2D((uint)(width * (double_width ? 2 : 1)), height);
-            rawImage.Init();
+            rawImage.Init(false);
             TIFFBinaryReader input = new TIFFBinaryReader(stream, (uint)(off + raw.RelativeOffset));
             Point2D pos = new Point2D(0, 0);
 

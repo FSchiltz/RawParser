@@ -46,7 +46,7 @@ namespace RawNet.Decoder
 
         public override void DecodeRaw()
         {
-            rawImage.ColorDepth = 8;
+            rawImage.raw.ColorDepth = 8;
             rawImage.cpp = 3;
             rawImage.isCFA = false;
             var decoder = BitmapDecoder.CreateAsync(stream.AsRandomAccessStream()).AsTask();
@@ -60,21 +60,20 @@ namespace RawNet.Decoder
             {
                 BitmapPlaneDescription bufferLayout = buffer.GetPlaneDescription(0);
                 rawImage.raw.dim = new Point2D((uint)bufferLayout.Width, (uint)bufferLayout.Height);
-                rawImage.Init();
+                rawImage.Init(true);
                 unsafe
                 {
                     ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
                     for (int y = 0; y < rawImage.raw.dim.height; y++)
                     {
-                        long realY = y * rawImage.raw.dim.width * 3;
-                        long bufferY = y * rawImage.raw.dim.width * 4 + +bufferLayout.StartIndex;
+                        long bufferY = y * rawImage.raw.dim.width * 4 + bufferLayout.StartIndex;
                         for (int x = 0; x < rawImage.raw.dim.width; x++)
                         {
-                            long realPix = realY + (3 * x);
                             long bufferPix = bufferY + (4 * x);
-                            rawImage.raw.data[realPix] = temp[bufferPix + 2];
-                            rawImage.raw.data[realPix + 1] = temp[bufferPix + 1];
-                            rawImage.raw.data[realPix + 2] = temp[bufferPix];
+                            long position = (y * rawImage.raw.dim.width) + x;
+                            rawImage.raw.red[position] = temp[bufferPix + 2];
+                            rawImage.raw.green[position] = temp[bufferPix + 1];
+                            rawImage.raw.blue[position] = temp[bufferPix];
                         }
 
                     }

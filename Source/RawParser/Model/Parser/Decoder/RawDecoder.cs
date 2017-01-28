@@ -152,7 +152,7 @@ namespace RawNet
          */
         protected unsafe void ReadUncompressedRaw(TIFFBinaryReader input, Point2D size, Point2D offset, long inputPitch, int bitPerPixel, BitOrder order)
         {
-            fixed (ushort* d = rawImage.raw.data)
+            fixed (ushort* d = rawImage.raw.rawView)
             {
                 byte* data = (byte*)d;
                 //uint outPitch = rawImage.pitch;
@@ -200,7 +200,7 @@ namespace RawNet
                         for (uint x = 0; x < w; x++)
                         {
                             uint b = bits.GetBits(bitPerPixel);
-                            rawImage.raw.data[x + (offset.width * rawImage.cpp + y * rawImage.raw.dim.width * rawImage.cpp)] = (ushort)b;
+                            rawImage.raw.rawView[x + (offset.width * rawImage.cpp + y * rawImage.raw.dim.width * rawImage.cpp)] = (ushort)b;
                         }
                         bits.SkipBits(skipBits);
                     }
@@ -284,7 +284,7 @@ namespace RawNet
             {
                 for (int x = 0; x < width; x += 1)
                 {
-                    rawImage.SetWithLookUp(input.ReadByte(), rawImage.raw.data, x, ref random);
+                    rawImage.SetWithLookUp(input.ReadByte(), rawImage.raw.rawView, x, ref random);
                     input.Position++;
                 }
             }
@@ -311,9 +311,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[(y * rawImage.raw.uncroppedDim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                    rawImage.raw.rawView[(y * rawImage.raw.uncroppedDim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.data[(y * rawImage.raw.uncroppedDim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                    rawImage.raw.rawView[(y * rawImage.raw.uncroppedDim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                 }
             }
         }
@@ -348,9 +348,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[(y * rawImage.raw.dim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.data[(y * rawImage.raw.dim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                     if ((x % 10) == 8) input.Position++;
                 }
             }
@@ -383,9 +383,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[(y * rawImage.raw.dim.width) + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.data[(y * rawImage.raw.dim.width) + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                     if ((x % 10) == 8) input.Position++;
                 }
             }
@@ -411,9 +411,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
@@ -450,9 +450,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
@@ -475,7 +475,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
                 }
             }
         }
@@ -499,7 +499,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)(((g1 << 8) | (g2 & 0xf0)) >> 4);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g1 << 8) | (g2 & 0xf0)) >> 4);
                 }
             }
         }
@@ -523,7 +523,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)(((g1 & 0x3f) << 8) | g2);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g1 & 0x3f) << 8) | g2);
                 }
             }
         }
@@ -547,7 +547,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)((g2 << 8) | g1);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g2 << 8) | g1);
                 }
             }
         }
@@ -571,7 +571,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 8) | g2);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 8) | g2);
                 }
             }
         }
@@ -594,7 +594,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.data[y * rawImage.raw.dim.width + x] = (ushort)(((g2 << 8) | g1) >> 4);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g2 << 8) | g1) >> 4);
                 }
             }
         }
