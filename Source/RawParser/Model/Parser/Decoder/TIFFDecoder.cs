@@ -304,12 +304,12 @@ namespace RawNet.Decoder
                 {
                     rawImage.metadata.Gps = new GPSInfo()
                     {
-                        longitude = gps.GetEntry((TagType)0x02).GetAsDoubleArray(),
-                        lattitude = gps.GetEntry((TagType)0x02).GetAsDoubleArray(),
-                        longitudeRef = gps.GetEntry((TagType)0x02).DataAsString,
-                        lattitudeRef = gps.GetEntry((TagType)0x02).DataAsString,
-                        altitude = gps.GetEntry((TagType)0x02).GetFloat(0),
-                        altitudeRef = gps.GetEntry((TagType)0x02).GetInt(0)
+                        longitude = gps.GetEntry((TagType)0x02)?.GetAsDoubleArray() ?? new double[] { 0, 0, 0 },
+                        lattitude = gps.GetEntry((TagType)0x02)?.GetAsDoubleArray() ?? new double[] { 0, 0, 0 },
+                        longitudeRef = gps.GetEntry((TagType)0x02)?.DataAsString,
+                        lattitudeRef = gps.GetEntry((TagType)0x02)?.DataAsString,
+                        altitude = gps.GetEntry((TagType)0x02)?.GetFloat(0) ?? 0,
+                        altitudeRef = gps.GetEntry((TagType)0x02)?.GetInt(0) ?? 0
                     };
                 }
             }
