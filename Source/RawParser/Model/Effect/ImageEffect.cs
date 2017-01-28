@@ -139,7 +139,6 @@ namespace RawEditor.Effect
                     double pixelCount = image.dim.height * image.dim.width;
 
                     int sum = 0;
-                    if (histogram.luma[0] == 0) sum = 1;
                     // build a LUT containing scale factor
                     for (int i = 0; i < 256; ++i)
                     {
