@@ -8,6 +8,7 @@ namespace RawEditor.Effect
         Bilinear,
         Deflate,
         AHD,
-        SSDD
+        SSDD,
+        Malvar
     }
 }
