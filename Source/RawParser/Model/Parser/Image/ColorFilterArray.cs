@@ -118,23 +118,31 @@ namespace RawNet
             cfa[3] = color4;
         }
 
+
         public void ShiftLeft(uint count)
         {
             if (Size.width == 0)
             {
                 throw new RawDecoderException("ColorFilterArray:shiftLeft: No CFA size set (or set to zero)");
             }
-            //Debug.Write("Shift left:" + n + "\n");
             uint shift = count % Size.width;
             if (0 == shift)
                 return;
+            CFAColor[] newCFa = new CFAColor[Size.width * Size.height];
             CFAColor[] tmp = new CFAColor[Size.width];
             for (int y = 0; y < Size.height; y++)
             {
-                CFAColor[] old = cfa.Skip((int)(y * Size.width)).ToArray();
-                Common.Memcopy(tmp, old, (Size.width - shift) * sizeof(CFAColor), 0, (int)shift);
-                Common.Memcopy(tmp, old, shift * sizeof(CFAColor), (int)(Size.width - shift), 0);
-                Common.Memcopy(old, tmp, Size.width * sizeof(CFAColor));
+                CFAColor[] oldfirst = cfa.Skip((int)(y * Size.width)).ToArray().Take((int)count).ToArray();
+                CFAColor[] oldlast = cfa.Skip((int)(y * Size.width + count)).Take((int)(Size.width - count)).ToArray();
+                int i = 0;
+                for (; i < count; i++)
+                {
+                    newCFa[(int)(y * Size.width) + i] = oldfirst[i];
+                }
+                for (; i < Size.width; i++)
+                {
+                    newCFa[(int)(y * Size.width) + i] = oldlast[i - count];
+                }
             }
         }
 
@@ -144,7 +152,6 @@ namespace RawNet
             {
                 throw new RawDecoderException("ColorFilterArray:shiftDown: No CFA size set (or set to zero)");
             }
-            //Debug.Write("Shift down:" + n + "\n");
             uint shift = count % Size.height;
             if (0 == shift)
                 return;
