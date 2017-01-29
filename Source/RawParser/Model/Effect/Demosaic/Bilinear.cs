@@ -23,7 +23,7 @@ namespace RawEditor.Effect
  * image.raw.dim.width*image.raw.dim.height in row-major order.  redx, redy are the coordinates of the 
  * upper-rightmost red pixel to specify the CFA pattern.
  */
-        static void Demosaic(RawImage image)
+        static public void Demosaic(RawImage image)
         {
             Parallel.For(1, image.raw.dim.height - 1, row =>
             {
@@ -208,7 +208,6 @@ namespace RawEditor.Effect
                         }
                     }
                 }*/
-
         }
     }
 }

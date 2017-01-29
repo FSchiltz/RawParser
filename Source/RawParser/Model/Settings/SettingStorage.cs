@@ -12,7 +12,7 @@ namespace RawEditor.Settings
         static private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         private static string def = "Default";
-        private static uint version = 3;
+        private static uint version = 4;
         //check if settings already exists
         public static double ImageBoxBorder
         {
@@ -64,7 +64,7 @@ namespace RawEditor.Settings
             localSettings.Values["previewFactor" + def] = FactorValue.Auto.ToString();
             localSettings.Values["saveFormat" + def] = ".jpg";
             localSettings.Values["autoPreviewFormat" + def] = false;
-            localSettings.Values["demosAlgo" + def] = DemosaicAlgorithm.Bilinear.ToString();
+            localSettings.Values["demosAlgo" + def] = DemosaicAlgorithm.SimpleAdams.ToString();
             localSettings.Values["Theme" + def] = ThemeEnum.System.ToString();
             if (localSettings.Values["version"] == null || (uint)localSettings.Values["version"] < version)
                 Reset();
