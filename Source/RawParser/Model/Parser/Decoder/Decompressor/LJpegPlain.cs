@@ -104,6 +104,8 @@ namespace RawNet.Decoder.Decompressor
 
             if (predictor == 1)
             {
+                DecodeScanLeftGeneric();
+                return;
                 if (CanonFlipDim)
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot flip non subsampled images.");
                 if (raw.raw.dim.height * raw.pitch >= 1 << 28)
@@ -630,8 +632,8 @@ namespace RawNet.Decoder.Decompressor
                 UInt32 cw = frame.width - skipX;
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = ((t_x + offX) * raw.Bpp + ((offY + t_y) * raw.pitch)) | (t_s << 28);
-                    Debug.Assert((offset[slice] & 0x0fffffff) < raw.pitch * raw.raw.dim.height);
+                    offset[slice] = (t_x + offX+ ((offY + t_y) * raw.raw.dim.width)) | (t_s << 28);
+                    Debug.Assert((offset[slice] & 0x0fffffff) < raw.raw.dim.width * raw.raw.dim.height);
                     t_y++;
                     if (t_y == (frame.height - skipY))
                     {
@@ -640,7 +642,7 @@ namespace RawNet.Decoder.Decompressor
                     }
                 }
                 // We check the final position. If bad slice sizes are given we risk writing outside the image
-                if ((offset[slices - 1] & 0x0fffffff) >= raw.pitch * raw.raw.dim.height)
+                if ((offset[slices - 1] & 0x0fffffff) >= raw.raw.dim.width * raw.raw.dim.height)
                 {
                     throw new RawDecoderException("decodeScanLeft: Last slice out of bounds");
                 }

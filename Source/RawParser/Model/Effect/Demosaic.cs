@@ -65,11 +65,12 @@ namespace RawEditor.Effect
             image.raw.green = new ushort[image.raw.dim.width * image.raw.dim.height];
             image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
 
-            Parallel.For(image.raw.offset.height, image.raw.dim.height, row =>
+            Parallel.For(0, image.raw.dim.height, row =>
             {
-                for (uint col = image.raw.offset.width; col < image.raw.dim.width; col++)
+                long realRow = (row + image.raw.offset.height) * image.raw.uncroppedDim.width;
+                for (int col = 0; col < image.raw.dim.width; col++)
                 {
-                    long realCol = col + (row * image.raw.uncroppedDim.width);
+                    long realCol = (col + image.raw.offset.width) + realRow;
                     CFAColor pixeltype = image.colorFilter.cfa[((row % height) * width) + col % width];
                     switch (pixeltype)
                     {
