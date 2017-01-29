@@ -9,8 +9,8 @@ namespace RawEditor.Effect
 {
     static class SSDD
     {
-        static byte GREENPOSITION = 0;
-        static byte REDPOSITION = 1;
+        static byte GREENPOSITION = 1;
+        static byte REDPOSITION = 0;
         static byte BLUEPOSITION = 2;
 
         static int MAX(int i, int j) { return ((i) < (j) ? (j) : (i)); }
@@ -24,6 +24,12 @@ namespace RawEditor.Effect
         static double LUTMAX = 30.0;
         static double LUTMAXM1 = 29.0;
         static double LUTPRECISION = 1000.0;
+        //double h;
+        //int dbloc = 7;
+        //double side = 1.5;
+        //int iter = 1;
+        //int projflag = 1;
+        static double threshold = 2.0;
 
         public static void Demosaic(RawImage image, bool simple)
         {
@@ -50,14 +56,17 @@ namespace RawEditor.Effect
                     throw new FormatException("Pattern " + image.colorFilter.ToString() + " is not supported");
             }
 
-            //double h;
-            //int dbloc = 7;
-            //double side = 1.5;
-            //int iter = 1;
-            //int projflag = 1;
-            double threshold = 2.0;
+            // Mask of color per pixel
+            byte[] mask = new byte[image.raw.dim.width * image.raw.dim.height];
+            Parallel.For(0, image.raw.dim.width, x =>
+            {
+                for (int y = 0; y < image.raw.dim.height; y++)
+                {
+                    mask[y * image.raw.dim.width + x] = (byte)image.colorFilter.cfa[((y % 2) * 2) + (x % 2)];
+                }
+            });
 
-            demosaicking_adams(threshold, redx, redy, image.raw, simple);
+            demosaicking_adams(redx, redy, image.raw, simple, mask);
             /*
             h = 16.0;
             demosaicking_nlmeans(dbloc, h, redx, redy, image.raw);
@@ -338,24 +347,11 @@ namespace RawEditor.Effect
          * @param[in]  image.dim.width, image.dim.height size of the image
          *
          */
-        static unsafe void demosaicking_adams(double threshold, int redx, int redy, ImageComponent image, bool simple)
+        static unsafe void demosaicking_adams(int redx, int redy, ImageComponent image, bool simple, byte[] mask)
         {
             // Initializations
             int bluex = 1 - redx;
             int bluey = 1 - redy;
-
-            // Mask of color per pixel
-            byte[] mask = new byte[image.dim.width * image.dim.height];
-
-            Parallel.For(0, image.dim.width, x =>
-            {
-                for (int y = 0; y < image.dim.height; y++)
-                {
-                    if (x % 2 == redx && y % 2 == redy) mask[y * image.dim.width + x] = REDPOSITION;
-                    else if (x % 2 == bluex && y % 2 == bluey) mask[y * image.dim.width + x] = BLUEPOSITION;
-                    else mask[y * image.dim.width + x] = GREENPOSITION;
-                }
-            });
 
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West

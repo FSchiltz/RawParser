@@ -11,36 +11,39 @@ namespace RawEditor.Effect
             image.cpp = 3;
             //first we deflate the image
             Deflate(image);
-            switch (algo)
-            {
-                case DemosaicAlgorithm.AHD:
-                //AHD(image);
-                //break;
-                //break;
-                case DemosaicAlgorithm.Bicubic:
-                //Bicubic(image);
-                //break;
-                case DemosaicAlgorithm.Spline:
-                //break;
-                case DemosaicAlgorithm.Bilinear:
-                    if (image.isFujiTrans)
-                        FujiBilinear(image);
-                    else
-                        Bilinear.Demosaic(image);
-                    break;
-                case DemosaicAlgorithm.Deflate:
-                    //already done
-                    break;
-                case DemosaicAlgorithm.SSDD:
-                    SSDD.Demosaic(image, false);
-                    break;
-                case DemosaicAlgorithm.SimpleAdams:
-                    SSDD.Demosaic(image, true);
-                    break;
-                case DemosaicAlgorithm.Malvar:
-                    Malvar.Demosaic(image);
-                    break;
-            }
+
+            if (!image.isFujiTrans)
+                switch (algo)
+                {
+                    case DemosaicAlgorithm.AHD:
+                    //AHD(image);
+                    //break;
+                    //break;
+                    case DemosaicAlgorithm.Bicubic:
+                    //Bicubic(image);
+                    //break;
+                    case DemosaicAlgorithm.Spline:
+                    //break;
+                    case DemosaicAlgorithm.Bilinear:
+                        if (image.isFujiTrans)
+                            FujiBilinear(image);
+                        else
+                            Bilinear.Demosaic(image);
+                        break;
+                    case DemosaicAlgorithm.Deflate:
+                        //already done
+                        break;
+                    case DemosaicAlgorithm.SSDD:
+                        SSDD.Demosaic(image, false);
+                        break;
+                    case DemosaicAlgorithm.SimpleAdams:
+
+                        SSDD.Demosaic(image, true);
+                        break;
+                    case DemosaicAlgorithm.Malvar:
+                        Malvar.Demosaic(image);
+                        break;
+                }
         }
 
         private static void AHD(RawImage image)
@@ -62,12 +65,11 @@ namespace RawEditor.Effect
             image.raw.green = new ushort[image.raw.dim.width * image.raw.dim.height];
             image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
 
-            Parallel.For(0, image.raw.dim.height, row =>
+            Parallel.For(image.raw.offset.height, image.raw.dim.height, row =>
             {
-                long realRow = row + image.raw.offset.height;
-                for (int col = 0; col < image.raw.dim.width; col++)
+                for (uint col = image.raw.offset.width; col < image.raw.dim.width; col++)
                 {
-                    long realCol = (col + image.raw.offset.width) + realRow * image.raw.uncroppedDim.width;
+                    long realCol = col + (row * image.raw.uncroppedDim.width);
                     CFAColor pixeltype = image.colorFilter.cfa[((row % height) * width) + col % width];
                     switch (pixeltype)
                     {
