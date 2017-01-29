@@ -276,8 +276,7 @@ namespace RawNet.Decoder
             input.Position = 0;
             if (bpp == 8)
             {
-                /* Since ARW2 compressed images have predictable offsets, we decode them threaded */
-                // throw new RawDecoderException("8 bits image are not yet supported");       
+                // Since ARW2 compressed images have predictable offsets, we decode them threaded        
                 BitPumpPlain bits = new BitPumpPlain(reader);
                 //todo add parralel (parrallel.For not working because onlyone bits so not thread safe;
                 //set one bits pump per row (may be slower)

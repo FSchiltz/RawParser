@@ -12,7 +12,7 @@ namespace RawEditor.Effect
             //first we deflate the image
             Deflate(image);
 
-            if (!image.isFujiTrans)
+            if (!image.isFujiTrans && image.colorFilter.ToString() != "RGBG")
                 switch (algo)
                 {
                     case DemosaicAlgorithm.AHD:

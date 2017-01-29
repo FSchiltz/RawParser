@@ -212,22 +212,15 @@ namespace RawEditor.View.Pages
 
                         decoder.DecodeRaw();
                         decoder.DecodeMetadata();
-                        raw = decoder.rawImage;
-                        //if (decoder.ScaleValue) raw.ScaleValues();
-                        raw.metadata.FileName = file.DisplayName;
-                        raw.metadata.FileNameComplete = file.Name;
-                        raw.metadata.FileExtension = file.FileType;
-                        if (raw.errors.Count > 0)
-                        {
-                            TextDisplay.DisplayWarning("This file is not fully supported, it may appear incorrectly");
-#if !DEBUG
-                            //send an event with file extension and camera model and make if any                   
-                            logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + "" + raw.errors.Count);
-#endif
-                        }
                         watch.Stop();
+                        raw = decoder.rawImage;
                         raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
                     }
+                    //if (decoder.ScaleValue) raw.ScaleValues();
+                    raw.metadata.FileName = file.DisplayName;
+                    raw.metadata.FileNameComplete = file.Name;
+                    raw.metadata.FileExtension = file.FileType;
+
                     if (raw.isCFA)
                     {
                         //get the algo from the settings
@@ -260,13 +253,21 @@ namespace RawEditor.View.Pages
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
 
-                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         raw.ParseExif(ExifSource);
                         ResetControls();
                         UpdatePreview(true);
                         ControlVisibilty.Value = true;
                     });
+                    if (raw.errors.Count > 0)
+                    {
+                        TextDisplay.DisplayWarning("This file is not fully supported, it may appear incorrectly");
+#if !DEBUG
+                            //send an event with file extension and camera model and make if any                   
+                            logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + "" + raw.errors.Count);
+#endif
+                    }
                     thumbnail = null;
                 }
                 catch (Exception e)
@@ -393,7 +394,7 @@ namespace RawEditor.View.Pages
             if (ZeroFactor < 0.1) ZeroFactor = 0.1f;
             else if (ZeroFactor > 1) ZeroFactor = (float)(1 - relativeBorder);
             ImageDisplay.MinZoomFactor = 0.1f;
-            ImageDisplay.MaxZoomFactor = 2;
+            ImageDisplay.MaxZoomFactor = 10;
             ZoomSlider.Value = ZeroFactor;
             ImageDisplay.ChangeView(0, 0, ZeroFactor);
         }

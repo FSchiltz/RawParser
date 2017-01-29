@@ -146,15 +146,7 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("NEF Decoder: Decompression info tag not found");
 
             Tag meta;
-            if (data[0].tags.ContainsKey((TagType)0x96))
-            {
-                meta = data[0].GetEntry((TagType)0x96);
-            }
-            else
-            {
-                meta = data[0].GetEntry((TagType)0x8c);  // Fall back
-            }
-
+            meta = data[0].GetEntry((TagType)0x96) ?? data[0].GetEntry((TagType)0x8c);
             rawImage.Init(false);
             try
             {
@@ -225,7 +217,7 @@ namespace RawNet.Decoder
                 if (width > largest_width)
                     best_ifd = raw;
             }
-            if (null == best_ifd)
+            if (best_ifd == null)
                 throw new RawDecoderException("NEF Decoder: Unable to locate image");
             return best_ifd;
         }
