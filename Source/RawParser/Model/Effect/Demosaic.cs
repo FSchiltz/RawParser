@@ -29,9 +29,13 @@ namespace RawEditor.Effect
                         Bilinear.Demosaic(image);
                     break;
                 case DemosaicAlgorithm.Deflate:
+                    //already done
                     break;
                 case DemosaicAlgorithm.SSDD:
-                    SSDD.Demosaic(image);
+                    SSDD.Demosaic(image, false);
+                    break;
+                case DemosaicAlgorithm.SimpleAdams:
+                    SSDD.Demosaic(image, true);
                     break;
                 case DemosaicAlgorithm.Malvar:
                     Malvar.Demosaic(image);
@@ -128,5 +132,5 @@ namespace RawEditor.Effect
             });
         }
 
-     }
+    }
 }

@@ -25,7 +25,7 @@ namespace RawEditor.Effect
         static double LUTMAXM1 = 29.0;
         static double LUTPRECISION = 1000.0;
 
-        public static void Demosaic(RawImage image)
+        public static void Demosaic(RawImage image, bool simple)
         {
             int redx, redy;
             switch (image.colorFilter.ToString())
@@ -57,7 +57,7 @@ namespace RawEditor.Effect
             int projflag = 1;
             double threshold = 2.0;
 
-            demosaicking_adams(threshold, redx, redy, image.raw);
+            demosaicking_adams(threshold, redx, redy, image.raw, simple);
             /*
             h = 16.0;
             demosaicking_nlmeans(dbloc, h, redx, redy, image.raw);
@@ -71,6 +71,8 @@ namespace RawEditor.Effect
             demosaicking_nlmeans(dbloc, h, redx, redy, image.raw);
             //chromatic_median(iter, redx, redy, projflag, side, image.arw);*/
         }
+
+        #region nlMean
 
         /**
          * \brief  Iterate median filter on chromatic components of the image
@@ -321,6 +323,7 @@ namespace RawEditor.Effect
 
             return dist;
         }
+        #endregion
 
         /**
          * \brief  Classical Adams-Hamilton demosaicking algorithm
@@ -335,7 +338,7 @@ namespace RawEditor.Effect
          * @param[in]  image.dim.width, image.dim.height size of the image
          *
          */
-        static unsafe void demosaicking_adams(double threshold, int redx, int redy, ImageComponent image)
+        static unsafe void demosaicking_adams(double threshold, int redx, int redy, ImageComponent image, bool simple)
         {
             // Initializations
             int bluex = 1 - redx;
@@ -356,17 +359,17 @@ namespace RawEditor.Effect
 
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West
-            for (int x = 0; x < image.dim.width; x++)
+            Parallel.For(0, image.dim.width, x =>
             {
                 for (int y = 0; y < image.dim.height; y++)
                 {
                     if ((mask[y * image.dim.width + x] != GREENPOSITION) && (x < 3 || y < 3 || x >= image.dim.width - 3 || y >= image.dim.height - 3))
                     {
-                        int gn, gs, ge, gw;
+                        long gn, gs, ge, gw;
 
                         if (y > 0) gn = y - 1; else gn = 1;
-                        if (y < image.dim.height - 1) gs = y + 1; else gs = (int)image.dim.height - 2;
-                        if (x < image.dim.width - 1) ge = x + 1; else ge = (int)image.dim.width - 2;
+                        if (y < image.dim.height - 1) gs = y + 1; else gs = image.dim.height - 2;
+                        if (x < image.dim.width - 1) ge = x + 1; else ge = image.dim.width - 2;
                         if (x > 0) gw = x - 1; else gw = 1;
 
                         image.green[y * image.dim.width + x] = (ushort)((
@@ -376,11 +379,11 @@ namespace RawEditor.Effect
                             image.green[y * image.dim.width + ge]) / 4.0);
                     }
                 }
-            }
+            });
 
             // Interpolate the green by Adams algorithm inside the image    
             // First interpolate green directionally
-            for (int x = 3; x < image.dim.width - 3; x++)
+            Parallel.For(3, image.dim.width - 3, x =>
             {
                 for (int y = 3; y < image.dim.height - 3; y++)
                 {
@@ -424,17 +427,30 @@ namespace RawEditor.Effect
 
                         // Else If horizontal differences are smaller, compute horizontal average
                         else if (adh < adv)
+                        {
                             image.green[l] = (ushort)((image.green[l - 1] + image.green[l + 1]) / 2.0 + (dh0) / 4.0);
+                        }
 
                         // Else If vertical differences are smaller, compute vertical average			
                         else if (adv < adh)
+                        {
                             image.green[l] = (ushort)((image.green[lp1] + image.green[lm1]) / 2.0 + (dv0) / 4.0);
+                        }
                     }
                 }
-            }
+            });
 
-            // compute the bilinear on the differences of the red and blue with the already interpolated green
-            demosaicking_bilinear_red_blue(redx, redy, image, mask);
+            if (!simple)
+            {
+                // compute the bilinear on the differences of the red and blue with the already interpolated green
+                demosaicking_bilinear_red_blue(redx, redy, image, mask, image.red, REDPOSITION);
+                demosaicking_bilinear_red_blue(bluex, bluey, image, mask, image.blue, BLUEPOSITION);
+            }
+            else
+            {
+                demosaicking_bilinearSimple_red_blue(redx, redy, image, mask, image.red, REDPOSITION);
+                demosaicking_bilinearSimple_red_blue(bluex, bluey, image, mask, image.blue, BLUEPOSITION);
+            }
         }
 
         /**
@@ -447,62 +463,13 @@ namespace RawEditor.Effect
          * @param[in]  image.dim.width, image.dim.height size of the image
          *
          */
-        static unsafe void demosaicking_bilinear_red_blue(int redx, int redy, ImageComponent image, byte[] mask)
+        static unsafe void demosaicking_bilinear_red_blue(int redx, int redy, ImageComponent image, byte[] mask, ushort[] input, int COLORPOSITION)
         {
-            // Initializations
-            int bluex = 1 - redx;
-            int bluey = 1 - redy;
-            ushort maxvalue = (ushort)((1 << image.ColorDepth) - 1);
-            int[] blue = new int[image.dim.width * image.dim.height];
-            // Compute the differences  
-            Parallel.For(0, image.dim.width * image.dim.height, i =>
-             {
-                 blue[i] = image.blue[i] - image.green[i];
-             });
-
-
-            // Interpolate the blue differences making the average of possible values depending on the CFA structure 
-            for (int x = 0; x < image.dim.width; x++)
-            {
-                for (int y = 0; y < image.dim.height; y++)
-                {
-                    if (mask[y * image.dim.width + x] != BLUEPOSITION)
-                    {
-                        int gn, gs, ge, gw;
-                        // Compute north, south, west, east positions
-                        // taking a mirror symmetry at the boundaries
-                        if (y > 0) gn = y - 1; else gn = 1;
-                        if (y < image.dim.height - 1) gs = y + 1; else gs = (int)image.dim.height - 2;
-                        if (x < image.dim.width - 1) ge = x + 1; else ge = (int)image.dim.width - 2;
-                        if (x > 0) gw = x - 1; else gw = 1;
-
-                        if (mask[y * image.dim.width + x] == GREENPOSITION && y % 2 == bluey)
-                            blue[y * image.dim.width + x] = (int)((blue[y * image.dim.width + ge] + blue[y * image.dim.width + gw]) / 2.0);
-                        else if (mask[y * image.dim.width + x] == GREENPOSITION && x % 2 == bluex)
-                            blue[y * image.dim.width + x] = (int)((blue[gn * image.dim.width + x] + blue[gs * image.dim.width + x]) / 2.0);
-                        else
-                        {
-                            blue[y * image.dim.width + x] = (int)((blue[gn * image.dim.width + ge] +
-                                blue[gn * image.dim.width + gw] +
-                                blue[gs * image.dim.width + ge] +
-                                blue[gs * image.dim.width + gw]) / 4.0);
-                        }
-
-                    }
-                }
-            }
-            // Make back the differences
-            Parallel.For(0, image.dim.width * image.dim.height, i =>
-            {
-                image.blue[i] = (ushort)(blue[i] + image.green[i]);
-            });
-            blue = null;
-
-            int[] red = new int[image.dim.width * image.dim.height];
+            long[] red = new long[image.dim.width * image.dim.height];
             // Compute the differences  
             Parallel.For(0, image.dim.width * image.dim.height, i =>
             {
-                red[i] = image.red[i] - image.green[i];
+                red[i] = input[i] - image.green[i];
             });
 
             // Interpolate the red differences making the average of possible values depending on the CFA structure
@@ -510,7 +477,7 @@ namespace RawEditor.Effect
             {
                 for (int y = 0; y < image.dim.height; y++)
                 {
-                    if (mask[y * image.dim.width + x] != REDPOSITION)
+                    if (mask[y * image.dim.width + x] != COLORPOSITION)
                     {
                         int gn, gs, ge, gw;
                         // Compute north, south, west, east positions
@@ -537,12 +504,43 @@ namespace RawEditor.Effect
             // Make back the differences
             Parallel.For(0, image.dim.width * image.dim.height, i =>
             {
-                image.red[i] = (ushort)(red[i] + image.green[i]);
-              
+                input[i] = (ushort)(red[i] + image.green[i]);
+
             });
             red = null;
         }
 
-        static void interpolateColor() { }
+        static unsafe void demosaicking_bilinearSimple_red_blue(int redx, int redy, ImageComponent image, byte[] mask, ushort[] input, int COLORPOSITION)
+        {
+            // Interpolate the red differences making the average of possible values depending on the CFA structure
+            Parallel.For(0, image.dim.width, x =>
+            {
+                for (int y = 0; y < image.dim.height; y++)
+                {
+                    if (mask[y * image.dim.width + x] != COLORPOSITION)
+                    {
+                        long gn, gs, ge, gw;
+                        // Compute north, south, west, east positions
+                        // taking a mirror symmetry at the boundaries
+                        if (y > 0) gn = y - 1; else gn = 1;
+                        if (y < image.dim.height - 1) gs = y + 1; else gs = image.dim.height - 2;
+                        if (x < image.dim.width - 1) ge = x + 1; else ge = image.dim.width - 2;
+                        if (x > 0) gw = x - 1; else gw = 1;
+
+                        if (mask[y * image.dim.width + x] == GREENPOSITION && y % 2 == redy)
+                            input[y * image.dim.width + x] = (ushort)((input[y * image.dim.width + ge] + input[y * image.dim.width + gw]) / 2.0);
+                        else if (mask[y * image.dim.width + x] == GREENPOSITION && x % 2 == redx)
+                            input[y * image.dim.width + x] = (ushort)((input[gn * image.dim.width + x] + input[gs * image.dim.width + x]) / 2.0);
+                        else
+                        {
+                            input[y * image.dim.width + x] = (ushort)((input[gn * image.dim.width + ge] +
+                                input[gn * image.dim.width + gw] +
+                                input[gs * image.dim.width + ge] +
+                                input[gs * image.dim.width + gw]) / 4.0);
+                        }
+                    }
+                }
+            });
+        }
     }
 }

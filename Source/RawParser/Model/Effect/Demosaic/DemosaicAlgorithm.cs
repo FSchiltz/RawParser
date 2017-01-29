@@ -9,6 +9,7 @@ namespace RawEditor.Effect
         Deflate,
         AHD,
         SSDD,
-        Malvar
+        Malvar,
+        SimpleAdams
     }
 }

@@ -309,7 +309,7 @@ namespace RawNet.Decoder
                         longitudeRef = gps.GetEntry((TagType)0x02)?.DataAsString,
                         lattitudeRef = gps.GetEntry((TagType)0x02)?.DataAsString,
                         altitude = gps.GetEntry((TagType)0x02)?.GetFloat(0) ?? 0,
-                        altitudeRef = gps.GetEntry((TagType)0x02)?.GetInt(0) ?? 0
+                        altitudeRef = gps.GetEntry((TagType)0x02)?.GetLong(0) ?? 0
                     };
                 }
             }

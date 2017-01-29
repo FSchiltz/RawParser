@@ -6,7 +6,7 @@ namespace RawNet
     {
         public double[] longitude;
         public double[] lattitude;
-        public int altitudeRef;
+        public long altitudeRef;
         public double altitude;
         public string lattitudeRef;
         public string longitudeRef;

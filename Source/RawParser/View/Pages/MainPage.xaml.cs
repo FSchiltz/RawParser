@@ -186,7 +186,7 @@ namespace RawEditor.View.Pages
                 EmptyImage();
             }
             Load.Show();
-            Blur(true);
+            // Blur(true);
             Task.Run(async () =>
             {
                 try
@@ -286,7 +286,7 @@ namespace RawEditor.View.Pages
                 }
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    Blur(false);
+                    // Blur(false);
                     Load.Hide();
                 });
                 ImageSelected = false;
@@ -315,7 +315,7 @@ namespace RawEditor.View.Pages
         {
             if (raw?.raw != null)
             {
-                Blur(true);
+                //Blur(true);
                 var savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
@@ -347,7 +347,7 @@ namespace RawEditor.View.Pages
                     }
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        Blur(false);
+                        //Blur(false);
                         Load.Hide();
                     });
                 });
@@ -554,7 +554,7 @@ namespace RawEditor.View.Pages
             {
                 CropUI.SetThumbAsync(null);
                 Load.Show();
-                Blur(true);
+                // Blur(true);
                 ControlVisibilty.Value = false;
                 //display the crop UI
                 CropGrid.Visibility = Visibility.Visible;
@@ -614,67 +614,71 @@ namespace RawEditor.View.Pages
             ResetButtonVisibility.Value = true;
         }
 
+        #region blur
+        /*
         private void Blur(bool visibility)
         {
             if (visibility)
             {
                 PivotGrid.IsEnabled = false;
-                /* try
-                 {
-                     // Get the current compositor
-                     _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
-                     // Create the destinatio sprite, sized to cover the entire list
-                     _pivotGridSprite = _compositor.CreateSpriteVisual();
-                     _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
-                     ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
-                     // Create the effect factory and instantiate a brush
-                     CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
-                     brush = _effectFactory.CreateBrush();
-                     // Set the destination brush as the source of the image content
-                     brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
-                     // Update the destination layer with the fully configured brush
-                     _pivotGridSprite.Brush = brush;
+                try
+                {
+                    // Get the current compositor
+                    _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+                    // Create the destinatio sprite, sized to cover the entire list
+                    _pivotGridSprite = _compositor.CreateSpriteVisual();
+                    _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
+                    ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
+                    // Create the effect factory and instantiate a brush
+                    CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
+                    brush = _effectFactory.CreateBrush();
+                    // Set the destination brush as the source of the image content
+                    brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
+                    // Update the destination layer with the fully configured brush
+                    _pivotGridSprite.Brush = brush;
 
-                     ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
-                     blurAnimation.InsertKeyFrame(0.0f, 0.0f);
-                     blurAnimation.InsertKeyFrame(1.0f, blurAmount);
-                     blurAnimation.Duration = animationDuration;
-                     blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
-                     blurAnimation.IterationCount = 1;
-                     brush.StartAnimation("Blur.BlurAmount", blurAnimation);
-                 }
-                 catch (Exception e)
-                 {
-                     //no blur if exception (bug on some phone)
-                 }*/
+                    ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                    blurAnimation.InsertKeyFrame(0.0f, 0.0f);
+                    blurAnimation.InsertKeyFrame(1.0f, blurAmount);
+                    blurAnimation.Duration = animationDuration;
+                    blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                    blurAnimation.IterationCount = 1;
+                    brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+                }
+                catch (Exception e)
+                {
+                    //no blur if exception (bug on some phone)
+                }
             }
             else
             {
 
                 PivotGrid.IsEnabled = true;
-                /*            try
-                            {
-                                // Update the destination layer with the fully configured brush
-                                _pivotGridSprite.Brush = brush;
-                                ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
-                                blurAnimation.InsertKeyFrame(0.0f, blurAmount);
-                                blurAnimation.InsertKeyFrame(1.0f, 0.0f);
-                                blurAnimation.Duration = animationDuration;
-                                blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
-                                blurAnimation.IterationCount = 1;
-                                brush.StartAnimation("Blur.BlurAmount", blurAnimation);
-                            }
-                            catch (Exception e)
-                            {
-                            }*/
+                try
+                {
+                    // Update the destination layer with the fully configured brush
+                    _pivotGridSprite.Brush = brush;
+                    ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
+                    blurAnimation.InsertKeyFrame(0.0f, blurAmount);
+                    blurAnimation.InsertKeyFrame(1.0f, 0.0f);
+                    blurAnimation.Duration = animationDuration;
+                    blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+                    blurAnimation.IterationCount = 1;
+                    brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+                }
+                catch (Exception e)
+                {
+                }
             }
         }
+       */
+        #endregion
 
         private void HideCropUI()
         {
             if (CropGrid.Visibility == Visibility.Visible)
             {
-                Blur(false);
+                //Blur(false);
                 Load.Hide();
                 CropGrid.Visibility = Visibility.Collapsed;
                 ControlVisibilty.Value = true;
