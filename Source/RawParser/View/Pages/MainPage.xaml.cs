@@ -130,6 +130,7 @@ namespace RawEditor.View.Pages
             //VignetSlider.Value = 0;
             //Cause problem (double update of preview)
             GammaToggle.IsOn = raw?.IsGammaCorrected ?? false;
+            MediumGamma.IsChecked = true;
             AutoCorrectToggle.IsOn = false;
             if (raw != null)
             {
