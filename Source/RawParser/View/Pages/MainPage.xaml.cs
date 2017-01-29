@@ -24,10 +24,11 @@ using Windows.System;
 using RawEditor.Base;
 using RawEditor.View.UIHelper;
 using RawEditor.Settings;
+/*
 using Microsoft.Graphics.Canvas.Effects;
 using Windows.UI.Composition;
 using Windows.UI.Xaml.Hosting;
-using System.Numerics;
+using System.Numerics;*/
 using Windows.Foundation.Collections;
 
 namespace RawEditor.View.Pages
@@ -45,12 +46,12 @@ namespace RawEditor.View.Pages
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
         public Bindable<bool> feedbacksupport = new Bindable<bool>(StoreServicesFeedbackLauncher.IsSupported());
-        private SpriteVisual _pivotGridSprite;
-        private Compositor _compositor;
-        private CompositionEffectBrush brush;
+        // private SpriteVisual _pivotGridSprite;
+        //private Compositor _compositor;
+        //private CompositionEffectBrush brush;
         public Histogram Histo { get; set; } = new Histogram();
-        private float blurAmount = 5;
-        private GaussianBlurEffect graphicsEffect = new GaussianBlurEffect()
+        //private float blurAmount = 5;
+        /*private GaussianBlurEffect graphicsEffect = new GaussianBlurEffect()
         {
             Name = "Blur",
             BlurAmount = 0f,
@@ -58,7 +59,7 @@ namespace RawEditor.View.Pages
             Optimization = EffectOptimization.Balanced,
             BorderMode = EffectBorderMode.Soft
         };
-        private TimeSpan animationDuration = TimeSpan.FromMilliseconds(300);
+        private TimeSpan animationDuration = TimeSpan.FromMilliseconds(300);*/
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
