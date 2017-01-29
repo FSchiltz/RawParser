@@ -18,9 +18,9 @@ namespace RawEditor.Effect
 
         static double fTiny = 0.00000001;
 
-        static double COEFF_YR = 0.299;
-        static double COEFF_YG = 0.587;
-        static double COEFF_YB = 0.114;
+        //static double COEFF_YR = 0.299;
+        //static double COEFF_YG = 0.587;
+        //static double COEFF_YB = 0.114;
         static double LUTMAX = 30.0;
         static double LUTMAXM1 = 29.0;
         static double LUTPRECISION = 1000.0;
@@ -50,11 +50,11 @@ namespace RawEditor.Effect
                     throw new FormatException("Pattern " + image.colorFilter.ToString() + " is not supported");
             }
 
-            double h;
-            int dbloc = 7;
-            double side = 1.5;
-            int iter = 1;
-            int projflag = 1;
+            //double h;
+            //int dbloc = 7;
+            //double side = 1.5;
+            //int iter = 1;
+            //int projflag = 1;
             double threshold = 2.0;
 
             demosaicking_adams(threshold, redx, redy, image.raw, simple);
