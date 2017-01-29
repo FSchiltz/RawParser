@@ -303,13 +303,13 @@ namespace RawNet.Decoder
                 if (gps != null)
                 {
                     rawImage.metadata.Gps = new GPSInfo()
-                    {szzzzzzzz
-                        longitude = gps.GetEntry((TagType)0x02)?.GetAsDoubleArray() ?? new double[] { 0, 0, 0 },
+                    {
+                        longitude = gps.GetEntry((TagType)0x04)?.GetAsDoubleArray() ?? new double[] { 0, 0, 0 },
                         lattitude = gps.GetEntry((TagType)0x02)?.GetAsDoubleArray() ?? new double[] { 0, 0, 0 },
-                        longitudeRef = gps.GetEntry((TagType)0x02)?.DataAsString,
-                        lattitudeRef = gps.GetEntry((TagType)0x02)?.DataAsString,
-                        altitude = gps.GetEntry((TagType)0x02)?.GetFloat(0) ?? 0,
-                        altitudeRef = gps.GetEntry((TagType)0x02)?.GetLong(0) ?? 0
+                        longitudeRef = gps.GetEntry((TagType)0x03)?.DataAsString,
+                        lattitudeRef = gps.GetEntry((TagType)0x01)?.DataAsString,
+                        altitude = gps.GetEntry((TagType)0x06)?.GetFloat(0) ?? 0,
+                        altitudeRef = gps.GetEntry((TagType)0x05)?.GetLong(0) ?? 0
                     };
                 }
             }
