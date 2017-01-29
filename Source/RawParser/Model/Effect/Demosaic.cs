@@ -26,7 +26,7 @@ namespace RawEditor.Effect
                     if (image.isFujiTrans)
                         FujiBilinear(image);
                     else
-                        Bilinear(image);
+                        Bilinear.Demosaic(image);
                     break;
                 case DemosaicAlgorithm.Deflate:
                     break;
@@ -97,30 +97,30 @@ namespace RawEditor.Effect
                     CFAColor pixeltype = image.colorFilter.cfa[((row % 2) * 2) + col % 2];
                     if (pixeltype == CFAColor.GREEN)
                     {
-                //get the red                      
-                image.raw.red[(row * image.raw.dim.width) + col] =
-                  (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col] + image.raw.red[((row + 1) * image.raw.dim.width) + col] >> 1);
-                //get the blue (left) //get the red                      
-                image.raw.blue[(row * image.raw.dim.width) + col] =
-                  (ushort)(image.raw.blue[(row * image.raw.dim.width) + col - 1] + image.raw.blue[(row * image.raw.dim.width) + col + 1] >> 1);
+                        //get the red                      
+                        image.raw.red[(row * image.raw.dim.width) + col] =
+                          (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col] + image.raw.red[((row + 1) * image.raw.dim.width) + col] >> 1);
+                        //get the blue (left) //get the red                      
+                        image.raw.blue[(row * image.raw.dim.width) + col] =
+                          (ushort)(image.raw.blue[(row * image.raw.dim.width) + col - 1] + image.raw.blue[(row * image.raw.dim.width) + col + 1] >> 1);
                     }
                     else
                     {
 
-                //get the red                      
-                image.raw.green[(row * image.raw.dim.width) + col] =
-                  (ushort)(image.raw.green[((row - 1) * image.raw.dim.width) + col] + image.raw.green[((row + 1) * image.raw.dim.width) + col] >> 1);
+                        //get the red                      
+                        image.raw.green[(row * image.raw.dim.width) + col] =
+                          (ushort)(image.raw.green[((row - 1) * image.raw.dim.width) + col] + image.raw.green[((row + 1) * image.raw.dim.width) + col] >> 1);
                         if (pixeltype == CFAColor.BLUE)
                         {
-                    //get the other value
-                    image.raw.red[(row * image.raw.dim.width) + col] =
-                    (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.red[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
+                            //get the other value
+                            image.raw.red[(row * image.raw.dim.width) + col] =
+                            (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.red[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
                         }
                         else
                         {
-                    //get the other value
-                    image.raw.blue[(row * image.raw.dim.width) + col] =
-                    (ushort)(image.raw.blue[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.blue[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
+                            //get the other value
+                            image.raw.blue[(row * image.raw.dim.width) + col] =
+                            (ushort)(image.raw.blue[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.blue[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
 
                         }
                     }
@@ -128,44 +128,5 @@ namespace RawEditor.Effect
             });
         }
 
-        private static void Bilinear(RawImage image)
-        {
-            Parallel.For(1, image.raw.dim.height - 1, row =>
-            {
-                for (int col = 1; col < image.raw.dim.width - 1; col++)
-                {
-                    CFAColor pixeltype = image.colorFilter.cfa[((row % 2) * 2) + col % 2];
-                    if (pixeltype == CFAColor.GREEN)
-                    {
-                //get the red                      
-                image.raw.red[(row * image.raw.dim.width) + col] =
-              (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col] + image.raw.red[((row + 1) * image.raw.dim.width) + col] >> 1);
-                //get the blue (left) //get the red                      
-                image.raw.blue[(row * image.raw.dim.width) + col] =
-              (ushort)(image.raw.blue[(row * image.raw.dim.width) + col - 1] + image.raw.blue[(row * image.raw.dim.width) + col + 1] >> 1);
-                    }
-                    else
-                    {
-
-                //get the red                      
-                image.raw.green[(row * image.raw.dim.width) + col] =
-              (ushort)(image.raw.green[((row - 1) * image.raw.dim.width) + col] + image.raw.green[((row + 1) * image.raw.dim.width) + col] >> 1);
-                        if (pixeltype == CFAColor.BLUE)
-                        {
-                    //get the other value
-                    image.raw.red[(row * image.raw.dim.width) + col] =
-                (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.red[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
-                        }
-                        else
-                        {
-                    //get the other value
-                    image.raw.blue[(row * image.raw.dim.width) + col] =
-                (ushort)(image.raw.blue[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.blue[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
-
-                        }
-                    }
-                }
-            });
-        }
-    }
+     }
 }
