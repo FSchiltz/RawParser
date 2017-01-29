@@ -336,7 +336,7 @@ namespace RawEditor.View.Pages
                 {
                     try
                     {
-                        var result = await ApplyUserModifAsync(raw.raw, false);
+                        var result = await ApplyUserModifAsync(raw.raw);
                         FormatHelper.SaveAsync(file, result.Item2);
                     }
                     catch (Exception ex)
@@ -405,14 +405,14 @@ namespace RawEditor.View.Pages
                 //display the histogram                  
                 Task.Run(async () =>
                 {
-                    var result = await ApplyUserModifAsync(raw.preview, true);
+                    var result = await ApplyUserModifAsync(raw.preview);
                     DisplayImage(result.Item2, move);
                     Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
                 });
         }
 
         //Apply the change over the image preview       
-        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(RawNet.ImageComponent image, bool histo)
+        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(RawNet.ImageComponent image)
         {
             ImageEffect effect = new ImageEffect();
             //get all the value 
@@ -450,16 +450,8 @@ namespace RawEditor.View.Pages
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.width, (int)image.dim.height);
                 }
             });
-            if (histo)
-            {
-                var tmp = effect.Apply(image, bitmap);
-                return Tuple.Create(tmp, bitmap);
-            }
-            else
-            {
-                effect.Apply(image, bitmap);
-                return Tuple.Create(new HistoRaw(), bitmap);
-            }
+            var tmp = effect.Apply(image, bitmap);
+            return Tuple.Create(tmp, bitmap);
         }
 
         private void EditingControlChanged()
@@ -517,7 +509,7 @@ namespace RawEditor.View.Pages
                 //TODO regionalise text
                 //generate the bitmap
                 Load.Show();
-                var result = await ApplyUserModifAsync(raw.raw, false);
+                var result = await ApplyUserModifAsync(raw.raw);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -588,7 +580,7 @@ namespace RawEditor.View.Pages
                 {
                     dim = raw.raw.uncroppedDim
                 };
-                var result = await ApplyUserModifAsync(img, false);
+                var result = await ApplyUserModifAsync(img);
                 //display the preview
                 CropUI.SetThumbAsync(result.Item2);
             }

@@ -168,8 +168,8 @@ namespace RawEditor.Effect
                              int realX = (realY + x) * 4;
                              double red = temp[realX], green = temp[realX + 1], blue = temp[realX + 2];
                              Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
-                             Interlocked.Increment(ref histogram.luma[(int)(l * 255)]);
                              l = lut[(int)(l * 255.0)] / 255.0;
+                             Interlocked.Increment(ref histogram.luma[(int)(l * 255)]);
                              Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
                              Luminance.Clip(ref red, ref green, ref blue, 255);
                              temp[realX] = (byte)(red);

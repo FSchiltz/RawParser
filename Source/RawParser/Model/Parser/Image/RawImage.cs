@@ -22,6 +22,7 @@ namespace RawNet
             green = image.green;
             blue = image.blue;
             uncroppedDim = image.uncroppedDim;
+            ColorDepth = image.ColorDepth;
         }
 
         public ushort ColorDepth { get; set; }
@@ -60,7 +61,7 @@ namespace RawNet
             get { return rotation; }
             set
             {
-                if (value < 0) rotation = 0;
+                if (value < 0) rotation = 4 + (value % 4);
                 else rotation = value % 4;
             }
         }

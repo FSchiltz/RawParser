@@ -14,7 +14,7 @@ namespace RawNet.Decoder
         public RAFDecoder(Stream file) : base(file, true)
         {
             //alt_layout = false;
-            rawImage.IsGammaCorrected = false;
+            rawImage.IsGammaCorrected = true;
             // FUJI has pointers to IFD's at fixed byte offsets
             // So if camera is FUJI, we cannot use ordinary TIFF parser
             //get first 8 char and see if equal fuji
