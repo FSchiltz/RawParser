@@ -183,8 +183,8 @@ namespace RawNet.Decoder
             int off = offsets.GetInt(0);
             int count = counts.GetInt(0);
 
-            ushort bps = 16;
-            var bpsTag = raw.GetEntryRecursive(TagType.FUJI_BITSPERSAMPLE);
+            ushort bps = 12;
+            var bpsTag = raw.GetEntryRecursive(TagType.FUJI_BITSPERSAMPLE) ?? raw.GetEntryRecursive(TagType.BITSPERSAMPLE);
             if (bpsTag != null)
             {
                 bps = bpsTag.GetUShort(0);

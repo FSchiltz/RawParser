@@ -217,16 +217,16 @@ namespace RawNet.Decoder.Decompressor
             sliceWidth[slices] = sliceWidth[slices - 1];        // Extra offset to avoid branch in loop.
 
             // Predictors for components
-            int[] p = new int[4];
-            uint dest = imagePos[0];
+            long[] p = new long[4];
+            long dest = imagePos[0];
 
             // Always points to next slice
             slice = 1;
-            uint pixInSlice = sliceWidth[0];
+            long pixInSlice = sliceWidth[0];
 
             // Initialize predictors and decode one group.pitch
             uint x = 0;
-            uint predict = dest;          // Prediction pointer
+            long predict = dest;          // Prediction pointer
             for (uint i = 0; i < comps; i++)
             {
                 for (uint y2 = 0; y2 < samplesV[i]; y2++)
@@ -632,7 +632,7 @@ namespace RawNet.Decoder.Decompressor
                 UInt32 cw = frame.width - skipX;
                 for (slice = 0; slice < slices; slice++)
                 {
-                    offset[slice] = (t_x + offX+ ((offY + t_y) * raw.raw.dim.width)) | (t_s << 28);
+                    offset[slice] = (t_x + offX + ((offY + t_y) * raw.raw.dim.width)) | (t_s << 28);
                     Debug.Assert((offset[slice] & 0x0fffffff) < raw.raw.dim.width * raw.raw.dim.height);
                     t_y++;
                     if (t_y == (frame.height - skipY))
