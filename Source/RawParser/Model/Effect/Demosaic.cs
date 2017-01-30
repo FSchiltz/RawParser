@@ -11,56 +11,39 @@ namespace RawEditor.Effect
             image.cpp = 3;
             //first we deflate the image
             Deflate(image);
-
-            if (!image.isFujiTrans && image.colorFilter.ToString() != "RGBG")
+            if (image.isFujiTrans)
+            {
                 switch (algo)
                 {
-                    case DemosaicAlgorithm.AHD:
-                    //AHD(image);
-                    //break;
-                    //break;
-                    case DemosaicAlgorithm.Bicubic:
-                    //Bicubic(image);
-                    //break;
-                    case DemosaicAlgorithm.Spline:
-                    //break;
-                    case DemosaicAlgorithm.Bilinear:
-                        if (image.isFujiTrans)
-                            FujiBilinear(image);
-                        else
-                            Bilinear.Demosaic(image);
-                        break;
                     case DemosaicAlgorithm.Deflate:
-                        //already done
+                        break;
+                    default:
+                        FujiDemos.Demosaic(image);
+                        break;
+                }
+            }
+            else if (image.colorFilter.ToString() != "RGBG")
+            {
+                switch (algo)
+                {
+                    case DemosaicAlgorithm.Bilinear:
+                        Bilinear.Demosaic(image);
                         break;
                     case DemosaicAlgorithm.SSDD:
                         SSDD.Demosaic(image, false);
                         break;
                     case DemosaicAlgorithm.SimpleAdams:
-
                         SSDD.Demosaic(image, true);
                         break;
                     case DemosaicAlgorithm.Malvar:
                         Malvar.Demosaic(image);
                         break;
                 }
-        }
-
-        private static void AHD(RawImage image)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void Bicubic(RawImage image)
-        {
-            throw new NotImplementedException();
+            }
         }
 
         private static void Deflate(RawImage image)
         {
-            uint height = image.colorFilter.Size.height;
-            uint width = image.colorFilter.Size.width;
-
             image.raw.red = new ushort[image.raw.dim.width * image.raw.dim.height];
             image.raw.green = new ushort[image.raw.dim.width * image.raw.dim.height];
             image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
@@ -68,10 +51,11 @@ namespace RawEditor.Effect
             Parallel.For(0, image.raw.dim.height, row =>
             {
                 long realRow = (row + image.raw.offset.height) * image.raw.uncroppedDim.width;
+                long cfarow = (row % image.colorFilter.Size.height) * image.colorFilter.Size.width;
                 for (int col = 0; col < image.raw.dim.width; col++)
                 {
                     long realCol = (col + image.raw.offset.width) + realRow;
-                    CFAColor pixeltype = image.colorFilter.cfa[((row % height) * width) + col % width];
+                    CFAColor pixeltype = image.colorFilter.cfa[cfarow + (col % image.colorFilter.Size.width)];
                     switch (pixeltype)
                     {
                         case CFAColor.GREEN:
@@ -91,49 +75,5 @@ namespace RawEditor.Effect
             image.raw.offset = new Point2D();
             image.raw.uncroppedDim = new Point2D(image.raw.dim.width, image.raw.dim.height);
         }
-
-        private static void FujiBilinear(RawImage image)
-        {
-            uint height = image.colorFilter.Size.height;
-            uint width = image.colorFilter.Size.width;
-
-            Parallel.For(0, image.raw.dim.height, row =>
-            {
-                for (int col = 0; col < image.raw.dim.width; col++)
-                {
-                    CFAColor pixeltype = image.colorFilter.cfa[((row % 2) * 2) + col % 2];
-                    if (pixeltype == CFAColor.GREEN)
-                    {
-                        //get the red                      
-                        image.raw.red[(row * image.raw.dim.width) + col] =
-                          (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col] + image.raw.red[((row + 1) * image.raw.dim.width) + col] >> 1);
-                        //get the blue (left) //get the red                      
-                        image.raw.blue[(row * image.raw.dim.width) + col] =
-                          (ushort)(image.raw.blue[(row * image.raw.dim.width) + col - 1] + image.raw.blue[(row * image.raw.dim.width) + col + 1] >> 1);
-                    }
-                    else
-                    {
-
-                        //get the red                      
-                        image.raw.green[(row * image.raw.dim.width) + col] =
-                          (ushort)(image.raw.green[((row - 1) * image.raw.dim.width) + col] + image.raw.green[((row + 1) * image.raw.dim.width) + col] >> 1);
-                        if (pixeltype == CFAColor.BLUE)
-                        {
-                            //get the other value
-                            image.raw.red[(row * image.raw.dim.width) + col] =
-                            (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.red[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
-                        }
-                        else
-                        {
-                            //get the other value
-                            image.raw.blue[(row * image.raw.dim.width) + col] =
-                            (ushort)(image.raw.blue[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.blue[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
-
-                        }
-                    }
-                }
-            });
-        }
-
     }
 }
