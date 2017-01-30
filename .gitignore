@@ -295,3 +295,4 @@ Source/RawParser/Package.appxmanifest
 
 Source/RawParser/project.lock.json
 /Source/Appx
+*.lock.json
