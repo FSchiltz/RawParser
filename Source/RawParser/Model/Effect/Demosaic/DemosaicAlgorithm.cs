@@ -3,11 +3,10 @@ namespace RawEditor.Effect
 {
     public enum DemosaicAlgorithm
     {
-        Bicubic,
-        Spline,
+        /*Bicubic,
+        Spline, AHD,*/
         Bilinear,
-        Deflate,
-        AHD,
+        Deflate,       
         SSDD,
         Malvar,
         SimpleAdams

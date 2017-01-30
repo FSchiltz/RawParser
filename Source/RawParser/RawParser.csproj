@@ -138,6 +138,7 @@
     <Compile Include="Model\Effect\Curve.cs" />
     <Compile Include="Model\Effect\Demosaic\Bilinear.cs" />
     <Compile Include="Model\Effect\Demosaic\DemosaicAlgorithm.cs" />
+    <Compile Include="Model\Effect\Demosaic\FujiDemos.cs" />
     <Compile Include="Model\Effect\Demosaic\FujiSSDD.cs" />
     <Compile Include="Model\Effect\Demosaic\Malvar.cs" />
     <Compile Include="Model\Effect\Demosaic\SSDD.cs" />
