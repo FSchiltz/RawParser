@@ -43,6 +43,7 @@ namespace RawEditor.Model.Effect.Demosaic
 
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West
+            //TODO optimiseby removing unnessecary increment and check
             Parallel.For(0, image.raw.dim.width, x =>
             {
                 for (int y = 0; y < image.raw.dim.height; y++)
@@ -161,7 +162,5 @@ namespace RawEditor.Model.Effect.Demosaic
                 }
             });
         }
-
-
     }
 }

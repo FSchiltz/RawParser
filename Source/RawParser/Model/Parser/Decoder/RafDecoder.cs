@@ -262,7 +262,7 @@ namespace RawNet.Decoder
                 else
                 {
                     //default to GRBG
-                    rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                    rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
                 }
 
                 //Debug.WriteLine("CFA pattern is not found");

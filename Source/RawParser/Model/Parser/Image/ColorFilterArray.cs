@@ -4,16 +4,16 @@ namespace RawNet
 {
     public enum CFAColor
     {
-        RED = 0,
-        GREEN = 1,
-        BLUE = 2,
+        Red = 0,
+        Green = 1,
+        Blue = 2,
         CYAN = 4,
         MAGENTA = 5,
         YELLOW = 6,
         WHITE = 7,
         COLOR_MAX = 8,
         FUJI_GREEN = 9,
-        UNKNOWN = 255
+        Unknow = 255
     };
 
     public class ColorFilterArray

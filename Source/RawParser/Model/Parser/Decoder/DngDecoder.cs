@@ -69,7 +69,7 @@ namespace RawNet.Decoder
             if (cfa == null)
             {
                 Debug.WriteLine("CFA pattern is not found");
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
             }
             else
             {
@@ -619,11 +619,11 @@ namespace RawNet.Decoder
                     switch (c1)
                     {
                         case 0:
-                            c2 = CFAColor.RED; break;
+                            c2 = CFAColor.Red; break;
                         case 1:
-                            c2 = CFAColor.GREEN; break;
+                            c2 = CFAColor.Green; break;
                         case 2:
-                            c2 = CFAColor.BLUE; break;
+                            c2 = CFAColor.Blue; break;
                         case 3:
                             c2 = CFAColor.CYAN; break;
                         case 4:
@@ -633,7 +633,7 @@ namespace RawNet.Decoder
                         case 6:
                             c2 = CFAColor.WHITE; break;
                         default:
-                            c2 = CFAColor.UNKNOWN;
+                            c2 = CFAColor.Unknow;
                             throw new RawDecoderException("DNG Decoder: Unsupported CFA Color.");
                     }
                     rawImage.colorFilter.SetColorAt(new Point2D(x, y), c2);

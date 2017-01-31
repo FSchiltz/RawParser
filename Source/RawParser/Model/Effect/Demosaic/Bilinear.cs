@@ -30,7 +30,7 @@ namespace RawEditor.Effect
                 for (int col = 1; col < image.raw.dim.width - 1; col++)
                 {
                     CFAColor pixeltype = image.colorFilter.cfa[((row % 2) * 2) + col % 2];
-                    if (pixeltype == CFAColor.GREEN)
+                    if (pixeltype == CFAColor.Green)
                     {
                         //get the red                      
                         image.raw.red[(row * image.raw.dim.width) + col] =
@@ -45,7 +45,7 @@ namespace RawEditor.Effect
                         //get the red                      
                         image.raw.green[(row * image.raw.dim.width) + col] =
                   (ushort)(image.raw.green[((row - 1) * image.raw.dim.width) + col] + image.raw.green[((row + 1) * image.raw.dim.width) + col] >> 1);
-                        if (pixeltype == CFAColor.BLUE)
+                        if (pixeltype == CFAColor.Blue)
                         {
                             //get the other value
                             image.raw.red[(row * image.raw.dim.width) + col] =
