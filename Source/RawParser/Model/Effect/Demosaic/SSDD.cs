@@ -329,10 +329,8 @@ namespace RawEditor.Effect
             // make the average of four neighbouring green pixels: Nourth, South, East, West
             Parallel.For(0, image.dim.height, row =>
             {
-                long realRow = row + image.offset.height;
                 for (long col = 0; col < image.dim.width; col++)
                 {
-                    long realCol = col + image.offset.width;
                     if (!(col < 3 || row < 3 || col >= image.dim.width - 3 || row >= image.dim.height - 3))
                     {
                         //skip to the end of line to reduce calculation
@@ -341,17 +339,16 @@ namespace RawEditor.Effect
                     else if ((mask[row * image.dim.width + col] != (CFAColor)CFAColor.Green))
                     {
                         long gn, gs, ge, gw;
-
-                        if (row > 0) gn = realRow - 1; else gn = 1;
-                        if (row < image.dim.height - 1) gs = realRow + 1; else gs = image.uncroppedDim.height - 2;
-                        if (col < image.dim.width - 1) ge = realCol + 1; else ge = image.uncroppedDim.width - 2;
-                        if (col > 0) gw = realCol - 1; else gw = 1;
+                        if (row > 0) gn = row - 1; else gn = 1;
+                        if (row < image.dim.height - 1) gs = row + 1; else gs = image.dim.height - 2;
+                        if (col < image.dim.width - 1) ge = col + 1; else ge = image.dim.width - 2;
+                        if (col > 0) gw = col - 1; else gw = 1;
 
                         image.green[row * image.dim.width + col] = (ushort)((
-                            image.rawView[gn * image.uncroppedDim.width + realCol] +
-                            image.rawView[gs * image.uncroppedDim.width + realCol] +
-                            image.rawView[realRow * image.uncroppedDim.width + gw] +
-                            image.rawView[realRow * image.uncroppedDim.width + ge]) / 4.0);
+                            image.green[gn * image.dim.width + col] +
+                            image.green[gs * image.dim.width + col] +
+                            image.green[row * image.dim.width + gw] +
+                            image.green[row * image.dim.width + ge]) / 4.0);
                     }
                 }
             });
@@ -360,58 +357,56 @@ namespace RawEditor.Effect
             // First interpolate green directionally
             Parallel.For(3, image.dim.height - 3, row =>
             {
-                long realRow = row + image.offset.height;
                 for (int col = 3; col < image.dim.width - 3; col++)
                 {
-                    long realCol = col + image.offset.width;
-
-                    long l1 = row * image.dim.width + col;
-                    if (mask[l1] != CFAColor.Green)
+                    if (mask[row * image.dim.width + col] != CFAColor.Green)
                     {
-                        long l = realRow * image.uncroppedDim.width + realCol;
-                        long lp1 = (realRow + 1) * image.uncroppedDim.width + realCol;
-                        long lp2 = (realRow + 2) * image.uncroppedDim.width + realCol;
-                        long lm1 = (realRow - 1) * image.uncroppedDim.width + realCol;
-                        long lm2 = (realRow - 2) * image.uncroppedDim.width + realCol;
+                        long l = row * image.dim.width + col;
+                        long lp1 = (row + 1) * image.dim.width + col;
+                        long lp2 = (row + 2) * image.dim.width + col;
+                        long lm1 = (row - 1) * image.dim.width + col;
+                        long lm2 = (row - 2) * image.dim.width + col;
 
                         // Compute vertical and horizontal gradients in the green channel
-                        double adv = Math.Abs(image.rawView[lp1] - image.rawView[lm1]);
-                        double adh = Math.Abs(image.rawView[l - 1] - image.rawView[l + 1]);
+                        double adv = Math.Abs(image.green[lp1] - image.green[lm1]);
+                        double adh = Math.Abs(image.green[l - 1] - image.green[l + 1]);
                         double dh0, dv0;
 
                         // If current pixel is blue, we compute the horizontal and vertical blue second derivatives
                         // else is red, we compute the horizontal and vertical red second derivatives
-                        // if (mask[l] == CFAColor.Blue)
-                        // {
-                        dh0 = 2.0 * image.rawView[l] - image.rawView[l + 2] - image.rawView[l - 2];
-                        dv0 = 2.0 * image.rawView[l] - image.rawView[lp2] - image.rawView[lm2];
-                        //}
-                        /*
+                        if (mask[l] == CFAColor.Blue)
+                        {
+                            dh0 = 2.0 * image.blue[l] - image.blue[l + 2] - image.blue[l - 2];
+                            dv0 = 2.0 * image.blue[l] - image.blue[lp2] - image.blue[lm2];
+                        }
                         else
                         {
                             dh0 = 2.0 * image.red[l] - image.red[l + 2] - image.red[l - 2];
                             dv0 = 2.0 * image.red[l] - image.red[lp2] - image.red[lm2];
-                        }*/
+                        }
 
                         // Add vertical and horizontal differences
                         adh = adh + Math.Abs(dh0);
                         adv = adv + Math.Abs(dv0);
 
+                        // If vertical and horizontal differences are similar, compute an isotropic average
                         if (Math.Abs(adv - adh) < threshold)
-                        {
-                            // If vertical and horizontal differences are similar, compute an isotropic average
-                            image.green[l1] = (ushort)((image.rawView[lm1] + image.rawView[lp1] + image.rawView[l - 1] +
-                                image.rawView[l + 1]) / 4.0 + (dh0 + dv0) / 8.0);
-                        }
+                            image.green[l] = (ushort)(
+                                (image.green[lm1] +
+                                image.green[lp1] +
+                                image.green[l - 1] +
+                                image.green[l + 1]) / 4.0 + (dh0 + dv0) / 8.0);
+
+                        // Else If horizontal differences are smaller, compute horizontal average
                         else if (adh < adv)
                         {
-                            // Else If horizontal differences are smaller, compute horizontal average
-                            image.green[l1] = (ushort)((image.rawView[l - 1] + image.rawView[l + 1]) / 2.0 + (dh0) / 4.0);
+                            image.green[l] = (ushort)((image.green[l - 1] + image.green[l + 1]) / 2.0 + (dh0) / 4.0);
                         }
+
+                        // Else If vertical differences are smaller, compute vertical average			
                         else if (adv < adh)
                         {
-                            // Else If vertical differences are smaller, compute vertical average	
-                            image.green[l1] = (ushort)((image.rawView[lp1] + image.rawView[lm1]) / 2.0 + (dv0) / 4.0);
+                            image.green[l] = (ushort)((image.green[lp1] + image.green[lm1]) / 2.0 + (dv0) / 4.0);
                         }
                     }
                 }
@@ -420,13 +415,13 @@ namespace RawEditor.Effect
             if (!simple)
             {
                 // compute the bilinear on the differences of the red and blue with the already interpolated green
-                demosaicking_bilinear_red_blue(redx, redy, image, mask, image.red, CFAColor.Red);
-                demosaicking_bilinear_red_blue(bluex, bluey, image, mask, image.blue, CFAColor.Blue);
+                demosaicking_bilinear_red_blue(redx, redy, image.dim, mask, image.red, CFAColor.Red);
+                demosaicking_bilinear_red_blue(bluex, bluey, image.dim, mask, image.blue, CFAColor.Blue);
             }
             else
             {
-                demosaicking_bilinearSimple_red_blue(redx, redy, image, mask, image.red, CFAColor.Red);
-                demosaicking_bilinearSimple_red_blue(bluex, bluey, image, mask, image.blue, CFAColor.Blue);
+                demosaicking_bilinearSimple_red_blue(redx, redy, image.dim, mask, image.red, CFAColor.Red);
+                demosaicking_bilinearSimple_red_blue(bluex, bluey, image.dim, mask, image.blue, CFAColor.Blue);
             }
         }
 
@@ -440,87 +435,78 @@ namespace RawEditor.Effect
          * @param[in]  image.dim.width, image.dim.height size of the image
          *
          */
-        static unsafe void demosaicking_bilinear_red_blue(int colorX, int colorY, ImageComponent image, CFAColor[] mask, ushort[] output, CFAColor COLORPOSITION)
+        static unsafe void demosaicking_bilinear_red_blue(int colorX, int colorY, Point2D dim, CFAColor[] mask, ushort[] output, CFAColor COLORPOSITION)
         {
-            long[] red = new long[image.dim.width * image.dim.height];
+            long[] red = new long[dim.width * dim.height];
             // Compute the differences  
-            Parallel.For(0, image.dim.width * image.dim.height, i =>
+            Parallel.For(0, dim.width * dim.height, i =>
             {
-                red[i] = output[i] - image.green[i];
+                red[i] = output[i];// - image.green[i];
             });
 
             // Interpolate the red differences making the average of possible values depending on the CFA structure
-            Parallel.For(0, image.dim.width, x =>
-           {
-               for (int y = 0; y < image.dim.height; y++)
-               {
-                   if (mask[y * image.dim.width + x] != COLORPOSITION)
-                   {
-                       long gn, gs, ge, gw;
-                       // Compute north, south, west, east positions
-                       // taking a mirror symmetry at the boundaries
-                       if (y > 0) gn = y - 1; else gn = 1;
-                       if (y < image.dim.height - 1) gs = y + 1; else gs = (int)image.dim.height - 2;
-                       if (x < image.dim.width - 1) ge = x + 1; else ge = (int)image.dim.width - 2;
-                       if (x > 0) gw = x - 1; else gw = 1;
-
-                       if (mask[y * image.dim.width + x] == CFAColor.Green && y % 2 == colorY)
-                           red[y * image.dim.width + x] = (int)((red[y * image.dim.width + ge] + red[y * image.dim.width + gw]) / 2.0);
-                       else if (mask[y * image.dim.width + x] == CFAColor.Green && x % 2 == colorX)
-                           red[y * image.dim.width + x] = (int)((red[gn * image.dim.width + x] + red[gs * image.dim.width + x]) / 2.0);
-                       else
-                       {
-                           red[y * image.dim.width + x] = (int)((red[gn * image.dim.width + ge] +
-                               red[gn * image.dim.width + gw] +
-                               red[gs * image.dim.width + ge] +
-                               red[gs * image.dim.width + gw]) / 4.0);
-                       }
-                   }
-               }
-           });
-            // Make back the differences
-            Parallel.For(0, image.dim.width * image.dim.height, i =>
+            Parallel.For(0, dim.width, x =>
             {
-                output[i] = (ushort)(red[i] + image.green[i]);
-
-            });
-            red = null;
-        }
-
-        static unsafe void demosaicking_bilinearSimple_red_blue(int colorX, int colorY, ImageComponent image, CFAColor[] mask, ushort[] output, CFAColor COLORPOSITION)
-        {
-            // Interpolate the red differences making the average of possible values depending on the CFA structure
-            Parallel.For(0, image.dim.height, row =>
-            {
-                long realRow = row + image.offset.height;
-                for (int col = 0; col < image.dim.width; col++)
+                for (int y = 0; y < dim.height; y++)
                 {
-                    long realCol = col + image.offset.width;
-                    if (mask[row * image.dim.width + col] != COLORPOSITION)
+                    if (mask[y * dim.width + x] != COLORPOSITION)
                     {
                         long gn, gs, ge, gw;
                         // Compute north, south, west, east positions
                         // taking a mirror symmetry at the boundaries
-                        if (row > 0) gn = realRow - 1; else gn = 1;
-                        gn *= image.uncroppedDim.width;
-                        if (row < image.dim.height - 1) gs = realRow + 1; else gs = image.uncroppedDim.height - 2;
-                        gs *= image.uncroppedDim.width;
-                        if (col < image.dim.width - 1) ge = realCol + 1; else ge = image.uncroppedDim.width - 2;
-                        if (col > 0) gw = realCol - 1; else gw = 1;
+                        if (y > 0) gn = y - 1; else gn = 1;
+                        if (y < dim.height - 1) gs = y + 1; else gs = dim.height - 2;
+                        if (x < dim.width - 1) ge = x + 1; else ge = dim.width - 2;
+                        if (x > 0) gw = x - 1; else gw = 1;
 
-                        long pos = row * image.dim.width + col;
-
-                        if (mask[pos] == CFAColor.Green && row % 2 == colorY)
-                        {
-                            output[pos] = (ushort)((image.rawView[realRow * image.uncroppedDim.width + ge] + image.rawView[realRow * image.uncroppedDim.width + gw]) / 2.0);
-                        }
-                        else if (mask[pos] == CFAColor.Green && col % 2 == colorX)
-                        {
-                            output[pos] = (ushort)((image.rawView[gn + realCol] + image.rawView[gs + realCol]) / 2.0);
-                        }
+                        if (mask[y * dim.width + x] == CFAColor.Green && y % 2 == colorY)
+                            red[y * dim.width + x] = (int)((red[y * dim.width + ge] + red[y * dim.width + gw]) / 2.0);
+                        else if (mask[y * dim.width + x] == CFAColor.Green && x % 2 == colorX)
+                            red[y * dim.width + x] = (int)((red[gn * dim.width + x] + red[gs * dim.width + x]) / 2.0);
                         else
                         {
-                            output[pos] = (ushort)((image.rawView[gn + ge] + image.rawView[gn + gw] + image.rawView[gs + ge] + image.rawView[gs + gw]) / 4.0);
+                            red[y * dim.width + x] = (int)((red[gn * dim.width + ge] +
+                                red[gn * dim.width + gw] +
+                                red[gs * dim.width + ge] +
+                                red[gs * dim.width + gw]) / 4.0);
+                        }
+                    }
+                }
+            });
+
+            // Make back the differences
+            Parallel.For(0, dim.width * dim.height, i =>
+            {
+                output[i] = (ushort)(red[i]);// + image.green[i]);
+            });
+        }
+
+        static unsafe void demosaicking_bilinearSimple_red_blue(int colorX, int colorY, Point2D dim, CFAColor[] mask, ushort[] output, CFAColor COLORPOSITION)
+        {
+            Parallel.For(0, dim.height, row =>
+            {
+                for (int col = 0; col < dim.width; col++)
+                {
+                    if (mask[row * dim.width + col] != COLORPOSITION)
+                    {
+                        long gn, gs, ge, gw;
+                        // Compute north, south, west, east positions
+                        // taking a mirror symmetry at the boundaries
+                        if (row > 0) gn = row - 1; else gn = 1;
+                        if (row < dim.height - 1) gs = row + 1; else gs = dim.height - 2;
+                        if (col < dim.width - 1) ge = col + 1; else ge = dim.width - 2;
+                        if (col > 0) gw = col - 1; else gw = 1;
+
+                        if (mask[row * dim.width + col] == CFAColor.Green && row % 2 == colorY)
+                            output[row * dim.width + col] = (ushort)((output[row * dim.width + ge] + output[row * dim.width + gw]) / 2.0);
+                        else if (mask[row * dim.width + col] == CFAColor.Green && col % 2 == colorX)
+                            output[row * dim.width + col] = (ushort)((output[gn * dim.width + col] + output[gs * dim.width + col]) / 2.0);
+                        else
+                        {
+                            output[row * dim.width + col] = (ushort)((output[gn * dim.width + ge] +
+                                output[gn * dim.width + gw] +
+                                output[gs * dim.width + ge] +
+                                output[gs * dim.width + gw]) / 4.0);
                         }
                     }
                 }
