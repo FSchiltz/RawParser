@@ -17,10 +17,10 @@ namespace RawEditor.View.UIHelper
 
     public class Histogram
     {
-        public PointCollection PointsL { get; set; } = new PointCollection();
-        public PointCollection PointsR { get; set; } = new PointCollection();
-        public PointCollection PointsG { get; set; } = new PointCollection();
-        public PointCollection PointsB { get; set; } = new PointCollection();
+        public PointCollection PointsL { get; } = new PointCollection();
+        public PointCollection PointsR { get; } = new PointCollection();
+        public PointCollection PointsG { get; } = new PointCollection();
+        public PointCollection PointsB { get; } = new PointCollection();
 
         public async void FillAsync(HistoRaw value, uint height, uint width)
         {

@@ -2,6 +2,7 @@ using RawNet.Decoder.HuffmanCompressor;
 using RawNet.JPEG;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace RawNet.Decoder.Decompressor
@@ -299,9 +300,9 @@ namespace RawNet.Decoder.Decompressor
                 return markL;
             }
             input.SkipToMarker();
-            input.ReadByte();
-            //TODO change
-            //Debug.Assert(0xff == id);
+            var id = input.ReadByte();
+
+            Debug.Assert(0xff == id);
             JpegMarker mark = (JpegMarker)input.ReadByte();
             return mark;
         }

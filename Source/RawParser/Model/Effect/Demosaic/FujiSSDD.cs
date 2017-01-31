@@ -16,14 +16,14 @@ namespace RawEditor.Model.Effect.Demosaic
         static int MAX(int i, int j) { return ((i) < (j) ? (j) : (i)); }
         static int MIN(int i, int j) { return ((i) < (j) ? (i) : (j)); }
 
-        static double fTiny = 0.00000001;
+        //static double fTiny = 0.00000001;
 
         //static double COEFF_YR = 0.299;
         //static double COEFF_YG = 0.587;
         //static double COEFF_YB = 0.114;
-        static double LUTMAX = 30.0;
-        static double LUTMAXM1 = 29.0;
-        static double LUTPRECISION = 1000.0;
+       // static double LUTMAX = 30.0;
+        //static double LUTMAXM1 = 29.0;
+        //static double LUTPRECISION = 1000.0;
         static double threshold = 2.0;
 
 

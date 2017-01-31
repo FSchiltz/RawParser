@@ -6,9 +6,9 @@ namespace RawEditor.Effect
         /*Bicubic,
         Spline, AHD,*/
         Bilinear,
-        Deflate,       
-        SSDD,
+        None,       
+        Adams,
         Malvar,
-        SimpleAdams
+        FastAdams
     }
 }

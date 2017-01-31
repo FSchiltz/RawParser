@@ -313,7 +313,7 @@ namespace RawNet.Decoder
                     };
                 }
             }
-            catch (Exception e) { }
+            catch (Exception ) { }
         }
 
         public override Thumbnail DecodeThumb()

@@ -64,7 +64,7 @@ namespace RawEditor.Settings
             localSettings.Values["previewFactor" + def] = FactorValue.Auto.ToString();
             localSettings.Values["saveFormat" + def] = ".jpg";
             localSettings.Values["autoPreviewFormat" + def] = false;
-            localSettings.Values["demosAlgo" + def] = DemosaicAlgorithm.SimpleAdams.ToString();
+            localSettings.Values["demosAlgo" + def] = DemosaicAlgorithm.FastAdams.ToString();
             localSettings.Values["Theme" + def] = ThemeEnum.System.ToString();
             if (localSettings.Values["version"] == null || (uint)localSettings.Values["version"] < version)
                 Reset();
