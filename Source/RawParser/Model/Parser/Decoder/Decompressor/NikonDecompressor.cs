@@ -22,7 +22,7 @@ namespace RawNet.Decoder.Decompressor
             metadata.Position = 0;
             byte v0 = metadata.ReadByte();
             byte v1 = metadata.ReadByte();
-            uint huffSelect = 0;
+            int huffSelect = 0;
             uint split = 0;
             int[] pUp1 = new int[2];
             int[] pUp2 = new int[2];

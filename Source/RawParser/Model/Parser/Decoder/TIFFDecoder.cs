@@ -1,4 +1,5 @@
-﻿using RawNet.Format.TIFF;
+﻿using RawNet.DNG;
+using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -89,7 +90,7 @@ namespace RawNet.Decoder
             var imageOffsetTag = ifd.GetEntryRecursive((TagType)0x0111) ?? throw new FormatException("File not correct");
             int cpp = ifd.GetEntryRecursive((TagType)0x0115)?.GetInt(0) ?? throw new FormatException("File not correct");
 
-            uint compression = ifd.GetEntryRecursive((TagType)0x0103)?.GetUInt(0) ?? throw new FormatException("File not correct");
+            int compression = ifd.GetEntryRecursive((TagType)0x0103)?.GetInt(0) ?? throw new FormatException("File not correct");
             if (compression == 1 && rawImage.raw.ColorDepth <= 8)
             {
                 //not compressed
@@ -313,7 +314,7 @@ namespace RawNet.Decoder
                     };
                 }
             }
-            catch (Exception ) { }
+            catch (Exception) { }
         }
 
         public override Thumbnail DecodeThumb()

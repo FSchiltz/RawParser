@@ -30,7 +30,7 @@ namespace RawNet.Decoder.HuffmanCompressor
         protected short[] valptr = new short[17];
         protected uint[] numbits = new uint[256];
         protected int[] bigTable;
-        public uint precision;
+        public int precision;
         protected static uint[] bitMask = {  0xffffffff, 0x7fffffff,
                            0x3fffffff, 0x1fffffff,
                            0x0fffffff, 0x07ffffff,
@@ -63,7 +63,7 @@ namespace RawNet.Decoder.HuffmanCompressor
             //numbits = Enumerable.Repeat<uint>(uint.MaxValue, 256).ToArray();
         }
 
-        public virtual void Create(uint precision)
+        public virtual void Create(int precision)
         {
             int p, i, l, lastp, si;
             byte[] huffsize = new byte[257];

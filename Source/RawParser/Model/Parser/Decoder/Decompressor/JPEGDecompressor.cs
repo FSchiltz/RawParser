@@ -15,7 +15,7 @@ namespace RawNet.Decoder.Decompressor
         public SOFInfo frame = new SOFInfo();
         public List<uint> slicesW = new List<uint>(1);
         public uint predictor;
-        public uint Pt;
+        public int Pt;
         public uint offX, offY;  // Offset into image where decoding should start
         public uint skipX, skipY;   // Tile is larger than output, skip these border pixels
         public HuffmanTable[] huff;
@@ -230,7 +230,7 @@ namespace RawNet.Decoder.Decompressor
                 throw new RawDecoderException("parseSOS: Invalid predictor mode.");
 
             input.ReadBytes(1); // Se + Ah Not used in LJPEG
-            uint b = input.ReadByte();
+            int b = input.ReadByte();
             Pt = b & 0xf;        // Point Transform            
 
             bits = new BitPumpJPEG(input);
