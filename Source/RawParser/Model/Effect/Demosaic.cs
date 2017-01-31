@@ -12,16 +12,13 @@ namespace RawEditor.Effect
             image.raw.red = new ushort[image.raw.dim.width * image.raw.dim.height];
             image.raw.green = new ushort[image.raw.dim.width * image.raw.dim.height];
             image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
-
-            //first we deflate the image
-            //TODO remove deflate for all and put it in each algo
-            // Deflate(image);
+            Deflate(image);
             if (image.isFujiTrans)
             {
                 switch (algo)
                 {
                     case DemosaicAlgorithm.Deflate:
-                        Deflate(image);
+                       // Deflate(image);
                         break;
                     default:
                         FujiDemos.Demosaic(image);
