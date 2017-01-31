@@ -273,9 +273,7 @@ namespace RawNet.Decoder
             }
 
             //read lens
-            var lens = ifd.GetEntryRecursive((TagType)42036);
-            if (lens != null)
-                rawImage.metadata.Lens = Common.Trim(lens.DataAsString);
+            rawImage.metadata.Lens = ifd.GetEntryRecursive((TagType)42036)?.DataAsString;
             Tag sep_black = ifd.GetEntryRecursive(TagType.FUJI_RGGBLEVELSBLACK);
             if (sep_black != null)
             {
