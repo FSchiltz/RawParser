@@ -355,6 +355,7 @@ namespace RawEditor.Effect
 
             // Interpolate the green by Adams algorithm inside the image    
             // First interpolate green directionally
+
             Parallel.For(3, image.dim.height - 3, row =>
             {
                 for (int col = 3; col < image.dim.width - 3; col++)
@@ -388,7 +389,6 @@ namespace RawEditor.Effect
                         // Add vertical and horizontal differences
                         adh = adh + Math.Abs(dh0);
                         adv = adv + Math.Abs(dv0);
-
                         // If vertical and horizontal differences are similar, compute an isotropic average
                         if (Math.Abs(adv - adh) < threshold)
                             image.green[l] = (ushort)(
