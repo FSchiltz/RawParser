@@ -47,7 +47,7 @@ namespace RawEditor.Effect
         {
             //generate the curve            
             double[] xCurve = new double[3], yCurve = new double[3];
-            //todo add exposure in the curve
+
             //mid point
             xCurve[1] = maxValue / 2;
             yCurve[1] = (maxValue / 2) * exposure;

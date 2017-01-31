@@ -415,8 +415,8 @@ namespace RawEditor.Effect
             if (!simple)
             {
                 // compute the bilinear on the differences of the red and blue with the already interpolated green
-                demosaicking_bilinear_red_blue(redx, redy, image.dim, mask, image.red, CFAColor.Red);
-                demosaicking_bilinear_red_blue(bluex, bluey, image.dim, mask, image.blue, CFAColor.Blue);
+                demosaicking_bilinear_red_blue(redx, redy, image, mask, image.red, CFAColor.Red);
+                demosaicking_bilinear_red_blue(bluex, bluey, image, mask, image.blue, CFAColor.Blue);
             }
             else
             {
@@ -435,13 +435,14 @@ namespace RawEditor.Effect
          * @param[in]  image.dim.width, image.dim.height size of the image
          *
          */
-        static unsafe void demosaicking_bilinear_red_blue(int colorX, int colorY, Point2D dim, CFAColor[] mask, ushort[] output, CFAColor COLORPOSITION)
+        static unsafe void demosaicking_bilinear_red_blue(int colorX, int colorY, ImageComponent image, CFAColor[] mask, ushort[] output, CFAColor COLORPOSITION)
         {
-            long[] red = new long[dim.width * dim.height];
+            var dim = image.dim;
+            int[] red = new int[dim.width * dim.height];
             // Compute the differences  
             Parallel.For(0, dim.width * dim.height, i =>
             {
-                red[i] = output[i];// - image.green[i];
+                red[i] = output[i] - image.green[i];
             });
 
             // Interpolate the red differences making the average of possible values depending on the CFA structure
@@ -477,7 +478,7 @@ namespace RawEditor.Effect
             // Make back the differences
             Parallel.For(0, dim.width * dim.height, i =>
             {
-                output[i] = (ushort)(red[i]);// + image.green[i]);
+                output[i] = (ushort)(red[i] + image.green[i]);
             });
         }
 

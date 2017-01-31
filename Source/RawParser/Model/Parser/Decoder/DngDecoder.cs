@@ -92,7 +92,7 @@ namespace RawNet.Decoder
                 bool isSubsampled = false;
                 try
                 {
-                    isSubsampled = (i.GetEntry(TagType.NEWSUBFILETYPE).GetInt(0) & 1) != 0; // bit 0 is on if image is subsampled
+                    isSubsampled = ((i.GetEntry(TagType.NEWSUBFILETYPE)?.GetInt(0) ?? 0) & 1) != 0; // bit 0 is on if image is subsampled
                 }
                 catch (RawDecoderException) { }
                 if ((comp != 7 && comp != 1 && comp != 0x884c) || isSubsampled)
@@ -596,7 +596,7 @@ namespace RawNet.Decoder
         {
             // Check if layout is OK, if present
             if (raw.tags.ContainsKey(TagType.CFALAYOUT))
-                if (raw.GetEntry(TagType.CFALAYOUT).GetShort(0) != 1)
+                if (raw.GetEntry(TagType.CFALAYOUT).GetUShort(0) > 2)
                     throw new RawDecoderException("DNG Decoder: Unsupported CFA Layout.");
 
             Tag cfadim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM);
@@ -614,29 +614,7 @@ namespace RawNet.Decoder
             {
                 for (uint x = 0; x < cfaSize.width; x++)
                 {
-                    int c1 = cPat[x + y * cfaSize.width];
-                    CFAColor c2;
-                    switch (c1)
-                    {
-                        case 0:
-                            c2 = CFAColor.Red; break;
-                        case 1:
-                            c2 = CFAColor.Green; break;
-                        case 2:
-                            c2 = CFAColor.Blue; break;
-                        case 3:
-                            c2 = CFAColor.CYAN; break;
-                        case 4:
-                            c2 = CFAColor.MAGENTA; break;
-                        case 5:
-                            c2 = CFAColor.YELLOW; break;
-                        case 6:
-                            c2 = CFAColor.WHITE; break;
-                        default:
-                            c2 = CFAColor.Unknow;
-                            throw new RawDecoderException("DNG Decoder: Unsupported CFA Color.");
-                    }
-                    rawImage.colorFilter.SetColorAt(new Point2D(x, y), c2);
+                    rawImage.colorFilter.SetColorAt(new Point2D(x, y), (CFAColor)cPat[x + y * cfaSize.width]);
                 }
             }
         }
