@@ -126,7 +126,6 @@
     <None Include="RawParser_StoreKey.pfx" />
     <None Include="RawParser_TemporaryKey.pfx" />
     <PRIResource Include="Strings\fr-FR\Resources.resw" />
-    <PRIResource Include="Strings\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -164,7 +163,7 @@
     <Compile Include="Model\Parser\Encoder\SaveHelper.cs" />
     <Compile Include="Model\Parser\Base\Endianness.cs" />
     <Compile Include="Model\Parser\Decoder\CamRGB.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\IFD\IFDType.cs" />
+    <Compile Include="Model\Parser\Format\TIFF\IFDType.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="Model\Parser\Base\Common.cs" />
@@ -196,10 +195,10 @@
     <Compile Include="Model\Parser\Image\RawImage.cs" />
     <Compile Include="Model\Parser\Image\TableLookUp.cs" />
     <Compile Include="Model\Parser\Image\Thumbnail.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\IFD\IFD.cs" />
+    <Compile Include="Model\Parser\Format\TIFF\IFD.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Makernote\NokiaMakernote.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\IFD\Tag.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\IFD\TagType.cs" />
+    <Compile Include="Model\Parser\Format\TIFF\Tag.cs" />
+    <Compile Include="Model\Parser\Format\TIFF\TagType.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Makernote\FujiMakerNote.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Makernote\Makernote.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Makernote\NikonMakerNote.cs" />
