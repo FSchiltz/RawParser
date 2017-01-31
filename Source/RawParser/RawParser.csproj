@@ -85,7 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;</DefineConstants>
     <NoWarn>
     </NoWarn>
     <DebugType>full</DebugType>
@@ -148,9 +148,10 @@
     <Compile Include="Model\Parser\Decoder\Decompressor\IBitPump.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\HuffmanCompressor\NikonHuffman.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\HuffmanCompressor\PentaxHuffman.cs" />
+    <Compile Include="Model\Parser\Decoder\Decompressor\LJPEGPlain.cs" />
+    <Compile Include="Model\Parser\Decoder\Decompressor\LJPEGPlainOld.cs" />
     <Compile Include="Model\Parser\Format\JPEG\CosineTable.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\JPEGDecompressor.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\LJPEGPlain.cs" />
     <Compile Include="Model\Parser\Decoder\DNGDecoder.cs" />
     <Compile Include="Model\Parser\Decoder\ORFDecoder.cs" />
     <Compile Include="Model\Parser\Decoder\PEFDecoder.cs" />

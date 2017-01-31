@@ -91,6 +91,11 @@ namespace RawNet
         public int Bpp { get { return (int)Math.Ceiling(raw.ColorDepth / 8.0); } }
         public bool IsGammaCorrected { get; set; } = true;
 
+        public RawImage(uint height, uint width) : this()
+        {
+            raw.dim = new Point2D(width, height);
+        }
+
         public RawImage()
         {
             //Set for 16bit image non demos           
