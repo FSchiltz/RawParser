@@ -63,12 +63,17 @@ namespace RawNet.Decoder.Decompressor
             }
             else
             {
+                /*
+                 * this will be useful for optimisation
                 if (frame.numComponents == 2)
                     decodeN_X_Y(2, 1, 1);
+                else if (frame.numComponents == 3)
+                    decodeN_X_Y(3, 1, 1);
                 else if (frame.numComponents == 4)
                     decodeN_X_Y(4, 1, 1);
                 else
-                    throw new RawDecoderException("LJpegDecompressor::decodeScan: Unsupported component direction count.");
+                    throw new RawDecoderException("LJpegDecompressor::decodeScan: Unsupported component direction count.");*/
+                decodeN_X_Y((int)frame.numComponents, 1, 1);
             }
         }
 
@@ -88,7 +93,7 @@ namespace RawNet.Decoder.Decompressor
                 ht[i] = huff[frame.ComponentInfo[i].dcTblNo];
 
             // Initialize predictors
-            int[] p = new int[N_COMP];
+            long[] p = new long[N_COMP];
             for (int i = 0; i < N_COMP; ++i)
                 p[i] = (1 << (frame.precision - Pt - 1));
 
@@ -178,20 +183,29 @@ namespace RawNet.Decoder.Decompressor
                         {
                             for (int i = 0; i < Y_S_F; i++)
                             {
-                                raw.raw.rawView[dest + i * pixelPitch] = (ushort)(p[0] += ht[0].Decode());
-                                raw.raw.rawView[dest + 3 + i * pixelPitch] = (ushort)(p[0] += ht[0].Decode());
+                                p[0] += ht[0].Decode();
+                                var t = p[0];
+                                p[0] += ht[0].Decode();
+                                if (x + offX < raw.raw.dim.width)
+                                {
+                                    if (x + offX < raw.raw.dim.width) raw.raw.rawView[dest + i * pixelPitch] = (ushort)(t);
+                                    if (x + offX < raw.raw.dim.width) raw.raw.rawView[dest + 3 + i * pixelPitch] = (ushort)(p[0]);
+                                }
                             }
-                            raw.raw.rawView[dest + 1] = (ushort)(p[1] += ht[1].Decode());
-                            raw.raw.rawView[dest + 2] = (ushort)(p[2] += ht[2].Decode());
+                            p[1] += ht[1].Decode();
+                            p[2] += ht[2].Decode();
+                            if (x + offX < raw.raw.dim.width)
+                            {
+                                raw.raw.rawView[dest + 1] = (ushort)(p[1]);
+                                raw.raw.rawView[dest + 2] = (ushort)(p[2]);
+                            }
                             dest += xStepSize;
                         }
-
                         processedPixels += (uint)X_S_F;
                     }
                     processedLineSlices += (uint)yStepSize;
                 }
             }
-
             //TODO Check
             //input.ReadBytes(bitStream.getBufferPosition());
         }
