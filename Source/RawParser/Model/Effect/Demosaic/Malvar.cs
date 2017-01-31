@@ -58,7 +58,7 @@ namespace RawEditor.Effect
             // NeighPresence is used for boundary handling.  It is set to 0 if the       neighbor is beyond the boundaries of the image and 1 otherwise. 
             byte[,] NeighPresence = new byte[5, 5];
             int i = 0;
-            for (long y = 0; y < image.raw.dim.height; y++)
+            Parallel.For(0, image.raw.dim.height, y =>
             {
                 for (long x = 0; x < image.raw.dim.width; x++, i++)
                 {
@@ -69,7 +69,7 @@ namespace RawEditor.Effect
                         {
                             if (x + nx >= 0 && x + nx < image.raw.dim.width && y + ny >= 0 && y + ny < image.raw.dim.height)
                             {
-                                Neigh[2 + nx, 2 + ny] = (ushort)(image.raw.green[j + nx] + image.raw.blue[j + nx] + image.raw.red[j + nx]);
+                                Neigh[2 + nx, 2 + ny] = image.raw.green[j + nx] + image.raw.blue[j + nx] + image.raw.red[j + nx];
                                 NeighPresence[2 + nx, 2 + ny] = 1;
                             }
                             else
@@ -173,7 +173,7 @@ namespace RawEditor.Effect
                         }
                     }
                 }
-            }
+            });
         }
     }
 }

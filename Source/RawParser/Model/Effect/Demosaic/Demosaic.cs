@@ -13,12 +13,13 @@ namespace RawEditor.Effect
             image.raw.green = new ushort[image.raw.dim.width * image.raw.dim.height];
             image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
             Deflate(image);
+            image.raw.rawView = null;
             if (image.isFujiTrans)
             {
                 switch (algo)
                 {
                     case DemosaicAlgorithm.Deflate:
-                       // Deflate(image);
+                        // Deflate(image);
                         break;
                     default:
                         FujiDemos.Demosaic(image);
@@ -30,7 +31,7 @@ namespace RawEditor.Effect
                 switch (algo)
                 {
                     case DemosaicAlgorithm.Deflate:
-                        Deflate(image);
+                        //Deflate(image);
                         break;
                     case DemosaicAlgorithm.Bilinear:
                         Bilinear.Demosaic(image);
@@ -47,7 +48,6 @@ namespace RawEditor.Effect
                 }
             }
 
-            image.raw.rawView = null;
             //set correct dim
             image.raw.offset = new Point2D();
             image.raw.uncroppedDim = new Point2D(image.raw.dim.width, image.raw.dim.height);
