@@ -9,8 +9,6 @@ namespace RawEditor.Effect
 {
     static class FujiDemos
     {
-        static RawImage img;
-        static CFAColor fcol(int row, int col) { return img.colorFilter.cfa[((row + 6) % 6) * 6 + (col + 6) % 6]; }
         static unsafe public void Demosaic(RawImage image)
         {
             short[,] greenPosition = new short[,] { { 0, 0 }, { 0, 2 }, { 2, 0 }, { 2, 2 } };//position for green whithout the center

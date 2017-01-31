@@ -18,7 +18,7 @@ namespace RawEditor.Effect
             {
                 switch (algo)
                 {
-                    case DemosaicAlgorithm.Deflate:
+                    case DemosaicAlgorithm.None:
                         // Deflate(image);
                         break;
                     default:
@@ -30,16 +30,16 @@ namespace RawEditor.Effect
             {
                 switch (algo)
                 {
-                    case DemosaicAlgorithm.Deflate:
+                    case DemosaicAlgorithm.None:
                         //Deflate(image);
                         break;
                     case DemosaicAlgorithm.Bilinear:
                         Bilinear.Demosaic(image);
                         break;
-                    case DemosaicAlgorithm.SSDD:
+                    case DemosaicAlgorithm.Adams:
                         SSDD.Demosaic(image, false);
                         break;
-                    case DemosaicAlgorithm.SimpleAdams:
+                    case DemosaicAlgorithm.FastAdams:
                         SSDD.Demosaic(image, true);
                         break;
                     case DemosaicAlgorithm.Malvar:

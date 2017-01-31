@@ -115,7 +115,6 @@ namespace RawEditor.View.Pages
             ResetControls();
             DisplayImage(null, false); ;
             Histo.ClearAsync();
-            GC.Collect();
         }
 
         private void ResetControls()
@@ -232,7 +231,7 @@ namespace RawEditor.View.Pages
                         catch (Exception e)
                         {
                             Debug.WriteLine(e.Message);
-                            algo = DemosaicAlgorithm.Deflate;
+                            algo = DemosaicAlgorithm.None;
                         }
                         Demosaic.Demos(raw, algo);
                     }
