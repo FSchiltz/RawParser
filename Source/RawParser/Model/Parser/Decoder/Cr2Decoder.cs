@@ -381,7 +381,7 @@ namespace RawNet.Decoder
             if (cfa == null)
             {
                 Debug.WriteLine("CFA pattern is not found");
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
             }
             else
             {
@@ -502,7 +502,7 @@ namespace RawNet.Decoder
                         //mask[1][3] = -4;
                         break;
                     case "EOS D2000C":
-                        rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.GREEN, CFAColor.RED, CFAColor.BLUE, CFAColor.GREEN);
+                        rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Green, CFAColor.Red, CFAColor.Blue, CFAColor.Green);
                         rawImage.BlackLevel = (int)rawImage.curve[200];
                         break;
                 }
