@@ -59,7 +59,7 @@ namespace RawNet.Format.TIFF
                         case TiffDataType.UNDEFINED:
                             foreach (object t in data)
                             {
-                                temp += (byte)t;
+                                temp += Convert.ToChar(t);
                                 temp += " ";
                             }
                             temp += "\0";

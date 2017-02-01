@@ -15,6 +15,15 @@ namespace RawNet
         public string AltitudeAsString => Math.Sign(altitudeRef) * altitude + "";
     }
 
+    public enum ColorSpaceType
+    {
+        sRGB = 1,
+        AdobeRGB = 2,
+        WideGamutRGB = 0xfffd,
+        ICCProfile = 0xfffe,
+        Uncalibrated = 0xffff
+    }
+
     public class ImageMetadata
     {
         public string FileName { get; set; }
@@ -39,16 +48,14 @@ namespace RawNet
         public string Make { get; set; }
         public string Model { get; set; }
         public string Mode { get; set; }
+        public string Copyright { get; set; }
 
-        /*
-        public string canonical_make;
-        public string canonical_model;
-        public string canonical_alias;
-        public string canonical_id;*/
         public int Rotation { get; set; }
         public int IsoSpeed { get; set; }
         public double Exposure { get; set; }
         public double Aperture { get; set; }
+        public double Focal { get; set; }
+        public string Lens { get; set; }
 
         public string TimeTake { get; set; }
         public string TimeModify { get; set; }
@@ -57,7 +64,8 @@ namespace RawNet
         public Point2D RawDim { get; set; }
         public int OriginalRotation { get; set; }
 
-        public string Lens { get; set; }
+        public string Comment { get; set; }
+        public ColorSpaceType ColorSpace { get; set; } = ColorSpaceType.Uncalibrated;
 
         public ImageMetadata()
         {
@@ -69,6 +77,5 @@ namespace RawNet
         }
 
         public string ExposureAsString => (Exposure >= 1) ? Exposure + "s" : "1/" + (1 / Exposure).ToString("F0") + "s";
-
     }
 }

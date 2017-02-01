@@ -141,7 +141,6 @@ namespace RawNet.Decoder
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Decoder: No image data found");
 
-
             IFD raw = data[0];
             rawImage = new RawImage()
             {
@@ -150,7 +149,6 @@ namespace RawNet.Decoder
 
             List<Cr2Slice> slices = new List<Cr2Slice>();
             uint completeH = 0;
-            bool doubleHeight = false;
             rawImage.raw.ColorDepth = 14;
             try
             {
@@ -169,10 +167,7 @@ namespace RawNet.Decoder
                     l.GetSOF(sof, slice.offset, slice.count);
                     slice.w = sof.width * sof.numComponents;
                     slice.h = sof.height;
-                    if (sof.numComponents == 4 && slice.w > slice.h * 4)
-                    {
-                        doubleHeight = true;
-                    }
+
                     if (slices.Count != 0 && slices[0].w != slice.w)
                         throw new RawDecoderException("CR2 Decoder: Slice width does not match.");
 
@@ -186,11 +181,6 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("CR2 Decoder: Unsupported format.");
             }
 
-            // Override with canon_double_height if set.
-            hints.TryGetValue("canon_double_height", out var str);
-            if (str != null)
-                doubleHeight = (str == "true");
-
             if (slices.Count == 0)
             {
                 throw new RawDecoderException("CR2 Decoder: No Slices found.");
@@ -200,7 +190,6 @@ namespace RawNet.Decoder
             // Fix for Canon 6D rawImage, which has flipped width & height for some part of the image
             // In that case, we swap width and height, since this is the correct dimension
             bool flipDims = false;
-            bool wrappedCr2Slices = false;
             if (raw.tags.ContainsKey((TagType)0xc6c5))
             {
                 UInt16 ss = raw.GetEntry((TagType)0xc6c5).GetUShort(0);
@@ -210,21 +199,6 @@ namespace RawNet.Decoder
                     rawImage.raw.dim.width /= 3;
                     rawImage.cpp = 3;
                     rawImage.isCFA = false;
-                    // Fix for Canon 80D rawImage format.
-                    // In that format, the frame (as read by getSOF()) is 4032x3402, while the
-                    // real image should be 4536x3024 (where the full vertical slices in
-                    // the frame "wrap around" the image.
-                    if (hints.ContainsKey("wrapped_cr2_slices") && raw.tags.ContainsKey(TagType.IMAGEWIDTH) && raw.tags.ContainsKey(TagType.IMAGELENGTH))
-                    {
-                        wrappedCr2Slices = true;
-                        uint w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-                        uint h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-                        if (w * h != rawImage.raw.dim.width * rawImage.raw.dim.height)
-                        {
-                            throw new RawDecoderException("CR2 Decoder: Wrapped slices don't match image size");
-                        }
-                        rawImage.raw.dim = new Point2D(w, h);
-                    }
                 }
                 flipDims = rawImage.raw.dim.width < rawImage.raw.dim.height;
                 if (flipDims)
@@ -259,10 +233,7 @@ namespace RawNet.Decoder
                 {
                     new LJPEGPlain(reader, rawImage, true, false)
                     {
-                        slicesW = s_width,
-                        CanonFlipDim = flipDims,
-                        CanonDoubleHeight = doubleHeight,
-                        WrappedCr2Slices = wrappedCr2Slices
+                        slicesW = s_width
                     }.StartDecoder(slice.offset, slice.count, 0, offY);
                 }
                 catch (RawDecoderException e)
@@ -381,7 +352,7 @@ namespace RawNet.Decoder
             if (cfa == null)
             {
                 Debug.WriteLine("CFA pattern is not found");
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
             }
             else
             {
@@ -502,7 +473,7 @@ namespace RawNet.Decoder
                         //mask[1][3] = -4;
                         break;
                     case "EOS D2000C":
-                        rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.GREEN, CFAColor.RED, CFAColor.BLUE, CFAColor.GREEN);
+                        rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Green, CFAColor.Red, CFAColor.Blue, CFAColor.Green);
                         rawImage.BlackLevel = (int)rawImage.curve[200];
                         break;
                 }

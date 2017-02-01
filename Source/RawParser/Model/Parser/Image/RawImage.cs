@@ -91,6 +91,11 @@ namespace RawNet
         public int Bpp { get { return (int)Math.Ceiling(raw.ColorDepth / 8.0); } }
         public bool IsGammaCorrected { get; set; } = true;
 
+        public RawImage(uint height, uint width) : this()
+        {
+            raw.dim = new Point2D(width, height);
+        }
+
         public RawImage()
         {
             //Set for 16bit image non demos           
@@ -494,8 +499,6 @@ namespace RawNet
                 exif.Add(new ExifValue("Model", metadata.Model));
             if (!string.IsNullOrEmpty(metadata.Mode))
                 exif.Add(new ExifValue("Image mode", metadata.Mode));
-            if (!string.IsNullOrEmpty(metadata.Lens))
-                exif.Add(new ExifValue("Lense", metadata.Lens));
             exif.Add(new ExifValue("Size", "" + ((raw.dim.width * raw.dim.height) / 1000000.0).ToString("F") + " MPixels"));
             exif.Add(new ExifValue("Dimension", "" + raw.dim.width + " x " + raw.dim.height));
 
@@ -503,16 +506,22 @@ namespace RawNet
             exif.Add(new ExifValue("Sensor dimension", "" + metadata.RawDim.width + " x " + metadata.RawDim.height));
 
             if (metadata.IsoSpeed > 0)
-                exif.Add(new ExifValue("ISO", "" + metadata.IsoSpeed));
+                exif.Add(new ExifValue("ISO", "" + (int)metadata.IsoSpeed));
             if (metadata.Aperture > 0)
                 exif.Add(new ExifValue("Aperture", "" + metadata.Aperture.ToString("F")));
             if (metadata.Exposure > 0)
                 exif.Add(new ExifValue("Exposure time", "" + metadata.ExposureAsString));
+            if (metadata.Focal > 0)
+                exif.Add(new ExifValue("Focal", "" + (int)metadata.Focal + " mm"));
+            if (!string.IsNullOrEmpty(metadata.Lens))
+                exif.Add(new ExifValue("Lense", metadata.Lens));
 
             if (!string.IsNullOrEmpty(metadata.TimeTake))
                 exif.Add(new ExifValue("Time of capture", "" + metadata.TimeTake));
             if (!string.IsNullOrEmpty(metadata.TimeModify))
                 exif.Add(new ExifValue("Time modified", "" + metadata.TimeModify));
+            if (!string.IsNullOrEmpty(metadata.Comment))
+                exif.Add(new ExifValue("Comment", "" + metadata.Comment));
 
             if (metadata.Gps != null)
             {
@@ -520,6 +529,8 @@ namespace RawNet
                 exif.Add(new ExifValue("lattitude", metadata.Gps.LattitudeAsString));
                 exif.Add(new ExifValue("altitude", metadata.Gps.AltitudeAsString));
             }
+
+            exif.Add(new ExifValue("Color space", "" + metadata.ColorSpace.ToString()));
 
             //more metadata
             exif.Add(new ExifValue("Black level", "" + BlackLevel));

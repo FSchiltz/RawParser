@@ -9,13 +9,17 @@ namespace RawEditor.Effect
         public static void Demos(RawImage image, DemosaicAlgorithm algo)
         {
             image.cpp = 3;
-            //first we deflate the image
+            image.raw.red = new ushort[image.raw.dim.width * image.raw.dim.height];
+            image.raw.green = new ushort[image.raw.dim.width * image.raw.dim.height];
+            image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
             Deflate(image);
+            image.raw.rawView = null;
             if (image.isFujiTrans)
             {
                 switch (algo)
                 {
-                    case DemosaicAlgorithm.Deflate:
+                    case DemosaicAlgorithm.None:
+                        // Deflate(image);
                         break;
                     default:
                         FujiDemos.Demosaic(image);
@@ -26,13 +30,16 @@ namespace RawEditor.Effect
             {
                 switch (algo)
                 {
+                    case DemosaicAlgorithm.None:
+                        //Deflate(image);
+                        break;
                     case DemosaicAlgorithm.Bilinear:
                         Bilinear.Demosaic(image);
                         break;
-                    case DemosaicAlgorithm.SSDD:
+                    case DemosaicAlgorithm.Adams:
                         SSDD.Demosaic(image, false);
                         break;
-                    case DemosaicAlgorithm.SimpleAdams:
+                    case DemosaicAlgorithm.FastAdams:
                         SSDD.Demosaic(image, true);
                         break;
                     case DemosaicAlgorithm.Malvar:
@@ -40,14 +47,14 @@ namespace RawEditor.Effect
                         break;
                 }
             }
+
+            //set correct dim
+            image.raw.offset = new Point2D();
+            image.raw.uncroppedDim = new Point2D(image.raw.dim.width, image.raw.dim.height);
         }
 
         private static void Deflate(RawImage image)
         {
-            image.raw.red = new ushort[image.raw.dim.width * image.raw.dim.height];
-            image.raw.green = new ushort[image.raw.dim.width * image.raw.dim.height];
-            image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
-
             Parallel.For(0, image.raw.dim.height, row =>
             {
                 long realRow = (row + image.raw.offset.height) * image.raw.uncroppedDim.width;
@@ -58,22 +65,18 @@ namespace RawEditor.Effect
                     CFAColor pixeltype = image.colorFilter.cfa[cfarow + (col % image.colorFilter.Size.width)];
                     switch (pixeltype)
                     {
-                        case CFAColor.GREEN:
+                        case CFAColor.Green:
                             image.raw.green[(row * image.raw.dim.width) + col] = image.raw.rawView[realCol];
                             break;
-                        case CFAColor.RED:
+                        case CFAColor.Red:
                             image.raw.red[(row * image.raw.dim.width) + col] = image.raw.rawView[realCol];
                             break;
-                        case CFAColor.BLUE:
+                        case CFAColor.Blue:
                             image.raw.blue[(row * image.raw.dim.width) + col] = image.raw.rawView[realCol];
                             break;
                     }
                 }
             });
-            image.raw.rawView = null;
-            //set correct dim
-            image.raw.offset = new Point2D();
-            image.raw.uncroppedDim = new Point2D(image.raw.dim.width, image.raw.dim.height);
         }
     }
 }

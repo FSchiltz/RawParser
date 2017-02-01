@@ -54,22 +54,22 @@ namespace RawEditor.Effect
             int BlueX = 1 - redx;
             int BlueY = 1 - redy;
             // Neigh holds a copy of the 5x5 neighborhood around the current point 
-            ushort[,] Neigh = new ushort[5, 5];
+            long[,] Neigh = new long[5, 5];
             // NeighPresence is used for boundary handling.  It is set to 0 if the       neighbor is beyond the boundaries of the image and 1 otherwise. 
-            int[,] NeighPresence = new int[5, 5];
+            byte[,] NeighPresence = new byte[5, 5];
             int i = 0;
-            for (int y = 0; y < image.raw.dim.height; y++)
+            Parallel.For(0, image.raw.dim.height, y =>
             {
-                for (uint x = 0; x < image.raw.dim.width; x++, i++)
+                for (long x = 0; x < image.raw.dim.width; x++, i++)
                 {
                     /* 5x5 neighborhood around the point (x,y) is copied into Neigh */
                     for (long ny = -2, j = x + image.raw.dim.width * (y - 2); ny <= 2; ny++, j += image.raw.dim.width)
                     {
                         for (int nx = -2; nx <= 2; nx++)
                         {
-                            if (0 <= x + nx && x + nx < image.raw.dim.width && 0 <= y + ny && y + ny < image.raw.dim.height)
+                            if (x + nx >= 0 && x + nx < image.raw.dim.width && y + ny >= 0 && y + ny < image.raw.dim.height)
                             {
-                                Neigh[2 + nx, 2 + ny] = (ushort)(image.raw.green[j + nx] + image.raw.blue[j + nx] + image.raw.red[j + nx]);
+                                Neigh[2 + nx, 2 + ny] = image.raw.green[j + nx] + image.raw.blue[j + nx] + image.raw.red[j + nx];
                                 NeighPresence[2 + nx, 2 + ny] = 1;
                             }
                             else
@@ -173,7 +173,7 @@ namespace RawEditor.Effect
                         }
                     }
                 }
-            }
+            });
         }
     }
 }

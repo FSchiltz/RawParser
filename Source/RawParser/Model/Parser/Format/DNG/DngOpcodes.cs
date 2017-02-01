@@ -107,8 +107,6 @@ namespace RawNet.DNG
             }
         }
 
-
-        /* TODO: Apply in separate threads */
         public RawImage ApplyOpCodes(RawImage img)
         {
             int codes = opcodes.Count;

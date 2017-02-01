@@ -1,4 +1,5 @@
-﻿using RawNet.Format.TIFF;
+﻿using RawNet.DNG;
+using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -89,7 +90,7 @@ namespace RawNet.Decoder
             var imageOffsetTag = ifd.GetEntryRecursive((TagType)0x0111) ?? throw new FormatException("File not correct");
             int cpp = ifd.GetEntryRecursive((TagType)0x0115)?.GetInt(0) ?? throw new FormatException("File not correct");
 
-            uint compression = ifd.GetEntryRecursive((TagType)0x0103)?.GetUInt(0) ?? throw new FormatException("File not correct");
+            int compression = ifd.GetEntryRecursive((TagType)0x0103)?.GetInt(0) ?? throw new FormatException("File not correct");
             if (compression == 1 && rawImage.raw.ColorDepth <= 8)
             {
                 //not compressed
@@ -224,33 +225,24 @@ namespace RawNet.Decoder
                 rawImage.raw.ColorDepth = ifd.GetEntryRecursive(TagType.BITSPERSAMPLE)?.GetUShort(0) ?? 0;
             }
             rawImage.metadata.IsoSpeed = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS)?.GetInt(0) ?? 0;
-            var fn = ifd.GetEntryRecursive(TagType.APERTUREVALUE);
-            if (fn != null)
-            {
-                rawImage.metadata.Aperture = fn.GetFloat(0);
-            }
-            else
-            {
-                fn = ifd.GetEntryRecursive(TagType.FNUMBER);
-                if (fn != null) rawImage.metadata.Aperture = fn.GetFloat(0);
-            }
-
+            rawImage.metadata.Aperture = ifd.GetEntryRecursive(TagType.APERTUREVALUE)?.GetFloat(0) ?? ifd.GetEntryRecursive(TagType.FNUMBER)?.GetFloat(0) ?? 0;
+            rawImage.metadata.Focal = ifd.GetEntryRecursive(TagType.FOCALLENGTH)?.GetDouble(0) ?? ifd.GetEntryRecursive(TagType.FOCALLENGTHIN35MMFILM)?.GetDouble(0) ?? 0;
+            rawImage.metadata.Lens = ifd.GetEntryRecursive(TagType.LENSINFO)?.DataAsString;
             rawImage.metadata.Exposure = ifd.GetEntryRecursive(TagType.EXPOSURETIME)?.GetFloat(0) ?? 0;
 
             if (rawImage.whitePoint == 0)
             {
-                Tag whitelevel = ifd.GetEntryRecursive(TagType.WHITELEVEL);
-                if (whitelevel != null)
-                {
-                    rawImage.whitePoint = whitelevel.GetInt(0);
-                }
-            }
+                rawImage.whitePoint = ifd.GetEntryRecursive(TagType.WHITELEVEL)?.GetInt(0) ?? 0;
 
+            }
             rawImage.metadata.TimeTake = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL)?.DataAsString;
             rawImage.metadata.TimeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED)?.DataAsString;
             // Set the make and model
             rawImage.metadata.Make = ifd.GetEntryRecursive(TagType.MAKE)?.DataAsString.Trim();
             rawImage.metadata.Model = ifd.GetEntryRecursive(TagType.MODEL)?.DataAsString.Trim();
+
+            rawImage.metadata.Comment = ifd.GetEntryRecursive(TagType.USERCOMMENT)?.DataAsString;
+            rawImage.metadata.ColorSpace = (ColorSpaceType)(ifd.GetEntryRecursive(TagType.COLORSPACE)?.GetInt(0) ?? 0xffff);
 
             //rotation
             var rotateTag = ifd.GetEntryRecursive(TagType.ORIENTATION);
@@ -313,7 +305,7 @@ namespace RawNet.Decoder
                     };
                 }
             }
-            catch (Exception e) { }
+            catch (Exception) { }
         }
 
         public override Thumbnail DecodeThumb()
