@@ -30,6 +30,8 @@ using Windows.UI.Composition;
 using Windows.UI.Xaml.Hosting;
 using System.Numerics;*/
 using Windows.Foundation.Collections;
+using Windows.UI.Xaml.Data;
+using System.Linq;
 
 namespace RawEditor.View.Pages
 {
@@ -44,7 +46,7 @@ namespace RawEditor.View.Pages
         public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
-        public ObservableCollection<ExifValue> ExifSource = new ObservableCollection<ExifValue>();
+        public CollectionViewSource ExifSource = new CollectionViewSource() { IsSourceGrouped = true };
         public Bindable<bool> feedbacksupport = new Bindable<bool>(StoreServicesFeedbackLauncher.IsSupported());
         // private SpriteVisual _pivotGridSprite;
         //private Compositor _compositor;
@@ -68,15 +70,15 @@ namespace RawEditor.View.Pages
             InitializeComponent();
             NavigationCacheMode = NavigationCacheMode.Required;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
-           /* IPropertySet roamingProperties = ApplicationData.Current.RoamingSettings.Values;
-            if (!roamingProperties.ContainsKey("HasBeenHereBefore"))
-            {
-                // The first-time case
-                //show a greeting pop up
-                var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
-                TextDisplay.Display(loader.GetString("WelcomeText"), "Welcome", "Ok");
-                roamingProperties["HasBeenHereBefore"] = bool.TrueString; // Doesn't really matter what
-            }*/
+            /* IPropertySet roamingProperties = ApplicationData.Current.RoamingSettings.Values;
+             if (!roamingProperties.ContainsKey("HasBeenHereBefore"))
+             {
+                 // The first-time case
+                 //show a greeting pop up
+                 var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                 TextDisplay.Display(loader.GetString("WelcomeText"), "Welcome", "Ok");
+                 roamingProperties["HasBeenHereBefore"] = bool.TrueString; // Doesn't really matter what
+             }*/
         }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
@@ -109,7 +111,7 @@ namespace RawEditor.View.Pages
             ImageBox.Source = null;
             //empty the exif data
             //history?.Clear();
-            ExifSource?.Clear();
+            ExifSource.Source = null;
             //empty the histogram
             ControlVisibilty.Value = false;
             ResetControls();
@@ -256,7 +258,13 @@ namespace RawEditor.View.Pages
 
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        raw.ParseExif(ExifSource);
+                        var exif = raw.ParseExif();
+                        //Group the data
+                        var groups = from x in exif group x by x.Group into grp orderby grp.Key select grp;
+
+                        //Set the grouped data to CollectionViewSource
+                        ExifSource.Source = groups;
+
                         ResetControls();
                         UpdatePreview(true);
                         ControlVisibilty.Value = true;
@@ -424,7 +432,7 @@ namespace RawEditor.View.Pages
                 effect.rMul = ColorTempSlider.Value / 255;
                 effect.gMul = ColorTintSlider.Value / 255;
                 effect.bMul = ColorTintBlueSlider.Value / 255;
-                effect.contrast = contrastSlider.Value * 5;
+                effect.contrast = contrastSlider.Value;
                 effect.shadow = ShadowSlider.Value;
                 effect.hightlight = HighLightSlider.Value;
                 effect.saturation = saturationSlider.Value / 100;
@@ -570,17 +578,17 @@ namespace RawEditor.View.Pages
                 double factor;
                 if (w > h)
                 {
-                    factor = ImageDisplay.ActualWidth / (w + 160);
+                    factor = ImageDisplay.ActualWidth / (w);
                 }
                 else
                 {
                     factor = ImageDisplay.ActualHeight / (h + 160);
                 }
-                CropUI.SetSize((int)(w * factor), (int)(h * factor), raw.Rotation);
+                CropUI.SetSize((int)(w * factor * 0.7), (int)(h * factor * 0.7), raw.Rotation);
                 //create a preview of the image
                 ImageComponent img = new ImageComponent(raw.preview)
                 {
-                    dim = raw.raw.uncroppedDim
+                    dim = raw.preview.uncroppedDim
                 };
                 var result = await ApplyUserModifAsync(img);
                 //display the preview
@@ -677,6 +685,7 @@ namespace RawEditor.View.Pages
                 //Blur(false);
                 Load.Hide();
                 CropGrid.Visibility = Visibility.Collapsed;
+                CropUI.isRightDragging = CropUI.isTopDragging = false;
                 ControlVisibilty.Value = true;
             }
         }
