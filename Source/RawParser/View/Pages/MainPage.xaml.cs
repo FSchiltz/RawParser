@@ -115,6 +115,7 @@ namespace RawEditor.View.Pages
             ResetControls();
             DisplayImage(null, false); ;
             Histo.ClearAsync();
+            GC.Collect();
         }
 
         private void ResetControls()
@@ -242,6 +243,7 @@ namespace RawEditor.View.Pages
                     }*/
                     raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
+                    GC.Collect();
                     //check if enough memory
                     if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)raw.raw.green.Length * 3) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                     {
