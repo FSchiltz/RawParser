@@ -362,7 +362,7 @@ namespace RawNet.Decoder
             if (cfa == null)
             {
                 Debug.WriteLine("CFA pattern is not found");
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
             }
             else
             {
@@ -484,7 +484,7 @@ namespace RawNet.Decoder
                     //order = 0x4d4d;
                     //load_flags = 2;
                 }
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.GREEN, CFAColor.RED, CFAColor.BLUE, CFAColor.GREEN);
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Green, CFAColor.Red, CFAColor.Blue, CFAColor.Green);
             }
         }
 

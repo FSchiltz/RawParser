@@ -280,7 +280,7 @@ namespace RawNet.Decoder
 
         public override void DecodeMetadata()
         {
-            rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+            rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
             base.DecodeMetadata();
             if (rawImage.metadata.Model == null)
                 throw new RawDecoderException("ORF Meta Decoder: Model name found");
@@ -333,13 +333,13 @@ namespace RawNet.Decoder
                                 //blackEntry.offsetFromParent();
                                 for (int i = 0; i < 4; i++)
                                 {
-                                    if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.RED)
+                                    if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Red)
                                         rawImage.blackLevelSeparate[i] = blackEntry.GetShort(0);
-                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.BLUE)
+                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Blue)
                                         rawImage.blackLevelSeparate[i] = blackEntry.GetShort(3);
-                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.GREEN && i < 2)
+                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Green && i < 2)
                                         rawImage.blackLevelSeparate[i] = blackEntry.GetShort(1);
-                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.GREEN)
+                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Green)
                                         rawImage.blackLevelSeparate[i] = blackEntry.GetShort(2);
                                 }
                                 // Adjust whitelevel based on the read black (we assume the dynamic range is the same)

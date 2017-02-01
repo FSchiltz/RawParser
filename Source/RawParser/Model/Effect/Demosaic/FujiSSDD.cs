@@ -16,14 +16,14 @@ namespace RawEditor.Model.Effect.Demosaic
         static int MAX(int i, int j) { return ((i) < (j) ? (j) : (i)); }
         static int MIN(int i, int j) { return ((i) < (j) ? (i) : (j)); }
 
-        static double fTiny = 0.00000001;
+        //static double fTiny = 0.00000001;
 
         //static double COEFF_YR = 0.299;
         //static double COEFF_YG = 0.587;
         //static double COEFF_YB = 0.114;
-        static double LUTMAX = 30.0;
-        static double LUTMAXM1 = 29.0;
-        static double LUTPRECISION = 1000.0;
+       // static double LUTMAX = 30.0;
+        //static double LUTMAXM1 = 29.0;
+        //static double LUTPRECISION = 1000.0;
         static double threshold = 2.0;
 
 
@@ -43,6 +43,7 @@ namespace RawEditor.Model.Effect.Demosaic
 
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West
+            //TODO optimiseby removing unnessecary increment and check
             Parallel.For(0, image.raw.dim.width, x =>
             {
                 for (int y = 0; y < image.raw.dim.height; y++)
@@ -161,7 +162,5 @@ namespace RawEditor.Model.Effect.Demosaic
                 }
             });
         }
-
-
     }
 }

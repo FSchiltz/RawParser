@@ -262,7 +262,7 @@ namespace RawNet.Decoder
                 else
                 {
                     //default to GRBG
-                    rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.RED, CFAColor.GREEN, CFAColor.GREEN, CFAColor.BLUE);
+                    rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
                 }
 
                 //Debug.WriteLine("CFA pattern is not found");
@@ -273,9 +273,7 @@ namespace RawNet.Decoder
             }
 
             //read lens
-            var lens = ifd.GetEntryRecursive((TagType)42036);
-            if (lens != null)
-                rawImage.metadata.Lens = Common.Trim(lens.DataAsString);
+            rawImage.metadata.Lens = ifd.GetEntryRecursive((TagType)42036)?.DataAsString;
             Tag sep_black = ifd.GetEntryRecursive(TagType.FUJI_RGGBLEVELSBLACK);
             if (sep_black != null)
             {

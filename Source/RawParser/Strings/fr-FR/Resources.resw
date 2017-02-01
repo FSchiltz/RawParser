@@ -151,7 +151,7 @@
     <value>Options d'affichage</value>
   </data>
   <data name="ExceptionText" xml:space="preserve">
-    <value>L'image n'est pas un format supporté, vous pouvez signaler un problème  sur le github.</value>
+    <value>L'image n'est pas un format supporté, vous pouvez signaler un problème sur le github.</value>
   </data>
   <data name="Exifs.Header" xml:space="preserve">
     <value>Exifs</value>
@@ -215,9 +215,6 @@
   </data>
   <data name="Share.Label" xml:space="preserve">
     <value>Partager</value>
-  </data>
-  <data name="System.Header" xml:space="preserve">
-    <value>Debug</value>
   </data>
   <data name="Temperature.Text" xml:space="preserve">
     <value>Température</value>

@@ -68,7 +68,7 @@ namespace RawEditor.View.Pages
             InitializeComponent();
             NavigationCacheMode = NavigationCacheMode.Required;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
-            IPropertySet roamingProperties = ApplicationData.Current.RoamingSettings.Values;
+           /* IPropertySet roamingProperties = ApplicationData.Current.RoamingSettings.Values;
             if (!roamingProperties.ContainsKey("HasBeenHereBefore"))
             {
                 // The first-time case
@@ -76,7 +76,7 @@ namespace RawEditor.View.Pages
                 var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                 TextDisplay.Display(loader.GetString("WelcomeText"), "Welcome", "Ok");
                 roamingProperties["HasBeenHereBefore"] = bool.TrueString; // Doesn't really matter what
-            }
+            }*/
         }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
@@ -232,7 +232,7 @@ namespace RawEditor.View.Pages
                         catch (Exception e)
                         {
                             Debug.WriteLine(e.Message);
-                            algo = DemosaicAlgorithm.Deflate;
+                            algo = DemosaicAlgorithm.None;
                         }
                         Demosaic.Demos(raw, algo);
                     }
@@ -243,6 +243,7 @@ namespace RawEditor.View.Pages
                     }*/
                     raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
+                    GC.Collect();
                     //check if enough memory
                     if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)raw.raw.green.Length * 3) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                     {

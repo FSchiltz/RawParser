@@ -136,7 +136,7 @@ namespace RawNet.Format.TIFF
                             {
                                 subIFD.Add(new IFD(IFDType.GPS, fileStream, temp.GetUInt(0), endian, Depth));
                             }
-                            catch (Exception e) { }
+                            catch (Exception) { }
 
                             fileStream.BaseStream.Position = pos;
                             break;

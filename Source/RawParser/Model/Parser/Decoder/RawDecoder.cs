@@ -6,7 +6,6 @@ using System.IO;
 
 namespace RawNet
 {
-    //TODO fix comment from original
     public abstract class RawDecoder
     {
         internal class RawSlice
@@ -125,11 +124,11 @@ namespace RawNet
                 {
                     ReadUncompressedRaw(input, size, pos, width * bitPerPixel / 8, bitPerPixel, order);
                 }
-                catch (RawDecoderException)
+                catch (RawDecoderException e)
                 {
                     if (i > 0)
                     {
-                        //TODO add something
+                        rawImage.errors.Add(e.Message);
                     }
                     else
                         throw;
@@ -138,7 +137,7 @@ namespace RawNet
                 {
                     if (i > 0)
                     {
-                        //TODO add something
+                        rawImage.errors.Add(e.Message);
                     }
                     else
                         throw new RawDecoderException("RAW decoder: IO error occurred in first slice, unable to decode more. Error is: " + e);

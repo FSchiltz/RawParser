@@ -27,7 +27,7 @@ namespace RawNet.Decoder.HuffmanCompressor
 
         public NikonHuffman() : base(false, false) { }
 
-        public override void Create(uint huffSelect)
+        public override void Create(int huffSelect)
         {
             uint acc = 0;
             for (int i = 0; i < 16; i++)
