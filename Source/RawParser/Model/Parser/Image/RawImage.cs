@@ -38,15 +38,29 @@ namespace RawNet
         }
     }
 
+    public enum ExifGroup
+    {
+        Lens,
+        Parser,
+        Camera,
+        Image,
+        Shot,
+        Various,
+        GPS
+    }
+
     public class ExifValue
     {
-        public string Key { get; set; }
-        public string Value { get; set; }
-        public ExifValue(string key, string value)
+        public string Name { get; set; }
+        public string Data { get; set; }
+        public ExifValue(string key, string value, ExifGroup group)
         {
-            Key = key;
-            Value = value;
+            Name = key;
+            Data = value;
+            Group = group;
         }
+        public ExifGroup Group { get; }
+
     }
 
     public class RawImage
@@ -489,58 +503,67 @@ namespace RawNet
              });
         }
 
-        public void ParseExif(ObservableCollection<ExifValue> exif)
+        public List<ExifValue> ParseExif()
         {
-            exif.Add(new ExifValue("File", metadata.FileNameComplete));
-            exif.Add(new ExifValue("Parsing time", metadata.ParsingTimeAsString));
+            List<ExifValue> exif = new List<ExifValue>();
+            //Parser
+            exif.Add(new ExifValue("File", metadata.FileNameComplete, ExifGroup.Parser));
+            exif.Add(new ExifValue("Parsing time", metadata.ParsingTimeAsString, ExifGroup.Parser));
+
+            //Camera
             if (!string.IsNullOrEmpty(metadata.Make))
-                exif.Add(new ExifValue("Maker", metadata.Make));
+                exif.Add(new ExifValue("Maker", metadata.Make, ExifGroup.Camera));
             if (!string.IsNullOrEmpty(metadata.Model))
-                exif.Add(new ExifValue("Model", metadata.Model));
-            if (!string.IsNullOrEmpty(metadata.Mode))
-                exif.Add(new ExifValue("Image mode", metadata.Mode));
-            exif.Add(new ExifValue("Size", "" + ((raw.dim.width * raw.dim.height) / 1000000.0).ToString("F") + " MPixels"));
-            exif.Add(new ExifValue("Dimension", "" + raw.dim.width + " x " + raw.dim.height));
-
-            exif.Add(new ExifValue("Sensor size", "" + ((metadata.RawDim.width * metadata.RawDim.height) / 1000000.0).ToString("F") + " MPixels"));
-            exif.Add(new ExifValue("Sensor dimension", "" + metadata.RawDim.width + " x " + metadata.RawDim.height));
-
-            if (metadata.IsoSpeed > 0)
-                exif.Add(new ExifValue("ISO", "" + (int)metadata.IsoSpeed));
-            if (metadata.Aperture > 0)
-                exif.Add(new ExifValue("Aperture", "" + metadata.Aperture.ToString("F")));
-            if (metadata.Exposure > 0)
-                exif.Add(new ExifValue("Exposure time", "" + metadata.ExposureAsString));
-            if (metadata.Focal > 0)
-                exif.Add(new ExifValue("Focal", "" + (int)metadata.Focal + " mm"));
-            if (!string.IsNullOrEmpty(metadata.Lens))
-                exif.Add(new ExifValue("Lense", metadata.Lens));
-
-            if (!string.IsNullOrEmpty(metadata.TimeTake))
-                exif.Add(new ExifValue("Time of capture", "" + metadata.TimeTake));
-            if (!string.IsNullOrEmpty(metadata.TimeModify))
-                exif.Add(new ExifValue("Time modified", "" + metadata.TimeModify));
-            if (!string.IsNullOrEmpty(metadata.Comment))
-                exif.Add(new ExifValue("Comment", "" + metadata.Comment));
-
-            if (metadata.Gps != null)
-            {
-                exif.Add(new ExifValue("Longitude", metadata.Gps.LongitudeAsString));
-                exif.Add(new ExifValue("lattitude", metadata.Gps.LattitudeAsString));
-                exif.Add(new ExifValue("altitude", metadata.Gps.AltitudeAsString));
-            }
-
-            exif.Add(new ExifValue("Color space", "" + metadata.ColorSpace.ToString()));
-
-            //more metadata
-            exif.Add(new ExifValue("Black level", "" + BlackLevel));
-            exif.Add(new ExifValue("White level", "" + whitePoint));
-            exif.Add(new ExifValue("Color depth", "" + raw.ColorDepth + " bits"));
+                exif.Add(new ExifValue("Model", metadata.Model, ExifGroup.Camera));
+            exif.Add(new ExifValue("Size", "" + ((raw.dim.width * raw.dim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera));
+            exif.Add(new ExifValue("Dimension", "" + raw.dim.width + " x " + raw.dim.height, ExifGroup.Camera));
+            exif.Add(new ExifValue("Sensor size", "" + ((metadata.RawDim.width * metadata.RawDim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera));
+            exif.Add(new ExifValue("Sensor dimension", "" + metadata.RawDim.width + " x " + metadata.RawDim.height, ExifGroup.Camera));
 
             if (isCFA)
             {
-                exif.Add(new ExifValue("CFA pattern", colorFilter.ToString()));
+                exif.Add(new ExifValue("CFA pattern", colorFilter.ToString(), ExifGroup.Camera));
             }
+
+            //Image
+            if (!string.IsNullOrEmpty(metadata.Mode))
+                exif.Add(new ExifValue("Image mode", metadata.Mode, ExifGroup.Image));
+            exif.Add(new ExifValue("Black level", "" + BlackLevel, ExifGroup.Image));
+            exif.Add(new ExifValue("White level", "" + whitePoint, ExifGroup.Image));
+            exif.Add(new ExifValue("Color depth", "" + raw.ColorDepth + " bits", ExifGroup.Image));
+
+            //Shot settings
+            if (metadata.IsoSpeed > 0)
+                exif.Add(new ExifValue("ISO", "" + (int)metadata.IsoSpeed, ExifGroup.Shot));
+            if (metadata.Exposure > 0)
+                exif.Add(new ExifValue("Exposure time", "" + metadata.ExposureAsString, ExifGroup.Shot));
+            exif.Add(new ExifValue("Color space", "" + metadata.ColorSpace.ToString(), ExifGroup.Shot));
+
+            //Lens
+            if (!string.IsNullOrEmpty(metadata.Lens))
+                exif.Add(new ExifValue("Lense", metadata.Lens, ExifGroup.Lens));
+            if (metadata.Focal > 0)
+                exif.Add(new ExifValue("Focal", "" + (int)metadata.Focal + " mm", ExifGroup.Lens));
+            if (metadata.Aperture > 0)
+                exif.Add(new ExifValue("Aperture", "" + metadata.Aperture.ToString("F"), ExifGroup.Lens));
+
+            //Various
+            if (!string.IsNullOrEmpty(metadata.TimeTake))
+                exif.Add(new ExifValue("Time of capture", "" + metadata.TimeTake, ExifGroup.Various));
+            if (!string.IsNullOrEmpty(metadata.TimeModify))
+                exif.Add(new ExifValue("Time modified", "" + metadata.TimeModify, ExifGroup.Various));
+            if (!string.IsNullOrEmpty(metadata.Comment))
+                exif.Add(new ExifValue("Comment", "" + metadata.Comment, ExifGroup.Various));
+
+            //GPS
+            if (metadata.Gps != null)
+            {
+                exif.Add(new ExifValue("Longitude", metadata.Gps.LongitudeAsString, ExifGroup.GPS));
+                exif.Add(new ExifValue("lattitude", metadata.Gps.LattitudeAsString, ExifGroup.GPS));
+                exif.Add(new ExifValue("altitude", metadata.Gps.AltitudeAsString, ExifGroup.GPS));
+            }
+
+            return exif;
         }
     }
 }

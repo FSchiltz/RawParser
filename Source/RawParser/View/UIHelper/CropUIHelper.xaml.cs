@@ -93,7 +93,7 @@ namespace RawEditor.View.UIHelper
         }
 
         public int rotation = 0;
-        private bool isTopDragging = false, isRightDragging = false;
+        public bool isTopDragging = false, isRightDragging = false;
         private Point topClickPos = new Point(0, 0), rightClickPos = new Point(0, 0);
         private double left, top, width, height;
 
@@ -110,15 +110,19 @@ namespace RawEditor.View.UIHelper
             CropZone.Width = CropSelection.Width = (width - 1);
             Thumb.Height = Thumb2.Height = CropZone.Height;
             Thumb.Width = Thumb2.Width = CropZone.Width;
-
+            ResetCrop();
+            this.rotation = rotation;
+            /*
             //move crop control to correct position
             if (rotation != this.rotation)
             {
                 ResetCrop();
                 this.rotation = rotation;
             }
-            else { MoveEllipse(); }
-
+            else
+            {
+                MoveEllipse();
+            }*/
         }
 
         public void ResetCrop()

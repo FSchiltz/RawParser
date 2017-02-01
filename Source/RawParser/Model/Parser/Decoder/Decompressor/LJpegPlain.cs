@@ -63,17 +63,17 @@ namespace RawNet.Decoder.Decompressor
             }
             else
             {
-                /*
-                 * this will be useful for optimisation
+
+                //this will be useful for optimisation
                 if (frame.numComponents == 2)
-                    decodeN_X_Y(2, 1, 1);
-                else if (frame.numComponents == 3)
+                    decode2_1_1();
+                else /*if (frame.numComponents == 3)
                     decodeN_X_Y(3, 1, 1);
                 else if (frame.numComponents == 4)
                     decodeN_X_Y(4, 1, 1);
                 else
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Unsupported component direction count.");*/
-                decodeN_X_Y((int)frame.numComponents, 1, 1);
+                    decodeN_X_Y((int)frame.numComponents, 1, 1);
             }
         }
 
@@ -208,6 +208,93 @@ namespace RawNet.Decoder.Decompressor
             }
             //TODO Check
             //input.ReadBytes(bitStream.getBufferPosition());
+        }
+
+        // N_COMP == number of components (2, 3 or 4)
+        // X_S_F  == x/horizontal sampling factor (1 or 2)
+        // Y_S_F  == y/vertical   sampling factor (1 or 2)
+        void decode2_1_1()
+        {
+            Debug.Assert(frame.ComponentInfo[0].superH == 1);
+            Debug.Assert(frame.ComponentInfo[0].superV == 1);
+            Debug.Assert(frame.ComponentInfo[1].superH == 1);
+            Debug.Assert(frame.ComponentInfo[1].superV == 1);
+            Debug.Assert(frame.numComponents == 2);
+
+            HuffmanTable[] ht = new HuffmanTable[2];
+            for (int i = 0; i < 2; ++i)
+                ht[i] = huff[frame.ComponentInfo[i].dcTblNo];
+
+            // Initialize predictors
+            long[] p = new long[2];
+            for (int i = 0; i < 2; ++i)
+                p[i] = (1 << (frame.precision - Pt - 1));
+
+            BitPumpJPEG bitStream = new BitPumpJPEG(input);
+            uint pixelPitch = raw.pitch / 2; // Pitch in pixel
+            if (frame.numComponents != 3 && frame.width * frame.numComponents > 2 * frame.height)
+            {
+                // Fix Canon double height issue where Canon doubled the width and halfed
+                // the height (e.g. with 5Ds), ask Canon. frame.w needs to stay as is here
+                // because the number of pixels after which the predictor gets updated is
+                // still the doubled width.
+                // see: FIX_CANON_HALF_HEIGHT_DOUBLE_WIDTH
+                frame.height *= 2;
+            }
+            // Fix for Canon 6D raw, which has flipped width & height
+            // see FIX_CANON_FLIPPED_WIDTH_AND_HEIGHT
+            uint sliceH = frame.numComponents == 3 ? Math.Min(frame.width, frame.height) : frame.height;
+
+            // To understand the CR2 slice handling and sampling factor behavior, see
+            // https://github.com/lclevy/libcraw2/blob/master/docs/cr2_lossless.pdf?raw=true
+
+            // inner loop decodes one group of pixels at a time
+            //  * for <N,1,1>: N  = N*1*1 (full raw)
+            //  * for <3,2,1>: 6  = 3*2*1
+            //  * for <3,2,2>: 12 = 3*2*2
+            // and advances x by N_COMP*X_S_F and y by Y_S_F
+            //int xStepSize = 2;
+            //int yStepSize = 1;
+
+            uint processedPixels = 0;
+            uint processedLineSlices = 0;
+            long nextPredictor = offX + (offY * raw.raw.dim.width);
+            foreach (uint sliceW in slicesW)
+            {
+                for (uint y = 0; y < sliceH && y + offY < raw.raw.dim.height; y += 1)
+                {
+                    uint destX = processedLineSlices / raw.raw.dim.height * slicesW[0];
+                    uint destY = processedLineSlices % raw.raw.dim.height;
+                    if (destX + offX >= raw.raw.dim.width * raw.cpp)
+                        break;
+
+                    long dest = (destX + offX) + (destY + offY) * raw.raw.dim.width;
+                    for (uint x = 0; x < sliceW; x += 2)
+                    {
+                        Debug.Assert((processedPixels <= frame.width));
+                        // check if we processed one full raw row worth of pixels
+                        if (processedPixels == frame.width)
+                        {
+                            p[0] = raw.raw.rawView[nextPredictor];
+                            p[1] = raw.raw.rawView[nextPredictor + 1];
+                            nextPredictor = dest;
+                            processedPixels = 0;
+                        }
+
+                        p[0] += ht[0].Decode();
+                        p[1] += ht[1].Decode();
+                        if (x + offX < raw.raw.dim.width)
+                        {
+                            raw.raw.rawView[dest] = (ushort)(p[0]);
+                            dest++;
+                            raw.raw.rawView[dest] = (ushort)(p[1]);
+                            dest++;
+                        }
+                        processedPixels++;
+                    }
+                    processedLineSlices++;
+                }
+            }
         }
     }
 }
