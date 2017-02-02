@@ -1,4 +1,7 @@
-﻿<Page x:Class="RawEditor.View.Pages.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:rawnet="using:RawNet" xmlns:uihelper="using:RawEditor.View.UIHelper" mc:Ignorable="d" SizeChanged="{x:Bind CenterImageBindable}">
+﻿<Page x:Class="RawEditor.View.Pages.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:rawnet="using:RawNet" xmlns:uihelper="using:RawEditor.View.UIHelper"
+        mc:Ignorable="d" SizeChanged="{x:Bind CenterImageBindable}">
     <Page.BottomAppBar>
         <CommandBar x:Name="commandBar" VerticalContentAlignment="Top" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
             <CommandBar.Content>
@@ -9,7 +12,8 @@
             <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Crop" x:Uid="Crop" Tapped="CropButton_TappedAsync" />
             <AppBarSeparator />
             <AppBarButton Icon="BrowsePhotos" x:Uid="OpenImage" Click="ImageChooseClickAsync" />
-            <AppBarButton Icon="SaveLocal" x:Uid="Save" Click="SaveButtonClickAsync" VerticalAlignment="Top" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+            <AppBarButton Icon="SaveLocal" x:Uid="Save" Click="SaveButtonClickAsync" VerticalAlignment="Top"
+                    IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
             <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Link" x:Uid="Share" Tapped="ShareButton_Tapped" />
             <AppBarSeparator />
             <AppBarButton Icon="Setting" x:Uid="Setting" Click="SettingClick" />
@@ -79,22 +83,30 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <ScrollViewer x:Name="ImageDisplay" ZoomMode="Enabled" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignLeftWithPanel="True" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <ScrollViewer x:Name="ImageDisplay" ZoomMode="Enabled" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignLeftWithPanel="True" HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch">
             <ScrollViewer.Background>
                 <SolidColorBrush Color="#19FFFFFF" />
             </ScrollViewer.Background>
-            <Image x:Name="ImageBox" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Auto" />
+            <Image x:Name="ImageBox" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Auto" />
         </ScrollViewer>
-        <Slider x:Name="ZoomSlider" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1" Canvas.ZIndex="3" Margin="10,0,0,10" Value="{x:Bind ImageDisplay.ZoomFactor, Mode=OneWay}" ValueChanged="Slider_ValueChanged" Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom" />
+        <Slider x:Name="ZoomSlider" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1"
+                Canvas.ZIndex="3" Margin="10,0,0,10" Value="{x:Bind ImageDisplay.ZoomFactor, Mode=OneWay}" ValueChanged="Slider_ValueChanged"
+                Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom" />
         <Grid x:Name="CropGrid" Visibility="Collapsed" Canvas.ZIndex="5" Background="#FFAAAAAA">
             <uihelper:CropUIHelper x:Name="CropUI"></uihelper:CropUIHelper>
-            <Button VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,-80,10" Background="{ThemeResource ButtonForeground}" Tapped="{x:Bind CropUI.ResetCrop}">
+            <Button VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,-80,10" Background="{ThemeResource ButtonForeground}"
+                    Tapped="{x:Bind CropUI.ResetCrop}">
                 <SymbolIcon Symbol="Refresh" Foreground="{ThemeResource AppBarBorderThemeBrush}" Width="20" Height="20" />
             </Button>
-            <Button VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="{ThemeResource ButtonForeground}" Tapped="CropAccept_Tapped" Margin="0,0,10,10">
+            <Button VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="{ThemeResource ButtonForeground}" Tapped="CropAccept_Tapped"
+                    Margin="0,0,10,10">
                 <SymbolIcon Symbol="Accept" Width="20" Height="20" Foreground="{ThemeResource AppBarBorderThemeBrush}"></SymbolIcon>
             </Button>
-            <Button VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,100,10" Background="{ThemeResource ButtonForeground}" Tapped="{x:Bind HideCropUI}">
+            <Button VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,100,10" Background="{ThemeResource ButtonForeground}"
+                    Tapped="{x:Bind HideCropUI}">
                 <SymbolIcon Symbol="Clear" Foreground="{ThemeResource AppBarBorderThemeBrush}" Width="20" Height="20" />
             </Button>
         </Grid>
@@ -109,21 +121,27 @@
                             <Polygon Points="{x:Bind Histo.PointsG }" Opacity="0.4" Stretch="Fill" Fill="#FF000083" Width="260" Height="120" />
                             <Polygon Points="{x:Bind Histo.PointsB }" Opacity="0.9" Stretch="Fill" Fill="#FF555555" Width="260" Height="120" />
                         </Grid>
-                        <Button Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="{x:Bind ResetUpdateControls}" IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}">Reset</Button>
+                        <Button Margin="0,10,0,5" HorizontalAlignment="Center" Tapped="{x:Bind ResetUpdateControls}"
+                                IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}">Reset</Button>
                         <uihelper:Sepparator></uihelper:Sepparator>
                         <uihelper:CollapsibleBox x:Uid="ExposureSettings">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
-                                    <ToggleSwitch IsOn="False" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14" x:Name="AutoCorrectToggle" HorizontalAlignment="Left" Margin="0,0,0,10" Toggled="{x:Bind EditingControlChanged}" HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
+                                    <ToggleSwitch IsOn="False" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14" x:Name="AutoCorrectToggle"
+                                            HorizontalAlignment="Left" Margin="0,0,0,10" Toggled="{x:Bind EditingControlChanged}"
+                                            HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
                                     <TextBlock FontSize="14" x:Uid="Exposure" />
-                                    <Slider x:Name="exposureSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="0.3" />
-                                    <!-- <TextBlock FontSize="12">Brightness</TextBlock>
-                                <Slider x:Name="brightnessSlider"  PointerCaptureLost="Slider_PointerCaptureLost"  Minimum="-100" Maximum="100"  LargeChange="10" SmallChange="5" IsEnabled="False" StepFrequency="5"/>
-                                -->
+                                    <Slider x:Name="exposureSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" Minimum="-5" LargeChange="1"
+                                            SmallChange="0.3" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="0.3" />
+                                    <TextBlock FontSize="14">Brightness</TextBlock>
+                                    <Slider x:Name="brightnessSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="-100" Maximum="100"
+                                            LargeChange="10" SmallChange="5" IsEnabled="False" StepFrequency="5" />
                                     <TextBlock FontSize="14"> Highlight</TextBlock>
-                                    <Slider x:Name="HighLightSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50" LargeChange="5" SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="1" />
+                                    <Slider x:Name="HighLightSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50"
+                                            LargeChange="5" SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="1" />
                                     <TextBlock FontSize="14">Shadow</TextBlock>
-                                    <Slider x:Name="ShadowSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50" LargeChange="5" SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+                                    <Slider x:Name="ShadowSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50" LargeChange="5"
+                                            SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -131,7 +149,8 @@
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14" x:Uid="Temperature" />
-                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="{x:Bind SetWBUpdate}" FontSize="12" x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton" Margin="0,5,0,5" />
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="{x:Bind SetWBUpdate}" FontSize="12"
+                                            x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton" Margin="0,5,0,5" />
                                     <Grid Margin="0,5,0,5">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"></ColumnDefinition>
@@ -143,16 +162,24 @@
                                             <RowDefinition></RowDefinition>
                                         </Grid.RowDefinitions>
                                         <TextBlock FontSize="12" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">Red</TextBlock>
-                                        <Slider x:Name="ColorTempSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Grid.Column="1" />
+                                        <Slider x:Name="ColorTempSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1"
+                                                LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                                Grid.Column="1" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left">Green</TextBlock>
-                                        <Slider x:Name="ColorTintSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Grid.Column="1" Grid.Row="1" />
+                                        <Slider x:Name="ColorTintSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1"
+                                                LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                                Grid.Column="1" Grid.Row="1" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Center">Blue</TextBlock>
-                                        <Slider x:Name="ColorTintBlueSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1" LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Grid.Column="1" Grid.Row="2" />
+                                        <Slider x:Name="ColorTintBlueSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1"
+                                                LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                                Grid.Column="1" Grid.Row="2" />
                                     </Grid>
                                     <TextBlock FontSize="14" x:Uid="Saturation" />
-                                    <Slider x:Name="saturationSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0" Maximum="200" LargeChange="10" SmallChange="5" Value="100" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+                                    <Slider x:Name="saturationSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0" Maximum="200"
+                                            LargeChange="10" SmallChange="5" Value="100" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
                                     <TextBlock FontSize="14">Vibrance</TextBlock>
-                                    <Slider x:Name="vibranceSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="512" Minimum="1" LargeChange="50" SmallChange="5" Value="256" IsEnabled="False" />
+                                    <Slider x:Name="vibranceSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="512" Minimum="1"
+                                            LargeChange="50" SmallChange="5" Value="256" IsEnabled="False" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -160,11 +187,17 @@
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14" x:Uid="Contrast" />
-                                    <Slider x:Name="contrastSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="20" LargeChange="1" Value="0" Minimum="-20" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-                                    <ToggleSwitch x:Name="GammaToggle" IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}" IsOn="False" Toggled="{x:Bind EditingControlChanged}" Margin="0,10,0,5" FontSize="14" HorizontalAlignment="Left" HorizontalContentAlignment="Left">Apply gamma curve</ToggleSwitch>
-                                    <RadioButton x:Name="HighGamma" IsChecked="False" GroupName="Gamma" IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">High</RadioButton>
-                                    <RadioButton x:Name="MediumGamma" IsChecked="True" GroupName="Gamma" IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">Medium</RadioButton>
-                                    <RadioButton x:Name="LowGamma" IsChecked="False" GroupName="Gamma" IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">Low</RadioButton>
+                                    <Slider x:Name="contrastSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="20" LargeChange="1" Value="0"
+                                            Minimum="-20" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+                                    <ToggleSwitch x:Name="GammaToggle" IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}" IsOn="False"
+                                            Toggled="{x:Bind EditingControlChanged}" Margin="0,10,0,5" FontSize="14" HorizontalAlignment="Left"
+                                            HorizontalContentAlignment="Left">Apply gamma curve</ToggleSwitch>
+                                    <RadioButton x:Name="HighGamma" IsChecked="False" GroupName="Gamma"
+                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">High</RadioButton>
+                                    <RadioButton x:Name="MediumGamma" IsChecked="True" GroupName="Gamma"
+                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">Medium</RadioButton>
+                                    <RadioButton x:Name="LowGamma" IsChecked="False" GroupName="Gamma"
+                                            IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">Low</RadioButton>
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -172,11 +205,14 @@
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14">Vignet</TextBlock>
-                                    <Slider x:Name="VignetSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                                    <Slider x:Name="VignetSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0"
+                                            Minimum="-10" IsEnabled="False" />
                                     <TextBlock FontSize="14">Sharpness</TextBlock>
-                                    <Slider x:Name="NoiseSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                                    <Slider x:Name="NoiseSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0"
+                                            Minimum="-10" IsEnabled="False" />
                                     <TextBlock FontSize="14">Noise reduction</TextBlock>
-                                    <Slider x:Name="SharpenSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0" Minimum="-10" IsEnabled="False" />
+                                    <Slider x:Name="SharpenSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0"
+                                            Minimum="-10" IsEnabled="False" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -184,38 +220,34 @@
                 </ScrollViewer>
             </PivotItem>
             <PivotItem x:Uid="Exifs">
-                <ScrollViewer VerticalContentAlignment="Stretch">
-                    <StackPanel x:Name="Container">
-                        <TextBlock x:Uid="ExifsData" />
-                        <ListView ItemsSource="{x:Bind ExifSource.View,Mode=OneWay}" HorizontalContentAlignment="Stretch">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="rawnet:ExifValue">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition />
-                                            <ColumnDefinition />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{x:Bind Name}" TextWrapping="WrapWholeWords" HorizontalAlignment="Left" FontSize="14" FontStyle="Italic"/>
-                                        <TextBlock Text="{x:Bind Data}" Grid.Column="1" TextWrapping="WrapWholeWords" HorizontalAlignment="Right" Margin="10,0,0,0" FontSize="14" />
-                                    </Grid>
+                <ListView ItemsSource="{x:Bind ExifSource.View,Mode=OneWay}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="rawnet:ExifValue">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Bind Name}" TextWrapping="Wrap" FontSize="14" FontStyle="Italic" />
+                                <TextBlock Text="{x:Bind Data}" Grid.Column="1" TextWrapping="Wrap" Margin="10,0,0,0" FontSize="14" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Key}" FontSize="15" FontWeight="SemiBold"></TextBlock>
                                 </DataTemplate>
-                            </ListView.ItemTemplate>
-                            <ListView.GroupStyle>
-                                <GroupStyle>
-                                    <GroupStyle.HeaderTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Key}" FontSize="15" FontWeight="Bold"></TextBlock>
-                                        </DataTemplate>
-                                    </GroupStyle.HeaderTemplate>
-                                </GroupStyle>
-                            </ListView.GroupStyle>
-                        </ListView>
-                    </StackPanel>
-                </ScrollViewer>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListView.GroupStyle>
+                </ListView>
             </PivotItem>
             <PivotItem x:Uid="Tools">
                 <StackPanel>
-                    <TextBlock Foreground="Black" IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False" ManipulationMode="None" HorizontalAlignment="Left" FontSize="14">Memory usage</TextBlock>
+                    <TextBlock Foreground="Black" IsDoubleTapEnabled="False" IsHoldingEnabled="False" IsRightTapEnabled="False" IsTapEnabled="False"
+                            ManipulationMode="None" HorizontalAlignment="Left" FontSize="14">Memory usage</TextBlock>
                     <uihelper:MemoryBar></uihelper:MemoryBar>
                     <Button Margin="0,20,0,0" Tapped="{x:Bind EmptyImage}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center">Free image</Button>
                     <Button Margin="0,20,0,0" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center" Tapped="Button_Tapped">Recreate preview</Button>

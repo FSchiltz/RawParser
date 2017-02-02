@@ -1,68 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.ObjectModel;
 
 namespace RawNet
 {
-    public class ImageComponent
-    {
-        public ushort[] red, blue, green, rawView;
-        public bool IsLumaOnly { get; set; }//if is true,only green is filled
-        public Point2D dim, offset = new Point2D(), uncroppedDim;
-
-
-        public ImageComponent() { }
-        public ImageComponent(ImageComponent image)
-        {
-            red = image.red;
-            green = image.green;
-            blue = image.blue;
-            uncroppedDim = image.uncroppedDim;
-            ColorDepth = image.ColorDepth;
-        }
-
-        public ushort ColorDepth { get; set; }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool GetSafeBound(long row, long col)
-        {
-            if (row < 0 || row >= dim.height || col < 0 || col >= dim.width)
-            {
-                return false;
-            }
-            else return true;
-        }
-    }
-
-    public enum ExifGroup
-    {
-        Lens,
-        Parser,
-        Camera,
-        Image,
-        Shot,
-        Various,
-        GPS
-    }
-
-    public class ExifValue
-    {
-        public string Name { get; set; }
-        public string Data { get; set; }
-        public ExifValue(string key, string value, ExifGroup group)
-        {
-            Name = key;
-            Data = value;
-            Group = group;
-        }
-        public ExifGroup Group { get; }
-
-    }
-
     public class RawImage
     {
         public ImageComponent preview = new ImageComponent(), thumb, raw = new ImageComponent();
@@ -505,20 +447,24 @@ namespace RawNet
 
         public List<ExifValue> ParseExif()
         {
-            List<ExifValue> exif = new List<ExifValue>();
-            //Parser
-            exif.Add(new ExifValue("File", metadata.FileNameComplete, ExifGroup.Parser));
-            exif.Add(new ExifValue("Parsing time", metadata.ParsingTimeAsString, ExifGroup.Parser));
-
+            List<ExifValue> exif = new List<ExifValue>
+            {
+                new ExifValue("File", metadata.FileNameComplete, ExifGroup.Parser),
+                new ExifValue("Parsing time", metadata.ParsingTimeAsString, ExifGroup.Parser),
+                new ExifValue("Size", "" + ((raw.dim.width * raw.dim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
+                new ExifValue("Dimension", "" + raw.dim.width + " x " + raw.dim.height, ExifGroup.Camera),
+                new ExifValue("Sensor size", "" + ((metadata.RawDim.width * metadata.RawDim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
+                new ExifValue("Sensor dimension", "" + metadata.RawDim.width + " x " + metadata.RawDim.height, ExifGroup.Camera),
+                new ExifValue("Black level", "" + BlackLevel, ExifGroup.Image),
+                new ExifValue("White level", "" + whitePoint, ExifGroup.Image),
+                new ExifValue("Color depth", "" + raw.ColorDepth + " bits", ExifGroup.Image),
+                new ExifValue("Color space", "" + metadata.ColorSpace.ToString(), ExifGroup.Shot)
+            };
             //Camera
             if (!string.IsNullOrEmpty(metadata.Make))
                 exif.Add(new ExifValue("Maker", metadata.Make, ExifGroup.Camera));
             if (!string.IsNullOrEmpty(metadata.Model))
                 exif.Add(new ExifValue("Model", metadata.Model, ExifGroup.Camera));
-            exif.Add(new ExifValue("Size", "" + ((raw.dim.width * raw.dim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera));
-            exif.Add(new ExifValue("Dimension", "" + raw.dim.width + " x " + raw.dim.height, ExifGroup.Camera));
-            exif.Add(new ExifValue("Sensor size", "" + ((metadata.RawDim.width * metadata.RawDim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera));
-            exif.Add(new ExifValue("Sensor dimension", "" + metadata.RawDim.width + " x " + metadata.RawDim.height, ExifGroup.Camera));
 
             if (isCFA)
             {
@@ -528,17 +474,12 @@ namespace RawNet
             //Image
             if (!string.IsNullOrEmpty(metadata.Mode))
                 exif.Add(new ExifValue("Image mode", metadata.Mode, ExifGroup.Image));
-            exif.Add(new ExifValue("Black level", "" + BlackLevel, ExifGroup.Image));
-            exif.Add(new ExifValue("White level", "" + whitePoint, ExifGroup.Image));
-            exif.Add(new ExifValue("Color depth", "" + raw.ColorDepth + " bits", ExifGroup.Image));
 
             //Shot settings
             if (metadata.IsoSpeed > 0)
                 exif.Add(new ExifValue("ISO", "" + (int)metadata.IsoSpeed, ExifGroup.Shot));
             if (metadata.Exposure > 0)
                 exif.Add(new ExifValue("Exposure time", "" + metadata.ExposureAsString, ExifGroup.Shot));
-            exif.Add(new ExifValue("Color space", "" + metadata.ColorSpace.ToString(), ExifGroup.Shot));
-
             //Lens
             if (!string.IsNullOrEmpty(metadata.Lens))
                 exif.Add(new ExifValue("Lense", metadata.Lens, ExifGroup.Lens));

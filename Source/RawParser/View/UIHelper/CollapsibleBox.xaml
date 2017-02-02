@@ -6,7 +6,7 @@
         <StackPanel Tapped="Header_Tapped" Orientation="Horizontal" Margin="0,0,0,10">
             <SymbolIcon x:Name="icon" Symbol="BackToWindow" Width="20" Height="20">
             </SymbolIcon>
-            <TextBlock x:Name="Header" FontSize="16" Margin="5,0,0,0"></TextBlock>
+            <TextBlock x:Name="Header" FontSize="16" Margin="5,0,0,0" FontWeight="SemiBold"></TextBlock>
         </StackPanel>
         <ContentPresenter x:Name="Container" Content="{x:Bind MainContent}">
         </ContentPresenter>
