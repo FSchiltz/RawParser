@@ -166,6 +166,8 @@
     <Compile Include="Model\Parser\Base\Endianness.cs" />
     <Compile Include="Model\Parser\Decoder\CamRGB.cs" />
     <Compile Include="Model\Parser\Format\TIFF\IFDType.cs" />
+    <Compile Include="Model\Parser\Image\ExifValue.cs" />
+    <Compile Include="Model\Parser\Image\ImageComponent.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="Model\Parser\Base\Common.cs" />

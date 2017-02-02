@@ -125,7 +125,7 @@ namespace RawNet.Decoder
             }
             else if (rawImage.raw.dim.width >= 4960 && model.Contains("K-5"))
             {
-                rawImage.raw.offset.height = 10;
+                rawImage.raw.dim.height -= rawImage.raw.offset.height = 10;
                 rawImage.raw.dim.width = 4950;
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Blue, CFAColor.Green, CFAColor.Green, CFAColor.Red);
             }
@@ -138,7 +138,7 @@ namespace RawNet.Decoder
             }
             else if (rawImage.raw.dim.width == 6080 && model == "K-3")
             {
-                rawImage.raw.offset.height = 4;
+                rawImage.raw.dim.height -= rawImage.raw.offset.height = 4;
                 rawImage.raw.dim.width = 6040;
             }
             else if (rawImage.raw.dim.width == 7424 && model == "645D")
