@@ -47,97 +47,9 @@ namespace RawNet.Decoder
             return temp;
         }
 
-        public override void DecodeRaw()
+        public void DecodeNewFormat()
         {
-            if (hints.ContainsKey("old_format"))
-            {
-                uint off = 0;
-                var t = ifd.GetEntryRecursive((TagType)0x81);
-                if (t != null)
-                    off = t.GetUInt(0);
-                else
-                {
-                    List<IFD> data2 = ifd.GetIFDsWithTag(TagType.CFAPATTERN);
-                    if (data2.Count == 0)
-                        throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
-                    else
-                    {
-                        if (data2[0].tags.ContainsKey(TagType.STRIPOFFSETS))
-                            off = data2[0].GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
-                        else
-                            throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
-                    }
-                }
-
-                var b = new TIFFBinaryReader(reader.BaseStream, off + 41);
-
-                uint height = b.ReadUInt16();
-                uint width = b.ReadUInt16();
-
-                // Every two lines can be encoded as a single line, probably to try and get
-                // better compression by getting the same RGBG sequence in every line
-                if (hints.ContainsKey("double_line_ljpeg"))
-                {
-                    height *= 2;
-                    rawImage.raw.dim = new Point2D(width * 2, height / 2);
-                }
-                else
-                {
-                    width *= 2;
-                    rawImage.raw.dim = new Point2D(width, height);
-                }
-
-                rawImage.Init(false);
-                LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
-                try
-                {
-                    l.StartDecoder(off, (uint)(reader.BaseStream.Length - off), 0, 0);
-                }
-                catch (IOException e)
-                {
-                    rawImage.errors.Add(e.Message);
-                }
-
-                if (hints.ContainsKey("double_line_ljpeg"))
-                {
-                    // We now have a double width half height image we need to convert to the
-                    // normal format
-                    var final_size = new Point2D(width, height);
-                    RawImage procRaw = new RawImage();
-                    procRaw.raw.dim = final_size;
-                    procRaw.metadata = rawImage.metadata;
-                    procRaw.Init(false);
-
-                    for (int y = 0; y < height; y++)
-                    {
-                        for (int x = 0; x < width; x++)
-                            procRaw.raw.rawView[x] = rawImage.raw.rawView[((y % 2 == 0) ? 0 : width) + x];
-                    }
-                    rawImage = procRaw;
-                }
-
-                var tv = ifd.GetEntryRecursive((TagType)0x123);
-                if (tv != null)
-                {
-                    Tag curve = ifd.GetEntryRecursive((TagType)0x123);
-                    if (curve.dataType == TiffDataType.SHORT && curve.dataCount == 4096)
-                    {
-                        Tag linearization = ifd.GetEntryRecursive((TagType)0x123);
-                        var table = linearization.GetUShortArray();
-
-                        rawImage.SetTable(table, 4096, true);
-                        // Apply table
-                        //rawImage.sixteenBitLookup();
-                        // Delete table
-                        // rawImage.setTable(null);
-
-                    }
-                }
-                return;
-            }
-
             List<IFD> data = ifd.GetIFDsWithTag((TagType)0xc5d8);
-
             if (data.Count == 0)
                 throw new RawDecoderException("CR2 Decoder: No image data found");
 
@@ -252,6 +164,101 @@ namespace RawNet.Decoder
 
             if (rawImage.metadata.Subsampling.width > 1 || rawImage.metadata.Subsampling.height > 1)
                 SRawInterpolate();
+        }
+
+        public void DecodeOldFormat()
+        {
+            uint off = 0;
+            var t = ifd.GetEntryRecursive((TagType)0x81);
+            if (t != null)
+                off = t.GetUInt(0);
+            else
+            {
+                List<IFD> data2 = ifd.GetIFDsWithTag(TagType.CFAPATTERN);
+                if (data2.Count == 0)
+                    throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
+                else
+                {
+                    if (data2[0].tags.ContainsKey(TagType.STRIPOFFSETS))
+                        off = data2[0].GetEntry(TagType.STRIPOFFSETS).GetUInt(0);
+                    else
+                        throw new RawDecoderException("CR2 Decoder: Couldn't find offset");
+                }
+            }
+
+            var b = new TIFFBinaryReader(reader.BaseStream, off + 41);
+
+            uint height = b.ReadUInt16();
+            uint width = b.ReadUInt16();
+
+            // Every two lines can be encoded as a single line, probably to try and get
+            // better compression by getting the same RGBG sequence in every line
+            if (hints.ContainsKey("double_line_ljpeg"))
+            {
+                height *= 2;
+                rawImage.raw.dim = new Point2D(width * 2, height / 2);
+            }
+            else
+            {
+                width *= 2;
+                rawImage.raw.dim = new Point2D(width, height);
+            }
+
+            rawImage.Init(false);
+            LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
+            try
+            {
+                l.StartDecoder(off, (uint)(reader.BaseStream.Length - off), 0, 0);
+            }
+            catch (IOException e)
+            {
+                rawImage.errors.Add(e.Message);
+            }
+
+            if (hints.ContainsKey("double_line_ljpeg"))
+            {
+                // We now have a double width half height image we need to convert to the
+                // normal format
+                var final_size = new Point2D(width, height);
+                RawImage procRaw = new RawImage();
+                procRaw.raw.dim = final_size;
+                procRaw.metadata = rawImage.metadata;
+                procRaw.Init(false);
+
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                        procRaw.raw.rawView[x] = rawImage.raw.rawView[((y % 2 == 0) ? 0 : width) + x];
+                }
+                rawImage = procRaw;
+            }
+
+            var tv = ifd.GetEntryRecursive((TagType)0x123);
+            if (tv != null)
+            {
+                Tag curve = ifd.GetEntryRecursive((TagType)0x123);
+                if (curve.dataType == TiffDataType.SHORT && curve.dataCount == 4096)
+                {
+                    Tag linearization = ifd.GetEntryRecursive((TagType)0x123);
+                    var table = linearization.GetUShortArray();
+
+                    rawImage.SetTable(table, 4096, true);
+                    // Apply table
+                    //rawImage.sixteenBitLookup();
+                    // Delete table
+                    // rawImage.setTable(null);
+
+                }
+            }
+
+        }
+
+        public override void DecodeRaw()
+        {
+            if (ifd.subIFD.Count < 4)
+                DecodeOldFormat();
+            else
+                DecodeNewFormat();
         }
 
         public override void DecodeMetadata()
