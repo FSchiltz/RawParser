@@ -73,11 +73,15 @@ namespace RawNet.DNG
                 Parallel.For(0, slices.Count, (i) =>
                 {
                     DngSliceElement e = slices[i];
-                    LJPEGPlain l = new LJPEGPlain(e.data, raw, e.mUseBigtable, FixLjpeg);
+                    LJPEGPlain l = new LJPEGPlain(e.data, raw, e.mUseBigtable, FixLjpeg)
+                    {
+                        offX = e.offX,
+                        offY = e.offY
+                    };
 
                     try
                     {
-                        l.StartDecoder(0, e.byteCount, e.offX, e.offY);
+                        l.StartDecoder(0, e.byteCount);
                         l.input.Dispose();
                     }
                     catch (RawDecoderException err)

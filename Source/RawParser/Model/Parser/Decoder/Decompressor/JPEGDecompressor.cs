@@ -16,8 +16,8 @@ namespace RawNet.Decoder.Decompressor
         public List<uint> slicesW = new List<uint>(1);
         public uint predictor;
         public int Pt;
-        public uint offX, offY;  // Offset into image where decoding should start
-        public uint skipX, skipY;   // Tile is larger than output, skip these border pixels
+        public uint offX = 0, offY = 0;  // Offset into image where decoding should start
+        public uint skipX = 0, skipY = 0;   // Tile is larger than output, skip these border pixels
         public HuffmanTable[] huff;
         public bool UseBigTable { get; set; }     // Use only for large images
         public bool DNGCompatible { get; set; }  // DNG v1.0.x compatibility
@@ -62,12 +62,11 @@ namespace RawNet.Decoder.Decompressor
         */
         public JPEGDecompressor(TIFFBinaryReader file, RawImage img, bool DNGCompatible, bool UseBigTable)
         {
-            raw = (img);
+            raw = img;
             input = file;
-            skipX = skipY = 0;
             this.DNGCompatible = DNGCompatible;
             this.UseBigTable = UseBigTable;
-            slicesW.Clear();
+            //slicesW.Clear();
             huff = new HuffmanTable[4];
         }
 
@@ -107,16 +106,14 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public void StartDecoder(uint offset, uint size, uint offsetX, uint offsetY)
+        public void StartDecoder(uint offset, uint size)
         {
             if (!input.IsValid(offset, size))
                 throw new RawDecoderException("startDecoder: Start offset plus size is longer than file. Truncated file.");
-            if ((int)offsetX >= raw.raw.dim.width)
+            if ((int)offX >= raw.raw.dim.width)
                 throw new RawDecoderException("startDecoder: X offset outside of image");
-            if ((int)offsetY >= raw.raw.dim.height)
+            if ((int)offY >= raw.raw.dim.height)
                 throw new RawDecoderException("startDecoder: Y offset outside of image");
-            offX = offsetX;
-            offY = offsetY;
 
             // JPEG is big endian
             if (Common.GetHostEndianness() == Endianness.Big)
