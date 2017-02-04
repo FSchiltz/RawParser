@@ -14,7 +14,7 @@ namespace RawNet.Decoder.Decompressor
         public RawImage raw;
         public SOFInfo frame = new SOFInfo();
         public List<uint> slicesW = new List<uint>(1);
-        public uint predictor;
+        public int predictor;
         public int Pt;
         public uint offX = 0, offY = 0;  // Offset into image where decoding should start
         public uint skipX = 0, skipY = 0;   // Tile is larger than output, skip these border pixels
@@ -66,43 +66,33 @@ namespace RawNet.Decoder.Decompressor
             input = file;
             this.DNGCompatible = DNGCompatible;
             this.UseBigTable = UseBigTable;
-            //slicesW.Clear();
             huff = new HuffmanTable[4];
         }
 
-        public void GetSOF(SOFInfo sof, uint offset, uint size)
+        public SOFInfo GetSOF(uint offset, uint size)
         {
-            if (!input.IsValid(offset, size))
-                throw new RawDecoderException("getSOF: Start offset plus size is longer than file. Truncated file.");
-            try
+            // JPEG is big endian
+            if (Common.GetHostEndianness() == Endianness.Big)
+                input = new TIFFBinaryReader(input.BaseStream, offset);
+            else
+                input = new TIFFBinaryReaderRE(input.BaseStream, offset);
+
+            if (GetNextMarker(false) != JpegMarker.SOI)
+                throw new RawDecoderException("getSOF: Image did not start with SOI. Probably not an LJPEG");
+
+            while (true)
             {
-                Endianness host_endian = Common.GetHostEndianness();
-                // JPEG is big endian
-                if (host_endian == Endianness.Big)
-                    input = new TIFFBinaryReader(input.BaseStream, offset);
-                else
-                    input = new TIFFBinaryReaderRE(input.BaseStream, offset);
-
-                if (GetNextMarker(false) != JpegMarker.SOI)
-                    throw new RawDecoderException("getSOF: Image did not start with SOI. Probably not an LJPEG");
-
-                while (true)
+                JpegMarker m = GetNextMarker(true);
+                if (m == JpegMarker.Sof3)
                 {
-                    JpegMarker m = GetNextMarker(true);
-                    if (m == JpegMarker.Sof3)
-                    {
-                        ParseSOF(sof);
-                        return;
-                    }
-                    if (m == JpegMarker.EOI)
-                    {
-                        throw new RawDecoderException("LJpegDecompressor: Could not locate Start of Frame.");
-                    }
+                    SOFInfo sof = new SOFInfo();
+                    ParseSOF(sof);
+                    return sof;
                 }
-            }
-            catch (IOException)
-            {
-                throw new RawDecoderException("LJpegDecompressor: IO exception, read outside file. Corrupt File.");
+                if (m == JpegMarker.EOI)
+                {
+                    throw new RawDecoderException("LJpegDecompressor: Could not locate Start of Frame.");
+                }
             }
         }
 
@@ -123,7 +113,6 @@ namespace RawNet.Decoder.Decompressor
 
             if (GetNextMarker(false) != JpegMarker.SOI)
                 throw new RawDecoderException("startDecoder: Image did not start with SOI. Probably not an LJPEG");
-            //    _RPT0(0,"Found SOI marker\n");
 
             bool moreImage = true;
             while (moreImage)
@@ -144,6 +133,7 @@ namespace RawNet.Decoder.Decompressor
                     case JpegMarker.Sof3:
                         //          _RPT0(0,"Found SOF 3 marker:\n");
                         ParseSOF(frame);
+                        Debug.WriteLine(frame);
                         break;
                     case JpegMarker.EOI:
                         //          _RPT0(0,"Found EOI marker\n");

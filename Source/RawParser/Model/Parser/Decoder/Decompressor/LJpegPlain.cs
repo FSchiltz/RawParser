@@ -243,7 +243,7 @@ namespace RawNet.Decoder.Decompressor
             }
             // Fix for Canon 6D raw, which has flipped width & height
             // see FIX_CANON_FLIPPED_WIDTH_AND_HEIGHT
-            uint sliceH = frame.numComponents == 3 ? Math.Min(frame.width, frame.height) : frame.height;
+            long sliceH = frame.numComponents == 3 ? Math.Min(frame.width, frame.height) : frame.height;
 
             // To understand the CR2 slice handling and sampling factor behavior, see
             // https://github.com/lclevy/libcraw2/blob/master/docs/cr2_lossless.pdf?raw=true
