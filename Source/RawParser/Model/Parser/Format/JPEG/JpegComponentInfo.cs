@@ -19,6 +19,11 @@
         public uint dcTblNo;
         public uint superH; // Horizontal Supersampling
         public uint superV; // Vertical Supersampling
+
+        public override string ToString()
+        {
+            return "id:" + componentId + " index:" + componentIndex + " table:" + dcTblNo + " subH:" + superH + " subV:" + superV;
+        }
     };
 }
 

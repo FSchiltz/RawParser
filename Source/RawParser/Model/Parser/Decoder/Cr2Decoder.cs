@@ -49,8 +49,8 @@ namespace RawNet.Decoder
 
         public void DecodeNewFormat()
         {
+            /*
             Tag sensorInfoE = ifd.GetEntryRecursive(TagType.CANON_SENSOR_INFO) ?? throw new RawDecoderException("Cr2Decoder: failed to get SensorInfo from MakerNote");
-
             uint componentsPerPixel = 1;
             IFD raw = ifd.subIFD[3];
             if (raw.GetEntry(TagType.CANON_SRAWTYPE)?.GetUInt(0) == 4)
@@ -61,10 +61,11 @@ namespace RawNet.Decoder
                 cpp = componentsPerPixel,
                 isCFA = true
             };
+            rawImage.raw.ColorDepth = 14;
             rawImage.Init(false);
 
             List<uint> s_width = new List<uint>();
-            Tag cr2SliceEntry = raw.GetEntryRecursive(TagType.CANONCR2SLICE);
+            Tag cr2SliceEntry = ifd.GetEntryRecursive(TagType.CANONCR2SLICE);
             if (cr2SliceEntry?.GetShort(0) > 0)
             {
                 for (int i = 0; i < cr2SliceEntry.GetShort(0); i++)
@@ -78,26 +79,78 @@ namespace RawNet.Decoder
             uint offsetY = 0;
             for (int i = 0; i < s_width.Count; i++)
             {
-                try
+                new LJPEGPlain(reader, rawImage, true, false)
                 {
-                    new LJPEGPlain(reader, rawImage, true, false)
-                    {
-                        slicesW = s_width,
-                        offY = offsetY
-                    }.StartDecoder(offsets.GetUInt(i), counts.GetUInt(i));
-                }
-                catch (RawDecoderException e)
-                {
-                    if (i == 0) throw;
-                    // These may just be single slice error - store the error and move on
-                    rawImage.errors.Add(e.Message);
-                }
-                catch (IOException e)
-                {
-                    // Let's try to ignore this - it might be truncated data, so something might be useful.
-                    rawImage.errors.Add(e.Message);
-                }
+                    slicesW = s_width,
+                    offY = offsetY
+                }.StartDecoder(offsets.GetUInt(i), counts.GetUInt(i));
                 offsetY += s_width[i];
+            }*/
+
+            List<IFD> data = ifd.GetIFDsWithTag((TagType)0xc5d8);
+            if (data.Count == 0)
+                throw new RawDecoderException("CR2 Decoder: No image data found");
+
+            IFD raw = data[0];
+            Tag sensorInfoE = ifd.GetEntryRecursive(TagType.CANON_SENSOR_INFO) ?? throw new RawDecoderException("Cr2Decoder: failed to get SensorInfo from MakerNote");
+            rawImage = new RawImage(sensorInfoE.GetUInt(1), sensorInfoE.GetUInt(2))
+            {
+                //cpp = componentsPerPixel,
+                isCFA = true
+            };
+            rawImage.raw.ColorDepth = 14;
+            rawImage.Init(false);
+
+            List<Cr2Slice> slices = new List<Cr2Slice>();
+            Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
+            Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
+            // Iterate through all slices
+            for (int s = 0; s < offsets.dataCount; s++)
+            {
+                LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
+                Cr2Slice slice = new Cr2Slice()
+                {
+                    offset = offsets.GetUInt(s),
+                    count = counts.GetUInt(s)
+                };
+
+                SOFInfo sof = l.GetSOF(slice.offset, slice.count);
+                slice.w = sof.width * sof.numComponents;
+                slice.h = sof.height;
+
+                if (slices.Count != 0 && slices[0].w != slice.w)
+                    throw new RawDecoderException("CR2 Decoder: Slice width does not match.");
+
+                if (reader.IsValid(slice.offset, slice.count)) // Only decode if size is valid
+                    slices.Add(slice);
+            }
+
+            List<uint> s_width = new List<uint>();
+            if (raw.tags.ContainsKey(TagType.CANONCR2SLICE))
+            {
+                Tag ss = raw.GetEntry(TagType.CANONCR2SLICE);
+                for (int i = 0; i < ss.GetShort(0); i++)
+                {
+                    s_width.Add(ss.GetUShort(1));
+                }
+                s_width.Add(ss.GetUShort(2));
+            }
+            else
+            {
+                s_width.Add(slices[0].w);
+            }
+
+            uint offY = 0;
+            for (int i = 0; i < slices.Count; i++)
+            {
+                Cr2Slice slice = slices[i];
+                new LJPEGPlain(reader, rawImage, true, false)
+                {
+                    slicesW = s_width,
+                    offY = offY
+                }.StartDecoder(slice.offset, slice.count);
+
+                offY += slice.w;
             }
 
             if (rawImage.metadata.Subsampling.width > 1 || rawImage.metadata.Subsampling.height > 1)
