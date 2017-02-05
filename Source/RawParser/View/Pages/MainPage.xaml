@@ -157,19 +157,20 @@
                                         <TextBlock FontSize="12" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">Red</TextBlock>
                                         <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
                                                 Value="{x:Bind EditionValue.RMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
-                                                Grid.Column="1" />
+                                                Grid.Column="1" StepFrequency="0.01" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left">Green</TextBlock>
                                         <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
                                                 Value="{x:Bind EditionValue.GMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
-                                                Grid.Column="1" Grid.Row="1" />
+                                                Grid.Column="1" Grid.Row="1" StepFrequency="0.01" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Center">Blue</TextBlock>
                                         <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
                                                 Value="{x:Bind EditionValue.BMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
-                                                Grid.Column="1" Grid.Row="2" />
+                                                Grid.Column="1" Grid.Row="2" StepFrequency="0.01" />
                                     </Grid>
                                     <TextBlock FontSize="14" x:Uid="Saturation" />
                                     <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0" Maximum="2"
-                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Value="{x:Bind EditionValue.Saturation, Mode=TwoWay}" />
+                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Value="{x:Bind EditionValue.Saturation, Mode=TwoWay}"
+                                            SmallChange="0.01" StepFrequency="0.01" />
                                     <TextBlock FontSize="14">Vibrance</TextBlock>
                                     <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="512" Minimum="1" LargeChange="50" SmallChange="5"
                                             Value="{x:Bind EditionValue.Vibrance, Mode=TwoWay}" IsEnabled="False" />
