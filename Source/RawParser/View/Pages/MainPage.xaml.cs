@@ -168,9 +168,9 @@ namespace RawEditor.View.Pages
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                EditionValue.rMul = raw?.metadata.WbCoeffs[0] ?? 1;
-                EditionValue.gMul = raw?.metadata.WbCoeffs[1] ?? 1;
-                EditionValue.bMul = raw?.metadata.WbCoeffs[2] ?? 1;
+                EditionValue.RMul = raw?.metadata.WbCoeffs[0] ?? 1;
+                EditionValue.GMul = raw?.metadata.WbCoeffs[1] ?? 1;
+                EditionValue.BMul = raw?.metadata.WbCoeffs[2] ?? 1;
             });
         }
 
@@ -445,15 +445,15 @@ namespace RawEditor.View.Pages
             //EditionValue = newEffect;
             if (LowGamma.IsChecked == true)
             {
-                EditionValue.gamma = 1.8;
+                EditionValue.Gamma = 1.8;
             }
             else if (HighGamma.IsChecked == true)
             {
-                EditionValue.gamma = 2.4;
+                EditionValue.Gamma = 2.4;
             }
             else
             {
-                EditionValue.gamma = 2.2;
+                EditionValue.Gamma = 2.2;
             }
 
             ResetButtonVisibility.Value = true;
