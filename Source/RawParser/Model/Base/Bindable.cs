@@ -22,7 +22,7 @@ namespace RawEditor.Base
                 if (!EqualityComparer<Type>.Default.Equals(this.val, value))
                 {
                     this.val = value;
-                    OnPropertyChanged("Value");
+                    OnPropertyChanged();
                 }
             }
         }

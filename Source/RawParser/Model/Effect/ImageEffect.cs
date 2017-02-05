@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
+using RawEditor.Settings;
+using System.ComponentModel;
 
 namespace RawEditor.Effect
 {
@@ -19,29 +21,54 @@ namespace RawEditor.Effect
         void GetBuffer(out byte* buffer, out uint capacity);
     }
 
-    class ImageEffect
+    public class ImageEffect : INotifyPropertyChanged
     {
-        //public double temperature = 1;
-        //public double tint = 1;
-        //public double gamma = 0;
-        //public double brightness = 0;
-        //public double vibrance = 0;
-        //public double vignet;
-        //public double[] camCurve;
+        public event PropertyChangedEventHandler PropertyChanged;
 
+        public double brightness = 0;
+        public double vibrance = 1;
+        public double vignet;
+        public double sharpness = 0;
+        public double denoise = 0;
         public double contrast = 0;
-        public double hightlight = 1;
-        public double shadow = 1;
-        public bool ReverseGamma = true;
+        public double hightlight = 0;
+        public double shadow = 0;
+        public bool ReverseGamma = false;
         public uint maxValue;
         public double saturation = 1;
-        public double exposure = 0;
-        public double rMul;
-        public double gMul;
-        public double bMul;
-        public int rotation;
-        public double gamma;
-        public bool histoEqual;
+        private double exposure = 1;
+        public double Exposure
+        {
+            set { exposure = Math.Pow(2, value); }
+            get
+            {
+               // OnPropertyChanged();
+                return Math.Log(exposure, 2);
+            }
+        }
+
+        public double rMul = 1;
+        public double gMul = 1;
+        public double bMul = 1;
+
+        private int rotation = 0;
+        public int Rotation
+        {
+            get { return rotation; }
+            set
+            {
+                if (value < 0) rotation = 4 + (value % 4);
+                else rotation = value % 4;
+                //OnPropertyChanged();
+            }
+        }
+        public double gamma = 1;
+        public bool histoEqual = false;
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         internal double[] CreateCurve()
         {
@@ -186,6 +213,23 @@ namespace RawEditor.Effect
             }
         }
 
+        internal void Copy(ImageEffect effect)
+        {
+            Exposure = effect.Exposure;
+            rMul = effect.rMul;
+            gMul = effect.gMul;
+            bMul = effect.bMul;
+            contrast = effect.contrast;
+            shadow = effect.shadow;
+            hightlight = effect.hightlight;
+            saturation = effect.saturation;
+            ReverseGamma = effect.ReverseGamma;
+            histoEqual = effect.histoEqual;
+            Rotation = effect.Rotation;
+            ReverseGamma = effect.ReverseGamma;
+            gamma = effect.gamma;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long Rotate(long x, long y, uint w, uint h)
         {
@@ -197,6 +241,11 @@ namespace RawEditor.Effect
                 case 1: return x * h + h - y - 1;
                 default: return y * w + x;
             }
+        }
+
+        internal HistoryObject GetHistory(ImageEffect newEffect)
+        {
+            throw new NotImplementedException();
         }
     }
 }
