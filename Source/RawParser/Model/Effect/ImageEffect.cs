@@ -1,7 +1,6 @@
 ﻿using RawEditor.View.UIHelper;
 using RawNet;
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -24,32 +23,228 @@ namespace RawEditor.Effect
     public class ImageEffect : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+        private uint maxValue;
 
-        public double brightness = 0;
-        public double vibrance = 1;
-        public double vignet;
-        public double sharpness = 0;
-        public double denoise = 0;
-        public double contrast = 0;
-        public double hightlight = 0;
-        public double shadow = 0;
-        public bool ReverseGamma = false;
-        public uint maxValue;
-        public double saturation = 1;
-        private double exposure = 1;
-        public double Exposure
+        private double brightness = 0;
+        public double Brightness
         {
-            set { exposure = Math.Pow(2, value); }
-            get
+            get { return brightness; }
+            set
             {
-               // OnPropertyChanged();
-                return Math.Log(exposure, 2);
+                if (brightness != value)
+                {
+                    brightness = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
-        public double rMul = 1;
-        public double gMul = 1;
-        public double bMul = 1;
+        private double vibrance = 1;
+        public double Vibrance
+        {
+            get { return vibrance; }
+            set
+            {
+                if (vibrance != value)
+                {
+                    vibrance = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double vignet;
+        public double Vignet
+        {
+            get { return vignet; }
+            set
+            {
+                if (vignet != value)
+                {
+                    vignet = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double sharpness = 0;
+        public double Sharpness
+        {
+            get { return sharpness; }
+            set
+            {
+                if (sharpness != value)
+                {
+                    sharpness = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double denoise = 0;
+        public double Denoise
+        {
+            get { return denoise; }
+            set
+            {
+                if (denoise != value)
+                {
+                    denoise = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double contrast = 0;
+        public double Contrast
+        {
+            get { return contrast; }
+            set
+            {
+                if (contrast != value)
+                {
+                    contrast = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double hightlight = 0;
+        public double Hightlight
+        {
+            get { return hightlight; }
+            set
+            {
+                if (hightlight != value)
+                {
+                    hightlight = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double shadow = 0;
+        public double Shadow
+        {
+            get { return shadow; }
+            set
+            {
+                if (shadow != value)
+                {
+                    shadow = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool reverseGamma = false;
+        public bool ReverseGamma
+        {
+            get { return reverseGamma; }
+            set
+            {
+                if (reverseGamma != value)
+                {
+                    reverseGamma = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double saturation = 1;
+        public double Saturation
+        {
+            get { return saturation; }
+            set
+            {
+                if (saturation != value)
+                {
+                    saturation = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double exposure = 1;
+        public double Exposure
+        {
+            set
+            {
+                exposure = Math.Pow(2, value);
+                OnPropertyChanged();
+            }
+            get { return Math.Log(exposure, 2); }
+        }
+
+        private double rMul = 1;
+        public double RMul
+        {
+            get { return rMul; }
+            set
+            {
+                if (rMul != value)
+                {
+                    rMul = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double gMul = 1;
+        public double GMul
+        {
+            get { return gMul; }
+            set
+            {
+                if (gMul != value)
+                {
+                    gMul = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double bMul = 1;
+        public double BMul
+        {
+            get { return bMul; }
+            set
+            {
+                if (bMul != value)
+                {
+                    bMul = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double gamma = 1;
+        public double Gamma
+        {
+            get { return gamma; }
+            set
+            {
+                if (gamma != value)
+                {
+                    gamma = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool histoEqual = false;
+        public bool HistoEqualisation
+        {
+            get { return histoEqual; }
+            set
+            {
+                if (histoEqual != value)
+                {
+                    histoEqual = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         private int rotation = 0;
         public int Rotation
@@ -57,13 +252,14 @@ namespace RawEditor.Effect
             get { return rotation; }
             set
             {
-                if (value < 0) rotation = 4 + (value % 4);
-                else rotation = value % 4;
-                //OnPropertyChanged();
+                if (rotation != value)
+                {
+                    if (value < 0) rotation = 4 + (value % 4);
+                    else rotation = value % 4;
+                    OnPropertyChanged();
+                }
             }
         }
-        public double gamma = 1;
-        public bool histoEqual = false;
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -74,7 +270,6 @@ namespace RawEditor.Effect
         {
             //generate the curve            
             double[] xCurve = new double[3], yCurve = new double[3];
-
             //mid point
             xCurve[1] = maxValue / 2;
             yCurve[1] = (maxValue / 2) * exposure;
@@ -84,7 +279,6 @@ namespace RawEditor.Effect
             //hightlight
             xCurve[2] = maxValue;
             yCurve[2] = (maxValue + ((contrast + hightlight) * (maxValue / 200))) * exposure;
-            maxValue--;
 
             var curve = Curve.CubicSpline(xCurve, yCurve);
             if (ReverseGamma)
@@ -110,7 +304,7 @@ namespace RawEditor.Effect
         public unsafe HistoRaw Apply(ImageComponent image, SoftwareBitmap bitmap)
         {
             int shift = image.ColorDepth - 8;
-            maxValue = (uint)(1 << image.ColorDepth);
+            maxValue = (uint)(1 << image.ColorDepth) - 1;
             using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
             using (var reference = buffer.CreateReference())
             {
@@ -213,21 +407,21 @@ namespace RawEditor.Effect
             }
         }
 
-        internal void Copy(ImageEffect effect)
+        public void Copy(ImageEffect effect)
         {
             Exposure = effect.Exposure;
-            rMul = effect.rMul;
-            gMul = effect.gMul;
-            bMul = effect.bMul;
-            contrast = effect.contrast;
-            shadow = effect.shadow;
-            hightlight = effect.hightlight;
-            saturation = effect.saturation;
+            RMul = effect.RMul;
+            GMul = effect.GMul;
+            BMul = effect.BMul;
+            Contrast = effect.Contrast;
+            Shadow = effect.Shadow;
+            Hightlight = effect.Hightlight;
+            Saturation = effect.Saturation;
             ReverseGamma = effect.ReverseGamma;
-            histoEqual = effect.histoEqual;
+            HistoEqualisation = effect.HistoEqualisation;
             Rotation = effect.Rotation;
             ReverseGamma = effect.ReverseGamma;
-            gamma = effect.gamma;
+            Gamma = effect.Gamma;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -118,24 +118,23 @@
                         <uihelper:CollapsibleBox x:Uid="ExposureSettings">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
-                                    <ToggleSwitch IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14" x:Name="AutoCorrectToggle"
-                                            IsOn="{x:Bind EditionValue.histoEqual, Mode=TwoWay}" HorizontalAlignment="Left" Margin="0,0,0,10"
+                                    <ToggleSwitch IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14"
+                                            IsOn="{x:Bind EditionValue.HistoEqualisation, Mode=TwoWay}" HorizontalAlignment="Left"
                                             Toggled="{x:Bind EditingControlChanged}" HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
-                                    <!--<TextBlock FontSize="14" x:Uid="Exposure" /> -->
-                                    <Slider x:Name="exposureSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" Minimum="-5" LargeChange="1"
-                                            SmallChange="0.3" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="0.3"
+                                    <TextBlock FontSize="14" x:Uid="Exposure" />
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" Minimum="-5" LargeChange="1" SmallChange="0.3"
+                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="0.3"
                                             Value="{x:Bind EditionValue.Exposure, Mode=TwoWay}" />
                                     <TextBlock FontSize="14">Brightness</TextBlock>
-                                    <Slider x:Name="brightnessSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="-100" Maximum="100"
-                                            LargeChange="10" SmallChange="5" IsEnabled="False" StepFrequency="5" />
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="-100" Maximum="100" LargeChange="10" SmallChange="5"
+                                            IsEnabled="False" StepFrequency="5" />
                                     <TextBlock FontSize="14"> Highlight</TextBlock>
-                                    <Slider x:Name="HighLightSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50"
-                                            LargeChange="5" SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="1"
-                                            Value="{x:Bind EditionValue.hightlight, Mode=TwoWay}" />
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50" LargeChange="5" SmallChange="1"
+                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="1"
+                                            Value="{x:Bind EditionValue.Hightlight, Mode=TwoWay}" />
                                     <TextBlock FontSize="14">Shadow</TextBlock>
-                                    <Slider x:Name="ShadowSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50" LargeChange="5"
-                                            SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
-                                            Value="{x:Bind EditionValue.shadow, Mode=TwoWay}" />
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50" LargeChange="5" SmallChange="1"
+                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Value="{x:Bind EditionValue.Shadow, Mode=TwoWay}" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -144,7 +143,7 @@
                                 <StackPanel>
                                     <TextBlock FontSize="14" x:Uid="Temperature" />
                                     <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="{x:Bind SetWBUpdate}" FontSize="12"
-                                            x:Name="cameraWBCheck" HorizontalAlignment="Center" x:Uid="WBButton" Margin="0,5,0,5" />
+                                            HorizontalAlignment="Center" x:Uid="WBButton" />
                                     <Grid Margin="0,5,0,5">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"></ColumnDefinition>
@@ -156,24 +155,24 @@
                                             <RowDefinition></RowDefinition>
                                         </Grid.RowDefinitions>
                                         <TextBlock FontSize="12" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">Red</TextBlock>
-                                        <Slider x:Name="ColorTempSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
-                                                Value="{x:Bind EditionValue.rMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                        <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
+                                                Value="{x:Bind EditionValue.RMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                                 Grid.Column="1" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left">Green</TextBlock>
-                                        <Slider x:Name="ColorTintSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
-                                                Value="{x:Bind EditionValue.gMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                        <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
+                                                Value="{x:Bind EditionValue.GMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                                 Grid.Column="1" Grid.Row="1" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Center">Blue</TextBlock>
-                                        <Slider x:Name="ColorTintBlueSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
-                                                Value="{x:Bind EditionValue.bMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                        <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
+                                                Value="{x:Bind EditionValue.BMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                                 Grid.Column="1" Grid.Row="2" />
                                     </Grid>
                                     <TextBlock FontSize="14" x:Uid="Saturation" />
-                                    <Slider x:Name="saturationSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0" Maximum="2"
-                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Value="{x:Bind EditionValue.saturation, Mode=TwoWay}" />
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0" Maximum="2"
+                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Value="{x:Bind EditionValue.Saturation, Mode=TwoWay}" />
                                     <TextBlock FontSize="14">Vibrance</TextBlock>
-                                    <Slider x:Name="vibranceSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="512" Minimum="1"
-                                            LargeChange="50" SmallChange="5" Value="{x:Bind EditionValue.vibrance, Mode=TwoWay}" IsEnabled="False" />
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="512" Minimum="1" LargeChange="50" SmallChange="5"
+                                            Value="{x:Bind EditionValue.Vibrance, Mode=TwoWay}" IsEnabled="False" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -181,10 +180,10 @@
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14" x:Uid="Contrast" />
-                                    <Slider x:Name="contrastSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="20" LargeChange="1"
-                                            Value="{x:Bind EditionValue.contrast, Mode=TwoWay}" Minimum="-20"
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="20" LargeChange="1"
+                                            Value="{x:Bind EditionValue.Contrast, Mode=TwoWay}" Minimum="-20"
                                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-                                    <ToggleSwitch x:Name="GammaToggle" IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}"
+                                    <ToggleSwitch x:Name="GammaToggle" x:Uid="GammaToggle" IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}"
                                             IsOn="{x:Bind EditionValue.ReverseGamma, Mode=TwoWay}" Toggled="{x:Bind EditingControlChanged}" Margin="0,10,0,5"
                                             FontSize="14" HorizontalAlignment="Left" HorizontalContentAlignment="Left">Apply gamma curve</ToggleSwitch>
                                     <RadioButton x:Name="HighGamma" IsChecked="False" GroupName="Gamma"
@@ -224,14 +223,14 @@
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14">Vignet</TextBlock>
-                                    <Slider x:Name="VignetSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
-                                            Value="{x:Bind EditionValue.vignet, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
-                                    <TextBlock FontSize="14">Sharpness</TextBlock>
-                                    <Slider x:Name="NoiseSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
-                                            Value="{x:Bind EditionValue.denoise, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
-                                    <TextBlock FontSize="14">Noise reduction</TextBlock>
-                                    <Slider x:Name="SharpenSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
-                                            Value="{x:Bind EditionValue.sharpness, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
+                                            Value="{x:Bind EditionValue.Vignet, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
+                                    <TextBlock FontSize="14" x:Uid="Sharpness">Sharpness</TextBlock>
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
+                                            Value="{x:Bind EditionValue.Denoise, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
+                                    <TextBlock FontSize="14" x:Uid="Denoise">Noise reduction</TextBlock>
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
+                                            Value="{x:Bind EditionValue.Sharpness, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
