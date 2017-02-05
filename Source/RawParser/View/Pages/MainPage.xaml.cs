@@ -32,6 +32,7 @@ using System.Numerics;*/
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml.Data;
 using System.Linq;
+using Windows.UI.Xaml.Controls.Primitives;
 
 namespace RawEditor.View.Pages
 {
@@ -52,6 +53,9 @@ namespace RawEditor.View.Pages
         //private Compositor _compositor;
         //private CompositionEffectBrush brush;
         public Histogram Histo { get; set; } = new Histogram();
+        public ImageEffect EditionValue { get; private set; } = new ImageEffect();
+        public ImageEffect DefaultValue { get; } = new ImageEffect();
+
         //private float blurAmount = 5;
         /*private GaussianBlurEffect graphicsEffect = new GaussianBlurEffect()
         {
@@ -62,9 +66,11 @@ namespace RawEditor.View.Pages
             BorderMode = EffectBorderMode.Soft
         };
         private TimeSpan animationDuration = TimeSpan.FromMilliseconds(300);*/
+
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
+
         public MainPage()
         {
             InitializeComponent();
@@ -122,25 +128,17 @@ namespace RawEditor.View.Pages
 
         private void ResetControls()
         {
-            exposureSlider.Value = 0;
-            ShadowSlider.Value = 0;
-            HighLightSlider.Value = 0;
-            contrastSlider.Value = 0;
-            saturationSlider.Value = 100;
+            EditionValue.Copy(DefaultValue);
             CropUI.ResetCrop();
             CropUI.SetThumbAsync(null);
-            //VignetSlider.Value = 0;
-            //Cause problem (double update of preview)
-            GammaToggle.IsOn = raw?.IsGammaCorrected ?? false;
-            MediumGamma.IsChecked = true;
-            AutoCorrectToggle.IsOn = false;
             if (raw != null)
             {
                 raw.raw.offset = new Point2D(0, 0);
                 raw.raw.dim = new Point2D(raw.raw.uncroppedDim.width, raw.raw.uncroppedDim.height);
                 raw.preview.offset = new Point2D(0, 0);
                 raw.preview.dim = new Point2D(raw.preview.uncroppedDim.width, raw.preview.uncroppedDim.height);
-                raw.Rotation = raw.metadata.OriginalRotation;
+                EditionValue.Rotation = raw.metadata.OriginalRotation;
+                EditionValue.ReverseGamma = raw.IsGammaCorrected;
             }
             SetWBAsync();
             ResetButtonVisibility.Value = false;
@@ -152,6 +150,10 @@ namespace RawEditor.View.Pages
             ResetControls();
             if (raw != null)
             {
+                //ImageEffect newEffect = GetEffects();
+                //find the changed value
+                //history.Add(EditionValue.GetHistory(newEffect));
+                //EditionValue = newEffect;
                 UpdatePreview(false);
             }
         }
@@ -164,21 +166,11 @@ namespace RawEditor.View.Pages
 
         private async void SetWBAsync()
         {
-            int rValue = 255, bValue = 255, gValue = 255;
-            if (raw != null && raw.metadata != null)
-            {
-                //calculate the coeff
-                double r = raw.metadata.WbCoeffs[0], b = raw.metadata.WbCoeffs[2], g = raw.metadata.WbCoeffs[1];
-                rValue = (int)(r * 255);
-                bValue = (int)(b * 255);
-                gValue = (int)(g * 255);
-
-            }
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                ColorTempSlider.Value = rValue;
-                ColorTintSlider.Value = gValue;
-                ColorTintBlueSlider.Value = bValue;
+                EditionValue.rMul = raw?.metadata.WbCoeffs[0] ?? 1;
+                EditionValue.gMul = raw?.metadata.WbCoeffs[1] ?? 1;
+                EditionValue.bMul = raw?.metadata.WbCoeffs[2] ?? 1;
             });
         }
 
@@ -424,34 +416,11 @@ namespace RawEditor.View.Pages
         //Apply the change over the image preview       
         async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(RawNet.ImageComponent image)
         {
-            ImageEffect effect = new ImageEffect();
-            //get all the value 
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                effect.exposure = exposureSlider.Value;
-                effect.rMul = ColorTempSlider.Value / 255;
-                effect.gMul = ColorTintSlider.Value / 255;
-                effect.bMul = ColorTintBlueSlider.Value / 255;
-                effect.contrast = contrastSlider.Value;
-                effect.shadow = ShadowSlider.Value;
-                effect.hightlight = HighLightSlider.Value;
-                effect.saturation = saturationSlider.Value / 100;
-                //effect.vignet = VignetSlider.Value;
-                effect.ReverseGamma = GammaToggle.IsOn;
-                effect.histoEqual = AutoCorrectToggle.IsOn;
-                if ((bool)LowGamma.IsChecked) { effect.gamma = 1.8; }
-                else if ((bool)HighGamma.IsChecked) { effect.gamma = 2.8; }
-                else if ((bool)MediumGamma.IsChecked) { effect.gamma = 2.4; }
-            });
-            effect.exposure = Math.Pow(2, effect.exposure);
-            //effect.camCurve = raw.curve;
-            effect.rotation = raw.Rotation;
             SoftwareBitmap bitmap = null;
-
             //Needs to run in UI thread
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (raw.Rotation == 1 || raw.Rotation == 3)
+                if (EditionValue.Rotation == 1 || EditionValue.Rotation == 3)
                 {
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.height, (int)image.dim.width);
                 }
@@ -460,18 +429,38 @@ namespace RawEditor.View.Pages
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.width, (int)image.dim.height);
                 }
             });
-            var tmp = effect.Apply(image, bitmap);
+            var tmp = EditionValue?.Apply(image, bitmap) ?? DefaultValue.Apply(image, bitmap);
             return Tuple.Create(tmp, bitmap);
         }
 
+        public void Undo() { }
+        public void Redo() { }
+
         private void EditingControlChanged()
         {
-            history.Add(new HistoryObject() { oldValue = 0, value = saturationSlider.Value, target = EffectObject.Saturation });
+            //generate the new object
+            //ImageEffect newEffect = GetEffects();
+            //find the changed value
+            //history.Add(EditionValue.GetHistory(newEffect));
+            //EditionValue = newEffect;
+            if (LowGamma.IsChecked == true)
+            {
+                EditionValue.gamma = 1.8;
+            }
+            else if (HighGamma.IsChecked == true)
+            {
+                EditionValue.gamma = 2.4;
+            }
+            else
+            {
+                EditionValue.gamma = 2.2;
+            }
+
             ResetButtonVisibility.Value = true;
             UpdatePreview(false);
         }
 
-        private void Slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        private void Slider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             ImageDisplay.ChangeView(null, null, (float)e.NewValue);
         }
@@ -480,10 +469,10 @@ namespace RawEditor.View.Pages
         {
             if (raw != null)
             {
-                raw.Rotation++;
-                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.Rotate };
-                t.value = raw.Rotation;
-                history.Add(t);*/
+                EditionValue.Rotation++;
+                var t = new HistoryObject() { oldValue = EditionValue.Rotation, target = EffectObject.Rotate };
+                t.value = EditionValue.Rotation;
+                history.Add(t);
                 EditingControlChanged();
             }
         }
@@ -492,11 +481,10 @@ namespace RawEditor.View.Pages
         {
             if (raw != null)
             {
-                raw.Rotation--;
-
-                /*var t = new HistoryObject() { oldValue = raw.Rotation, target = EffectObject.Rotate };
-                t.value = raw.Rotation;
-                history.Add(t);*/
+                EditionValue.Rotation--;
+                var t = new HistoryObject() { oldValue = EditionValue.Rotation, target = EffectObject.Rotate };
+                t.value = EditionValue.Rotation;
+                history.Add(t);
                 EditingControlChanged();
             }
         }
@@ -565,7 +553,7 @@ namespace RawEditor.View.Pages
                 //wait for accept or reset pressed
 
                 uint h, w;
-                if (raw.Rotation == 1 || raw.Rotation == 3)
+                if (EditionValue.Rotation == 1 || EditionValue.Rotation == 3)
                 {
                     h = raw.preview.uncroppedDim.width;
                     w = raw.preview.uncroppedDim.height;
@@ -584,7 +572,7 @@ namespace RawEditor.View.Pages
                 {
                     factor = ImageDisplay.ActualHeight / (h + 160);
                 }
-                CropUI.SetSize((int)(w * factor * 0.7), (int)(h * factor * 0.7), raw.Rotation);
+                CropUI.SetSize((int)(w * factor * 0.7), (int)(h * factor * 0.7), EditionValue.Rotation);
                 //create a preview of the image
                 ImageComponent img = new ImageComponent(raw.preview)
                 {
@@ -607,10 +595,8 @@ namespace RawEditor.View.Pages
             {
                 raw.raw.offset = new Point2D((uint)(raw.raw.uncroppedDim.width * left), (uint)(raw.raw.uncroppedDim.height * top));
                 raw.raw.dim = new Point2D((uint)(raw.raw.uncroppedDim.width * right), (uint)(raw.raw.uncroppedDim.height * bottom));
-
                 raw.preview.offset = new Point2D((uint)(raw.preview.uncroppedDim.width * left), (uint)(raw.preview.uncroppedDim.height * top));
                 raw.preview.dim = new Point2D((uint)(raw.preview.uncroppedDim.width * right), (uint)(raw.preview.uncroppedDim.height * bottom));
-
                 UpdatePreview(true);
             }
             var t = new HistoryObject() { oldValue = 0, target = EffectObject.Crop };

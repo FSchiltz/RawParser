@@ -10,17 +10,7 @@ namespace RawNet
         public ImageComponent preview = new ImageComponent(), thumb, raw = new ImageComponent();
         public ColorFilterArray colorFilter = new ColorFilterArray();
         public double[,] convertionM;
-        public double[] camMul, curve;
-        private int rotation = 0;
-        public int Rotation
-        {
-            get { return rotation; }
-            set
-            {
-                if (value < 0) rotation = 4 + (value % 4);
-                else rotation = value % 4;
-            }
-        }
+        public double[] camMul, curve;       
         public int saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
         public bool DitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?

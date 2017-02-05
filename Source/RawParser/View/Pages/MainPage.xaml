@@ -3,13 +3,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:rawnet="using:RawNet" xmlns:uihelper="using:RawEditor.View.UIHelper"
         mc:Ignorable="d" SizeChanged="{x:Bind CenterImageBindable}">
     <Page.BottomAppBar>
-        <CommandBar x:Name="commandBar" VerticalContentAlignment="Top" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+        <CommandBar x:Name="CommandBar" VerticalContentAlignment="Top" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
             <CommandBar.Content>
                 <uihelper:LoadBar x:Name="Load" />
             </CommandBar.Content>
-            <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Undo" x:Uid="RotateLeft" Tapped="RotateLeftButton_Tapped" />
-            <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Redo" x:Uid="RotateRight" Tapped="RotateRightButton_Tapped" />
-            <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Crop" x:Uid="Crop" Tapped="CropButton_TappedAsync" />
+            <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Undo" x:Uid="Undo" Tapped="{x:Bind Undo}" />
+            <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Redo" x:Uid="Redo" Tapped="{x:Bind Redo}" />
             <AppBarSeparator />
             <AppBarButton Icon="BrowsePhotos" x:Uid="OpenImage" Click="ImageChooseClickAsync" />
             <AppBarButton Icon="SaveLocal" x:Uid="Save" Click="SaveButtonClickAsync" VerticalAlignment="Top"
@@ -32,12 +31,11 @@
                         <AdaptiveTrigger MinWindowWidth="1080" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="commandBar.DefaultLabelPosition" Value="Right"></Setter>
+                        <Setter Target="CommandBar.DefaultLabelPosition" Value="Right"></Setter>
                         <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto" />
                         <Setter Target="MainGrid.ColumnDefinitions[0].Width" Value="3*" />
                         <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*" />
-                        <Setter Target="ImageDisplay.Margin" Value="0 0 1 0" />
-                        <Setter Target="PivotGrid.Margin" Value="1 0 0 0" />
+                        <Setter Target="ProcessingGrid.Margin" Value="0,0,10,0" />
                         <Setter Target="PivotGrid.(Grid.Column)" Value="1" />
                         <Setter Target="PivotGrid.(Grid.Row)" Value="0" />
                     </VisualState.Setters>
@@ -47,25 +45,22 @@
                         <AdaptiveTrigger MinWindowWidth="640" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="commandBar.DefaultLabelPosition" Value="Bottom"></Setter>
+                        <Setter Target="CommandBar.DefaultLabelPosition" Value="Bottom"></Setter>
                         <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto" />
                         <Setter Target="MainGrid.ColumnDefinitions[0].Width" Value="2*" />
                         <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*" />
-                        <Setter Target="ImageDisplay.Margin" Value="0 0 1 0" />
-                        <Setter Target="PivotGrid.Margin" Value="1 0 0 0" />
+                        <Setter Target="ProcessingGrid.Margin" Value="0,0,30,0" />
                         <Setter Target="PivotGrid.(Grid.Column)" Value="1" />
                         <Setter Target="PivotGrid.(Grid.Row)" Value="0" />
                     </VisualState.Setters>
                 </VisualState>
-                <!-- Portrait -->
                 <VisualState x:Name="narrowState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="commandBar.DefaultLabelPosition" Value="Bottom"></Setter>
-                        <Setter Target="ImageDisplay.Margin" Value="0 0 0 1" />
-                        <Setter Target="PivotGrid.Margin" Value="0 1 0 0" />
+                        <Setter Target="CommandBar.DefaultLabelPosition" Value="Bottom"></Setter>
+                        <Setter Target="ProcessingGrid.Margin" Value="0,0,60,0" />
                         <Setter Target="MainGrid.RowDefinitions[0].Height" Value="4*" />
                         <Setter Target="MainGrid.RowDefinitions[1].Height" Value="5*" />
                         <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="0" />
@@ -86,11 +81,7 @@
         <ScrollViewer x:Name="ImageDisplay" ZoomMode="Enabled" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                 RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignLeftWithPanel="True" HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch">
-            <ScrollViewer.Background>
-                <SolidColorBrush Color="#19FFFFFF" />
-            </ScrollViewer.Background>
-            <Image x:Name="ImageBox" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Auto" />
+            <Image x:Name="ImageBox" />
         </ScrollViewer>
         <Slider x:Name="ZoomSlider" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1"
                 Canvas.ZIndex="3" Margin="10,0,0,10" Value="{x:Bind ImageDisplay.ZoomFactor, Mode=OneWay}" ValueChanged="Slider_ValueChanged"
@@ -112,10 +103,10 @@
         </Grid>
         <Pivot x:Name="PivotGrid" RelativePanel.AlignRightWithPanel="True" RelativePanel.AlignBottomWithPanel="True">
             <PivotItem x:Uid="ProcessingHeader">
-                <ScrollViewer VerticalContentAlignment="Stretch">
-                    <StackPanel Margin="0,0,40,0">
-                        <!--The histogram-->
-                        <Grid Margin="0,5,0,0">
+                <ScrollViewer>
+                    <StackPanel x:Name="ProcessingGrid">
+                        <Grid>
+                            <!--The histogram-->
                             <Polygon Points="{x:Bind Histo.PointsL }" Opacity="0.4" Stretch="Fill" Fill="#FFCF0000" Width="260" Height="120" />
                             <Polygon Points="{x:Bind Histo.PointsR }" Opacity="0.4" Stretch="Fill" Fill="#FF00B200" Width="260" Height="120" />
                             <Polygon Points="{x:Bind Histo.PointsG }" Opacity="0.4" Stretch="Fill" Fill="#FF000083" Width="260" Height="120" />
@@ -127,21 +118,24 @@
                         <uihelper:CollapsibleBox x:Uid="ExposureSettings">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
-                                    <ToggleSwitch IsOn="False" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14" x:Name="AutoCorrectToggle"
-                                            HorizontalAlignment="Left" Margin="0,0,0,10" Toggled="{x:Bind EditingControlChanged}"
-                                            HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
-                                    <TextBlock FontSize="14" x:Uid="Exposure" />
+                                    <ToggleSwitch IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14" x:Name="AutoCorrectToggle"
+                                            IsOn="{x:Bind EditionValue.histoEqual, Mode=TwoWay}" HorizontalAlignment="Left" Margin="0,0,0,10"
+                                            Toggled="{x:Bind EditingControlChanged}" HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
+                                    <!--<TextBlock FontSize="14" x:Uid="Exposure" /> -->
                                     <Slider x:Name="exposureSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" Minimum="-5" LargeChange="1"
-                                            SmallChange="0.3" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="0.3" />
+                                            SmallChange="0.3" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="0.3"
+                                            Value="{x:Bind EditionValue.Exposure, Mode=TwoWay}" />
                                     <TextBlock FontSize="14">Brightness</TextBlock>
                                     <Slider x:Name="brightnessSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="-100" Maximum="100"
                                             LargeChange="10" SmallChange="5" IsEnabled="False" StepFrequency="5" />
                                     <TextBlock FontSize="14"> Highlight</TextBlock>
                                     <Slider x:Name="HighLightSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50"
-                                            LargeChange="5" SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="1" />
+                                            LargeChange="5" SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="1"
+                                            Value="{x:Bind EditionValue.hightlight, Mode=TwoWay}" />
                                     <TextBlock FontSize="14">Shadow</TextBlock>
                                     <Slider x:Name="ShadowSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="50" Minimum="-50" LargeChange="5"
-                                            SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+                                            SmallChange="1" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                            Value="{x:Bind EditionValue.shadow, Mode=TwoWay}" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -162,24 +156,24 @@
                                             <RowDefinition></RowDefinition>
                                         </Grid.RowDefinitions>
                                         <TextBlock FontSize="12" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">Red</TextBlock>
-                                        <Slider x:Name="ColorTempSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1"
-                                                LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                        <Slider x:Name="ColorTempSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
+                                                Value="{x:Bind EditionValue.rMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                                 Grid.Column="1" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left">Green</TextBlock>
-                                        <Slider x:Name="ColorTintSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1"
-                                                LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                        <Slider x:Name="ColorTintSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
+                                                Value="{x:Bind EditionValue.gMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                                 Grid.Column="1" Grid.Row="1" />
                                         <TextBlock FontSize="12" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Center">Blue</TextBlock>
-                                        <Slider x:Name="ColorTintBlueSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="765" Minimum="1"
-                                                LargeChange="50" SmallChange="5" Value="255" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                        <Slider x:Name="ColorTintBlueSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="3" Minimum="0.05"
+                                                Value="{x:Bind EditionValue.bMul, Mode=TwoWay}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                                 Grid.Column="1" Grid.Row="2" />
                                     </Grid>
                                     <TextBlock FontSize="14" x:Uid="Saturation" />
-                                    <Slider x:Name="saturationSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0" Maximum="200"
-                                            LargeChange="10" SmallChange="5" Value="100" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+                                    <Slider x:Name="saturationSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Minimum="0" Maximum="2"
+                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Value="{x:Bind EditionValue.saturation, Mode=TwoWay}" />
                                     <TextBlock FontSize="14">Vibrance</TextBlock>
                                     <Slider x:Name="vibranceSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="512" Minimum="1"
-                                            LargeChange="50" SmallChange="5" Value="256" IsEnabled="False" />
+                                            LargeChange="50" SmallChange="5" Value="{x:Bind EditionValue.vibrance, Mode=TwoWay}" IsEnabled="False" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -187,11 +181,12 @@
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14" x:Uid="Contrast" />
-                                    <Slider x:Name="contrastSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="20" LargeChange="1" Value="0"
-                                            Minimum="-20" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-                                    <ToggleSwitch x:Name="GammaToggle" IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}" IsOn="False"
-                                            Toggled="{x:Bind EditingControlChanged}" Margin="0,10,0,5" FontSize="14" HorizontalAlignment="Left"
-                                            HorizontalContentAlignment="Left">Apply gamma curve</ToggleSwitch>
+                                    <Slider x:Name="contrastSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="20" LargeChange="1"
+                                            Value="{x:Bind EditionValue.contrast, Mode=TwoWay}" Minimum="-20"
+                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+                                    <ToggleSwitch x:Name="GammaToggle" IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}"
+                                            IsOn="{x:Bind EditionValue.ReverseGamma, Mode=TwoWay}" Toggled="{x:Bind EditingControlChanged}" Margin="0,10,0,5"
+                                            FontSize="14" HorizontalAlignment="Left" HorizontalContentAlignment="Left">Apply gamma curve</ToggleSwitch>
                                     <RadioButton x:Name="HighGamma" IsChecked="False" GroupName="Gamma"
                                             IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">High</RadioButton>
                                     <RadioButton x:Name="MediumGamma" IsChecked="True" GroupName="Gamma"
@@ -201,18 +196,42 @@
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
+                        <uihelper:CollapsibleBox x:Uid="CropBox">
+                            <uihelper:CollapsibleBox.MainContent>
+                                <StackPanel>
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateLeftButton_Tapped">
+                                        <StackPanel Orientation="Horizontal">
+                                            <SymbolIcon Symbol="Undo"></SymbolIcon>
+                                            <TextBlock x:Uid="RotateLeft"></TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateRightButton_Tapped">
+                                        <StackPanel Orientation="Horizontal">
+                                            <SymbolIcon Symbol="Redo"></SymbolIcon>
+                                            <TextBlock x:Uid="RotateRight"></TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="CropButton_TappedAsync">
+                                        <StackPanel Orientation="Horizontal">
+                                            <SymbolIcon Symbol="Crop"></SymbolIcon>
+                                            <TextBlock x:Uid="Crop"></TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </uihelper:CollapsibleBox.MainContent>
+                        </uihelper:CollapsibleBox>
                         <uihelper:CollapsibleBox x:Uid="CameraProfile">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14">Vignet</TextBlock>
-                                    <Slider x:Name="VignetSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0"
-                                            Minimum="-10" IsEnabled="False" />
+                                    <Slider x:Name="VignetSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
+                                            Value="{x:Bind EditionValue.vignet, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
                                     <TextBlock FontSize="14">Sharpness</TextBlock>
-                                    <Slider x:Name="NoiseSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0"
-                                            Minimum="-10" IsEnabled="False" />
+                                    <Slider x:Name="NoiseSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
+                                            Value="{x:Bind EditionValue.denoise, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
                                     <TextBlock FontSize="14">Noise reduction</TextBlock>
-                                    <Slider x:Name="SharpenSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1" Value="0"
-                                            Minimum="-10" IsEnabled="False" />
+                                    <Slider x:Name="SharpenSlider" PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" LargeChange="1"
+                                            Value="{x:Bind EditionValue.sharpness, Mode=TwoWay}" Minimum="-10" IsEnabled="False" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
@@ -254,28 +273,23 @@
                     <Button Margin="0,20,0,0" IsEnabled="False" HorizontalAlignment="Center">Save Thumbnail</Button>
                 </StackPanel>
             </PivotItem>
+            <PivotItem x:Uid="History">
+                <ListView ItemsSource="{x:Bind history,Mode=OneWay}" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Target}" TextWrapping="Wrap" Margin="0,0,5,0" HorizontalAlignment="Left" />
+                                <TextBlock Grid.Column="1" Text="{Binding ValueAsString}" TextWrapping="Wrap" HorizontalAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </PivotItem>
             <!--
-			<PivotItem x:Uid="History" IsEnabled="False">
-				<ScrollViewer VerticalContentAlignment="Stretch">
-					<ListView ItemsSource="{x:Bind history,Mode=OneWay}" VerticalAlignment="Top"
-							HorizontalAlignment="Left">
-						<ListView.ItemTemplate>
-							<DataTemplate>
-								<Grid>
-									<Grid.ColumnDefinitions>
-										<ColumnDefinition />
-										<ColumnDefinition />
-									</Grid.ColumnDefinitions>
-									<TextBlock Grid.Column="0" Text="{Binding Target}" TextWrapping="Wrap"
-											Margin="0,0,5,0" HorizontalAlignment="Left" />
-									<TextBlock Grid.Column="1" Text="{Binding ValueAsString}" TextWrapping="Wrap"
-											HorizontalAlignment="Right" />
-								</Grid>
-							</DataTemplate>
-						</ListView.ItemTemplate>
-					</ListView>
-				</ScrollViewer>
-			</PivotItem>
 			<PivotItem x:Uid="Presets" IsEnabled="False">
 				<GridView>
 				</GridView>
