@@ -290,6 +290,7 @@ namespace RawEditor.View.Pages
                     var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                     TextDisplay.DisplayError(loader.GetString("ExceptionText"));
                 }
+
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     // Blur(false);
