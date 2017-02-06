@@ -73,7 +73,6 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition MaxWidth="460" />
-            <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition />
@@ -196,19 +195,21 @@
                         </uihelper:CollapsibleBox>
                         <uihelper:CollapsibleBox x:Uid="CropBox">
                             <uihelper:CollapsibleBox.MainContent>
-                                <StackPanel>
-                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateLeftButton_Tapped">
-                                        <StackPanel Orientation="Horizontal">
-                                            <SymbolIcon Symbol="Undo"></SymbolIcon>
-                                            <TextBlock x:Uid="RotateLeft"></TextBlock>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateRightButton_Tapped">
-                                        <StackPanel Orientation="Horizontal">
-                                            <SymbolIcon Symbol="Redo"></SymbolIcon>
-                                            <TextBlock x:Uid="RotateRight"></TextBlock>
-                                        </StackPanel>
-                                    </Button>
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateLeftButton_Tapped" Margin="0,0,3,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <SymbolIcon Symbol="Undo"></SymbolIcon>
+                                                <TextBlock x:Uid="RotateLeft"></TextBlock>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateRightButton_Tapped" Margin="3,0,0,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <SymbolIcon Symbol="Redo"></SymbolIcon>
+                                                <TextBlock x:Uid="RotateRight"></TextBlock>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
                                     <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="CropButton_TappedAsync">
                                         <StackPanel Orientation="Horizontal">
                                             <SymbolIcon Symbol="Crop"></SymbolIcon>
