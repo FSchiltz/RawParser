@@ -32,15 +32,17 @@ namespace RawEditor
 #endif
             SettingStorage.Init();
             var theme = SettingStorage.SelectedTheme;
-            if (theme == ThemeEnum.Dark)
+            switch (theme)
             {
-                RequestedTheme = ApplicationTheme.Dark;
-            }
-            else if (theme == ThemeEnum.Light)
-            {
-                RequestedTheme = ApplicationTheme.Light;
+                case ThemeEnum.Dark:
+                    RequestedTheme = ApplicationTheme.Dark;
+                    break;
+                case ThemeEnum.Light:
+                    RequestedTheme = ApplicationTheme.Light;
+                    break;
             }
         }
+
 #if !DEBUG
         private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
@@ -95,6 +97,16 @@ namespace RawEditor
             {
                 if (rootFrame.Content == null)
                 {
+                    /* IPropertySet roamingProperties = ApplicationData.Current.RoamingSettings.Values;
+          if (!roamingProperties.ContainsKey("HasBeenHereBefore"))
+          {
+              // The first-time case
+              //show a greeting pop up
+              var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+              TextDisplay.Display(loader.GetString("WelcomeText"), "Welcome", "Ok");
+              roamingProperties["HasBeenHereBefore"] = bool.TrueString; // Doesn't really matter what
+          }*/
+
                     // Quand la pile de navigation n'est pas restaurée, accédez à la première page,
                     // puis configurez la nouvelle page en transmettant les informations requises en tant que
                     // paramètre

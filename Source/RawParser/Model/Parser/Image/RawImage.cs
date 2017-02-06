@@ -10,7 +10,7 @@ namespace RawNet
         public ImageComponent preview = new ImageComponent(), thumb, raw = new ImageComponent();
         public ColorFilterArray colorFilter = new ColorFilterArray();
         public double[,] convertionM;
-        public double[] camMul, curve;       
+        public double[] camMul, curve;
         public int saturation, dark;
         public List<BlackArea> blackAreas = new List<BlackArea>();
         public bool DitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
@@ -52,9 +52,9 @@ namespace RawNet
         internal void Init(bool RGB)
         {
             if (raw.dim.width > 65535 || raw.dim.height > 65535)
-                throw new RawDecoderException("RawImageData: Dimensions too large for allocation.");
+                throw new RawDecoderException("Dimensions too large for allocation.");
             if (raw.dim.width <= 0 || raw.dim.height <= 0)
-                throw new RawDecoderException("RawImageData: Dimension of one sides is less than 1 - cannot allocate image.");
+                throw new RawDecoderException("Dimension of one sides is less than 1 - cannot allocate image.");
             pitch = (uint)(((raw.dim.width * Bpp) + 15) / 16) * 16;
             if (RGB)
             {

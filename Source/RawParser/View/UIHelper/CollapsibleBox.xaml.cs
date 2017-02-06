@@ -19,10 +19,7 @@ namespace RawEditor.View.UIHelper
             InitializeComponent();
         }
 
-        public static readonly DependencyProperty MainContentProperty = DependencyProperty.Register("MainContent",
-            typeof(object),
-            typeof(CollapsibleBox),
-            new PropertyMetadata(default(object)));
+        public static readonly DependencyProperty MainContentProperty = DependencyProperty.Register("MainContent", typeof(object), typeof(CollapsibleBox), new PropertyMetadata(default(object)));
 
         public object MainContent
         {

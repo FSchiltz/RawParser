@@ -12,7 +12,7 @@ namespace RawNet.Decoder.Decompressor
         protected static int BITS_PER_LONG = (8 * sizeof(UInt32));
         protected static int BITS_PER_LONG_LONG = (8 * sizeof(UInt64));        
         protected int left;
-        protected UInt64 current;
+        protected ulong current;
 
         public abstract int Offset { get; set; }
         public abstract void Fill();

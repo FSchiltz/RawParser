@@ -208,6 +208,7 @@
     <Compile Include="Model\Parser\Format\TIFF\Makernote\PanasonicMakernote.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Makernote\PentaxMakernote.cs" />
     <Compile Include="Model\Parser\RawParser.cs" />
+    <Compile Include="View\Pages\HistoryList.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -325,12 +326,18 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Strings\fr-F\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
     <SDKReference Include="Microsoft.Services.Store.Engagement, Version=10.0">
       <Name>Microsoft Engagement Framework</Name>
     </SDKReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Strings\fr-F\" />
+    <SDKReference Include="Microsoft.VCLibs, Version=14.0">
+      <Name>Visual C++ 2015 Runtime for Universal Windows Platform Apps</Name>
+    </SDKReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
