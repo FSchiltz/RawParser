@@ -10,7 +10,49 @@ namespace RawEditor.View.UIHelper
 {
     public sealed partial class CollapsibleBox : UserControl
     {
-        public bool IsOpen { get; set; } = true;
+        private bool open = true;
+        public bool IsOpen
+        {
+            get { return open; }
+            set
+            {
+                open = value;
+                var sb = new Storyboard();
+                DoubleAnimation animation;
+                if (!IsOpen)
+                {
+                    height = Container.ActualHeight;
+                    sb.Completed += (a, b) =>
+                    {
+                        Container.Visibility = Visibility.Collapsed;
+                        icon.Symbol = Symbol.ShowBcc;
+                    };
+                    animation = new DoubleAnimation()
+                    {
+                        To = 0,
+                        From = height,
+                        EnableDependentAnimation = true,
+                        Duration = new Duration(new TimeSpan(0, 0, 0, 0, 100))
+                    };
+                }
+                else
+                {
+                    Container.Visibility = Visibility.Visible;
+                    animation = new DoubleAnimation()
+                    {
+                        To = height,
+                        From = 0,
+                        EnableDependentAnimation = true,
+                        Duration = new Duration(new TimeSpan(0, 0, 0, 0, 100))
+                    };
+                    icon.Symbol = Symbol.HideBcc;
+                }
+                Storyboard.SetTargetProperty(animation, "Height");
+                Storyboard.SetTarget(animation, Container);
+                sb.Children.Add(animation);
+                sb.Begin();
+            }
+        }
         public string Text { get { return Header.Text; } set { Header.Text = value; } }
         private double height;
 
@@ -27,51 +69,6 @@ namespace RawEditor.View.UIHelper
             set { SetValue(MainContentProperty, value); }
         }
 
-        private void Header_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            if (IsOpen)
-            {
-                var sb = new Storyboard();
-                height = Container.ActualHeight;
-                var animation = new DoubleAnimation()
-                {
-                    To = 0,
-                    From = height,
-                    EnableDependentAnimation = true,
-                    Duration = new Duration(new TimeSpan(0, 0, 0, 0, 100))
-                };
-                Storyboard.SetTargetProperty(animation, "Height");
-                Storyboard.SetTarget(animation, Container);
-                sb.Children.Add(animation);
-                sb.Completed += DoubleAnimation_Completed;
-                sb.Begin();
-                VisualStateManager.GoToState(this, "Collapsed", true);
-            }
-            else
-            {
-                Container.Visibility = Visibility.Visible;
-                var sb = new Storyboard();
-                var animation = new DoubleAnimation()
-                {
-                    To = height,
-                    From = 0,
-                    EnableDependentAnimation = true,
-                    Duration = new Duration(new TimeSpan(0, 0, 0, 0, 100))
-                };
-                Storyboard.SetTargetProperty(animation, "Height");
-                Storyboard.SetTarget(animation, Container);
-                sb.Children.Add(animation);
-                sb.Begin();
-                icon.Symbol = Symbol.BackToWindow;
-                VisualStateManager.GoToState(this, "Expanded", true);
-            }
-            IsOpen = !IsOpen;
-        }
-
-        private void DoubleAnimation_Completed(object sender, object e)
-        {
-            Container.Visibility = Visibility.Collapsed;
-            icon.Symbol = Symbol.FullScreen;
-        }
+        public void Toggle() { IsOpen = !IsOpen; }
     }
 }
