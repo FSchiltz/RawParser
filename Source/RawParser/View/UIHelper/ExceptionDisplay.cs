@@ -19,7 +19,7 @@ namespace RawEditor.View.UIHelper
 
         public static void Display(string message, string title, string button)
         {
-            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 //Do some UI-code that must be run on the UI thread.
                 var dialog = new MessageDialog(message)
@@ -27,7 +27,7 @@ namespace RawEditor.View.UIHelper
                     Title = title
                 };
                 dialog.Commands.Add(new UICommand { Label = button, Id = 0 });
-                dialog.ShowAsync();
+                await dialog.ShowAsync();
             });
         }
     }
