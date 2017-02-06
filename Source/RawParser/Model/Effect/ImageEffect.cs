@@ -328,7 +328,7 @@ namespace RawEditor.Effect
                     long realY = (y + image.offset.height) * image.uncroppedDim.width;
                     for (int x = 0; x < image.dim.width; x++)
                     {
-                        long realPix = realY + x;
+                        long realPix = realY + x + image.offset.width;
                         long bufferPix = Rotate(x, y, image.dim.width, image.dim.height) * 4;
                         double red = image.red[realPix] * rMul, green = image.green[realPix] * gMul, blue = image.blue[realPix] * bMul;
                         Luminance.Clip(ref red, ref green, ref blue, maxValue);
