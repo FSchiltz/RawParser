@@ -46,6 +46,7 @@ namespace RawEditor.Settings
                 switch (target)
                 {
                     case EffectType.WhiteBalance: return "Set to default";
+                    case EffectType.Crop:
                     case EffectType.Reset: return "";
                     case EffectType.HistoEqualisation:
                     case EffectType.ReverseGamma: return "From " + oldValue + " to " + value;
