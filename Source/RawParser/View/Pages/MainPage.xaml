@@ -7,8 +7,8 @@
             <CommandBar.Content>
                 <uihelper:LoadBar x:Name="Load" />
             </CommandBar.Content>
-            <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Undo" x:Uid="Undo" Tapped="{x:Bind History.Undo}" />
-            <AppBarButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="Redo" x:Uid="Redo" Tapped="{x:Bind History.Redo}" />
+            <AppBarButton IsEnabled="{x:Bind History.IsUndoEnabled,Mode=OneWay}" Icon="Undo" x:Uid="Undo" Tapped="{x:Bind History.Undo}" />
+            <AppBarButton IsEnabled="{x:Bind History.IsRedoEnabled,Mode=OneWay}" Icon="Redo" x:Uid="Redo" Tapped="{x:Bind History.Redo}" />
             <AppBarSeparator />
             <AppBarButton Icon="BrowsePhotos" x:Uid="OpenImage" Click="ImageChooseClickAsync" />
             <AppBarButton Icon="SaveLocal" x:Uid="Save" Click="SaveButtonClickAsync" VerticalAlignment="Top"
@@ -73,6 +73,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition MaxWidth="460" />
+            <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition />
@@ -261,7 +262,7 @@
                 </ListView>
             </PivotItem>
             <PivotItem x:Uid="History" Margin="12,0,2,0">
-                <ListView ItemsSource="{x:Bind History,Mode=OneWay}" VerticalAlignment="Top" HorizontalAlignment="Left">
+                <ListView ItemsSource="{x:Bind History,Mode=OneWay}" VerticalAlignment="Top" HorizontalAlignment="Left" Tapped="ListView_Tapped">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>

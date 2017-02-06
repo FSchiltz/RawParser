@@ -232,6 +232,11 @@ namespace RawEditor.Effect
             }
         }
 
+        internal ImageEffect GetCopy()
+        {
+            return (ImageEffect)this.MemberwiseClone();
+        }
+
         private bool histoEqual = false;
         public bool HistoEqualisation
         {
@@ -440,70 +445,70 @@ namespace RawEditor.Effect
         internal HistoryObject GetHistory(ImageEffect effect)
         {
             //gettge first change
-            HistoryObject history = new HistoryObject();
+            HistoryObject history = new HistoryObject(EffectType.Unkown, effect.GetCopy());
             if (Exposure != effect.Exposure)
             {
-                history.target = EffectObject.Exposure;
+                history.target = EffectType.Exposure;
                 history.oldValue = Exposure;
                 history.value = effect.Exposure;
             }
             else if (RMul != effect.RMul)
             {
-                history.target = EffectObject.Red;
+                history.target = EffectType.Red;
                 history.oldValue = RMul;
                 history.value = effect.RMul;
             }
             else if (GMul != effect.GMul)
             {
-                history.target = EffectObject.Green;
+                history.target = EffectType.Green;
                 history.oldValue = GMul;
                 history.value = effect.GMul;
             }
             else if (BMul != effect.BMul)
             {
-                history.target = EffectObject.Blue;
+                history.target = EffectType.Blue;
                 history.oldValue = BMul;
                 history.value = effect.BMul;
             }
             else if (Contrast != effect.Contrast)
             {
-                history.target = EffectObject.Contrast;
+                history.target = EffectType.Contrast;
                 history.oldValue = Contrast;
                 history.value = effect.Contrast;
             }
             else if (Shadow != effect.Shadow)
             {
-                history.target = EffectObject.Shadow;
+                history.target = EffectType.Shadow;
                 history.oldValue = Shadow;
                 history.value = effect.Shadow;
             }
             else if (Hightlight != effect.Hightlight)
             {
-                history.target = EffectObject.Hightlight;
+                history.target = EffectType.Hightlight;
                 history.oldValue = Hightlight;
                 history.value = effect.Hightlight;
             }
             else if (Saturation != effect.Saturation)
             {
-                history.target = EffectObject.Saturation;
+                history.target = EffectType.Saturation;
                 history.oldValue = Saturation;
                 history.value = effect.Saturation;
             }
             else if (ReverseGamma != effect.ReverseGamma)
             {
-                history.target = EffectObject.ReverseGamma;
+                history.target = EffectType.ReverseGamma;
                 history.oldValue = ReverseGamma;
                 history.value = effect.ReverseGamma;
             }
             else if (HistoEqualisation != effect.HistoEqualisation)
             {
-                history.target = EffectObject.HistoEqualisation;
+                history.target = EffectType.HistoEqualisation;
                 history.oldValue = HistoEqualisation;
                 history.value = effect.HistoEqualisation;
             }
             else if (Rotation != effect.Rotation)
             {
-                history.target = EffectObject.Rotate;
+                history.target = EffectType.Rotate;
                 history.oldValue = Rotation;
                 history.value = effect.Rotation;
             }

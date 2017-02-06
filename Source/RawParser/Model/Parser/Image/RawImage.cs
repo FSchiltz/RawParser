@@ -78,12 +78,12 @@ namespace RawNet
         {
             if (!crop.Dimension.IsThisInside(raw.dim - crop.Position))
             {
-                Debug.WriteLine("WARNING: RawImageData::subFrame - Attempted to create new subframe larger than original size. Crop skipped.");
+                Debug.WriteLine("Attempted to create new subframe larger than original size. Crop skipped.");
                 return;
             }
             if (crop.Position.width < 0 || crop.Position.height < 0 || !crop.HasPositiveArea())
             {
-                Debug.WriteLine("WARNING: RawImageData::subFrame - Negative crop raw.offset. Crop skipped.");
+                Debug.WriteLine("Negative crop raw.offset. Crop skipped.");
                 return;
             }
 

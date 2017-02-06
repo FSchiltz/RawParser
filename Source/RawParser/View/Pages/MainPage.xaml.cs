@@ -74,11 +74,15 @@ namespace RawEditor.View.Pages
 
         public MainPage()
         {
-            History.effect = EditionValue;
             InitializeComponent();
             NavigationCacheMode = NavigationCacheMode.Required;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
-            History.HistoryChanged += new PropertyChangedEventHandler((e, d) => UpdatePreview(false));
+            History.HistoryChanged += new PropertyChangedEventHandler((e, d) =>
+            {
+                EditionValue.Copy(History.GetCurrent().effect);
+                UpdatePreview(false);
+            });
+            History.Default = new HistoryObject(EffectType.Unkown, DefaultValue);
         }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
@@ -131,8 +135,6 @@ namespace RawEditor.View.Pages
                 raw.raw.dim = new Point2D(raw.raw.uncroppedDim.width, raw.raw.uncroppedDim.height);
                 raw.preview.offset = new Point2D(0, 0);
                 raw.preview.dim = new Point2D(raw.preview.uncroppedDim.width, raw.preview.uncroppedDim.height);
-                EditionValue.Rotation = raw.metadata.OriginalRotation;
-                EditionValue.ReverseGamma = raw.IsGammaCorrected;
             }
             SetWBAsync();
             ResetButtonVisibility.Value = false;
@@ -147,7 +149,7 @@ namespace RawEditor.View.Pages
             {
                 var old = new ImageEffect();
                 old.Copy(EditionValue);
-                History.Add(new HistoryObject() { oldValue = old, target = EffectObject.Reset });
+                History.Add(new HistoryObject(EffectType.Reset, EditionValue.GetCopy()) { oldValue = old });
                 UpdatePreview(false);
             }
         }
@@ -155,9 +157,8 @@ namespace RawEditor.View.Pages
         private void SetWBUpdate()
         {
             //add an history object
-            History.Add(new HistoryObject()
+            History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
             {
-                target = EffectObject.WB,
                 oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
                 value = new double[] { raw?.metadata.WbCoeffs[0] ?? 1, raw?.metadata.WbCoeffs[1] ?? 1, raw?.metadata.WbCoeffs[2] ?? 1 }
             });
@@ -249,7 +250,8 @@ namespace RawEditor.View.Pages
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
-
+                    DefaultValue.Rotation = raw.metadata.OriginalRotation;
+                    DefaultValue.ReverseGamma = raw.IsGammaCorrected;
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         var exif = raw.ParseExif();
@@ -352,6 +354,7 @@ namespace RawEditor.View.Pages
                         TextDisplay.DisplayError("An error occured while saving");
 #endif
                     }
+
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         //Blur(false);
@@ -468,8 +471,8 @@ namespace RawEditor.View.Pages
         {
             if (raw != null)
             {
+                var t = new HistoryObject(EffectType.Rotate, EditionValue.GetCopy()) { oldValue = EditionValue.Rotation };
                 EditionValue.Rotation++;
-                var t = new HistoryObject() { oldValue = EditionValue.Rotation, target = EffectObject.Rotate };
                 t.value = EditionValue.Rotation;
                 History.Add(t);
                 EditingControlChanged();
@@ -480,8 +483,8 @@ namespace RawEditor.View.Pages
         {
             if (raw != null)
             {
+                var t = new HistoryObject(EffectType.Rotate, EditionValue.GetCopy()) { oldValue = EditionValue.Rotation };
                 EditionValue.Rotation--;
-                var t = new HistoryObject() { oldValue = EditionValue.Rotation, target = EffectObject.Rotate };
                 t.value = EditionValue.Rotation;
                 History.Add(t);
                 EditingControlChanged();
@@ -598,7 +601,7 @@ namespace RawEditor.View.Pages
                 raw.preview.dim = new Point2D((uint)(raw.preview.uncroppedDim.width * right), (uint)(raw.preview.uncroppedDim.height * bottom));
                 UpdatePreview(true);
             }
-            var t = new HistoryObject() { oldValue = 0, target = EffectObject.Crop };
+            var t = new HistoryObject(EffectType.Crop, EditionValue.GetCopy()) { oldValue = 0 };
             History.Add(t);
             ResetButtonVisibility.Value = true;
         }
@@ -681,6 +684,11 @@ namespace RawEditor.View.Pages
             raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
             UpdatePreview(true);
             Load.Hide();
+        }
+
+        private void ListView_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            History.SetCurrent(((ListView)sender).SelectedIndex);
         }
     }
 }
