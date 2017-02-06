@@ -437,9 +437,78 @@ namespace RawEditor.Effect
             }
         }
 
-        internal HistoryObject GetHistory(ImageEffect newEffect)
+        internal HistoryObject GetHistory(ImageEffect effect)
         {
-            throw new NotImplementedException();
+            //gettge first change
+            HistoryObject history = new HistoryObject();
+            if (Exposure != effect.Exposure)
+            {
+                history.target = EffectObject.Exposure;
+                history.oldValue = Exposure;
+                history.value = effect.Exposure;
+            }
+            else if (RMul != effect.RMul)
+            {
+                history.target = EffectObject.Red;
+                history.oldValue = RMul;
+                history.value = effect.RMul;
+            }
+            else if (GMul != effect.GMul)
+            {
+                history.target = EffectObject.Green;
+                history.oldValue = GMul;
+                history.value = effect.GMul;
+            }
+            else if (BMul != effect.BMul)
+            {
+                history.target = EffectObject.Blue;
+                history.oldValue = BMul;
+                history.value = effect.BMul;
+            }
+            else if (Contrast != effect.Contrast)
+            {
+                history.target = EffectObject.Contrast;
+                history.oldValue = Contrast;
+                history.value = effect.Contrast;
+            }
+            else if (Shadow != effect.Shadow)
+            {
+                history.target = EffectObject.Shadow;
+                history.oldValue = Shadow;
+                history.value = effect.Shadow;
+            }
+            else if (Hightlight != effect.Hightlight)
+            {
+                history.target = EffectObject.Hightlight;
+                history.oldValue = Hightlight;
+                history.value = effect.Hightlight;
+            }
+            else if (Saturation != effect.Saturation)
+            {
+                history.target = EffectObject.Saturation;
+                history.oldValue = Saturation;
+                history.value = effect.Saturation;
+            }
+            else if (ReverseGamma != effect.ReverseGamma)
+            {
+                history.target = EffectObject.ReverseGamma;
+                history.oldValue = ReverseGamma;
+                history.value = effect.ReverseGamma;
+            }
+            else if (HistoEqualisation != effect.HistoEqualisation)
+            {
+                history.target = EffectObject.HistoEqualisation;
+                history.oldValue = HistoEqualisation;
+                history.value = effect.HistoEqualisation;
+            }
+            else if (Rotation != effect.Rotation)
+            {
+                history.target = EffectObject.Rotate;
+                history.oldValue = Rotation;
+                history.value = effect.Rotation;
+            }
+            else if (Gamma != effect.Gamma) { }
+            return history;
         }
     }
 }

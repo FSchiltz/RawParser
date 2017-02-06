@@ -23,7 +23,7 @@ namespace RawNet.Decoder.Decompressor
         public bool DNGCompatible { get; set; }  // DNG v1.0.x compatibility
         public CosineTable dct = new CosineTable();
 
-        public virtual void DecodeScan() { throw new RawDecoderException("JpegDecompressor: No Scan decoder found"); }
+        public virtual void DecodeScan() { throw new RawDecoderException("No scan decoder found"); }
 
         /*
         * Huffman table generation:
@@ -78,7 +78,7 @@ namespace RawNet.Decoder.Decompressor
                 input = new TIFFBinaryReaderRE(input.BaseStream, offset);
 
             if (GetNextMarker(false) != JpegMarker.SOI)
-                throw new RawDecoderException("getSOF: Image did not start with SOI. Probably not an LJPEG");
+                throw new RawDecoderException("Image did not start with SOI. Probably not an LJPEG");
 
             while (true)
             {
@@ -91,7 +91,7 @@ namespace RawNet.Decoder.Decompressor
                 }
                 if (m == JpegMarker.EOI)
                 {
-                    throw new RawDecoderException("LJpegDecompressor: Could not locate Start of Frame.");
+                    throw new RawDecoderException("Could not locate Start of Frame.");
                 }
             }
         }
@@ -99,11 +99,11 @@ namespace RawNet.Decoder.Decompressor
         public void StartDecoder(uint offset, uint size)
         {
             if (!input.IsValid(offset, size))
-                throw new RawDecoderException("startDecoder: Start offset plus size is longer than file. Truncated file.");
+                throw new RawDecoderException("Start offset plus size is longer than file. Truncated file.");
             if ((int)offX >= raw.raw.dim.width)
-                throw new RawDecoderException("startDecoder: X offset outside of image");
+                throw new RawDecoderException("X offset outside of image");
             if ((int)offY >= raw.raw.dim.height)
-                throw new RawDecoderException("startDecoder: Y offset outside of image");
+                throw new RawDecoderException("Y offset outside of image");
 
             // JPEG is big endian
             if (Common.GetHostEndianness() == Endianness.Big)
@@ -112,7 +112,7 @@ namespace RawNet.Decoder.Decompressor
                 input = new TIFFBinaryReaderRE(input.BaseStream, offset);
 
             if (GetNextMarker(false) != JpegMarker.SOI)
-                throw new RawDecoderException("startDecoder: Image did not start with SOI. Probably not an LJPEG");
+                throw new RawDecoderException("Image did not start with SOI. Probably not an LJPEG");
 
             bool moreImage = true;
             while (moreImage)
@@ -121,7 +121,7 @@ namespace RawNet.Decoder.Decompressor
                 switch (m)
                 {
                     case JpegMarker.DQT:
-                        throw new RawDecoderException("LJpegDecompressor: Not a valid RAW file.");
+                        throw new RawDecoderException("Not a valid RAW file.");
                     case JpegMarker.DHT:
                         //          _RPT0(0,"Found DHT marker\n");
                         ParseDHT();
@@ -157,13 +157,13 @@ namespace RawNet.Decoder.Decompressor
             sof.numComponents = input.ReadByte();
 
             if (sof.precision > 16)
-                throw new RawDecoderException("LJpegDecompressor: More than 16 bits per channel is not supported.");
+                throw new RawDecoderException("More than 16 bits per channel is not supported.");
 
             if (sof.numComponents > 4 || sof.numComponents < 1)
-                throw new RawDecoderException("LJpegDecompressor: Only from 1 to 4 components are supported.");
+                throw new RawDecoderException("Only from 1 to 4 components are supported.");
 
             if (headerLength != 8 + sof.numComponents * 3)
-                throw new RawDecoderException("LJpegDecompressor: Header size mismatch.");
+                throw new RawDecoderException("Header size mismatch.");
 
             for (int i = 0; i < sof.numComponents; i++)
             {
@@ -173,7 +173,7 @@ namespace RawNet.Decoder.Decompressor
                 frame.ComponentInfo[i].superH = subs >> 4;
                 uint Tq = input.ReadByte();
                 if (Tq != 0)
-                    throw new RawDecoderException("LJpegDecompressor: Quantized components not supported.");
+                    throw new RawDecoderException("Quantized components not supported.");
             }
             sof.Initialized = true;
         }
@@ -181,12 +181,12 @@ namespace RawNet.Decoder.Decompressor
         public void ParseSOS()
         {
             if (!frame.Initialized)
-                throw new RawDecoderException("parseSOS: Frame not yet initialized (SOF Marker not parsed)");
+                throw new RawDecoderException("Frame not yet initialized (SOF Marker not parsed)");
 
             input.ReadInt16();
             uint soscps = input.ReadByte();
             if (frame.numComponents != soscps)
-                throw new RawDecoderException("parseSOS: Component number mismatch.");
+                throw new RawDecoderException("Component number mismatch.");
 
             for (int i = 0; i < frame.numComponents; i++)
             {
@@ -195,26 +195,26 @@ namespace RawNet.Decoder.Decompressor
                 while (frame.ComponentInfo[count].componentId != cs)
                 {
                     if (count >= frame.numComponents)
-                        throw new RawDecoderException("parseSOS: Invalid Component Selector");
+                        throw new RawDecoderException("Invalid Component Selector");
                     count++;
                 }
 
                 uint b1 = input.ReadByte();
                 uint td = b1 >> 4;
                 if (td > 3)
-                    throw new RawDecoderException("parseSOS: Invalid Huffman table selection");
+                    throw new RawDecoderException("Invalid Huffman table selection");
                 if (!huff[td].Initialized)
-                    throw new RawDecoderException("parseSOS: Invalid Huffman table selection, not defined.");
+                    throw new RawDecoderException("Invalid Huffman table selection, not defined.");
 
                 if (count > 3)
-                    throw new RawDecoderException("parseSOS: Component count out of range");
+                    throw new RawDecoderException("Component count out of range");
 
                 frame.ComponentInfo[count].dcTblNo = td;
             }
 
             predictor = input.ReadByte();
             if (predictor > 7)
-                throw new RawDecoderException("parseSOS: Invalid predictor mode.");
+                throw new RawDecoderException("Invalid predictor mode.");
 
             input.ReadBytes(1); // Se + Ah Not used in LJPEG
             int b = input.ReadByte();
@@ -238,17 +238,17 @@ namespace RawNet.Decoder.Decompressor
                 uint b = input.ReadByte();
                 uint Tc = (b >> 4);
                 if (Tc != 0)
-                    throw new RawDecoderException("parseDHT: Unsupported Table class.");
+                    throw new RawDecoderException("Unsupported Table class.");
 
                 uint Th = b & 0xf;
                 if (Th > 3)
-                    throw new RawDecoderException("parseDHT: Invalid huffman table destination id.");
+                    throw new RawDecoderException("Invalid huffman table destination id.");
 
                 uint acc = 0;
                 HuffmanTable table = huff[Th];
 
                 if (table.Initialized)
-                    throw new RawDecoderException("parseDHT: Duplicate table definition");
+                    throw new RawDecoderException("Duplicate table definition");
 
                 for (int i = 0; i < 16; i++)
                 {
@@ -257,10 +257,10 @@ namespace RawNet.Decoder.Decompressor
                 }
                 table.bits[0] = 0;
                 if (acc > 256)
-                    throw new RawDecoderException("parseDHT: Invalid DHT table.");
+                    throw new RawDecoderException("Invalid DHT table.");
 
                 if (headerLength < 1 + 16 + acc)
-                    throw new RawDecoderException("parseDHT: Invalid DHT table length.");
+                    throw new RawDecoderException("Invalid DHT table length.");
 
                 for (int i = 0; i < acc; i++)
                 {
@@ -277,12 +277,12 @@ namespace RawNet.Decoder.Decompressor
             {
                 byte idL = input.ReadByte();
                 if (idL != 0xff)
-                    throw new RawDecoderException("getNextMarker: (Noskip) Expected marker not found. Propably corrupt file.");
+                    throw new RawDecoderException("Expected marker not found. Propably corrupt file.");
 
                 JpegMarker markL = (JpegMarker)input.ReadByte();
 
                 if (JpegMarker.Fill == markL || JpegMarker.Stuff == markL)
-                    throw new RawDecoderException("getNextMarker: (Noskip) Expected marker, but found stuffed 00 or ff.");
+                    throw new RawDecoderException("Expected marker, but found stuffed 00 or ff.");
 
                 return markL;
             }

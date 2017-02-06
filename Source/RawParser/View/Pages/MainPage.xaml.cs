@@ -1,38 +1,37 @@
-﻿using System;
+﻿using Microsoft.Services.Store.Engagement;
+using RawEditor.Base;
+using RawEditor.Effect;
+using RawEditor.Settings;
+using RawEditor.View.UIHelper;
+using RawNet;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using Windows.ApplicationModel.Core;
+using Windows.Storage.Streams;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
-using Windows.Foundation;
-using RawNet;
-using System.Diagnostics;
-using System.Collections.ObjectModel;
-using Microsoft.Services.Store.Engagement;
-using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage.Streams;
-using RawEditor.Effect;
-using Windows.System;
-using RawEditor.Base;
-using RawEditor.View.UIHelper;
-using RawEditor.Settings;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 /*
 using Microsoft.Graphics.Canvas.Effects;
 using Windows.UI.Composition;
 using Windows.UI.Xaml.Hosting;
 using System.Numerics;*/
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml.Data;
-using System.Linq;
-using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Navigation;
 
 namespace RawEditor.View.Pages
 {
@@ -44,20 +43,22 @@ namespace RawEditor.View.Pages
         public RawImage raw;
         public bool ImageSelected { set; get; } = false;
         public Thumbnail thumbnail;
-        public ObservableCollection<HistoryObject> history = new ObservableCollection<HistoryObject>();
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
         public Bindable<bool> ControlVisibilty = new Bindable<bool>(false);
         public CollectionViewSource ExifSource = new CollectionViewSource() { IsSourceGrouped = true };
         public Bindable<bool> feedbacksupport = new Bindable<bool>(StoreServicesFeedbackLauncher.IsSupported());
-        // private SpriteVisual _pivotGridSprite;
-        //private Compositor _compositor;
-        //private CompositionEffectBrush brush;
         public Histogram Histo { get; set; } = new Histogram();
-        public ImageEffect EditionValue { get; private set; } = new ImageEffect();
-        public ImageEffect DefaultValue { get; } = new ImageEffect();
+        public ImageEffect EditionValue = new ImageEffect();
+        public ImageEffect DefaultValue = new ImageEffect();
+        public ImageEffect OldValue = new ImageEffect();
+        public HistoryList History = new HistoryList();
 
-        //private float blurAmount = 5;
-        /*private GaussianBlurEffect graphicsEffect = new GaussianBlurEffect()
+        /*
+        private float blurAmount = 5;
+        private SpriteVisual _pivotGridSprite;
+        private Compositor _compositor;
+        private CompositionEffectBrush brush;
+        private GaussianBlurEffect graphicsEffect = new GaussianBlurEffect()
         {
             Name = "Blur",
             BlurAmount = 0f,
@@ -73,18 +74,11 @@ namespace RawEditor.View.Pages
 
         public MainPage()
         {
+            History.effect = EditionValue;
             InitializeComponent();
             NavigationCacheMode = NavigationCacheMode.Required;
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
-            /* IPropertySet roamingProperties = ApplicationData.Current.RoamingSettings.Values;
-             if (!roamingProperties.ContainsKey("HasBeenHereBefore"))
-             {
-                 // The first-time case
-                 //show a greeting pop up
-                 var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
-                 TextDisplay.Display(loader.GetString("WelcomeText"), "Welcome", "Ok");
-                 roamingProperties["HasBeenHereBefore"] = bool.TrueString; // Doesn't really matter what
-             }*/
+            History.HistoryChanged += new PropertyChangedEventHandler((e, d) => UpdatePreview(false));
         }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
@@ -116,7 +110,7 @@ namespace RawEditor.View.Pages
             //empty the image display
             ImageBox.Source = null;
             //empty the exif data
-            //history?.Clear();
+            History?.Clear();
             ExifSource.Source = null;
             //empty the histogram
             ControlVisibilty.Value = false;
@@ -148,18 +142,25 @@ namespace RawEditor.View.Pages
         private void ResetUpdateControls()
         {
             ResetControls();
+
             if (raw != null)
             {
-                //ImageEffect newEffect = GetEffects();
-                //find the changed value
-                //history.Add(EditionValue.GetHistory(newEffect));
-                //EditionValue = newEffect;
+                var old = new ImageEffect();
+                old.Copy(EditionValue);
+                History.Add(new HistoryObject() { oldValue = old, target = EffectObject.Reset });
                 UpdatePreview(false);
             }
         }
 
         private void SetWBUpdate()
         {
+            //add an history object
+            History.Add(new HistoryObject()
+            {
+                target = EffectObject.WB,
+                oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
+                value = new double[] { raw?.metadata.WbCoeffs[0] ?? 1, raw?.metadata.WbCoeffs[1] ?? 1, raw?.metadata.WbCoeffs[2] ?? 1 }
+            });
             SetWBAsync();
             UpdatePreview(false);
         }
@@ -195,6 +196,7 @@ namespace RawEditor.View.Pages
                         try
                         {
                             thumbnail = decoder.DecodeThumb();
+
                             Task.Run(() =>
                             {
                                 var result = thumbnail?.GetSoftwareBitmap();
@@ -402,15 +404,15 @@ namespace RawEditor.View.Pages
 
         private void UpdatePreview(bool move)
         {
-            Debug.WriteLine("Updated");
             if (raw?.preview != null)
-                //display the histogram                  
+            {
                 Task.Run(async () =>
                 {
                     var result = await ApplyUserModifAsync(raw.preview);
                     DisplayImage(result.Item2, move);
                     Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
                 });
+            }
         }
 
         //Apply the change over the image preview       
@@ -433,16 +435,13 @@ namespace RawEditor.View.Pages
             return Tuple.Create(tmp, bitmap);
         }
 
-        public void Undo() { }
-        public void Redo() { }
-
         private void EditingControlChanged()
         {
             //generate the new object
             //ImageEffect newEffect = GetEffects();
             //find the changed value
-            //history.Add(EditionValue.GetHistory(newEffect));
-            //EditionValue = newEffect;
+            History.Add(OldValue.GetHistory(EditionValue));
+            OldValue.Copy(EditionValue);
             if (LowGamma.IsChecked == true)
             {
                 EditionValue.Gamma = 1.8;
@@ -455,7 +454,6 @@ namespace RawEditor.View.Pages
             {
                 EditionValue.Gamma = 2.2;
             }
-
             ResetButtonVisibility.Value = true;
             UpdatePreview(false);
         }
@@ -472,7 +470,7 @@ namespace RawEditor.View.Pages
                 EditionValue.Rotation++;
                 var t = new HistoryObject() { oldValue = EditionValue.Rotation, target = EffectObject.Rotate };
                 t.value = EditionValue.Rotation;
-                history.Add(t);
+                History.Add(t);
                 EditingControlChanged();
             }
         }
@@ -484,7 +482,7 @@ namespace RawEditor.View.Pages
                 EditionValue.Rotation--;
                 var t = new HistoryObject() { oldValue = EditionValue.Rotation, target = EffectObject.Rotate };
                 t.value = EditionValue.Rotation;
-                history.Add(t);
+                History.Add(t);
                 EditingControlChanged();
             }
         }
@@ -600,7 +598,7 @@ namespace RawEditor.View.Pages
                 UpdatePreview(true);
             }
             var t = new HistoryObject() { oldValue = 0, target = EffectObject.Crop };
-            history.Add(t);
+            History.Add(t);
             ResetButtonVisibility.Value = true;
         }
 

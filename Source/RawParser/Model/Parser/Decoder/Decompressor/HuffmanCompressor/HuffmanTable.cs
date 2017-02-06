@@ -81,7 +81,7 @@ namespace RawNet.Decoder.HuffmanCompressor
                 {
                     huffsize[p++] = (byte)l;
                     if (p > 256)
-                        throw new RawDecoderException("createHuffmanTable: Code length too long. Corrupt data.");
+                        throw new RawDecoderException("Code length too long. Corrupt data.");
                 }
             }
             huffsize[p] = 0;
@@ -104,7 +104,7 @@ namespace RawNet.Decoder.HuffmanCompressor
                 code <<= 1;
                 si++;
                 if (p > 256)
-                    throw new RawDecoderException("createHuffmanTable: Code length too long. Corrupt data.");
+                    throw new RawDecoderException("Code length too long. Corrupt data.");
             }
 
 
@@ -157,7 +157,7 @@ namespace RawNet.Decoder.HuffmanCompressor
                         ul = ll;
                     }
                     if (ul > 256 || ll > ul)
-                        throw new RawDecoderException("createHuffmanTable: Code length too long. Corrupt data.");
+                        throw new RawDecoderException("Code length too long. Corrupt data.");
                     for (i = ll; i <= ul; i++)
                     {
                         numbits[i] = (uint)(size | (value << 4));

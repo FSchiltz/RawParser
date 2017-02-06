@@ -45,7 +45,7 @@ namespace RawNet.DNG
                 UInt32 entry_size = entry.dataCount;
 
                 if (entry_size < 20)
-                    throw new RawDecoderException("DngOpcodes: Not enough bytes to read a single opcode");
+                    throw new RawDecoderException("Not enough bytes to read a single opcode");
 
                 UInt32 opcode_count = reader.ReadUInt32();
                 uint bytes_used = 4;
@@ -116,7 +116,7 @@ namespace RawNet.DNG
                 Rectangle2D fullImage = new Rectangle2D(0, 0, img.raw.dim.width, img.raw.dim.height);
 
                 if (!opcodes[i].aoi.IsThisInside(fullImage))
-                    throw new RawDecoderException("DngOpcodes: Area of interest not inside image!");
+                    throw new RawDecoderException("Area of interest not inside image!");
                 if (opcodes[i].aoi.HasPositiveArea())
                 {
                     opcodes[i].Apply(img, ref img_out, opcodes[i].aoi.Top, opcodes[i].aoi.Bottom);
@@ -155,7 +155,7 @@ namespace RawNet.DNG
         public OpcodeTrimBounds(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref Int32 bytes_used)
         {
             if (param_max_bytes < 16)
-                throw new RawDecoderException("OpcodeTrimBounds: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+                throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
             mTop = parameters.ReadUInt16();
             mLeft = parameters.ReadUInt16();
             mBottom = parameters.ReadUInt16();
@@ -181,7 +181,7 @@ namespace RawNet.DNG
         public OpcodeMapTable(TIFFBinaryReader parameters, ulong param_max_bytes, ref Int32 bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
-                throw new RawDecoderException("OpcodeMapTable: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+                throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
             uint h1 = parameters.ReadUInt32();
             uint w1 = parameters.ReadUInt32();
             uint h2 = parameters.ReadUInt32();
@@ -192,20 +192,20 @@ namespace RawNet.DNG
             rowPitch = parameters.ReadUInt32();
             colPitch = parameters.ReadUInt32();
             if (planes == 0)
-                throw new RawDecoderException("OpcodeMapPolynomial: Zero planes");
+                throw new RawDecoderException("Zero planes");
             if (rowPitch == 0 || colPitch == 0)
-                throw new RawDecoderException("OpcodeMapPolynomial: Invalid Pitch");
+                throw new RawDecoderException("Invalid Pitch");
 
             int tablesize = (int)parameters.ReadUInt32();
             bytes_used = 36;
 
             if (tablesize <= 0)
-                throw new RawDecoderException("OpcodeMapTable: Table size must be positive");
+                throw new RawDecoderException("Table size must be positive");
             if (tablesize > 65536)
-                throw new RawDecoderException("OpcodeMapTable: A map with more than 65536 entries not allowed");
+                throw new RawDecoderException("A map with more than 65536 entries not allowed");
 
             if (param_max_bytes < 36 + ((UInt64)tablesize * 2))
-                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+                throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
 
             for (int i = 0; i <= 65535; i++)
             {
@@ -221,10 +221,10 @@ namespace RawNet.DNG
         public override RawImage CreateOutput(RawImage input)
         {
             if (firstPlane > input.cpp)
-                throw new RawDecoderException("OpcodeMapTable: Not that many planes in actual image");
+                throw new RawDecoderException("Not that many planes in actual image");
 
             if (firstPlane + planes > input.cpp)
-                throw new RawDecoderException("OpcodeMapTable: Not that many planes in actual image");
+                throw new RawDecoderException("Not that many planes in actual image");
 
             return input;
         }
@@ -259,7 +259,7 @@ namespace RawNet.DNG
         public OpcodeMapPolynomial(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
-                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+                throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
             uint h1 = parameters.ReadUInt32();
             uint w1 = parameters.ReadUInt32();
             uint h2 = parameters.ReadUInt32();
@@ -270,16 +270,16 @@ namespace RawNet.DNG
             mRowPitch = parameters.ReadUInt32();
             mColPitch = parameters.ReadUInt32();
             if (mPlanes == 0)
-                throw new RawDecoderException("OpcodeMapPolynomial: Zero planes");
+                throw new RawDecoderException("Zero planes");
             if (mRowPitch == 0 || mColPitch == 0)
-                throw new RawDecoderException("OpcodeMapPolynomial: Invalid Pitch");
+                throw new RawDecoderException("Invalid Pitch");
 
             mDegree = parameters.ReadUInt32();
             bytes_used = 36;
             if (mDegree > 8)
-                throw new RawDecoderException("OpcodeMapPolynomial: A polynomial with more than 8 degrees not allowed");
+                throw new RawDecoderException("A polynomial with more than 8 degrees not allowed");
             if (param_max_bytes < 36 + (mDegree * 8))
-                throw new RawDecoderException("OpcodeMapPolynomial: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+                throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
             for (UInt64 i = 0; i <= mDegree; i++)
             {
                 parameters.BaseStream.Position = (long)(36 + 8 * i) + offset;
@@ -292,10 +292,10 @@ namespace RawNet.DNG
         public override RawImage CreateOutput(RawImage input)
         {
             if (mFirstPlane > input.cpp)
-                throw new RawDecoderException("OpcodeMapPolynomial: Not that many planes in actual image");
+                throw new RawDecoderException("Not that many planes in actual image");
 
             if (mFirstPlane + mPlanes > input.cpp)
-                throw new RawDecoderException("OpcodeMapPolynomial: Not that many planes in actual image");
+                throw new RawDecoderException("Not that many planes in actual image");
 
             // Create lookup
             for (int i = 0; i < 65536; i++)
@@ -341,7 +341,7 @@ namespace RawNet.DNG
         public OpcodeGainMap(TIFFBinaryReaderRE parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
-                throw new RawDecoderException("OpcodeGainMap: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+                throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
             uint h1 = parameters.ReadUInt32();
             uint w1 = parameters.ReadUInt32();
             uint h2 = parameters.ReadUInt32();
@@ -352,9 +352,9 @@ namespace RawNet.DNG
             rowPitch = parameters.ReadUInt32();
             colPitch = parameters.ReadUInt32();
             if (planes == 0)
-                throw new RawDecoderException("OpcodeGainMap: Zero planes");
+                throw new RawDecoderException("Zero planes");
             if (rowPitch == 0 || colPitch == 0)
-                throw new RawDecoderException("OpcodeGainMap: Invalid Pitch");
+                throw new RawDecoderException("Invalid Pitch");
 
             mapPointsV = parameters.ReadUInt32();
             mapPointsH = parameters.ReadUInt32();
@@ -366,7 +366,7 @@ namespace RawNet.DNG
             gain = new double[mapPointsV, mapPointsH, mapPlanes];
             bytes_used = 76;
             if (param_max_bytes < 36 + (mapPointsV * mapPointsH * mapPlanes * 8))
-                throw new RawDecoderException("OpcodeGainMap: Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
+                throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
             for (UInt64 i = 0; i < mapPointsV; i++)
             {
                 for (UInt64 j = 0; j < mapPointsH; j++)
@@ -384,10 +384,10 @@ namespace RawNet.DNG
         public override RawImage CreateOutput(RawImage input)
         {
             if (firstPlane > input.cpp)
-                throw new RawDecoderException("OpcodeGainMap: Not that many planes in actual image");
+                throw new RawDecoderException("Not that many planes in actual image");
 
             if (firstPlane + planes > input.cpp)
-                throw new RawDecoderException("OpcodeGainMap: Not that many planes in actual image");
+                throw new RawDecoderException("Not that many planes in actual image");
 
             /*
             // Create lookup

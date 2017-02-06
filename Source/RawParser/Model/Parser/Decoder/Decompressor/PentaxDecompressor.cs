@@ -75,7 +75,7 @@ namespace RawNet.Decoder.Decompressor
                 }
                 else
                 {
-                    throw new RawDecoderException("PentaxDecompressor: Unknown Huffman table type.");
+                    throw new RawDecoderException("Unknown Huffman table type.");
                 }
             }
             else

@@ -89,10 +89,10 @@ namespace RawNet.Decoder
 
             List<IFD> data = ifd.GetIFDsWithTag((TagType)0xc5d8);
             if (data.Count == 0)
-                throw new RawDecoderException("CR2 Decoder: No image data found");
+                throw new RawDecoderException("No image data found");
 
             IFD raw = data[0];
-            Tag sensorInfoE = ifd.GetEntryRecursive(TagType.CANON_SENSOR_INFO) ?? throw new RawDecoderException("Cr2Decoder: failed to get SensorInfo from MakerNote");
+            Tag sensorInfoE = ifd.GetEntryRecursive(TagType.CANON_SENSOR_INFO) ?? throw new RawDecoderException("Failed to get sensor info from Makernote");
             rawImage = new RawImage(sensorInfoE.GetUInt(1), sensorInfoE.GetUInt(2))
             {
                 //cpp = componentsPerPixel,
@@ -499,7 +499,7 @@ namespace RawNet.Decoder
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.CANONCOLORDATA);
             if (data.Count == 0)
-                throw new RawDecoderException("CR2 sRaw: Unable to locate WB info.");
+                throw new RawDecoderException("Unable to locate white balance info.");
 
             Tag wb = data[0].GetEntry(TagType.CANONCOLORDATA);
             // Offset to sRaw coefficients used to reconstruct uncorrected RGB data.

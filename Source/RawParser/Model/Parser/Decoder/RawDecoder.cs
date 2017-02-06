@@ -166,16 +166,16 @@ namespace RawNet
                         rawImage.errors.Add("Image truncated (file is too short)");
                     }
                     else
-                        throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                        throw new IOException("Not enough data to decode a single line. Image file truncated.");
                 }
                 if (bitPerPixel > 16)
-                    throw new RawDecoderException("readUncompressedRaw: Unsupported bit depth");
+                    throw new RawDecoderException("Unsupported bit depth");
 
                 int skipBits = (int)(inputPitch - w * rawImage.cpp * bitPerPixel / 8);  // Skip per line
                 if (offset.height > rawImage.raw.dim.height)
-                    throw new RawDecoderException("readUncompressedRaw: Invalid y offset");
+                    throw new RawDecoderException("Invalid y offset");
                 if (offset.width + size.width > rawImage.raw.dim.width)
-                    throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
+                    throw new RawDecoderException("Invalid x offset");
 
                 uint y = offset.height;
                 h = Math.Min(h + offset.height, rawImage.raw.dim.height);
@@ -302,7 +302,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -402,7 +402,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -429,7 +429,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
 
             long half = (height + 1) >> 1;
@@ -466,7 +466,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -490,7 +490,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -514,7 +514,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -538,7 +538,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -562,7 +562,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -585,7 +585,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {

@@ -85,18 +85,18 @@ namespace RawNet
             Size = size;
             cfa = null;
             if (Size.Area() > 100)
-                throw new RawDecoderException("ColorFilterArray:setSize if your CFA pattern is really " + Size.Area() + " pixels in area we may as well give up now");
+                throw new RawDecoderException("if your CFA pattern is really " + Size.Area() + " pixels in area we may as well give up now");
             if (Size.Area() <= 0)
                 return;
             cfa = new CFAColor[Size.Area()];
             if (cfa == null)
-                throw new RawDecoderException("ColorFilterArray:setSize Unable to allocate memory");
+                throw new RawDecoderException("Unable to allocate memory");
         }
 
         public CFAColor GetColorAt(uint x, uint y)
         {
             if (cfa == null)
-                throw new RawDecoderException("ColorFilterArray:getColorAt: No CFA size set");
+                throw new RawDecoderException("No CFA size set");
             if (x >= Size.width || y >= Size.height)
             {
                 x = x % Size.width;
@@ -123,7 +123,7 @@ namespace RawNet
         {
             if (Size.width == 0)
             {
-                throw new RawDecoderException("ColorFilterArray:shiftLeft: No CFA size set (or set to zero)");
+                throw new RawDecoderException("No CFA size set (or set to zero)");
             }
             uint shift = count % Size.width;
             if (0 == shift)
@@ -150,7 +150,7 @@ namespace RawNet
         {
             if (Size.height == 0)
             {
-                throw new RawDecoderException("ColorFilterArray:shiftDown: No CFA size set (or set to zero)");
+                throw new RawDecoderException("No CFA size set (or set to zero)");
             }
             uint shift = count % Size.height;
             if (0 == shift)
@@ -183,9 +183,9 @@ namespace RawNet
         public void SetColorAt(Point2D position, CFAColor color)
         {
             if (position.width >= Size.width || position.width < 0)
-                throw new RawDecoderException("SetColor: position out of CFA pattern");
+                throw new RawDecoderException("Position out of CFA pattern");
             if (position.height >= Size.height || position.height < 0)
-                throw new RawDecoderException("SetColor: position out of CFA pattern");
+                throw new RawDecoderException("Position out of CFA pattern");
             cfa[position.width + position.height * Size.width] = color;
         }
     };

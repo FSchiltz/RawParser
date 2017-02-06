@@ -11,18 +11,22 @@
         Rotate,
         Zoom,
         Saturation,
-        Crop
+        Crop,
+        WB,
+        ReverseGamma,
+        HistoEqualisation
     }
 
     public class HistoryObject
     {
-        public double value;
-        public double oldValue;
+        public object value;
+        public object oldValue;
         public EffectObject target;
         public string Target
         {
             get { return target.ToString(); }
         }
+        //TODO improve aand replace by localisation
         public string ValueAsString { get { return "Old:" + oldValue + " new:" + value; } }
     }
 }

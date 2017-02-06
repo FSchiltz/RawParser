@@ -322,13 +322,13 @@ namespace RawNet.Decoder
                 if (input.RemainingSize > inputPitch)
                     h = (input.RemainingSize / inputPitch - 1);
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
 
             if (offset.height > rawImage.raw.dim.height)
-                throw new RawDecoderException("readUncompressedRaw: Invalid y offset");
+                throw new RawDecoderException("Invalid y offset");
             if (offset.width + size.width > rawImage.raw.dim.width)
-                throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
+                throw new RawDecoderException("Invalid x offset");
 
             uint y = offset.height;
             h = Math.Min(h + offset.height, rawImage.raw.dim.height);
@@ -355,13 +355,13 @@ namespace RawNet.Decoder
                 if (input.RemainingSize > inputPitch)
                     h = input.RemainingSize / inputPitch - 1;
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
 
             if (offset.height > rawImage.raw.dim.height)
-                throw new RawDecoderException("readCoolpixSplitRaw: Invalid y offset");
+                throw new RawDecoderException("Invalid y offset");
             if (offset.width + size.width > rawImage.raw.dim.width)
-                throw new RawDecoderException("readCoolpixSplitRaw: Invalid x offset");
+                throw new RawDecoderException("Invalid x offset");
 
             uint y = offset.height;
             h = Math.Min(h + offset.height, rawImage.raw.dim.height);
@@ -678,7 +678,7 @@ namespace RawNet.Decoder
         // TODO: It would be trivial to run this multithreaded.
         void DecodeNikonSNef(TIFFBinaryReader input, uint w, uint h)
         {
-            if (w < 6) throw new IOException("NEF: got a " + w + " wide sNEF, aborting");
+            if (w < 6) throw new IOException("Got a " + w + " wide sNEF, aborting");
 
             //uint pitch = rawImage.pitch;
             if (input.RemainingSize < (w * h * 3))
@@ -689,7 +689,7 @@ namespace RawNet.Decoder
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("DecodeNikonSNef: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
 
             // We need to read the applied whitebalance, since we should return
@@ -697,17 +697,17 @@ namespace RawNet.Decoder
             List<IFD> note = ifd.GetIFDsWithTag((TagType)12);
 
             if (note.Count == 0)
-                throw new RawDecoderException("NEF Decoder: Unable to locate whitebalance needed for decompression");
+                throw new RawDecoderException("Unable to locate white balance needed for decompression");
 
             Tag wb = note[0].GetEntry((TagType)12);
             if (wb.dataCount != 4 || wb.dataType != TiffDataType.RATIONAL)
-                throw new RawDecoderException("NEF Decoder: Whitebalance has unknown count or type");
+                throw new RawDecoderException("White balance has unknown count or type");
 
             float wb_r = wb.GetFloat(0);
             float wb_b = wb.GetFloat(1);
 
             if (wb_r == 0.0f || wb_b == 0.0f)
-                throw new RawDecoderException("NEF Decoder: Whitebalance has zero value");
+                throw new RawDecoderException("White balance has zero value");
 
             rawImage.metadata.WbCoeffs[0] = wb_r;
             rawImage.metadata.WbCoeffs[1] = 1.0f;

@@ -17,6 +17,7 @@ namespace RawNet
 
     public enum ColorSpaceType
     {
+        None = 0,
         sRGB = 1,
         AdobeRGB = 2,
         WideGamutRGB = 0xfffd,
