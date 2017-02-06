@@ -110,9 +110,7 @@ namespace RawEditor.View.UIHelper
             CropZone.Width = CropSelection.Width = (width - 1);
             Thumb.Height = Thumb2.Height = CropZone.Height;
             Thumb.Width = Thumb2.Width = CropZone.Width;
-            ResetCrop();
-            this.rotation = rotation;
-            /*
+            
             //move crop control to correct position
             if (rotation != this.rotation)
             {
@@ -122,7 +120,7 @@ namespace RawEditor.View.UIHelper
             else
             {
                 MoveEllipse();
-            }*/
+            }
         }
 
         public void ResetCrop()
