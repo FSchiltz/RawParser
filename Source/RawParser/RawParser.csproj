@@ -208,7 +208,7 @@
     <Compile Include="Model\Parser\Format\TIFF\Makernote\PanasonicMakernote.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Makernote\PentaxMakernote.cs" />
     <Compile Include="Model\Parser\RawParser.cs" />
-    <Compile Include="View\Pages\HistoryList.cs" />
+    <Compile Include="Model\Settings\HistoryList.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
