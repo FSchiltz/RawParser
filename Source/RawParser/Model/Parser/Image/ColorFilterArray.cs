@@ -41,7 +41,7 @@ namespace RawNet
         public override string ToString()
         {
             string val = "";
-            for (int i = 0; i < (Size.height * Size.width); i++)
+            for (int i = 0; i < (Size.Height * Size.Width); i++)
             {
                 val += cfa[i].ToString().First();
             }
@@ -85,24 +85,24 @@ namespace RawNet
             Size = size;
             cfa = null;
             if (Size.Area() > 100)
-                throw new RawDecoderException("ColorFilterArray:setSize if your CFA pattern is really " + Size.Area() + " pixels in area we may as well give up now");
+                throw new RawDecoderException("if your CFA pattern is really " + Size.Area() + " pixels in area we may as well give up now");
             if (Size.Area() <= 0)
                 return;
             cfa = new CFAColor[Size.Area()];
             if (cfa == null)
-                throw new RawDecoderException("ColorFilterArray:setSize Unable to allocate memory");
+                throw new RawDecoderException("Unable to allocate memory");
         }
 
         public CFAColor GetColorAt(uint x, uint y)
         {
             if (cfa == null)
-                throw new RawDecoderException("ColorFilterArray:getColorAt: No CFA size set");
-            if (x >= Size.width || y >= Size.height)
+                throw new RawDecoderException("No CFA size set");
+            if (x >= Size.Width || y >= Size.Height)
             {
-                x = x % Size.width;
-                y = y % Size.height;
+                x = x % Size.Width;
+                y = y % Size.Height;
             }
-            return cfa[x + y * Size.width];
+            return cfa[x + y * Size.Width];
         }
 
         public void SetCFA(Point2D inSize, CFAColor color1, CFAColor color2, CFAColor color3, CFAColor color4)
@@ -121,60 +121,60 @@ namespace RawNet
 
         public void ShiftLeft(uint count)
         {
-            if (Size.width == 0)
+            if (Size.Width == 0)
             {
-                throw new RawDecoderException("ColorFilterArray:shiftLeft: No CFA size set (or set to zero)");
+                throw new RawDecoderException("No CFA size set (or set to zero)");
             }
-            uint shift = count % Size.width;
+            uint shift = count % Size.Width;
             if (0 == shift)
                 return;
-            CFAColor[] newCFa = new CFAColor[Size.width * Size.height];
-            CFAColor[] tmp = new CFAColor[Size.width];
-            for (int y = 0; y < Size.height; y++)
+            CFAColor[] newCFa = new CFAColor[Size.Width * Size.Height];
+            CFAColor[] tmp = new CFAColor[Size.Width];
+            for (int y = 0; y < Size.Height; y++)
             {
-                CFAColor[] oldfirst = cfa.Skip((int)(y * Size.width)).ToArray().Take((int)count).ToArray();
-                CFAColor[] oldlast = cfa.Skip((int)(y * Size.width + count)).Take((int)(Size.width - count)).ToArray();
+                CFAColor[] oldfirst = cfa.Skip((int)(y * Size.Width)).ToArray().Take((int)count).ToArray();
+                CFAColor[] oldlast = cfa.Skip((int)(y * Size.Width + count)).Take((int)(Size.Width - count)).ToArray();
                 int i = 0;
                 for (; i < count; i++)
                 {
-                    newCFa[(int)(y * Size.width) + i] = oldfirst[i];
+                    newCFa[(int)(y * Size.Width) + i] = oldfirst[i];
                 }
-                for (; i < Size.width; i++)
+                for (; i < Size.Width; i++)
                 {
-                    newCFa[(int)(y * Size.width) + i] = oldlast[i - count];
+                    newCFa[(int)(y * Size.Width) + i] = oldlast[i - count];
                 }
             }
         }
 
         public void ShiftDown(uint count)
         {
-            if (Size.height == 0)
+            if (Size.Height == 0)
             {
-                throw new RawDecoderException("ColorFilterArray:shiftDown: No CFA size set (or set to zero)");
+                throw new RawDecoderException("No CFA size set (or set to zero)");
             }
-            uint shift = count % Size.height;
+            uint shift = count % Size.Height;
             if (0 == shift)
                 return;
-            CFAColor[] tmp = new CFAColor[Size.height];
-            for (int x = 0; x < Size.width; x++)
+            CFAColor[] tmp = new CFAColor[Size.Height];
+            for (int x = 0; x < Size.Width; x++)
             {
                 CFAColor[] old = cfa.Skip(x).ToArray();
-                for (int y = 0; y < Size.height; y++)
-                    tmp[y] = old[((y + shift) % Size.height) * Size.width];
-                for (int y = 0; y < Size.height; y++)
-                    old[y * Size.width] = tmp[y];
+                for (int y = 0; y < Size.Height; y++)
+                    tmp[y] = old[((y + shift) % Size.Height) * Size.Width];
+                for (int y = 0; y < Size.Height; y++)
+                    old[y * Size.Width] = tmp[y];
             }
         }
 
         protected string AsString()
         {
             string dst = "";
-            for (int y = 0; y < Size.height; y++)
+            for (int y = 0; y < Size.Height; y++)
             {
-                for (int x = 0; x < Size.width; x++)
+                for (int x = 0; x < Size.Width; x++)
                 {
                     dst += (GetColorAt((uint)x, (uint)y)).ToString();
-                    dst += (x == Size.width - 1) ? "\n" : ",";
+                    dst += (x == Size.Width - 1) ? "\n" : ",";
                 }
             }
             return dst;
@@ -182,11 +182,11 @@ namespace RawNet
 
         public void SetColorAt(Point2D position, CFAColor color)
         {
-            if (position.width >= Size.width || position.width < 0)
-                throw new RawDecoderException("SetColor: position out of CFA pattern");
-            if (position.height >= Size.height || position.height < 0)
-                throw new RawDecoderException("SetColor: position out of CFA pattern");
-            cfa[position.width + position.height * Size.width] = color;
+            if (position.Width >= Size.Width || position.Width < 0)
+                throw new RawDecoderException("Position out of CFA pattern");
+            if (position.Height >= Size.Height || position.Height < 0)
+                throw new RawDecoderException("Position out of CFA pattern");
+            cfa[position.Width + position.Height * Size.Width] = color;
         }
     };
 }

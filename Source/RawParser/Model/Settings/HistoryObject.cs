@@ -1,6 +1,8 @@
-﻿namespace RawEditor.Settings
+﻿using RawEditor.Effect;
+
+namespace RawEditor.Settings
 {
-    public enum EffectObject
+    public enum EffectType
     {
         Reset,
         Exposure,
@@ -11,18 +13,47 @@
         Rotate,
         Zoom,
         Saturation,
-        Crop
+        Crop,
+        WhiteBalance,
+        ReverseGamma,
+        HistoEqualisation,
+        Unkown = 0
     }
 
     public class HistoryObject
     {
-        public double value;
-        public double oldValue;
-        public EffectObject target;
+        public object value;
+        public object oldValue;
+        public EffectType target;
+        public ImageEffect effect;
+
+        public HistoryObject(EffectType target, ImageEffect effect)
+        {
+            this.target = target;
+            this.effect = effect;
+        }
+
         public string Target
         {
             get { return target.ToString(); }
         }
-        public string ValueAsString { get { return "Old:" + oldValue + " new:" + value; } }
+
+        //TODO improve and replace by localisation
+        public string ValueAsString
+        {
+            get
+            {
+                switch (target)
+                {
+                    case EffectType.WhiteBalance: return "Set to default";
+                    case EffectType.Crop:
+                    case EffectType.Rotate:
+                    case EffectType.Reset: return "";
+                    case EffectType.HistoEqualisation:
+                    case EffectType.ReverseGamma: return "from " + oldValue + " to " + value;
+                    default: return "from " + ((double)oldValue).ToString("F") + " to " + ((double)value).ToString("F");
+                }
+            }
+        }
     }
 }

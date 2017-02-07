@@ -21,7 +21,7 @@ namespace RawEditor.Effect
         //interpolate normalized value
         public static double[] CubicSpline(double[] x, double[] y)
         {
-            double[] curve = new double[(int)x[x.Length - 1]];
+            double[] curve = new double[(int)x[x.Length - 1] + 1];
             var spline = MathNet.Numerics.Interpolation.CubicSpline.InterpolateNaturalInplace(x, y);
 
             for (int i = 0; i < curve.Length; i++)

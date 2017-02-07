@@ -110,9 +110,7 @@ namespace RawEditor.View.UIHelper
             CropZone.Width = CropSelection.Width = (width - 1);
             Thumb.Height = Thumb2.Height = CropZone.Height;
             Thumb.Width = Thumb2.Width = CropZone.Width;
-            ResetCrop();
-            this.rotation = rotation;
-            /*
+            
             //move crop control to correct position
             if (rotation != this.rotation)
             {
@@ -122,7 +120,7 @@ namespace RawEditor.View.UIHelper
             else
             {
                 MoveEllipse();
-            }*/
+            }
         }
 
         public void ResetCrop()
@@ -167,53 +165,36 @@ namespace RawEditor.View.UIHelper
                 Point currentPosition = e.GetCurrentPoint(CropZone).Position;
                 double controlSize = (RightControl.Height / 2);
                 //check if not outside bound
-                if (currentPosition.Y >= 0 && currentPosition.Y < Canvas.GetTop(RightControl))
-                {
-                    Canvas.SetTop(TopControl, currentPosition.Y - controlSize);
-                    CropSelection.Clip = new RectangleGeometry()
-                    {
-                        Rect = new Rect(CropSelection.Clip.Rect.Left, currentPosition.Y, CropSelection.Clip.Rect.Width,
-                        Canvas.GetTop(RightControl) - currentPosition.Y + controlSize)
-                    };
-                }
+                double y = currentPosition.Y, x = currentPosition.X;
+                if (y < 0) y = 0;
+                else if (y > Canvas.GetTop(RightControl)) y = Canvas.GetTop(RightControl);
+                if (x < 0) x = 0;
+                else if (x > Canvas.GetLeft(RightControl)) x = Canvas.GetLeft(RightControl);
 
-                if (currentPosition.X >= 0 && currentPosition.X < Canvas.GetLeft(RightControl))
+                Canvas.SetTop(TopControl, y - controlSize);
+                Canvas.SetLeft(TopControl, x - controlSize);
+                CropSelection.Clip = new RectangleGeometry()
                 {
-                    Canvas.SetLeft(TopControl, currentPosition.X - controlSize);
-                    if (currentPosition.Y >= 0 && currentPosition.Y < Canvas.GetTop(RightControl))
-                    {
-                        Canvas.SetTop(TopControl, currentPosition.Y - controlSize);
-                        CropSelection.Clip = new RectangleGeometry()
-                        {
-                            Rect = new Rect(currentPosition.X, CropSelection.Clip.Rect.Top,
-                            Canvas.GetLeft(RightControl) - currentPosition.X + controlSize, CropSelection.Clip.Rect.Height)
-                        };
-                    }
-                }
+                    Rect = new Rect(x, y, Canvas.GetLeft(RightControl) - x + controlSize, Canvas.GetTop(RightControl) - y + controlSize)
+                };
             }
             else if (isRightDragging)
             {
                 Point currentPosition = e.GetCurrentPoint(CropZone).Position;
-                Point relative = e.GetCurrentPoint(RightControl).Position;
                 double controlSize = (RightControl.Height / 2);
-                if ((int)currentPosition.Y <= CropZone.Height && (int)currentPosition.Y > Canvas.GetTop(TopControl))
+                double x = currentPosition.X, y = currentPosition.Y;
+                if (y > CropZone.Height) y = CropZone.Height;
+                else if (y < Canvas.GetTop(TopControl)) y = Canvas.GetTop(TopControl);
+                if (x > CropZone.Width) x = CropZone.Width;
+                else if (x < Canvas.GetLeft(TopControl)) x = Canvas.GetLeft(TopControl);
+
+                Canvas.SetTop(RightControl, y - controlSize);
+                Canvas.SetLeft(RightControl, x - controlSize);
+                CropSelection.Clip = new RectangleGeometry()
                 {
-                    Canvas.SetTop(RightControl, currentPosition.Y - controlSize);
-                    CropSelection.Clip = new RectangleGeometry()
-                    {
-                        Rect = new Rect(CropSelection.Clip.Rect.Left, CropSelection.Clip.Rect.Top,
-                            CropSelection.Clip.Rect.Width, currentPosition.Y - Canvas.GetTop(TopControl) - controlSize)
-                    };
-                }
-                if ((int)currentPosition.X <= CropZone.Width && (int)currentPosition.X > Canvas.GetLeft(TopControl))
-                {
-                    Canvas.SetLeft(RightControl, currentPosition.X - controlSize);
-                    CropSelection.Clip = new RectangleGeometry()
-                    {
-                        Rect = new Rect(CropSelection.Clip.Rect.Left, CropSelection.Clip.Rect.Top,
-                            currentPosition.X - Canvas.GetLeft(TopControl) - controlSize, CropSelection.Clip.Rect.Height)
-                    };
-                }
+                    Rect = new Rect(CropSelection.Clip.Rect.Left, CropSelection.Clip.Rect.Top,
+                        x - Canvas.GetLeft(TopControl) - controlSize, y - Canvas.GetTop(TopControl) - controlSize)
+                };
             }
             e.Handled = true;
         }
