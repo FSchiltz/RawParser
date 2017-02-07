@@ -20,6 +20,12 @@ namespace RawEditor.Settings
             set { localSettings.Values["imageBoxBorder"] = value; }
         }
 
+        public static bool EnableDebug
+        {
+            get { return GetBoolSetting("enableDebug"); }
+            set { localSettings.Values["enableDebug"] = value; }
+        }
+
         public static FactorValue PreviewFactor
         {
             get
@@ -66,6 +72,7 @@ namespace RawEditor.Settings
             localSettings.Values["autoPreviewFormat" + def] = false;
             localSettings.Values["demosAlgo" + def] = DemosaicAlgorithm.FastAdams.ToString();
             localSettings.Values["Theme" + def] = ThemeEnum.System.ToString();
+            localSettings.Values["enableDebug" + def] = false;
             if (localSettings.Values["version"] == null || (uint)localSettings.Values["version"] < version)
                 Reset();
             localSettings.Values["version"] = version;

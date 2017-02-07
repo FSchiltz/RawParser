@@ -220,9 +220,7 @@ namespace RawNet.Decoder
                 rawImage.errors.Add(e.Message);
                 // Let's ignore it, it may have delivered somewhat useful data.
             }
-
-            // Set the table, if it should be needed later.
-            Debug.WriteLine("Set table is not correct");
+            
             // mRaw.setTable(null);
         }
 
@@ -361,7 +359,6 @@ namespace RawNet.Decoder
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)
             {
-                Debug.WriteLine("CFA pattern is not found");
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
             }
             else

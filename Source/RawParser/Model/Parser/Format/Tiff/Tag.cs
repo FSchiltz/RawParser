@@ -206,9 +206,9 @@ namespace RawNet.Format.TIFF
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Debug.WriteLine("Error " + e.Message + " while reading IFD tag: " + TagId.ToString());
+                    //we ignore invalid tag (Ugly but that's the specification
                 }
             }
             if (dataOffset > 1)

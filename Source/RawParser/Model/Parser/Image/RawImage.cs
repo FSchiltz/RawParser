@@ -78,12 +78,10 @@ namespace RawNet
         {
             if (!crop.Dimension.IsThisInside(raw.dim - crop.Position))
             {
-                Debug.WriteLine("Attempted to create new subframe larger than original size. Crop skipped.");
                 return;
             }
             if (crop.Position.Width < 0 || crop.Position.Height < 0 || !crop.HasPositiveArea())
             {
-                Debug.WriteLine("Negative crop raw.offset. Crop skipped.");
                 return;
             }
 
@@ -151,14 +149,14 @@ namespace RawNet
             *dest = table.tables[value];
         }
 
-        /*
+
         public void ScaleValues()
         {
-            ushort maxValue = (ushort)((1 << ColorDepth) - 1);
+            ushort maxValue = (ushort)((1 << raw.ColorDepth) - 1);
+            Debug.Assert(whitePoint > 0);
             if (whitePoint == 0)
             {
-                whitePoint = (1 << ColorDepth) - 1;
-                Debug.WriteLine("Whitepoint incorrect");
+                whitePoint = (1 << raw.ColorDepth) - 1;
             }
             try
             {
@@ -178,23 +176,24 @@ namespace RawNet
                         long v = y * raw.uncroppedDim.Width * cpp;
                         for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
                         {
-                            ulong value = (ulong)((raw.data[x + v] - BlackLevel) * factor);
+                            ulong value = (ulong)((raw.rawView[x + v] - BlackLevel) * factor);
                             if (value > maxValue) value = maxValue;
-                            raw.data[x + v] = (ushort)value;
+                            raw.rawView[x + v] = (ushort)value;
                         }
                     });
                 }
+                /*
                 if (table != null)
                 {
                     Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
                     {
                         long v = y * raw.uncroppedDim.Width * cpp;
-                        for (int x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
+                        for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
                         {
-                            raw.data[x + v] = table.tables[raw.data[x + v]];
+                            raw.rawView[x + v] = table.tables[raw.rawView[x + v]];
                         }
                     });
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -262,7 +261,7 @@ namespace RawNet
                     BlackLevel = b;
                 if (whitePoint >= 65536)
                     whitePoint = m;
-                //Debug.WriteLine("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + " Estimated white: " + whitePoint);
+                //ConsoleContent.Value +=("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + " Estimated white: " + whitePoint);
             }
 
             // Skip, if not needed 

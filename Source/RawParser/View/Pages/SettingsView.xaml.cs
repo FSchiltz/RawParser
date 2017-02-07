@@ -33,6 +33,7 @@ namespace RawEditor.View.Pages
         public SettingsView()
         {
             InitializeComponent();
+            DebugToggle.IsOn = SettingStorage.EnableDebug;
             var enumval = Enum.GetValues(typeof(DemosaicAlgorithm)).Cast<DemosaicAlgorithm>();
             DemosComboBox.ItemsSource = enumval.ToList();
 
@@ -131,6 +132,11 @@ namespace RawEditor.View.Pages
         private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SettingStorage.SelectedTheme = ((ThemeEnum)e.AddedItems[0]);
+        }
+
+        private void DebugToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            SettingStorage.EnableDebug = DebugToggle.IsOn;
         }
     }
 }
