@@ -46,7 +46,7 @@
                         <TextBlock TextWrapping="Wrap" FontSize="18" x:Uid="Theme" />
                         <ComboBox Grid.Row="2" Margin="0,10,0,0" x:Name="ThemeComboBox"
                                 SelectionChanged="ThemeComboBox_SelectionChanged" HorizontalAlignment="Stretch"></ComboBox>
-                        <ToggleSwitch x:Name="DebugToggle" Toggled="DebugToggle_Toggled">Enable debug console and preview feature (need a restart)</ToggleSwitch>
+                        <ToggleSwitch Margin="0,20,0,0" x:Name="DebugToggle" Toggled="DebugToggle_Toggled">Enable debug console and preview feature (need a restart)</ToggleSwitch>
                         <Button Tapped="Reset_Tapped" HorizontalAlignment="Center" Margin="0,10">Reset</Button>
                     </StackPanel>
                 </ScrollViewer>
