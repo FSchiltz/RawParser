@@ -4,6 +4,8 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/sdvkbleoqohq9rmb/branch/master?svg=true)](https://ci.appveyor.com/project/arimhan/rawparser/branch/master)
 
+You can contribute to the translation here https://poeditor.com/join/project/JwC7Lro8VT
+
 ## the app is now live on the store (https://www.microsoft.com/store/apps/9pfwlj4lxftf) 
 ###(I recommend uninstalling the preview and using the one in the store. The future releases will be available in the store one or 2 days after being here).
 
