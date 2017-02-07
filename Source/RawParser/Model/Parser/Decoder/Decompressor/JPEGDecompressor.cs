@@ -133,7 +133,6 @@ namespace RawNet.Decoder.Decompressor
                     case JpegMarker.Sof3:
                         //          _RPT0(0,"Found SOF 3 marker:\n");
                         ParseSOF(frame);
-                        Debug.WriteLine(frame);
                         break;
                     case JpegMarker.EOI:
                         //          _RPT0(0,"Found EOI marker\n");

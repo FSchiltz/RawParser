@@ -52,6 +52,7 @@ namespace RawEditor.View.Pages
         public ImageEffect DefaultValue = new ImageEffect();
         public ImageEffect OldValue = new ImageEffect();
         public HistoryList History = new HistoryList();
+        public Bindable<bool> DebugEnabled = new Bindable<bool>(SettingStorage.EnableDebug);
 
         /*
         private float blurAmount = 5;
@@ -83,6 +84,8 @@ namespace RawEditor.View.Pages
                 UpdatePreview(false);
             });
             History.Default = new HistoryObject(EffectType.Unkown, DefaultValue);
+
+            if (!SettingStorage.EnableDebug) PivotGrid.Items.Remove(ToolsPivot); //Super ugly (visibilty.collapsed no work for pivot..
         }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
@@ -212,8 +215,8 @@ namespace RawEditor.View.Pages
                         watch.Stop();
                         raw = decoder.rawImage;
                         raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
+                        //if (decoder.ScaleValue) raw.ScaleValues();
                     }
-                    //if (decoder.ScaleValue) raw.ScaleValues();
                     raw.metadata.FileName = file.DisplayName;
                     raw.metadata.FileNameComplete = file.Name;
                     raw.metadata.FileExtension = file.FileType;
@@ -228,7 +231,6 @@ namespace RawEditor.View.Pages
                         }
                         catch (Exception e)
                         {
-                            Debug.WriteLine(e.Message);
                             algo = DemosaicAlgorithm.None;
                         }
                         Demosaic.Demos(raw, algo);
@@ -277,9 +279,7 @@ namespace RawEditor.View.Pages
                 }
                 catch (Exception e)
                 {
-#if DEBUG
-                    Debug.WriteLine(e.StackTrace);
-#else
+#if !DEBUG
                     //send an event with file extension and camera model and make if any                   
                     logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif

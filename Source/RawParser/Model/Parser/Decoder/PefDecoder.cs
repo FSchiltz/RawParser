@@ -66,7 +66,6 @@ namespace RawNet.Decoder
             var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
             if (cfa == null)
             {
-                Debug.WriteLine("CFA pattern is not found");
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
             }
             else

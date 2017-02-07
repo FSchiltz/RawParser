@@ -265,7 +265,7 @@ namespace RawNet.Decoder
                     rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
                 }
 
-                //Debug.WriteLine("CFA pattern is not found");
+                //ConsoleContent.Value +=("CFA pattern is not found");
             }
             else
             {

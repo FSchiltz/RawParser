@@ -146,10 +146,6 @@ namespace RawNet.Format.TIFF
                     {
                         tags.Add(temp.TagId, temp);
                     }
-                    else
-                    {
-                        Debug.WriteLine("tags already exist");
-                    }
                 }
             }
         }
@@ -252,7 +248,6 @@ namespace RawNet.Format.TIFF
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
                 return null;
             }
             // If the structure cannot be read, a RawDecoderException will be thrown.            
@@ -279,13 +274,11 @@ namespace RawNet.Format.TIFF
             }*/
             if (!id.StartsWith("Adobe"))
             {
-                Debug.WriteLine("Not Adobe Private data");
                 return null;
             }
 
             if (!(data[6] == 'M' && data[7] == 'a' && data[8] == 'k' && data[9] == 'N'))
             {
-                Debug.WriteLine("Not Makernote");
                 return null;
             }
 
@@ -297,7 +290,6 @@ namespace RawNet.Format.TIFF
             data = data.Skip(4).ToArray();
             if (count > size)
             {
-                Debug.WriteLine("Error reading TIFF structure (invalid size). File Corrupt");
                 return null;
             }
             Endianness makernote_endian = Endianness.Unknown;
@@ -307,7 +299,6 @@ namespace RawNet.Format.TIFF
                 makernote_endian = Endianness.Big;
             else
             {
-                Debug.WriteLine("Cannot determine endianess of DNG makernote");
                 return null;
             }
             uint org_offset;
@@ -317,7 +308,6 @@ namespace RawNet.Format.TIFF
             /* We don't parse original makernotes that are placed after 300MB mark in the original file */
             if (org_offset + count > 300 * 1024 * 1024)
             {
-                Debug.WriteLine("Adobe Private data: original offset of makernote is past 300MB offset");
                 return null;
             }
             Makernote makerIfd;
@@ -325,9 +315,9 @@ namespace RawNet.Format.TIFF
             {
                 makerIfd = ParseMakerNote(data, makernote_endian, 0);
             }
-            catch (RawDecoderException e)
+            catch (RawDecoderException)
             {
-                Debug.WriteLine(e.Message);
+                //Makernote are optional and sometimes not even IFD (See Nokia)
                 return null;
             }
             return makerIfd;
