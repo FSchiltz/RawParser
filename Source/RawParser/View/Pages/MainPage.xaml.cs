@@ -475,7 +475,8 @@ namespace RawEditor.View.Pages
                 EditionValue.Rotation++;
                 t.value = EditionValue.Rotation;
                 History.Add(t);
-                EditingControlChanged();
+                ResetButtonVisibility.Value = true;
+                UpdatePreview(false);
             }
         }
 
@@ -487,7 +488,8 @@ namespace RawEditor.View.Pages
                 EditionValue.Rotation--;
                 t.value = EditionValue.Rotation;
                 History.Add(t);
-                EditingControlChanged();
+                ResetButtonVisibility.Value = true;
+                UpdatePreview(false);
             }
         }
 
