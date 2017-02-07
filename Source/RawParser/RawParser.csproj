@@ -20,7 +20,7 @@
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
     <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>arm</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <PackageCertificateThumbprint>8555196F52612800F9F665D82E1EBAF7F7A5100D</PackageCertificateThumbprint>
     <AppxPackageDir>..\AppPackages\</AppxPackageDir>
   </PropertyGroup>
@@ -123,6 +123,7 @@
     <Content Include="Assets\PrivacyPolicy.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <PRIResource Include="Strings\fr-FR\Resources.resw" />
     <None Include="UML\ClassDiagram.cd" />
     <None Include="project.json" />
     <None Include="RawParser_StoreKey.pfx" />
@@ -325,9 +326,7 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Strings\fr-FR\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
