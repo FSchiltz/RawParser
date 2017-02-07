@@ -394,7 +394,6 @@ namespace RawNet
             preview.dim = new Point2D(raw.dim.Width / previewFactor, raw.dim.Height / previewFactor);
             preview.ColorDepth = raw.ColorDepth;
             preview.uncroppedDim = new Point2D(preview.dim.Width, preview.dim.Height);
-            Debug.WriteLine("Preview of size w:" + preview.dim.Width + "y:" + preview.dim.Height);
             preview.green = new ushort[preview.dim.Height * preview.dim.Width];
             preview.red = new ushort[preview.dim.Height * preview.dim.Width];
             preview.blue = new ushort[preview.dim.Height * preview.dim.Width];
