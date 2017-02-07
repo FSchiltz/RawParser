@@ -113,7 +113,7 @@ namespace RawNet.DNG
             for (int i = 0; i < codes; i++)
             {
                 RawImage img_out = opcodes[i].CreateOutput(img);
-                Rectangle2D fullImage = new Rectangle2D(0, 0, img.raw.dim.width, img.raw.dim.height);
+                Rectangle2D fullImage = new Rectangle2D(0, 0, img.raw.dim.Width, img.raw.dim.Height);
 
                 if (!opcodes[i].aoi.IsThisInside(fullImage))
                     throw new RawDecoderException("Area of interest not inside image!");
@@ -233,7 +233,7 @@ namespace RawNet.DNG
         {
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
-                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.dim.width + aoi.Left])
+                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.dim.Width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
@@ -313,7 +313,7 @@ namespace RawNet.DNG
         {
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
-                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.dim.width + aoi.Left])
+                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.dim.Width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
@@ -407,7 +407,7 @@ namespace RawNet.DNG
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
                 ulong realY = (y - startY);
-                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.uncroppedDim.width + aoi.Left])
+                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.uncroppedDim.Width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane

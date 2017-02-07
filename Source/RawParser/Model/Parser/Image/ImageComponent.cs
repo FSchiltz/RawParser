@@ -24,7 +24,7 @@ namespace RawNet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool GetSafeBound(long row, long col)
         {
-            if (row < 0 || row >= dim.height || col < 0 || col >= dim.width)
+            if (row < 0 || row >= dim.Height || col < 0 || col >= dim.Width)
             {
                 return false;
             }

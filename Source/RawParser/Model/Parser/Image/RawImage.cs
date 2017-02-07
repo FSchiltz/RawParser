@@ -51,20 +51,20 @@ namespace RawNet
 
         internal void Init(bool RGB)
         {
-            if (raw.dim.width > 65535 || raw.dim.height > 65535)
+            if (raw.dim.Width > 65535 || raw.dim.Height > 65535)
                 throw new RawDecoderException("Dimensions too large for allocation.");
-            if (raw.dim.width <= 0 || raw.dim.height <= 0)
+            if (raw.dim.Width <= 0 || raw.dim.Height <= 0)
                 throw new RawDecoderException("Dimension of one sides is less than 1 - cannot allocate image.");
-            pitch = (uint)(((raw.dim.width * Bpp) + 15) / 16) * 16;
+            pitch = (uint)(((raw.dim.Width * Bpp) + 15) / 16) * 16;
             if (RGB)
             {
-                raw.red = new ushort[raw.dim.width * raw.dim.height];
-                raw.green = new ushort[raw.dim.width * raw.dim.height];
-                raw.blue = new ushort[raw.dim.width * raw.dim.height];
+                raw.red = new ushort[raw.dim.Width * raw.dim.Height];
+                raw.green = new ushort[raw.dim.Width * raw.dim.Height];
+                raw.blue = new ushort[raw.dim.Width * raw.dim.Height];
             }
             else
-                raw.rawView = new ushort[raw.dim.width * raw.dim.height * cpp];
-            raw.uncroppedDim = new Point2D(raw.dim.width, raw.dim.height);
+                raw.rawView = new ushort[raw.dim.Width * raw.dim.Height * cpp];
+            raw.uncroppedDim = new Point2D(raw.dim.Width, raw.dim.Height);
         }
 
         public void SetTable(ushort[] table, int nfilled, bool dither)
@@ -81,7 +81,7 @@ namespace RawNet
                 Debug.WriteLine("Attempted to create new subframe larger than original size. Crop skipped.");
                 return;
             }
-            if (crop.Position.width < 0 || crop.Position.height < 0 || !crop.HasPositiveArea())
+            if (crop.Position.Width < 0 || crop.Position.Height < 0 || !crop.HasPositiveArea())
             {
                 Debug.WriteLine("Negative crop raw.offset. Crop skipped.");
                 return;
@@ -91,9 +91,9 @@ namespace RawNet
 
             raw.dim = crop.Dimension;
 
-            if ((crop.Position.width & 1) != 0)
+            if ((crop.Position.Width & 1) != 0)
                 colorFilter.ShiftLeft(0);
-            if ((crop.Position.height & 1) != 0)
+            if ((crop.Position.Height & 1) != 0)
                 colorFilter.ShiftDown(0);
         }
 
@@ -173,10 +173,10 @@ namespace RawNet
                 if (BlackLevel != 0 || whitePoint != maxValue)
                 {
                     double factor = (double)maxValue / (maxValue - BlackLevel);
-                    Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
+                    Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
                     {
-                        long v = y * raw.uncroppedDim.width * cpp;
-                        for (uint x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
+                        long v = y * raw.uncroppedDim.Width * cpp;
+                        for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
                         {
                             ulong value = (ulong)((raw.data[x + v] - BlackLevel) * factor);
                             if (value > maxValue) value = maxValue;
@@ -186,10 +186,10 @@ namespace RawNet
                 }
                 if (table != null)
                 {
-                    Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
+                    Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
                     {
-                        long v = y * raw.uncroppedDim.width * cpp;
-                        for (int x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * cpp; x++)
+                        long v = y * raw.uncroppedDim.Width * cpp;
+                        for (int x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
                         {
                             raw.data[x + v] = table.tables[raw.data[x + v]];
                         }
@@ -207,12 +207,12 @@ namespace RawNet
         {
             double[,] xyzToRGB = { { 0.412453, 0.357580, 0.180423 }, { 0.212671, 0.715160, 0.072169 }, { 0.019334, 0.119193, 0.950227 } };
             int maxValue = (1 << ColorDepth) - 1;
-            Parallel.For(0, raw.dim.height, y =>
+            Parallel.For(0, raw.dim.Height, y =>
             {
-                long realY = (y + raw.offset.height) * raw.uncroppedDim.width * 3;
-                for (int x = 0; x < raw.dim.width; x++)
+                long realY = (y + raw.offset.Height) * raw.uncroppedDim.Width * 3;
+                for (int x = 0; x < raw.dim.Width; x++)
                 {
-                    long realX = y + 3 * (x + raw.offset.width);
+                    long realX = y + 3 * (x + raw.offset.Width);
                     double[] rgb = { raw.data[realX] / maxValue, raw.data[realX + 1] / maxValue, raw.data[realY + 2] / maxValue };
                     //convert to XYZ
                     double[] result = Mult3by1(convertionM, rgb);
@@ -242,14 +242,14 @@ namespace RawNet
         public void ScaleBlackWhite()
         {
             const int skipBorder = 250;
-            int gw = (int)((raw.dim.width - skipBorder + raw.offset.width) * cpp);
+            int gw = (int)((raw.dim.Width - skipBorder + raw.offset.Width) * cpp);
             if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && BlackLevel < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
                 int m = 0;
-                for (int row = skipBorder; row < (raw.dim.height - skipBorder + raw.offset.height); row++)
+                for (int row = skipBorder; row < (raw.dim.Height - skipBorder + raw.offset.Height); row++)
                 {
-                    ushort[] pixel = raw.green.Skip((int)(skipBorder + row * raw.dim.width)).ToArray();
+                    ushort[] pixel = raw.green.Skip((int)(skipBorder + row * raw.dim.Width)).ToArray();
                     int pix = 0;
                     for (int col = skipBorder; col < gw; col++)
                     {
@@ -294,35 +294,35 @@ namespace RawNet
                 // Process horizontal area 
                 if (!area.IsVertical)
                 {
-                    if (area.Offset + area.Size > raw.uncroppedDim.height)
+                    if (area.Offset + area.Size > raw.uncroppedDim.Height)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
                     for (uint y = area.Offset; y < area.Offset + area.Size; y++)
                     {
-                        ushort[] pixel = preview.data.Skip((int)(raw.offset.width + raw.dim.width * y)).ToArray();
+                        ushort[] pixel = preview.data.Skip((int)(raw.offset.Width + raw.dim.Width * y)).ToArray();
                         int[] localhist = histogram.Skip((int)(y & 1) * (65536 * 2)).ToArray();
-                        for (uint x = raw.offset.width; x < raw.dim.width + raw.offset.width; x++)
+                        for (uint x = raw.offset.Width; x < raw.dim.Width + raw.offset.Width; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
                     }
-                    totalpixels += area.Size * raw.dim.width;
+                    totalpixels += area.Size * raw.dim.Width;
                 }
 
                 // Process vertical area 
                 if (area.IsVertical)
                 {
-                    if (area.Offset + area.Size > raw.uncroppedDim.width)
+                    if (area.Offset + area.Size > raw.uncroppedDim.Width)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
-                    for (uint y = raw.offset.height; y < raw.dim.height + raw.offset.height; y++)
+                    for (uint y = raw.offset.Height; y < raw.dim.Height + raw.offset.Height; y++)
                     {
-                        ushort[] pixel = preview.data.Skip((int)(area.Offset + raw.dim.width * y)).ToArray();
+                        ushort[] pixel = preview.data.Skip((int)(area.Offset + raw.dim.Width * y)).ToArray();
                         int[] localhist = histogram.Skip((int)(y & 1) * (65536 * 2)).ToArray();
                         for (uint x = area.Offset; x < area.Size + area.Offset; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
                     }
-                    totalpixels += area.Size * raw.dim.height;
+                    totalpixels += area.Size * raw.dim.Height;
                 }
             }
 
@@ -373,13 +373,13 @@ namespace RawNet
             uint previewFactor = 0;
             if (factor == FactorValue.Auto)
             {
-                if (raw.dim.height > raw.dim.width)
+                if (raw.dim.Height > raw.dim.Width)
                 {
-                    previewFactor = (uint)((raw.dim.height / viewHeight) * 0.9);
+                    previewFactor = (uint)((raw.dim.Height / viewHeight) * 0.9);
                 }
                 else
                 {
-                    previewFactor = (uint)((raw.dim.width / viewWidth) * 0.9);
+                    previewFactor = (uint)((raw.dim.Width / viewWidth) * 0.9);
                 }
                 if (previewFactor < 1)
                 {
@@ -391,27 +391,27 @@ namespace RawNet
                 previewFactor = (uint)factor;
             }
 
-            preview.dim = new Point2D(raw.dim.width / previewFactor, raw.dim.height / previewFactor);
+            preview.dim = new Point2D(raw.dim.Width / previewFactor, raw.dim.Height / previewFactor);
             preview.ColorDepth = raw.ColorDepth;
-            preview.uncroppedDim = new Point2D(preview.dim.width, preview.dim.height);
-            Debug.WriteLine("Preview of size w:" + preview.dim.width + "y:" + preview.dim.height);
-            preview.green = new ushort[preview.dim.height * preview.dim.width];
-            preview.red = new ushort[preview.dim.height * preview.dim.width];
-            preview.blue = new ushort[preview.dim.height * preview.dim.width];
+            preview.uncroppedDim = new Point2D(preview.dim.Width, preview.dim.Height);
+            Debug.WriteLine("Preview of size w:" + preview.dim.Width + "y:" + preview.dim.Height);
+            preview.green = new ushort[preview.dim.Height * preview.dim.Width];
+            preview.red = new ushort[preview.dim.Height * preview.dim.Width];
+            preview.blue = new ushort[preview.dim.Height * preview.dim.Width];
 
             uint doubleFactor = previewFactor * previewFactor;
             ushort maxValue = (ushort)((1 << raw.ColorDepth) - 1);
             //loop over each block
-            Parallel.For(0, preview.dim.height, y =>
+            Parallel.For(0, preview.dim.Height, y =>
              {
-                 for (int x = 0; x < preview.dim.width; x++)
+                 for (int x = 0; x < preview.dim.Width; x++)
                  {
                      //find the mean of each block
                      long r = 0, g = 0, b = 0;
                      int xk = 0, yk = 0;
                      for (int i = 0; i < previewFactor; i++)
                      {
-                         long realY = raw.dim.width * ((y * previewFactor) + i);
+                         long realY = raw.dim.Width * ((y * previewFactor) + i);
                          yk++;
                          for (int k = 0; k < previewFactor; k++)
                          {
@@ -428,9 +428,9 @@ namespace RawNet
                      if (r < 0) r = 0; else if (r > maxValue) r = maxValue;
                      if (g < 0) g = 0; else if (g > maxValue) g = maxValue;
                      if (b < 0) b = 0; else if (b > maxValue) b = maxValue;
-                     preview.red[(y * preview.dim.width) + x] = (ushort)r;
-                     preview.green[(y * preview.dim.width) + x] = (ushort)g;
-                     preview.blue[(y * preview.dim.width) + x] = (ushort)b;
+                     preview.red[(y * preview.dim.Width) + x] = (ushort)r;
+                     preview.green[(y * preview.dim.Width) + x] = (ushort)g;
+                     preview.blue[(y * preview.dim.Width) + x] = (ushort)b;
                  }
              });
         }
@@ -441,10 +441,10 @@ namespace RawNet
             {
                 new ExifValue("File", metadata.FileNameComplete, ExifGroup.Parser),
                 new ExifValue("Parsing time", metadata.ParsingTimeAsString, ExifGroup.Parser),
-                new ExifValue("Size", "" + ((raw.dim.width * raw.dim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
-                new ExifValue("Dimension", "" + raw.dim.width + " x " + raw.dim.height, ExifGroup.Camera),
-                new ExifValue("Sensor size", "" + ((metadata.RawDim.width * metadata.RawDim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
-                new ExifValue("Sensor dimension", "" + metadata.RawDim.width + " x " + metadata.RawDim.height, ExifGroup.Camera),
+                new ExifValue("Size", "" + ((raw.dim.Width * raw.dim.Height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
+                new ExifValue("Dimension", "" + raw.dim.Width + " x " + raw.dim.Height, ExifGroup.Camera),
+                new ExifValue("Sensor size", "" + ((metadata.RawDim.Width * metadata.RawDim.Height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
+                new ExifValue("Sensor dimension", "" + metadata.RawDim.Width + " x " + metadata.RawDim.Height, ExifGroup.Camera),
                 new ExifValue("Black level", "" + BlackLevel, ExifGroup.Image),
                 new ExifValue("White level", "" + whitePoint, ExifGroup.Image),
                 new ExifValue("Color depth", "" + raw.ColorDepth + " bits", ExifGroup.Image),

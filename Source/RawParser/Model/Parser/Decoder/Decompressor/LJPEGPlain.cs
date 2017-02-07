@@ -132,10 +132,10 @@ namespace RawNet.Decoder.Decompressor
 
             uint processedPixels = 0;
             uint processedLineSlices = 0;
-            long nextPredictor = offX + (offY * raw.raw.dim.width);
+            long nextPredictor = offX + (offY * raw.raw.dim.Width);
             foreach (uint sliceW in slicesW)
             {
-                for (uint y = 0; y < sliceH && y + offY < raw.raw.dim.height; y += (uint)yStepSize)
+                for (uint y = 0; y < sliceH && y + offY < raw.raw.dim.Height; y += (uint)yStepSize)
                 {
                     // Fix for Canon 80D mraw format.
                     // In that format, `frame` is 4032x3402, while `raw` is 4536x3024.
@@ -143,12 +143,12 @@ namespace RawNet.Decoder.Decompressor
                     // 'extra' sliced lines because sum(slicesW) * sliceH > raw.dim.area()
                     // Those would overflow, hence the break.
                     // see FIX_CANON_FRAME_VS_IMAGE_SIZE_MISMATCH
-                    uint destX = processedLineSlices / raw.raw.dim.height * slicesW[0];
-                    uint destY = processedLineSlices % raw.raw.dim.height;
-                    if (destX + offX >= raw.raw.dim.width * raw.cpp)
+                    uint destX = processedLineSlices / raw.raw.dim.Height * slicesW[0];
+                    uint destY = processedLineSlices % raw.raw.dim.Height;
+                    if (destX + offX >= raw.raw.dim.Width * raw.cpp)
                         break;
 
-                    long dest = (destX + offX) + (destY + offY) * raw.raw.dim.width;
+                    long dest = (destX + offX) + (destY + offY) * raw.raw.dim.Width;
                     for (uint x = 0; x < sliceW; x += (uint)xStepSize)
                     {
                         Debug.Assert((processedPixels <= frame.width));
@@ -172,7 +172,7 @@ namespace RawNet.Decoder.Decompressor
                             for (int i = 0; i < N_COMP; i++)
                             {
                                 p[i] += ht[i].Decode();
-                                if (x + offX < raw.raw.dim.width)
+                                if (x + offX < raw.raw.dim.Width)
                                 {
                                     raw.raw.rawView[dest] = (ushort)(p[i]);
                                     dest++;
@@ -186,15 +186,15 @@ namespace RawNet.Decoder.Decompressor
                                 p[0] += ht[0].Decode();
                                 var t = p[0];
                                 p[0] += ht[0].Decode();
-                                if (x + offX < raw.raw.dim.width)
+                                if (x + offX < raw.raw.dim.Width)
                                 {
-                                    if (x + offX < raw.raw.dim.width) raw.raw.rawView[dest + i * pixelPitch] = (ushort)(t);
-                                    if (x + offX < raw.raw.dim.width) raw.raw.rawView[dest + 3 + i * pixelPitch] = (ushort)(p[0]);
+                                    if (x + offX < raw.raw.dim.Width) raw.raw.rawView[dest + i * pixelPitch] = (ushort)(t);
+                                    if (x + offX < raw.raw.dim.Width) raw.raw.rawView[dest + 3 + i * pixelPitch] = (ushort)(p[0]);
                                 }
                             }
                             p[1] += ht[1].Decode();
                             p[2] += ht[2].Decode();
-                            if (x + offX < raw.raw.dim.width)
+                            if (x + offX < raw.raw.dim.Width)
                             {
                                 raw.raw.rawView[dest + 1] = (ushort)(p[1]);
                                 raw.raw.rawView[dest + 2] = (ushort)(p[2]);
@@ -258,17 +258,17 @@ namespace RawNet.Decoder.Decompressor
 
             uint processedPixels = 0;
             uint processedLineSlices = 0;
-            long nextPredictor = offX + (offY * raw.raw.dim.width);
+            long nextPredictor = offX + (offY * raw.raw.dim.Width);
             foreach (uint sliceW in slicesW)
             {
-                for (uint y = 0; y < sliceH && y + offY < raw.raw.dim.height; y += 1)
+                for (uint y = 0; y < sliceH && y + offY < raw.raw.dim.Height; y += 1)
                 {
-                    uint destX = processedLineSlices / raw.raw.dim.height * slicesW[0];
-                    uint destY = processedLineSlices % raw.raw.dim.height;
-                    if (destX + offX >= raw.raw.dim.width * raw.cpp)
+                    uint destX = processedLineSlices / raw.raw.dim.Height * slicesW[0];
+                    uint destY = processedLineSlices % raw.raw.dim.Height;
+                    if (destX + offX >= raw.raw.dim.Width * raw.cpp)
                         break;
 
-                    long dest = (destX + offX) + (destY + offY) * raw.raw.dim.width;
+                    long dest = (destX + offX) + (destY + offY) * raw.raw.dim.Width;
                     for (uint x = 0; x < sliceW; x += 2)
                     {
                         Debug.Assert((processedPixels <= frame.width));
@@ -283,7 +283,7 @@ namespace RawNet.Decoder.Decompressor
 
                         p[0] += ht[0].Decode();
                         p[1] += ht[1].Decode();
-                        if (x + offX < raw.raw.dim.width)
+                        if (x + offX < raw.raw.dim.Width)
                         {
                             raw.raw.rawView[dest] = (ushort)(p[0]);
                             dest++;

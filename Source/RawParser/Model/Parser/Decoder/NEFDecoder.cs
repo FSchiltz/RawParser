@@ -59,8 +59,8 @@ namespace RawNet.Decoder
                 uint bps = ifd.GetEntry(TagType.BITSPERSAMPLE)?.GetUInt(0) ?? 8;
                 Point2D dim = new Point2D()
                 {
-                    width = ifd.GetEntry(TagType.IMAGEWIDTH)?.GetUInt(0) ?? 0,
-                    height = ifd.GetEntry(TagType.IMAGELENGTH)?.GetUInt(0) ?? 0
+                    Width = ifd.GetEntry(TagType.IMAGEWIDTH)?.GetUInt(0) ?? 0,
+                    Height = ifd.GetEntry(TagType.IMAGELENGTH)?.GetUInt(0) ?? 0
                 };
 
                 // Uncompressed
@@ -314,8 +314,8 @@ namespace RawNet.Decoder
         void ReadCoolpixMangledRaw(TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
             // uint outPitch = rawImage.pitch;
-            uint w = size.width;
-            long h = size.height;
+            uint w = size.Width;
+            long h = size.Height;
             uint cpp = rawImage.cpp;
             if (input.RemainingSize < (inputPitch * h))
             {
@@ -325,13 +325,13 @@ namespace RawNet.Decoder
                     throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
 
-            if (offset.height > rawImage.raw.dim.height)
+            if (offset.Height > rawImage.raw.dim.Height)
                 throw new RawDecoderException("Invalid y offset");
-            if (offset.width + size.width > rawImage.raw.dim.width)
+            if (offset.Width + size.Width > rawImage.raw.dim.Width)
                 throw new RawDecoderException("Invalid x offset");
 
-            uint y = offset.height;
-            h = Math.Min(h + offset.height, rawImage.raw.dim.height);
+            uint y = offset.Height;
+            h = Math.Min(h + offset.Height, rawImage.raw.dim.Height);
             w *= cpp;
             BitPumpMSB32 inputMSB = new BitPumpMSB32(input);
             for (; y < h; y++)
@@ -339,7 +339,7 @@ namespace RawNet.Decoder
                 for (int x = 0; x < w; x++)
                 {
                     //TODO fix X
-                    rawImage.raw.rawView[x + (offset.width * sizeof(UInt16) * cpp + y * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
+                    rawImage.raw.rawView[x + (offset.Width * sizeof(UInt16) * cpp + y * rawImage.raw.dim.Width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
         }
@@ -347,8 +347,8 @@ namespace RawNet.Decoder
         void ReadCoolpixSplitRaw(TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
             //uint outPitch = rawImage.pitch;
-            uint w = size.width;
-            long h = size.height;
+            uint w = size.Width;
+            long h = size.Height;
             uint cpp = rawImage.cpp;
             if (input.RemainingSize < (inputPitch * h))
             {
@@ -358,13 +358,13 @@ namespace RawNet.Decoder
                     throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
 
-            if (offset.height > rawImage.raw.dim.height)
+            if (offset.Height > rawImage.raw.dim.Height)
                 throw new RawDecoderException("Invalid y offset");
-            if (offset.width + size.width > rawImage.raw.dim.width)
+            if (offset.Width + size.Width > rawImage.raw.dim.Width)
                 throw new RawDecoderException("Invalid x offset");
 
-            uint y = offset.height;
-            h = Math.Min(h + offset.height, rawImage.raw.dim.height);
+            uint y = offset.Height;
+            h = Math.Min(h + offset.Height, rawImage.raw.dim.Height);
             w *= cpp;
             h /= 2;
             BitPumpMSB inputMSB = new BitPumpMSB(input);
@@ -372,14 +372,14 @@ namespace RawNet.Decoder
             {
                 for (uint x = 0; x < w; x++)
                 {
-                    rawImage.raw.rawView[x + (offset.width * sizeof(UInt16) * cpp + y * 2 * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
+                    rawImage.raw.rawView[x + (offset.Width * sizeof(UInt16) * cpp + y * 2 * rawImage.raw.dim.Width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
-            for (y = offset.height; y < h; y++)
+            for (y = offset.Height; y < h; y++)
             {
                 for (uint x = 0; x < w; x++)
                 {
-                    rawImage.raw.rawView[x + (offset.width * sizeof(UInt16) * cpp + (y * 2 + 1) * rawImage.raw.dim.width)] = (ushort)inputMSB.GetBits(12);
+                    rawImage.raw.rawView[x + (offset.Width * sizeof(UInt16) * cpp + (y * 2 + 1) * rawImage.raw.dim.Width)] = (ushort)inputMSB.GetBits(12);
                 }
             }
         }
@@ -771,26 +771,26 @@ namespace RawNet.Decoder
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 + 1.370705 * cr), 12), tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.raw.rawView[x + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.raw.rawView[x + (y * rawImage.raw.dim.Width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
 
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 - 0.337633 * cb - 0.698001 * cr), 12), rawImage.raw.rawView, x + 1, ref random);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y1 + 1.732446 * cb), 12), tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.raw.rawView[x + 2 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.raw.rawView[x + 2 + (y * rawImage.raw.dim.Width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 + 1.370705 * cr2), 12), tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.raw.rawView[x + 3 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.raw.rawView[x + 3 + (y * rawImage.raw.dim.Width)] = (ushort)Common.Clampbits((inv_wb_r * tmp + (1 << 9)) >> 10, 15);
 
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 - 0.337633 * cb2 - 0.698001 * cr2), 12), rawImage.raw.rawView, x + 4, ref random);
                     tmpch[0] = (byte)(tmp >> 8);
                     tmpch[1] = (byte)tmp;
                     rawImage.SetWithLookUp((ushort)Common.Clampbits((int)(y2 + 1.732446 * cb2), 12), tmpch, 0, ref random);
                     tmp = (ushort)(tmpch[0] << 8 + tmpch[1]);
-                    rawImage.raw.rawView[x + 5 + (y * rawImage.raw.dim.width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
+                    rawImage.raw.rawView[x + 5 + (y * rawImage.raw.dim.Width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                 }
             }
             rawImage.table = (null);
@@ -869,70 +869,70 @@ namespace RawNet.Decoder
                     rawImage.metadata.WbCoeffs[2] *= 256f / 317.0f;
                     break;
                 case "D1X":
-                    rawImage.raw.dim.width -= 4;
+                    rawImage.raw.dim.Width -= 4;
                     //pixel_aspect = 0.5;
                     break;
                 case "D40X":
                 case "D60":
                 case "D80":
                 case "D3000":
-                    rawImage.raw.dim.height -= 3;
-                    rawImage.raw.dim.width -= 4;
+                    rawImage.raw.dim.Height -= 3;
+                    rawImage.raw.dim.Width -= 4;
                     break;
                 case "D3":
                 case "D3S":
                 case "D700":
-                    rawImage.raw.dim.width -= 4;
-                    rawImage.raw.offset.width = 2;
+                    rawImage.raw.dim.Width -= 4;
+                    rawImage.raw.offset.Width = 2;
                     break;
                 case "D3100":
-                    rawImage.raw.dim.width -= 28;
-                    rawImage.raw.offset.width = 6;
+                    rawImage.raw.dim.Width -= 28;
+                    rawImage.raw.offset.Width = 6;
                     break;
                 case "D5000":
                 case "D90":
-                    rawImage.raw.dim.width -= 42;
+                    rawImage.raw.dim.Width -= 42;
                     break;
                 case "D5100":
                 case "D7000":
                 case "COOLPIX A":
-                    rawImage.raw.dim.width -= 44;
+                    rawImage.raw.dim.Width -= 44;
                     break;
                 case "D3200":
                 case "D600":
                 case "D610":
                 case "D800":
-                    rawImage.raw.dim.width -= 46;
+                    rawImage.raw.dim.Width -= 46;
                     break;
                 case "D4":
                 case "Df":
-                    rawImage.raw.dim.width -= 52;
-                    rawImage.raw.offset.width = 2;
+                    rawImage.raw.dim.Width -= 52;
+                    rawImage.raw.offset.Width = 2;
                     break;
                 case "D40":
                 case "D50":
                 case "D70":
-                    rawImage.raw.dim.width--;
+                    rawImage.raw.dim.Width--;
                     break;
                 case "D100":
                     //if (load_flags)
                     //  raw_width = (width += 3) + 3;
                     break;
                 case "D200":
-                    rawImage.raw.offset.width = 1;
-                    rawImage.raw.dim.width -= 4;
+                    rawImage.raw.offset.Width = 1;
+                    rawImage.raw.dim.Width -= 4;
                     rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
                     break;
                 case "D2H":
-                    rawImage.raw.offset.width = 6;
-                    rawImage.raw.dim.width -= 14;
+                    rawImage.raw.offset.Width = 6;
+                    rawImage.raw.dim.Width -= 14;
                     break;
                 case "D2X":
-                    if (rawImage.raw.dim.width == 3264) rawImage.raw.dim.width -= 32;
-                    else rawImage.raw.dim.width -= 8;
+                    if (rawImage.raw.dim.Width == 3264) rawImage.raw.dim.Width -= 32;
+                    else rawImage.raw.dim.Width -= 8;
                     break;
                 case "D300":
-                    rawImage.raw.dim.width -= 32;
+                    rawImage.raw.dim.Width -= 32;
                     break;
                 default: return;
             }
