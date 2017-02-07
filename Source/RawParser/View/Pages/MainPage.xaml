@@ -210,8 +210,12 @@
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
-                                    <TextBlock Text="{x:Bind raw.raw.dim.Width,Mode=OneWay}"></TextBlock>
-                                    <TextBlock Text="{x:Bind raw.raw.dim.Height,Mode=OneWay}"></TextBlock>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock>Width:</TextBlock>
+                                        <TextBlock Margin="0,0,5,0" Text="{x:Bind raw.raw.dim.Height,Mode=OneWay, FallbackValue=0px, TargetNullValue=0px}"></TextBlock>
+                                        <TextBlock>Height:</TextBlock>
+                                        <TextBlock Text="{x:Bind raw.raw.dim.Height,Mode=OneWay, FallbackValue=0px, TargetNullValue=0px}"></TextBlock>
+                                    </StackPanel>
                                     <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="CropButton_TappedAsync">
                                         <StackPanel Orientation="Horizontal">
                                             <SymbolIcon Symbol="Crop"></SymbolIcon>
