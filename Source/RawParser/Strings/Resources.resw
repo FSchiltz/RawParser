@@ -246,14 +246,5 @@
   <data name="Undo.Label" xml:space="preserve">
     <value>Undo</value>
   </data>
-  <data name="Crop.Label" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="RotateLeft.Label" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="RotateRight.Label" xml:space="preserve">
-    <value></value>
-  </data>
 
 </root>
