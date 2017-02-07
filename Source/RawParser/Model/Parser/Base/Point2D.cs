@@ -21,7 +21,7 @@ namespace RawNet
         public Point2D() { width = height = 0; }
         public Point2D(uint width, uint height) { this.width = width; this.height = height; }
         public Point2D(Point2D point) { width = point.width; height = point.height; }
-        
+
         static public Point2D operator -(Point2D a, Point2D b)
         {
             if ((a is null) && (b is null)) return null;
@@ -61,6 +61,11 @@ namespace RawNet
             var tmp = width;
             width = height;
             height = tmp;
+        }
+
+        public override string ToString()
+        {
+            return "Width: " + width + "px, Height: " + height + "px";
         }
     };
 }

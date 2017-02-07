@@ -4,7 +4,7 @@
         d:DesignHeight="300" d:DesignWidth="400" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
     <StackPanel>
         <StackPanel Tapped="{x:Bind Toggle}" Orientation="Horizontal" Margin="0,0,0,10">
-            <SymbolIcon x:Name="icon" Symbol="HideBcc" Width="20" Height="20"></SymbolIcon>
+            <SymbolIcon x:Name="icon" Symbol="HideBcc" Width="20" Height="20" VerticalAlignment="Center"></SymbolIcon>
             <TextBlock x:Name="Header" FontSize="16" Margin="5,0,0,0" FontWeight="SemiBold"></TextBlock>
         </StackPanel>
         <ContentPresenter x:Name="Container" Content="{x:Bind MainContent}"></ContentPresenter>

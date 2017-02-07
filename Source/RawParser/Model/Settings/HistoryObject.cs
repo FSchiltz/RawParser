@@ -50,8 +50,8 @@ namespace RawEditor.Settings
                     case EffectType.Rotate:
                     case EffectType.Reset: return "";
                     case EffectType.HistoEqualisation:
-                    case EffectType.ReverseGamma: return "From " + oldValue + " to " + value;
-                    default: return "From " + ((double)oldValue).ToString("F") + " to " + ((double)value).ToString("F");
+                    case EffectType.ReverseGamma: return "from " + oldValue + " to " + value;
+                    default: return "from " + ((double)oldValue).ToString("F") + " to " + ((double)value).ToString("F");
                 }
             }
         }
