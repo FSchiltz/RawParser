@@ -265,7 +265,7 @@ namespace RawNet.Decoder
                             diff -= (uint)(1 << len) - 1;
                         sum += (int)diff;
                         // Debug.Assert((sum >> 12) == 0);
-                        if (y < h) dest[x + y * rawImage.raw.dim.width] = (ushort)sum;
+                        if (y < h) dest[x + y * rawImage.raw.dim.Width] = (ushort)sum;
                     }
                 }
             }
@@ -280,14 +280,14 @@ namespace RawNet.Decoder
                 BitPumpPlain bits = new BitPumpPlain(reader);
                 //todo add parralel (parrallel.For not working because onlyone bits so not thread safe;
                 //set one bits pump per row (may be slower)
-                for (uint y = 0; y < rawImage.raw.dim.height; y++)
+                for (uint y = 0; y < rawImage.raw.dim.Height; y++)
                 {
                     // Realign
-                    bits.Offset = (int)(rawImage.raw.dim.width * 8 * y) >> 3;
+                    bits.Offset = (int)(rawImage.raw.dim.Width * 8 * y) >> 3;
                     uint random = bits.PeekBits(24);
 
                     // Process 32 pixels (16x2) per loop.
-                    for (uint x = 0; x < rawImage.raw.dim.width - 30;)
+                    for (uint x = 0; x < rawImage.raw.dim.Width - 30;)
                     {
                         bits.CheckPos();
                         int _max = (int)bits.GetBits(11);
@@ -307,7 +307,7 @@ namespace RawNet.Decoder
                                 if (p > 0x7ff)
                                     p = 0x7ff;
                             }
-                            rawImage.SetWithLookUp((ushort)(p << 1), rawImage.raw.rawView, (int)((y * rawImage.raw.dim.width) + x + i * 2), ref random);
+                            rawImage.SetWithLookUp((ushort)(p << 1), rawImage.raw.rawView, (int)((y * rawImage.raw.dim.Width) + x + i * 2), ref random);
 
                         }
                         x += (x & 1) != 0 ? (uint)31 : 1;  // Skip to next 32 pixels
@@ -334,9 +334,9 @@ namespace RawNet.Decoder
                             {
                                 uint g1 = *(t2++);
                                 uint g2 = *(t2++);
-                                rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                                rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                                 uint g3 = *(t2++);
-                                rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                                rawImage.raw.rawView[y * rawImage.raw.dim.Width + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                             }
 
                         }
@@ -425,43 +425,43 @@ namespace RawNet.Decoder
 
         protected void SetMetadata(string model)
         {
-            if (rawImage.raw.dim.width > 3888)
+            if (rawImage.raw.dim.Width > 3888)
             {
                 rawImage.BlackLevel = 128 << (rawImage.raw.ColorDepth - 12);
             }
 
-            switch (rawImage.raw.dim.width)
+            switch (rawImage.raw.dim.Width)
             {
                 case 3984:
-                    rawImage.raw.dim.width = 3925;
+                    rawImage.raw.dim.Width = 3925;
                     //order = 0x4d4d;
                     break;
                 case 4288:
-                    rawImage.raw.dim.width -= 32;
+                    rawImage.raw.dim.Width -= 32;
                     break;
                 case 4600:
                     if (model.Contains("DSLR-A350"))
-                        rawImage.raw.dim.height -= 4;
+                        rawImage.raw.dim.Height -= 4;
                     rawImage.BlackLevel = 0;
                     break;
                 case 4928:
-                    if (rawImage.raw.dim.height < 3280) rawImage.raw.dim.width -= 8;
+                    if (rawImage.raw.dim.Height < 3280) rawImage.raw.dim.Width -= 8;
                     break;
                 case 5504:
-                    rawImage.raw.dim.width -= (uint)((rawImage.raw.dim.height > 3664) ? 8 : 32);
+                    rawImage.raw.dim.Width -= (uint)((rawImage.raw.dim.Height > 3664) ? 8 : 32);
                     if (model.StartsWith("DSC"))
                         rawImage.BlackLevel = 200 << (rawImage.raw.ColorDepth - 12);
                     break;
                 case 6048:
-                    rawImage.raw.dim.width -= 24;
+                    rawImage.raw.dim.Width -= 24;
                     if (model.Contains("RX1") || model.Contains("A99"))
-                        rawImage.raw.dim.width -= 6;
+                        rawImage.raw.dim.Width -= 6;
                     break;
                 case 7392:
-                    rawImage.raw.dim.width -= 30;
+                    rawImage.raw.dim.Width -= 30;
                     break;
                 case 8000:
-                    rawImage.raw.dim.width -= 32;
+                    rawImage.raw.dim.Width -= 32;
                     if (model.StartsWith("DSC"))
                     {
                         rawImage.raw.ColorDepth = 14;
@@ -472,15 +472,15 @@ namespace RawNet.Decoder
             }
             if (model == "DSLR-A100")
             {
-                if (rawImage.raw.dim.width == 3880)
+                if (rawImage.raw.dim.Width == 3880)
                 {
-                    rawImage.raw.dim.height--;
-                    rawImage.raw.dim.width = ++rawImage.raw.uncroppedDim.width;
+                    rawImage.raw.dim.Height--;
+                    rawImage.raw.dim.Width = ++rawImage.raw.uncroppedDim.Width;
                 }
                 else
                 {
-                    rawImage.raw.dim.height -= 4;
-                    rawImage.raw.dim.width -= 4;
+                    rawImage.raw.dim.Height -= 4;
+                    rawImage.raw.dim.Width -= 4;
                     //order = 0x4d4d;
                     //load_flags = 2;
                 }

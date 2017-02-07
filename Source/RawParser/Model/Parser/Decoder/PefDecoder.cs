@@ -107,47 +107,47 @@ namespace RawNet.Decoder
 
         protected void SetMetadata(string model)
         {
-            if (rawImage.raw.dim.height == 2624 && rawImage.raw.dim.width == 3936)    /* Pentax K10D */
+            if (rawImage.raw.dim.Height == 2624 && rawImage.raw.dim.Width == 3936)    /* Pentax K10D */
             {
-                rawImage.raw.dim.height = 2616;
-                rawImage.raw.dim.width = 3896;
+                rawImage.raw.dim.Height = 2616;
+                rawImage.raw.dim.Width = 3896;
             }
-            else if (rawImage.raw.dim.height == 3136 && rawImage.raw.dim.width == 4864)  /* Pentax K20D 0 */
+            else if (rawImage.raw.dim.Height == 3136 && rawImage.raw.dim.Width == 4864)  /* Pentax K20D 0 */
             {
-                rawImage.raw.dim.height = 3124;
-                rawImage.raw.dim.width = 4688;
+                rawImage.raw.dim.Height = 3124;
+                rawImage.raw.dim.Width = 4688;
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Blue, CFAColor.Green, CFAColor.Green, CFAColor.Red);
             }
-            else if (rawImage.raw.dim.width == 4352 && (model == "K-r" || model == "K-x"))
+            else if (rawImage.raw.dim.Width == 4352 && (model == "K-r" || model == "K-x"))
             {
-                rawImage.raw.dim.width = 4309;
+                rawImage.raw.dim.Width = 4309;
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Blue, CFAColor.Green, CFAColor.Green, CFAColor.Red);
             }
-            else if (rawImage.raw.dim.width >= 4960 && model.Contains("K-5"))
+            else if (rawImage.raw.dim.Width >= 4960 && model.Contains("K-5"))
             {
-                rawImage.raw.dim.height -= rawImage.raw.offset.height = 10;
-                rawImage.raw.dim.width = 4950;
+                rawImage.raw.dim.Height -= rawImage.raw.offset.Height = 10;
+                rawImage.raw.dim.Width = 4950;
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Blue, CFAColor.Green, CFAColor.Green, CFAColor.Red);
             }
-            else if (rawImage.raw.dim.width == 4736 && model == "K-7")
+            else if (rawImage.raw.dim.Width == 4736 && model == "K-7")
             {
-                rawImage.raw.dim.height = 3122;
-                rawImage.raw.dim.width = 4684;
+                rawImage.raw.dim.Height = 3122;
+                rawImage.raw.dim.Width = 4684;
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Blue, CFAColor.Green, CFAColor.Green, CFAColor.Red);
-                rawImage.raw.offset.width = 2;
+                rawImage.raw.offset.Width = 2;
             }
-            else if (rawImage.raw.dim.width == 6080 && model == "K-3")
+            else if (rawImage.raw.dim.Width == 6080 && model == "K-3")
             {
-                rawImage.raw.dim.height -= rawImage.raw.offset.height = 4;
-                rawImage.raw.dim.width = 6040;
+                rawImage.raw.dim.Height -= rawImage.raw.offset.Height = 4;
+                rawImage.raw.dim.Width = 6040;
             }
-            else if (rawImage.raw.dim.width == 7424 && model == "645D")
+            else if (rawImage.raw.dim.Width == 7424 && model == "645D")
             {
-                rawImage.raw.dim.height = 5502;
-                rawImage.raw.dim.width = 7328;
+                rawImage.raw.dim.Height = 5502;
+                rawImage.raw.dim.Width = 7328;
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Green, CFAColor.Red, CFAColor.Blue, CFAColor.Green);
-                rawImage.raw.offset.width = 30;
-                rawImage.raw.offset.height = 48;
+                rawImage.raw.offset.Width = 30;
+                rawImage.raw.offset.Height = 48;
             }
         }
 

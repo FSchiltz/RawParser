@@ -106,8 +106,8 @@ namespace RawNet
             if (0 == slices.Count)
                 throw new RawDecoderException("RAW Decoder: No valid slices found. File probably truncated.");
 
-            rawImage.raw.dim.width = width;
-            rawImage.raw.dim.height = offY;
+            rawImage.raw.dim.Width = width;
+            rawImage.raw.dim.Height = offY;
             rawImage.whitePoint = (1 << bitPerPixel) - 1;
 
             offY = 0;
@@ -155,8 +155,8 @@ namespace RawNet
             {
                 byte* data = (byte*)d;
                 //uint outPitch = rawImage.pitch;
-                long w = size.width;
-                long h = size.height;
+                long w = size.Width;
+                long h = size.Height;
 
                 if (input.RemainingSize < (inputPitch * h))
                 {
@@ -166,19 +166,19 @@ namespace RawNet
                         rawImage.errors.Add("Image truncated (file is too short)");
                     }
                     else
-                        throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                        throw new IOException("Not enough data to decode a single line. Image file truncated.");
                 }
                 if (bitPerPixel > 16)
-                    throw new RawDecoderException("readUncompressedRaw: Unsupported bit depth");
+                    throw new RawDecoderException("Unsupported bit depth");
 
                 int skipBits = (int)(inputPitch - w * rawImage.cpp * bitPerPixel / 8);  // Skip per line
-                if (offset.height > rawImage.raw.dim.height)
-                    throw new RawDecoderException("readUncompressedRaw: Invalid y offset");
-                if (offset.width + size.width > rawImage.raw.dim.width)
-                    throw new RawDecoderException("readUncompressedRaw: Invalid x offset");
+                if (offset.Height > rawImage.raw.dim.Height)
+                    throw new RawDecoderException("Invalid y offset");
+                if (offset.Width + size.Width > rawImage.raw.dim.Width)
+                    throw new RawDecoderException("Invalid x offset");
 
-                uint y = offset.height;
-                h = Math.Min(h + offset.height, rawImage.raw.dim.height);
+                uint y = offset.Height;
+                h = Math.Min(h + offset.Height, rawImage.raw.dim.Height);
 
                 /*if (mRaw.getDataType() == TYPE_FLOAT32)
                 {
@@ -199,7 +199,7 @@ namespace RawNet
                         for (uint x = 0; x < w; x++)
                         {
                             uint b = bits.GetBits(bitPerPixel);
-                            rawImage.raw.rawView[x + (offset.width * rawImage.cpp + y * rawImage.raw.dim.width * rawImage.cpp)] = (ushort)b;
+                            rawImage.raw.rawView[x + (offset.Width * rawImage.cpp + y * rawImage.raw.dim.Width * rawImage.cpp)] = (ushort)b;
                         }
                         bits.SkipBits(skipBits);
                     }
@@ -210,7 +210,7 @@ namespace RawNet
                     w *= rawImage.cpp;
                     for (; y < h; y++)
                     {
-                        UInt16* dest = (UInt16*)&data[offset.width * sizeof(UInt16) * rawImage.cpp + y * rawImage.raw.dim.width];
+                        UInt16* dest = (UInt16*)&data[offset.Width * sizeof(UInt16) * rawImage.cpp + y * rawImage.raw.dim.Width];
                         bits.CheckPos();
                         for (uint x = 0; x < w; x++)
                         {
@@ -226,7 +226,7 @@ namespace RawNet
                     w *= rawImage.cpp;
                     for (; y < h; y++)
                     {
-                        UInt16* dest = (UInt16*)&data[offset.width * sizeof(UInt16) * rawImage.cpp + y * rawImage.raw.dim.width];
+                        UInt16* dest = (UInt16*)&data[offset.Width * sizeof(UInt16) * rawImage.cpp + y * rawImage.raw.dim.Width];
                         bits.CheckPos();
                         for (uint x = 0; x < w; x++)
                         {
@@ -252,7 +252,7 @@ namespace RawNet
                     w *= rawImage.cpp;
                     for (; y < h; y++)
                     {
-                        UInt16* dest = (UInt16*)&data[offset.width * sizeof(UInt16) + y * rawImage.raw.dim.width];
+                        UInt16* dest = (UInt16*)&data[offset.Width * sizeof(UInt16) + y * rawImage.raw.dim.Width];
                         bits.CheckPos();
                         for (uint x = 0; x < w; x++)
                         {
@@ -302,7 +302,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -310,9 +310,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.uncroppedDim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                    rawImage.raw.rawView[(y * rawImage.raw.uncroppedDim.Width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.uncroppedDim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                    rawImage.raw.rawView[(y * rawImage.raw.uncroppedDim.Width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                 }
             }
         }
@@ -347,9 +347,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.Width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.Width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                     if ((x % 10) == 8) input.Position++;
                 }
             }
@@ -382,9 +382,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.Width) + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.Width) + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                     if ((x % 10) == 8) input.Position++;
                 }
             }
@@ -402,7 +402,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -410,9 +410,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
@@ -429,7 +429,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
 
             long half = (height + 1) >> 1;
@@ -449,9 +449,9 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
@@ -466,7 +466,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -474,7 +474,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
                 }
             }
         }
@@ -490,7 +490,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -498,7 +498,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g1 << 8) | (g2 & 0xf0)) >> 4);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)(((g1 << 8) | (g2 & 0xf0)) >> 4);
                 }
             }
         }
@@ -514,7 +514,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -522,7 +522,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g1 & 0x3f) << 8) | g2);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)(((g1 & 0x3f) << 8) | g2);
                 }
             }
         }
@@ -538,7 +538,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -546,7 +546,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g2 << 8) | g1);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)((g2 << 8) | g1);
                 }
             }
         }
@@ -562,7 +562,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -570,7 +570,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 8) | g2);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)((g1 << 8) | g2);
                 }
             }
         }
@@ -585,7 +585,7 @@ namespace RawNet
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
-                    throw new IOException("readUncompressedRaw: Not enough data to decode a single line. Image file truncated.");
+                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -593,7 +593,7 @@ namespace RawNet
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g2 << 8) | g1) >> 4);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)(((g2 << 8) | g1) >> 4);
                 }
             }
         }

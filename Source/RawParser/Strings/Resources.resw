@@ -135,7 +135,13 @@
   <data name="ContrastBalance.Text" xml:space="preserve">
     <value>Contrast balance</value>
   </data>
-  <data name="Crop.Label" xml:space="preserve">
+  <data name="Crop.Text" xml:space="preserve">
+    <value>Crop</value>
+  </data>
+  <data name="CropBox.Text" xml:space="preserve">
+    <value>Crop &amp; Rotate</value>
+  </data>
+  <data name="CropContent.Content" xml:space="preserve">
     <value>Crop</value>
   </data>
   <data name="Demos.Text" xml:space="preserve">
@@ -192,10 +198,13 @@
   <data name="ProcessingHeader.Header" xml:space="preserve">
     <value>Processing</value>
   </data>
-  <data name="RotateLeft.Label" xml:space="preserve">
+  <data name="Redo.Label" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="RotateLeft.Text" xml:space="preserve">
     <value>Rotate left</value>
   </data>
-  <data name="RotateRight.Label" xml:space="preserve">
+  <data name="RotateRight.Text" xml:space="preserve">
     <value>Rotate right</value>
   </data>
   <data name="Saturation.Text" xml:space="preserve">
@@ -227,6 +236,9 @@
   </data>
   <data name="Tools.Header" xml:space="preserve">
     <value>Tools</value>
+  </data>
+  <data name="Undo.Label" xml:space="preserve">
+    <value>Undo</value>
   </data>
   <data name="WBButton.Content" xml:space="preserve">
     <value>Use camera white balance</value>

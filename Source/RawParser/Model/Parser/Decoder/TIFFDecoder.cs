@@ -200,11 +200,11 @@ namespace RawNet.Decoder
                     unsafe
                     {
                         ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                        for (int y = 0; y < rawImage.raw.dim.height; y++)
+                        for (int y = 0; y < rawImage.raw.dim.Height; y++)
                         {
-                            long realY = y * rawImage.raw.dim.width;
-                            long bufferY = y * rawImage.raw.dim.width * 4 + +bufferLayout.StartIndex;
-                            for (int x = 0; x < rawImage.raw.dim.width; x++)
+                            long realY = y * rawImage.raw.dim.Width;
+                            long bufferY = y * rawImage.raw.dim.Width * 4 + +bufferLayout.StartIndex;
+                            for (int x = 0; x < rawImage.raw.dim.Width; x++)
                             {
                                 long realPix = realY + x;
                                 long bufferPix = bufferY + (4 * x);
@@ -255,15 +255,15 @@ namespace RawNet.Decoder
                     {
                         case 3:
                         case 2:
-                            rawImage.Rotation = 2;
+                            rawImage.metadata.OriginalRotation = 2;
                             break;
                         case 4:
                         case 6:
-                            rawImage.Rotation = 1;
+                            rawImage.metadata.OriginalRotation = 1;
                             break;
                         case 7:
                         case 5:
-                            rawImage.Rotation = 3;
+                            rawImage.metadata.OriginalRotation = 3;
                             break;
                     }
                 }
@@ -274,20 +274,19 @@ namespace RawNet.Decoder
                 {
                     case 3:
                     case 2:
-                        rawImage.Rotation = 2;
+                        rawImage.metadata.OriginalRotation = 2;
                         break;
                     case 6:
                     case 5:
-                        rawImage.Rotation = 1;
+                        rawImage.metadata.OriginalRotation = 1;
                         break;
                     case 8:
                     case 7:
-                        rawImage.Rotation = 3;
+                        rawImage.metadata.OriginalRotation = 3;
                         break;
                 }
             }
-            rawImage.metadata.OriginalRotation = rawImage.Rotation;
-            rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.width, rawImage.raw.uncroppedDim.height);
+            rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.Width, rawImage.raw.uncroppedDim.Height);
             try
             {
                 //gps info

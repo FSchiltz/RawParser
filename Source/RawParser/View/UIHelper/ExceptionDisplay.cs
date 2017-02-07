@@ -27,7 +27,7 @@ namespace RawEditor.View.UIHelper
                     Title = title
                 };
                 dialog.Commands.Add(new UICommand { Label = button, Id = 0 });
-                dialog.ShowAsync();
+                await dialog.ShowAsync();
             });
         }
     }

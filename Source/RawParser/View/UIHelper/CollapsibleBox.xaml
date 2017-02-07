@@ -3,13 +3,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
         d:DesignHeight="300" d:DesignWidth="400" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
     <StackPanel>
-        <StackPanel Tapped="Header_Tapped" Orientation="Horizontal" Margin="0,0,0,10">
-            <SymbolIcon x:Name="icon" Symbol="BackToWindow" Width="20" Height="20">
-            </SymbolIcon>
+        <StackPanel Tapped="{x:Bind Toggle}" Orientation="Horizontal" Margin="0,0,0,10">
+            <SymbolIcon x:Name="icon" Symbol="HideBcc" Width="20" Height="20" VerticalAlignment="Center"></SymbolIcon>
             <TextBlock x:Name="Header" FontSize="16" Margin="5,0,0,0" FontWeight="SemiBold"></TextBlock>
         </StackPanel>
-        <ContentPresenter x:Name="Container" Content="{x:Bind MainContent}">
-        </ContentPresenter>
+        <ContentPresenter x:Name="Container" Content="{x:Bind MainContent}"></ContentPresenter>
         <local:Sepparator />
     </StackPanel>
 </UserControl>
