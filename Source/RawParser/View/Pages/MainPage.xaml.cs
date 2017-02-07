@@ -139,7 +139,6 @@ namespace RawEditor.View.Pages
                 raw.preview.offset = new Point2D(0, 0);
                 raw.preview.dim = new Point2D(raw.preview.uncroppedDim.Width, raw.preview.uncroppedDim.Height);
             }
-            SetWBAsync();
             ResetButtonVisibility.Value = false;
             HideCropUI();
         }
@@ -165,18 +164,10 @@ namespace RawEditor.View.Pages
                 oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
                 value = new double[] { raw?.metadata.WbCoeffs[0] ?? 1, raw?.metadata.WbCoeffs[1] ?? 1, raw?.metadata.WbCoeffs[2] ?? 1 }
             });
-            SetWBAsync();
+            EditionValue.RMul = DefaultValue.RMul;
+            EditionValue.GMul = DefaultValue.GMul;
+            EditionValue.BMul = DefaultValue.BMul;
             UpdatePreview(false);
-        }
-
-        private async void SetWBAsync()
-        {
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                EditionValue.RMul = raw?.metadata.WbCoeffs[0] ?? 1;
-                EditionValue.GMul = raw?.metadata.WbCoeffs[1] ?? 1;
-                EditionValue.BMul = raw?.metadata.WbCoeffs[2] ?? 1;
-            });
         }
 
         private void OpenFile(StorageFile file)
@@ -254,15 +245,16 @@ namespace RawEditor.View.Pages
 #endif
                     DefaultValue.Rotation = raw.metadata.OriginalRotation;
                     DefaultValue.ReverseGamma = raw.IsGammaCorrected;
+                    DefaultValue.RMul = raw?.metadata.WbCoeffs[0] ?? 1;
+                    DefaultValue.GMul = raw?.metadata.WbCoeffs[1] ?? 1;
+                    DefaultValue.BMul = raw?.metadata.WbCoeffs[2] ?? 1;
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         var exif = raw.ParseExif();
                         //Group the data
                         var groups = from x in exif group x by x.Group into grp orderby grp.Key select grp;
-
                         //Set the grouped data to CollectionViewSource
                         ExifSource.Source = groups;
-
                         ResetControls();
                         UpdatePreview(true);
                         ControlVisibilty.Value = true;
@@ -277,7 +269,7 @@ namespace RawEditor.View.Pages
                     }
                     thumbnail = null;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
 #if !DEBUG
                     //send an event with file extension and camera model and make if any                   

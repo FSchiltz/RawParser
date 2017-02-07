@@ -308,8 +308,8 @@
                 </ListView>
             </PivotItem>
             <PivotItem x:Uid="History" Margin="12,0,2,0">
-                <ListView ItemsSource="{x:Bind History,Mode=OneWay}" VerticalAlignment="Top" HorizontalAlignment="Left"
-                        Tapped="ListView_Tapped">
+                <ListView ItemsSource="{x:Bind History,Mode=OneWay}" Tapped="ListView_Tapped"
+                        HorizontalContentAlignment="Stretch">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>
