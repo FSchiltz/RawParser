@@ -101,7 +101,7 @@ namespace RawNet.DNG
 struct jpeg_decompress_struct dinfo;
 struct jpeg_error_mgr jerr;
 while (!t.slices.empty()) {
-  DngSliceElement e = t.slices.front();
+  DngSliceEleqment e = t.slices.front();
     t.slices.pop();
   byte* complete_buffer = null;
     JSAMPARRAY buffer = (JSAMPARRAY)malloc(sizeof(JSAMPROW));
