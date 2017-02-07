@@ -13,7 +13,7 @@ namespace RawEditor.Effect
        * @brief Demosaicing using the 5x5 linear method of Malvar et al.
        * @param Output pointer to memory to store the demosaiced image
        * @param Input the input image as a flattened 2D array
-       * @param image.raw.dim.width, image.raw.dim.height the image dimensions
+       * @param image.raw.dim.Width, image.raw.dim.Height the image dimensions
        * @param redx, redy the coordinates of the upper-rightmost red pixel
        *
        * Malvar, He, and Cutler considered the design of a high quality linear
@@ -23,7 +23,7 @@ namespace RawEditor.Effect
        * advantage of correlation among the RGB channels.
        *
        * The Input image is a 2D float array of the input RGB values of size 
-       * image.raw.dim.width*image.raw.dim.height in row-major order.  redx, redy are the coordinates of the 
+       * image.raw.dim.Width*image.raw.dim.Height in row-major order.  redx, redy are the coordinates of the 
        * upper-rightmost red pixel to specify the CFA pattern.
        */
         public static void Demosaic(RawImage image)
@@ -58,16 +58,16 @@ namespace RawEditor.Effect
             // NeighPresence is used for boundary handling.  It is set to 0 if the       neighbor is beyond the boundaries of the image and 1 otherwise. 
             byte[,] NeighPresence = new byte[5, 5];
             int i = 0;
-            Parallel.For(0, image.raw.dim.height, y =>
+            Parallel.For(0, image.raw.dim.Height, y =>
             {
-                for (long x = 0; x < image.raw.dim.width; x++, i++)
+                for (long x = 0; x < image.raw.dim.Width; x++, i++)
                 {
                     /* 5x5 neighborhood around the point (x,y) is copied into Neigh */
-                    for (long ny = -2, j = x + image.raw.dim.width * (y - 2); ny <= 2; ny++, j += image.raw.dim.width)
+                    for (long ny = -2, j = x + image.raw.dim.Width * (y - 2); ny <= 2; ny++, j += image.raw.dim.Width)
                     {
                         for (int nx = -2; nx <= 2; nx++)
                         {
-                            if (x + nx >= 0 && x + nx < image.raw.dim.width && y + ny >= 0 && y + ny < image.raw.dim.height)
+                            if (x + nx >= 0 && x + nx < image.raw.dim.Width && y + ny >= 0 && y + ny < image.raw.dim.Height)
                             {
                                 Neigh[2 + nx, 2 + ny] = image.raw.green[j + nx] + image.raw.blue[j + nx] + image.raw.red[j + nx];
                                 NeighPresence[2 + nx, 2 + ny] = 1;

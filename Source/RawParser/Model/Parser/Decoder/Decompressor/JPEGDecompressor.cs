@@ -100,9 +100,9 @@ namespace RawNet.Decoder.Decompressor
         {
             if (!input.IsValid(offset, size))
                 throw new RawDecoderException("Start offset plus size is longer than file. Truncated file.");
-            if ((int)offX >= raw.raw.dim.width)
+            if ((int)offX >= raw.raw.dim.Width)
                 throw new RawDecoderException("X offset outside of image");
-            if ((int)offY >= raw.raw.dim.height)
+            if ((int)offY >= raw.raw.dim.Height)
                 throw new RawDecoderException("Y offset outside of image");
 
             // JPEG is big endian

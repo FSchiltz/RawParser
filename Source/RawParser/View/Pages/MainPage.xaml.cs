@@ -132,9 +132,9 @@ namespace RawEditor.View.Pages
             if (raw != null)
             {
                 raw.raw.offset = new Point2D(0, 0);
-                raw.raw.dim = new Point2D(raw.raw.uncroppedDim.width, raw.raw.uncroppedDim.height);
+                raw.raw.dim = new Point2D(raw.raw.uncroppedDim.Width, raw.raw.uncroppedDim.Height);
                 raw.preview.offset = new Point2D(0, 0);
-                raw.preview.dim = new Point2D(raw.preview.uncroppedDim.width, raw.preview.uncroppedDim.height);
+                raw.preview.dim = new Point2D(raw.preview.uncroppedDim.Width, raw.preview.uncroppedDim.Height);
             }
             SetWBAsync();
             ResetButtonVisibility.Value = false;
@@ -414,7 +414,7 @@ namespace RawEditor.View.Pages
                 {
                     var result = await ApplyUserModifAsync(raw.preview);
                     DisplayImage(result.Item2, move);
-                    Histo.FillAsync(result.Item1, raw.preview.dim.height, raw.preview.dim.width);
+                    Histo.FillAsync(result.Item1, raw.preview.dim.Height, raw.preview.dim.Width);
                 });
             }
         }
@@ -428,11 +428,11 @@ namespace RawEditor.View.Pages
             {
                 if (EditionValue.Rotation == 1 || EditionValue.Rotation == 3)
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.height, (int)image.dim.width);
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.Height, (int)image.dim.Width);
                 }
                 else
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.width, (int)image.dim.height);
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.Width, (int)image.dim.Height);
                 }
             });
             var tmp = EditionValue?.Apply(image, bitmap) ?? DefaultValue.Apply(image, bitmap);
@@ -559,13 +559,13 @@ namespace RawEditor.View.Pages
                 uint h, w;
                 if (EditionValue.Rotation == 1 || EditionValue.Rotation == 3)
                 {
-                    h = raw.preview.uncroppedDim.width;
-                    w = raw.preview.uncroppedDim.height;
+                    h = raw.preview.uncroppedDim.Width;
+                    w = raw.preview.uncroppedDim.Height;
                 }
                 else
                 {
-                    h = raw.preview.uncroppedDim.height;
-                    w = raw.preview.uncroppedDim.width;
+                    h = raw.preview.uncroppedDim.Height;
+                    w = raw.preview.uncroppedDim.Width;
                 }
                 double factor;
                 if (w > h)
@@ -597,10 +597,10 @@ namespace RawEditor.View.Pages
             double bottom = CropUI.Bottom;
             if (raw?.raw != null && raw?.preview != null)
             {
-                raw.raw.offset = new Point2D((uint)(raw.raw.uncroppedDim.width * left), (uint)(raw.raw.uncroppedDim.height * top));
-                raw.raw.dim = new Point2D((uint)(raw.raw.uncroppedDim.width * right), (uint)(raw.raw.uncroppedDim.height * bottom));
-                raw.preview.offset = new Point2D((uint)(raw.preview.uncroppedDim.width * left), (uint)(raw.preview.uncroppedDim.height * top));
-                raw.preview.dim = new Point2D((uint)(raw.preview.uncroppedDim.width * right), (uint)(raw.preview.uncroppedDim.height * bottom));
+                raw.raw.offset = new Point2D((uint)(raw.raw.uncroppedDim.Width * left), (uint)(raw.raw.uncroppedDim.Height * top));
+                raw.raw.dim = new Point2D((uint)(raw.raw.uncroppedDim.Width * right), (uint)(raw.raw.uncroppedDim.Height * bottom));
+                raw.preview.offset = new Point2D((uint)(raw.preview.uncroppedDim.Width * left), (uint)(raw.preview.uncroppedDim.Height * top));
+                raw.preview.dim = new Point2D((uint)(raw.preview.uncroppedDim.Width * right), (uint)(raw.preview.uncroppedDim.Height * bottom));
                 UpdatePreview(true);
             }
             var t = new HistoryObject(EffectType.Crop, EditionValue.GetCopy()) { oldValue = 0 };

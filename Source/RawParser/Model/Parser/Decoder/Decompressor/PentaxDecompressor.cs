@@ -103,15 +103,15 @@ namespace RawNet.Decoder.Decompressor
             int pLeft1 = 0;
             int pLeft2 = 0;
 
-            for (int y = 0; y < raw.raw.dim.height; y++)
+            for (int y = 0; y < raw.raw.dim.Height; y++)
             {
                 huff[0].bitPump.CheckPos();
-                var realY = y * raw.raw.dim.width;
+                var realY = y * raw.raw.dim.Width;
                 pUp1[y & 1] += huff[0].Decode();
                 pUp2[y & 1] += huff[0].Decode();
                 raw.raw.rawView[realY] = (ushort)(pLeft1 = pUp1[y & 1]);
                 raw.raw.rawView[realY + 1] = (ushort)(pLeft2 = pUp2[y & 1]);
-                for (int x = 2; x < raw.raw.dim.width; x += 2)
+                for (int x = 2; x < raw.raw.dim.Width; x += 2)
                 {
                     pLeft1 += huff[0].Decode();
                     pLeft2 += huff[0].Decode();

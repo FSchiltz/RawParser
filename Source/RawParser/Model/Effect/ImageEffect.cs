@@ -323,21 +323,21 @@ namespace RawEditor.Effect
                     blue = new int[256],
                     green = new int[256]
                 };
-                Parallel.For(0, image.dim.height, y =>
+                Parallel.For(0, image.dim.Height, y =>
                 {
-                    long realY = (y + image.offset.height) * image.uncroppedDim.width;
-                    for (int x = 0; x < image.dim.width; x++)
+                    long realY = (y + image.offset.Height) * image.uncroppedDim.Width;
+                    for (int x = 0; x < image.dim.Width; x++)
                     {
-                        long realPix = realY + x + image.offset.width;
-                        long bufferPix = Rotate(x, y, image.dim.width, image.dim.height) * 4;
+                        long realPix = realY + x + image.offset.Width;
+                        long bufferPix = Rotate(x, y, image.dim.Width, image.dim.Height) * 4;
                         double red = image.red[realPix] * rMul, green = image.green[realPix] * gMul, blue = image.blue[realPix] * bMul;
                         Luminance.Clip(ref red, ref green, ref blue, maxValue);
                         Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                         //vignet correction
-                        //int xV = (x + off.width);
-                        //int yV = (y + off.height);
-                        //var v = Math.Abs(xV - (uncrop.width / 2.0)) / uncrop.width;
-                        //l *= 1 + (vignet * Math.Sin((xV - uncrop.width / 2) / uncrop.width) + Math.Sin((yV - uncrop.height / 2) / uncrop.width));
+                        //int xV = (x + off.Width);
+                        //int yV = (y + off.Height);
+                        //var v = Math.Abs(xV - (uncrop.Width / 2.0)) / uncrop.Width;
+                        //l *= 1 + (vignet * Math.Sin((xV - uncrop.Width / 2) / uncrop.Width) + Math.Sin((yV - uncrop.Height / 2) / uncrop.Width));
                         Luminance.Clip(ref l);
                         l = curve[(uint)(l * maxValue)] / maxValue;
                         Luminance.Clip(ref l);
@@ -362,7 +362,7 @@ namespace RawEditor.Effect
                     //apply histogram equalisation if needed using the histogram
                     //create a lookup table
                     byte[] lut = new byte[256];
-                    double pixelCount = image.dim.height * image.dim.width;
+                    double pixelCount = image.dim.Height * image.dim.Width;
 
                     int sum = 0;
                     // build a LUT containing scale factor
