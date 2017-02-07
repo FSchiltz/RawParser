@@ -326,7 +326,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Strings\fr-F\" />
+    <Folder Include="Strings\fr-FR\" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
