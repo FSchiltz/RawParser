@@ -234,7 +234,7 @@ namespace RawEditor.Effect
 
         internal ImageEffect GetCopy()
         {
-            return (ImageEffect)this.MemberwiseClone();
+            return (ImageEffect)MemberwiseClone();
         }
 
         private bool histoEqual = false;
