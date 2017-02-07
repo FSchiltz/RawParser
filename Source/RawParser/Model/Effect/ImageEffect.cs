@@ -218,7 +218,7 @@ namespace RawEditor.Effect
             }
         }
 
-        private double gamma = 1;
+        private double gamma = 2.2;
         public double Gamma
         {
             get { return gamma; }
