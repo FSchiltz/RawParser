@@ -113,7 +113,7 @@ namespace RawNet.Decoder
                     rawImage.Init(false);
                     using (TIFFBinaryReader reader = new TIFFBinaryReader(imageData, len))
                     {
-                        RawDecompressor.Decode16BitRawBEunpacked(reader, w, h, rawImage);
+                        RawDecompressor.Decode16BitRawUnpacked(reader, w, h, rawImage);
                     }
                     return;
                 }
