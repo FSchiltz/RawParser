@@ -45,6 +45,12 @@ namespace RawNet.Decoder.Decompressor
                     input.getData(), inputPitch, w * mRaw.bpp, h - y);
                 return;
             }*/
+            if (bitPerPixel == 8)
+            {
+                Decode12BitRaw(input, w, h, rawImage);
+                return;
+            }
+
             BitPump bits;
             switch (order)
             {

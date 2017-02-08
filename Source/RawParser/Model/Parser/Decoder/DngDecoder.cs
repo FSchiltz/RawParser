@@ -82,7 +82,7 @@ namespace RawNet.Decoder
             List<IFD> data = ifd.GetIFDsWithTag(TagType.COMPRESSION);
 
             if (data.Count == 0)
-                throw new RawDecoderException("DNG Decoder: No image data found");
+                throw new RawDecoderException("No image data found");
 
             // Erase the ones not with JPEG compression
             for (int k = data.Count - 1; k >= 0; k--)
@@ -102,7 +102,7 @@ namespace RawNet.Decoder
             }
 
             if (data.Count == 0)
-                throw new RawDecoderException("DNG Decoder: No RAW chunks found");
+                throw new RawDecoderException("No RAW chunks found");
 
             IFD raw = data[0];
             int sampleFormat = 1;
@@ -112,15 +112,15 @@ namespace RawNet.Decoder
                 sampleFormat = raw.GetEntry(TagType.SAMPLEFORMAT).GetInt(0);
 
             if (sampleFormat != 1)
-                throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported.");
+                throw new RawDecoderException("Only 16 bit unsigned data supported.");
 
             rawImage.isCFA = (raw.GetEntry(TagType.PHOTOMETRICINTERPRETATION).GetUShort(0) == 32803);
 
             if (sampleFormat == 1 && bps > 16)
-                throw new RawDecoderException("DNG Decoder: Integer precision larger than 16 bits currently not supported.");
+                throw new RawDecoderException("Integer precision larger than 16 bits currently not supported.");
 
             if (sampleFormat == 3 && bps != 32)
-                throw new RawDecoderException("DNG Decoder: Float point must be 32 bits per sample.");
+                throw new RawDecoderException("Float point must be 32 bits per sample.");
 
             rawImage.raw.dim = new Point2D()
             {
@@ -141,7 +141,7 @@ namespace RawNet.Decoder
                 // Uncompressed.
                 uint cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
                 if (cpp > 4)
-                    throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
+                    throw new RawDecoderException("More than 4 samples per pixel is not supported.");
                 rawImage.cpp = cpp;
 
                 Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
@@ -152,7 +152,7 @@ namespace RawNet.Decoder
 
                 if (counts.dataCount != offsets.dataCount)
                 {
-                    throw new RawDecoderException("DNG Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
+                    throw new RawDecoderException("Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
                 }
 
                 uint offY = 0;
@@ -196,7 +196,7 @@ namespace RawNet.Decoder
                         if (i > 0)
                             rawImage.errors.Add(ex.Message);
                         else
-                            throw new RawDecoderException("DNG decoder: IO error occurred in first slice, unable to decode more. Error is: " + ex.Message);
+                            throw new RawDecoderException("IO error occurred in first slice, unable to decode more. Error is: " + ex.Message);
                     }
                 }
 
@@ -207,7 +207,7 @@ namespace RawNet.Decoder
                 rawImage.cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
 
                 if (sampleFormat != 1)
-                    throw new RawDecoderException("DNG Decoder: Only 16 bit unsigned data supported for compressed data.");
+                    throw new RawDecoderException("Only 16 bit unsigned data supported for compressed data.");
 
                 DngDecoderSlices slices = new DngDecoderSlices(reader, rawImage, compression);
                 if (raw.tags.ContainsKey(TagType.TILEOFFSETS))
@@ -215,7 +215,7 @@ namespace RawNet.Decoder
                     int tilew = raw.GetEntry(TagType.TILEWIDTH).GetInt(0);
                     int tileh = raw.GetEntry(TagType.TILELENGTH).GetInt(0);
                     if (tilew == 0 || tileh == 0)
-                        throw new RawDecoderException("DNG Decoder: Invalid tile size");
+                        throw new RawDecoderException("Invalid tile size");
 
                     long tilesX = (rawImage.raw.dim.Width + tilew - 1) / tilew;
                     long tilesY = (rawImage.raw.dim.Height + tileh - 1) / tileh;
@@ -224,7 +224,7 @@ namespace RawNet.Decoder
                     Tag offsets = raw.GetEntry(TagType.TILEOFFSETS);
                     Tag counts = raw.GetEntry(TagType.TILEBYTECOUNTS);
                     if (offsets.dataCount != counts.dataCount || offsets.dataCount != nTiles)
-                        throw new RawDecoderException("DNG Decoder: Tile count mismatch: offsets:" + offsets.dataCount + " count:" + counts.dataCount + ", calculated:" + nTiles);
+                        throw new RawDecoderException("Tile count mismatch: offsets:" + offsets.dataCount + " count:" + counts.dataCount + ", calculated:" + nTiles);
 
                     slices.FixLjpeg = mFixLjpeg;
 
@@ -253,7 +253,7 @@ namespace RawNet.Decoder
                     }
 
                     if (yPerSlice == 0 || yPerSlice > rawImage.raw.dim.Height)
-                        throw new RawDecoderException("DNG Decoder: Invalid y per slice");
+                        throw new RawDecoderException("Invalid y per slice");
 
                     uint offY = 0;
                     for (int s = 0; s < counts.dataCount; s++)
@@ -269,17 +269,17 @@ namespace RawNet.Decoder
                     }
                 }
                 if (slices.slices.Count == 0)
-                    throw new RawDecoderException("DNG Decoder: No valid slices found.");
+                    throw new RawDecoderException("No valid slices found.");
 
                 slices.DecodeSlice();
 
                 if (rawImage.errors.Count >= slices.slices.Count)
-                    throw new RawDecoderException("DNG Decoding: Too many errors encountered. Giving up.\nFirst Error:" + rawImage.errors[0]);
+                    throw new RawDecoderException("Too many errors encountered. Giving up.\nFirst Error:" + rawImage.errors[0]);
 
             }
             else
             {
-                throw new RawDecoderException("DNG Decoder: Unknown compression: " + compression);
+                throw new RawDecoderException("Unknown compression: " + compression);
             }
 
 
@@ -315,7 +315,7 @@ namespace RawNet.Decoder
             if (active_area != null)
             {
                 if (active_area.dataCount != 4)
-                    throw new RawDecoderException("DNG: active area has " + active_area.dataCount + " values instead of 4");
+                    throw new RawDecoderException("Active area has " + active_area.dataCount + " values instead of 4");
 
                 //active_area.GetIntArray(out int[] corners, 4);
                 if (new Point2D(active_area.GetUInt(1), active_area.GetUInt(0)).IsThisInside(rawImage.raw.dim))
@@ -347,7 +347,7 @@ namespace RawNet.Decoder
                     cropped.Dimension = size;
 
                 if (!cropped.HasPositiveArea())
-                    throw new RawDecoderException("DNG Decoder: No positive crop area");
+                    throw new RawDecoderException("No positive crop area");
 
                 rawImage.Crop(cropped);
                 if (rawImage.isCFA && cropped.Position.Width % 2 == 1)
@@ -356,7 +356,7 @@ namespace RawNet.Decoder
                     rawImage.colorFilter.ShiftDown(1);
             }
             if (rawImage.raw.dim.Area() <= 0)
-                throw new RawDecoderException("DNG Decoder: No image left after crop");
+                throw new RawDecoderException("No image left after crop");
 
 
             // Apply stage 1 opcodes
@@ -530,7 +530,7 @@ namespace RawNet.Decoder
 
             Tag black_entry = raw.GetEntry(TagType.BLACKLEVEL);
             if ((int)black_entry.dataCount < blackdim.Width * blackdim.Height)
-                throw new RawDecoderException("DNG: BLACKLEVEL entry is too small");
+                throw new RawDecoderException("Black level entry is too small");
 
             if (blackdim.Width < 2 || blackdim.Height < 2)
             {
@@ -558,7 +558,7 @@ namespace RawNet.Decoder
             if (blackleveldeltav != null)
             {
                 if ((int)blackleveldeltav.dataCount < rawImage.raw.dim.Height)
-                    throw new RawDecoderException("DNG: BLACKLEVELDELTAV array is too small");
+                    throw new RawDecoderException("BLACKLEVELDELTAV array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
                 for (int i = 0; i < rawImage.raw.dim.Height; i++)
                     black_sum[i & 1] += blackleveldeltav.GetFloat(i);
@@ -572,7 +572,7 @@ namespace RawNet.Decoder
             if (blackleveldeltah != null)
             {
                 if ((int)blackleveldeltah.dataCount < rawImage.raw.dim.Width)
-                    throw new RawDecoderException("DNG: BLACKLEVELDELTAH array is too small");
+                    throw new RawDecoderException("BLACKLEVELDELTAH array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
                 for (int i = 0; i < rawImage.raw.dim.Width; i++)
                     black_sum[i & 1] += blackleveldeltah.GetFloat(i);
@@ -597,18 +597,18 @@ namespace RawNet.Decoder
             // Check if layout is OK, if present
             if (raw.tags.ContainsKey(TagType.CFALAYOUT))
                 if (raw.GetEntry(TagType.CFALAYOUT).GetUShort(0) > 2)
-                    throw new RawDecoderException("DNG Decoder: Unsupported CFA Layout.");
+                    throw new RawDecoderException("Unsupported CFA Layout.");
 
             Tag cfadim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM);
             if (cfadim.dataCount != 2)
-                throw new RawDecoderException("DNG Decoder: Couldn't read CFA pattern dimension");
+                throw new RawDecoderException("Couldn't read CFA pattern dimension");
             Tag pDim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
             var cPat = raw.GetEntry(TagType.CFAPATTERN).GetIntArray();     // Does NOT contain dimensions as some documents state
 
             Point2D cfaSize = new Point2D(pDim.GetUInt(1), pDim.GetUInt(0));
             rawImage.colorFilter.SetSize(cfaSize);
             if (cfaSize.Area() != raw.GetEntry(TagType.CFAPATTERN).dataCount)
-                throw new RawDecoderException("DNG Decoder: CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
+                throw new RawDecoderException("CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
 
             for (uint y = 0; y < cfaSize.Height; y++)
             {

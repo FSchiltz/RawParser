@@ -219,7 +219,7 @@ namespace RawNet.Decoder
             }
             else if (ifd.endian == Endianness.Big)
             {
-                RawDecompressor.Decode16BitRawBEunpacked(input, width, height, rawImage);
+                RawDecompressor.Decode16BitRawUnpacked(input, width, height, rawImage);
             }
             else
             {
