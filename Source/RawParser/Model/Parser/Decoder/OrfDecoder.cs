@@ -81,22 +81,22 @@ namespace RawNet.Decoder
         private void DecodeUncompressed(TIFFBinaryReader s, uint w, uint h, long size, Endianness endian)
         {
             if ((hints.ContainsKey("packed_with_control")))
-                Decode12BitRawWithControl(s, w, h);
+                RawDecompressor.Decode12BitRawWithControl(s, w, h, rawImage);
             else if ((hints.ContainsKey("jpeg32_bitorder")))
             {
                 Point2D dim = new Point2D(w, h), pos = new Point2D(0, 0);
-                ReadUncompressedRaw(s, dim, pos, w * 12 / 8, 12, BitOrder.Jpeg32);
+                RawDecompressor.ReadUncompressedRaw(s, dim, pos, w * 12 / 8, 12, BitOrder.Jpeg32, rawImage);
             }
             else if (size >= w * h * 2)
             { // We're in an unpacked raw
                 if (endian == Endianness.Little)
-                    Decode12BitRawUnpacked(s, w, h);
+                    RawDecompressor.Decode12BitRawUnpacked(s, w, h, rawImage);
                 else
-                    Decode12BitRawBEunpackedLeftAligned(s, w, h);
+                    RawDecompressor.Decode12BitRawBEunpackedLeftAligned(s, w, h, rawImage);
             }
             else if (size >= w * h * 3 / 2)
             { // We're in one of those weird interlaced packed raws
-                Decode12BitRawBEInterlaced(s, w, h);
+                RawDecompressor.Decode12BitRawBEInterlaced(s, w, h, rawImage);
             }
             else
             {

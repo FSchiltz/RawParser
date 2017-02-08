@@ -149,7 +149,6 @@ namespace RawNet
             *dest = table.tables[value];
         }
 
-
         public void ScaleValues()
         {
             ushort maxValue = (ushort)((1 << raw.ColorDepth) - 1);

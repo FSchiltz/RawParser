@@ -1,3 +1,4 @@
+using RawNet.Decoder.Decompressor;
 using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
@@ -214,18 +215,18 @@ namespace RawNet.Decoder
             }
             else if (double_width)
             {
-                Decode16BitRawUnpacked(input, width * 2, height);
+                RawDecompressor.Decode16BitRawUnpacked(input, width * 2, height, rawImage);
             }
             else if (ifd.endian == Endianness.Big)
             {
-                Decode16BitRawBEunpacked(input, width, height);
+                RawDecompressor.Decode16BitRawBEunpacked(input, width, height, rawImage);
             }
             else
             {
                 if (hints.ContainsKey("jpeg32_bitorder"))
-                    ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Jpeg32);
+                    RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Jpeg32, rawImage);
                 else
-                    ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Plain);
+                    RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Plain,rawImage);
             }
         }
 

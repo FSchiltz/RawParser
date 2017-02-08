@@ -1,3 +1,4 @@
+using RawNet.Decoder.Decompressor;
 using RawNet.DNG;
 using RawNet.Format.TIFF;
 using System;
@@ -188,7 +189,7 @@ namespace RawNet.Decoder
                         big_endian = true;
                     try
                     {
-                        ReadUncompressedRaw(input, size, pos, (int)(rawImage.cpp * width * bps / 8), bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
+                        RawDecompressor.ReadUncompressedRaw(input, size, pos, (int)(rawImage.cpp * width * bps / 8), bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain, rawImage);
                     }
                     catch (IOException ex)
                     {

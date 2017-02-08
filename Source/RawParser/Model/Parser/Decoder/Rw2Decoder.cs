@@ -74,13 +74,13 @@ namespace RawNet.Decoder
                 if (size >= width * height * 2)
                 {
                     // It's completely unpacked little-endian
-                    Decode12BitRawUnpacked(input_start, width, height);
+                    RawDecompressor.Decode12BitRawUnpacked(input_start, width, height, rawImage);
                     rawImage.raw.ColorDepth = 12;
                 }
                 else if (size >= width * height * 3 / 2)
                 {
                     // It's a packed format
-                    Decode12BitRawWithControl(input_start, width, height);
+                    RawDecompressor.Decode12BitRawWithControl(input_start, width, height, rawImage);
                     rawImage.raw.ColorDepth = 12;
                 }
                 else

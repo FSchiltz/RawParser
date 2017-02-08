@@ -1,4 +1,5 @@
-﻿using RawNet.DNG;
+﻿using RawNet.Decoder.Decompressor;
+using RawNet.DNG;
 using RawNet.Format.TIFF;
 using System;
 using System.Collections.Generic;
@@ -79,49 +80,18 @@ namespace RawNet.Decoder
             rawImage.isCFA = false;
             rawImage.raw.dim = new Point2D(width, height);
             rawImage.raw.uncroppedDim = rawImage.raw.dim;
-
             rawImage.raw.ColorDepth = ifd.GetEntryRecursive((TagType)0x0102)?.GetUShort(0) ?? throw new FormatException("File not correct");
             rawImage.cpp = 3;
             rawImage.Init(true);
-            rawImage.IsGammaCorrected = false;
-            long rowperstrip = ifd.GetEntryRecursive((TagType)0x0116)?.GetLong(0) ?? throw new FormatException("File not correct");
-            long strips = height / rowperstrip;
-            long lastStrip = height % rowperstrip;
-            var imageOffsetTag = ifd.GetEntryRecursive((TagType)0x0111) ?? throw new FormatException("File not correct");
-            int cpp = ifd.GetEntryRecursive((TagType)0x0115)?.GetInt(0) ?? throw new FormatException("File not correct");
+            rawImage.IsGammaCorrected = false;     
 
             int compression = ifd.GetEntryRecursive((TagType)0x0103)?.GetInt(0) ?? throw new FormatException("File not correct");
-            if (compression == 1 && rawImage.raw.ColorDepth <= 8)
+            if (compression == 1 )
             {
-                //not compressed
-                for (int i = 0; i < strips + ((lastStrip == 0) ? 0 : 1); i++)
-                {
-                    //for each complete strip
-                    //move to the offset
-                    reader.Position = imageOffsetTag.GetLong(i);
-                    for (int y = 0; y < rowperstrip && !(i == strips && y <= lastStrip); y++)
-                    {
-                        for (int x = 0; x < width; x++)
-                        {
-                            //get the pixel
-                            //red
-                            rawImage.raw.red[(y + i * rowperstrip) * width + x] = reader.ReadByte();
-                            //green
-                            rawImage.raw.green[(y + i * rowperstrip) * width + x] = reader.ReadByte();
-                            //blue 
-                            rawImage.raw.blue[(y + i * rowperstrip) * width + x] = reader.ReadByte();
-                            for (int z = 0; z < (cpp - 3); z++)
-                            {
-                                //pass the other pixel if more light
-                                reader.ReadByte();
-                            }
-                        }
-                    }
-                }
+                DecodeUncompressed(ifd, BitOrder.Plain);
             }
             else if (compression == 32773 && rawImage.raw.ColorDepth <= 8)
             {
-                //compressed
                 /*Loop until you get the number of unpacked bytes you are expecting:
                 Read the next source byte into n.
                 If n is between 0 and 127 inclusive, copy the next n+1 bytes literally.
@@ -130,7 +100,11 @@ namespace RawNet.Decoder
                 Else if n is - 128, noop.
                 Endloop
                 */
-                //not compressed
+                long rowperstrip = ifd.GetEntryRecursive((TagType)0x0116)?.GetLong(0) ?? throw new FormatException("File not correct");
+                long strips = height / rowperstrip;
+                long lastStrip = height % rowperstrip;
+                var imageOffsetTag = ifd.GetEntryRecursive((TagType)0x0111) ?? throw new FormatException("File not correct");
+                int cpp = ifd.GetEntryRecursive((TagType)0x0115)?.GetInt(0) ?? throw new FormatException("File not correct");
                 for (int i = 0; i < strips + ((lastStrip == 0) ? 0 : 1); i++)
                 {
                     //for each complete strip
@@ -386,5 +360,86 @@ namespace RawNet.Decoder
             }
             return null;
         }
+
+        /** 
+         * Check if the decoder can decode the image from this camera 
+         A RawDecoderException will be thrown if the camera isn't supported 
+         Unknown cameras does NOT generate any specific feedback 
+         This function must be overridden by actual decoders
+            */
+        protected void DecodeUncompressed(IFD rawIFD, BitOrder order)
+        {
+            uint nslices = rawIFD.GetEntry(TagType.STRIPOFFSETS).dataCount;
+            Tag offsets = rawIFD.GetEntry(TagType.STRIPOFFSETS);
+            Tag counts = rawIFD.GetEntry(TagType.STRIPBYTECOUNTS);
+            uint yPerSlice = rawIFD.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+            uint width = rawIFD.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint height = rawIFD.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
+            int bitPerPixel = rawIFD.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
+
+            List<RawSlice> slices = new List<RawSlice>();
+            uint offY = 0;
+
+            for (int s = 0; s < nslices; s++)
+            {
+                RawSlice slice = new RawSlice()
+                {
+                    offset = offsets.GetUInt(s),
+                    count = counts.GetUInt(s)
+                };
+                if (offY + yPerSlice > height)
+                    slice.h = height - offY;
+                else
+                    slice.h = yPerSlice;
+
+                offY += yPerSlice;
+
+                if (reader.IsValid(slice.offset, slice.count)) // Only decode if size is valid
+                    slices.Add(slice);
+            }
+
+            if (0 == slices.Count)
+                throw new RawDecoderException("RAW Decoder: No valid slices found. File probably truncated.");
+
+            rawImage.raw.dim.Width = width;
+            rawImage.raw.dim.Height = offY;
+            rawImage.whitePoint = (1 << bitPerPixel) - 1;
+
+            offY = 0;
+            for (int i = 0; i < slices.Count; i++)
+            {
+                RawSlice slice = slices[i];
+                TIFFBinaryReader input;
+                if (reader is TIFFBinaryReaderRE) input = new TIFFBinaryReaderRE(reader.BaseStream, slice.offset);
+                else input = new TIFFBinaryReader(reader.BaseStream, slice.offset);
+                Point2D size = new Point2D(width, slice.h);
+                Point2D pos = new Point2D(0, offY);
+                bitPerPixel = (int)(slice.count * 8u / (slice.h * width));
+                try
+                {
+                    RawDecompressor.ReadUncompressedRaw(input, size, pos, width * bitPerPixel / 8, bitPerPixel, order, rawImage);
+                }
+                catch (RawDecoderException e)
+                {
+                    if (i > 0)
+                    {
+                        rawImage.errors.Add(e.Message);
+                    }
+                    else
+                        throw;
+                }
+                catch (IOException e)
+                {
+                    if (i > 0)
+                    {
+                        rawImage.errors.Add(e.Message);
+                    }
+                    else
+                        throw new RawDecoderException("RAW decoder: IO error occurred in first slice, unable to decode more. Error is: " + e);
+                }
+                offY += slice.h;
+            }
+        }
+
     }
 }

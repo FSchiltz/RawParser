@@ -291,7 +291,7 @@ namespace RawNet.Decoder
                     else if (split != null)
                         ReadCoolpixSplitRaw(input, size, pos, (int)(width * bitPerPixel / 8));
                     else
-                        ReadUncompressedRaw(input, size, pos, (int)(width * bitPerPixel / 8), (int)bitPerPixel, ((bitorder) ? BitOrder.Jpeg : BitOrder.Plain));
+                        RawDecompressor.ReadUncompressedRaw(input, size, pos, (int)(width * bitPerPixel / 8), (int)bitPerPixel, ((bitorder) ? BitOrder.Jpeg : BitOrder.Plain), rawImage);
                 }
                 catch (RawDecoderException e)
                 {
@@ -400,7 +400,7 @@ namespace RawNet.Decoder
             rawImage.raw.ColorDepth = 12;
             rawImage.raw.dim = new Point2D(w, h);
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset);
-            Decode12BitRawBEWithControl(input, w, h);
+            RawDecompressor.Decode12BitRawBEWithControl(input, w, h, rawImage);
         }
 
         void DecodeSNefUncompressed()
