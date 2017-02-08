@@ -113,7 +113,7 @@ namespace RawNet.Decoder
                     rawImage.Init(false);
                     using (TIFFBinaryReader reader = new TIFFBinaryReader(imageData, len))
                     {
-                        Decode16BitRawBEunpacked(reader, w, h);
+                        RawDecompressor.Decode16BitRawBEunpacked(reader, w, h, rawImage);
                     }
                     return;
                 }
@@ -220,7 +220,7 @@ namespace RawNet.Decoder
                 rawImage.errors.Add(e.Message);
                 // Let's ignore it, it may have delivered somewhat useful data.
             }
-            
+
             // mRaw.setTable(null);
         }
 
@@ -235,9 +235,9 @@ namespace RawNet.Decoder
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, off);
 
             if (hints.ContainsKey("sr2_format"))
-                Decode14BitRawBEunpacked(input, width, height);
+                RawDecompressor.Decode14BitRawBEunpacked(input, width, height, rawImage);
             else
-                Decode16BitRawUnpacked(input, width, height);
+                RawDecompressor.Decode16BitRawUnpacked(input, width, height, rawImage);
         }
 
         unsafe void DecodeARW(TIFFBinaryReader input, long w, long h)

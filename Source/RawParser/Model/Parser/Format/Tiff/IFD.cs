@@ -246,7 +246,7 @@ namespace RawNet.Format.TIFF
             {
                 return new Makernote(data, offset, parentEndian, Depth, parentOffset);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }
