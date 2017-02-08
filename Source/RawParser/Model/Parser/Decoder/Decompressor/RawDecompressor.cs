@@ -1,11 +1,6 @@
-﻿using RawNet.Format.TIFF;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static RawNet.RawDecoder;
 
 namespace RawNet.Decoder.Decompressor
 {
@@ -84,8 +79,7 @@ namespace RawNet.Decoder.Decompressor
                 var skip = (offset.Width + y * rawImage.raw.dim.Width) * rawImage.cpp;
                 for (uint x = 0; x < w; x++)
                 {
-                    uint b = bits.GetBits(bitPerPixel);
-                    rawImage.raw.rawView[x + skip] = (ushort)b;
+                    rawImage.raw.rawView[x + skip] = (ushort)bits.GetBits(bitPerPixel); ;
                 }
                 bits.SkipBits(skipBits);
             }
@@ -96,13 +90,7 @@ namespace RawNet.Decoder.Decompressor
             var count = width * height;
             if (input.RemainingSize < count)
             {
-                if (input.RemainingSize > width)
-                {
-                    height = input.RemainingSize / width - 1;
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Decode8BitRaw: Not enough data to decode a single line. Image file truncated.");
+                throw new IOException("Decode8BitRaw: Not enough data to decode a single line. Image file truncated.");
             }
 
             var temp = input.ReadBytes((int)count);
@@ -118,16 +106,10 @@ namespace RawNet.Decoder.Decompressor
 
         public static void Decode12BitRaw(TIFFBinaryReader input, long width, long height, RawImage rawImage)
         {
-            if (width < 2) throw new IOException("1 pixel wide raw images are not supported");
-            //uint pitch = rawImage.pitch;
-
             if (input.RemainingSize < ((width * 12 / 8) * height) && input.RemainingSize > (width * 12 / 8))
             {
-                height = input.RemainingSize / (width * 12 / 8) - 1;
-                rawImage.errors.Add("Image truncated (file is too short)");
-            }
-            else
                 throw new IOException("Not enough data to decode a single line. Image file truncated.");
+            }
 
             for (int y = 0; y < height; y++)
             {
@@ -145,9 +127,6 @@ namespace RawNet.Decoder.Decompressor
 
         public static void Decode12BitRawWithControl(TIFFBinaryReader input, long width, long height, RawImage rawImage)
         {
-            if (width < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
-            //uint pitch = rawImage.pitch;
-
             // Calulate expected bytes per line.
             long perline = (width * 12 / 8);
             // Add skips every 10 pixels
@@ -156,15 +135,7 @@ namespace RawNet.Decoder.Decompressor
             // If file is too short, only decode as many lines as we have
             if (input.RemainingSize < (perline * height))
             {
-                if (input.RemainingSize > perline)
-                {
-                    height = input.RemainingSize / perline - 1;
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                {
-                    throw new IOException("Decode12BitRawBEWithControl: Not enough data to decode a single line. Image file truncated.");
-                }
+                throw new IOException("Decode12BitRawBEWithControl: Not enough data to decode a single line. Image file truncated.");
             }
 
             for (int y = 0; y < height; y++)
@@ -183,7 +154,6 @@ namespace RawNet.Decoder.Decompressor
 
         public static void Decode12BitRawBEWithControl(TIFFBinaryReader input, long width, long height, RawImage rawImage)
         {
-            if (width < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
             // Calulate expected bytes per line.
             long perline = (width * 12 / 8);
             // Add skips every 10 pixels
@@ -192,16 +162,9 @@ namespace RawNet.Decoder.Decompressor
             // If file is too short, only decode as many lines as we have
             if (input.RemainingSize < (perline * height))
             {
-                if (input.RemainingSize > perline)
-                {
-                    height = input.RemainingSize / perline - 1;
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                {
-                    throw new IOException("Decode12BitRawBEWithControl: Not enough data to decode a single line. Image file truncated.");
-                }
+                throw new IOException("Decode12BitRawBEWithControl: Not enough data to decode a single line. Image file truncated.");
             }
+
             for (int y = 0; y < height; y++)
             {
                 var skip = (y * rawImage.raw.dim.Width);
@@ -223,13 +186,7 @@ namespace RawNet.Decoder.Decompressor
 
             if (input.RemainingSize < ((width * 12 / 8) * height))
             {
-                if (input.RemainingSize > (width * 12 / 8))
-                {
-                    height = (input.RemainingSize / (width * 12 / 8) - 1);
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
+                throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -246,17 +203,9 @@ namespace RawNet.Decoder.Decompressor
 
         public static void Decode12BitRawBEInterlaced(TIFFBinaryReader input, long width, long height, RawImage rawImage)
         {
-            if (width < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
-
             if (input.RemainingSize < ((width * 12 / 8) * height))
             {
-                if (input.RemainingSize > (width * 12 / 8))
-                {
-                    height = input.RemainingSize / (width * 12 / 8) - 1;
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
+                throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
 
             long half = (height + 1) >> 1;
@@ -264,6 +213,7 @@ namespace RawNet.Decoder.Decompressor
             for (int row = 0; row < height; row++)
             {
                 y = row % half * 2 + row / half;
+                var skip = y * rawImage.raw.dim.Width;
                 if (y == 1)
                 {
                     // The second field starts at a 2048 byte aligment
@@ -276,9 +226,9 @@ namespace RawNet.Decoder.Decompressor
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[skip + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[skip + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
@@ -287,13 +237,7 @@ namespace RawNet.Decoder.Decompressor
         {
             if (input.RemainingSize < width * height * 2)
             {
-                if (input.RemainingSize > width * 2)
-                {
-                    height = input.RemainingSize / (width * 2) - 1;
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
+                throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
             for (int y = 0; y < height; y++)
             {
@@ -311,14 +255,9 @@ namespace RawNet.Decoder.Decompressor
             // uint pitch = rawImage.pitch;
             if (input.RemainingSize < width * height * 2)
             {
-                if (input.RemainingSize > width * 2)
-                {
-                    height = input.RemainingSize / (width * 2) - 1;
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
+                throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
+
             for (int y = 0; y < height; y++)
             {
                 var skip = y * rawImage.raw.dim.Width;
@@ -336,14 +275,9 @@ namespace RawNet.Decoder.Decompressor
             // uint pitch = rawImage.pitch;
             if (input.RemainingSize < width * height * 2)
             {
-                if (input.RemainingSize > width * 2)
-                {
-                    height = input.RemainingSize / (width * 2) - 1;
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
+                throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
+
             for (int y = 0; y < height; y++)
             {
                 var skip = y * rawImage.raw.dim.Width;
@@ -361,45 +295,15 @@ namespace RawNet.Decoder.Decompressor
             //uint pitch = rawImage.pitch;
             if (input.RemainingSize < width * height * 2)
             {
-                if (input.RemainingSize > width * 2)
-                {
-                    height = (input.RemainingSize / (width * 2) - 1);
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
+                throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x += 1)
-                {
-                    uint g1 = input.ReadByte();
-                    uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)((g2 << 8) | g1);
-                }
-            }
-        }
 
-        public static void Decode16BitRawBEunpacked(TIFFBinaryReader input, long width, long height, RawImage rawImage)
-        {
-            // uint pitch = rawImage.pitch;
-            if (input.RemainingSize < width * height * 2)
-            {
-                if (input.RemainingSize > width * 2)
-                {
-                    height = input.RemainingSize / (width * 2) - 1;
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
-            }
             for (int y = 0; y < height; y++)
             {
+                var skip = y * rawImage.raw.dim.Width;
                 for (int x = 0; x < width; x += 1)
                 {
-                    uint g1 = input.ReadByte();
-                    uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)((g1 << 8) | g2);
+                    rawImage.raw.rawView[skip + x] = input.ReadUInt16();
                 }
             }
         }
@@ -408,14 +312,9 @@ namespace RawNet.Decoder.Decompressor
         {
             if (input.RemainingSize < width * height * 2)
             {
-                if (input.RemainingSize > width * 2)
-                {
-                    height = (input.RemainingSize / (width * 2) - 1);
-                    rawImage.errors.Add("Image truncated (file is too short)");
-                }
-                else
-                    throw new IOException("Not enough data to decode a single line. Image file truncated.");
+                throw new IOException("Not enough data to decode a single line. Image file truncated.");
             }
+
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x += 1)
