@@ -45,7 +45,7 @@ namespace RawNet.Decoder
             {
                 data = ifd.GetIFDsWithTag(TagType.STRIPOFFSETS);
                 if (data == null)
-                    throw new RawDecoderException("RW2 Decoder: No image data found");
+                    throw new RawDecoderException("No image data found");
                 isOldPanasonic = true;
             }
 
@@ -59,11 +59,11 @@ namespace RawNet.Decoder
 
                 if (offsets.dataCount != 1)
                 {
-                    throw new RawDecoderException("RW2 Decoder: Multiple Strips found:" + offsets.dataCount);
+                    throw new RawDecoderException("Multiple Strips found:" + offsets.dataCount);
                 }
                 uint off = offsets.GetUInt(0);
                 if (!reader.IsValid(off))
-                    throw new RawDecoderException("Panasonic RAW Decoder: Invalid image data offset, cannot decode.");
+                    throw new RawDecoderException("Invalid image data offset, cannot decode.");
 
                 rawImage.raw.dim = new Point2D(width, height);
                 rawImage.Init(false);
@@ -107,14 +107,14 @@ namespace RawNet.Decoder
 
                 if (offsets.dataCount != 1)
                 {
-                    throw new RawDecoderException("RW2 Decoder: Multiple Strips found:" + offsets.dataCount);
+                    throw new RawDecoderException("Multiple Strips found:" + offsets.dataCount);
                 }
 
                 load_flags = 0x2008;
                 uint off = offsets.GetUInt(0);
 
                 if (!reader.IsValid(off))
-                    throw new RawDecoderException("RW2 Decoder: Invalid image data offset, cannot decode.");
+                    throw new RawDecoderException("Invalid image data offset, cannot decode.");
 
                 input_start = new TIFFBinaryReader(stream, off);
                 DecodeRw2();
@@ -243,9 +243,9 @@ namespace RawNet.Decoder
             base.DecodeMetadata();
 
             if (rawImage.metadata.Model == null)
-                throw new RawDecoderException("RW2 Meta Decoder: Model name not found");
+                throw new RawDecoderException("Model name not found");
             if (rawImage.metadata.Make == null)
-                throw new RawDecoderException("RW2 Support: Make name not found");
+                throw new RawDecoderException("Make name not found");
 
             string mode = GuessMode();
 

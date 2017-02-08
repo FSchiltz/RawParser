@@ -15,7 +15,7 @@ namespace RawNet.Decoder
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.STRIPOFFSETS);
             if (data.Count == 0)
-                throw new RawDecoderException("PEF Decoder: No image data found");
+                throw new RawDecoderException("No image data found");
 
             IFD raw = data[0];
 
@@ -28,21 +28,21 @@ namespace RawNet.Decoder
             }
 
             if (65535 != compression)
-                throw new RawDecoderException("PEF Decoder: Unsupported compression");
+                throw new RawDecoderException("Unsupported compression");
 
             Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
             Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
 
             if (offsets.dataCount != 1)
             {
-                throw new RawDecoderException("PEF Decoder: Multiple Strips found: " + offsets.dataCount);
+                throw new RawDecoderException("Multiple Strips found: " + offsets.dataCount);
             }
             if (counts.dataCount != offsets.dataCount)
             {
-                throw new RawDecoderException("PEF Decoder: Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
+                throw new RawDecoderException("Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
             }
             if (!reader.IsValid(offsets.GetUInt(0), counts.GetUInt(0)))
-                throw new RawDecoderException("PEF Decoder: Truncated file.");
+                throw new RawDecoderException("Truncated file.");
 
             rawImage.raw.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
             rawImage.Init(false);
