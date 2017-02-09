@@ -249,4 +249,7 @@
   <data name="Before.Label" xml:space="preserve">
     <value>Show Before</value>
   </data>
+  <data name="WBNeutralButton.Content" xml:space="preserve">
+    <value>Choose gray point</value>
+  </data>
 </root>

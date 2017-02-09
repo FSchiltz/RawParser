@@ -165,6 +165,9 @@
                                     <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                             Tapped="{x:Bind SetWBUpdate}" FontSize="12" HorizontalAlignment="Center"
                                             x:Uid="WBButton" />
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                            Tapped="{x:Bind ChooseNeutralPoint}" FontSize="12" HorizontalAlignment="Center"
+                                            x:Uid="WBNeutralButton" />
                                     <Grid Margin="0,5,0,5">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"></ColumnDefinition>
