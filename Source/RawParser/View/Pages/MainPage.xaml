@@ -9,6 +9,9 @@
             <CommandBar.Content>
                 <uihelper:LoadBar x:Name="Load" />
             </CommandBar.Content>
+            <AppBarToggleButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="RotateCamera"
+                    x:Uid="Before" Checked="{x:Bind ShowBeforeDisplay}" Unchecked="{x:Bind HideBeforeDisplay}"
+                    IsChecked="False" />
             <AppBarButton IsEnabled="{x:Bind History.IsUndoEnabled,Mode=OneWay}" Icon="Undo" x:Uid="Undo"
                     Tapped="{x:Bind History.Undo}" />
             <AppBarButton IsEnabled="{x:Bind History.IsRedoEnabled,Mode=OneWay}" Icon="Redo" x:Uid="Redo"
@@ -87,7 +90,10 @@
                 VerticalScrollBarVisibility="Auto" RelativePanel.AlignTopWithPanel="True"
                 RelativePanel.AlignLeftWithPanel="True" HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch">
-            <Image x:Name="ImageBox" />
+            <Grid>
+                <Image x:Name="ImageBox" />
+                <Image x:Name="ImageBoxPlain" Visibility="Collapsed" />
+            </Grid>
         </ScrollViewer>
         <Slider x:Name="ZoomSlider" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Minimum="0.1" Maximum="2"
                 SmallChange="0.1" StepFrequency="0.1" Canvas.ZIndex="3" Margin="10,0,0,10"
@@ -336,7 +342,7 @@
                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center">Free image</Button>
                     <Button Margin="0,20,0,0" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                             HorizontalAlignment="Center" Tapped="Button_Tapped">Recreate preview</Button>
-                    <Button Margin="0,20,0,0" IsEnabled="False" HorizontalAlignment="Center">Save Thumbnail</Button>             
+                    <Button Margin="0,20,0,0" IsEnabled="False" HorizontalAlignment="Center">Save Thumbnail</Button>
                 </StackPanel>
             </PivotItem>
             <!--
