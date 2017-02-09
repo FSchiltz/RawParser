@@ -709,5 +709,20 @@ namespace RawEditor.View.Pages
         {
             ImageBoxPlain.Visibility = Visibility.Collapsed;
         }
+
+        private void ChooseNeutralPoint()
+        {
+            //enable selection mode over the image
+
+            //get the correct pixel
+
+            //Calculate the multiplier
+
+            //apply them
+
+            //update preview
+
+            //add an history object
+        }
     }
 }
