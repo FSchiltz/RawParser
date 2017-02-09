@@ -6,15 +6,8 @@ using System.IO;
 
 namespace RawNet
 {
-    public abstract class RawDecoder
+    public abstract partial class RawDecoder
     {
-        internal class RawSlice
-        {
-            public RawSlice() { }
-            public uint h = 0;
-            public uint offset = 0;
-            public uint count = 0;
-        }
 
         /* The decoded image - undefined if image has not or could not be decoded. */
         public RawImage rawImage;
