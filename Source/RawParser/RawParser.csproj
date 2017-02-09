@@ -152,6 +152,7 @@
     <Compile Include="Model\Parser\Decoder\Decompressor\HuffmanCompressor\PentaxHuffman.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\LJPEGPlain.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\RawDecompressor.cs" />
+    <Compile Include="Model\Parser\Decoder\RawSlice.cs" />
     <Compile Include="Model\Parser\Format\JPEG\CosineTable.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\JPEGDecompressor.cs" />
     <Compile Include="Model\Parser\Decoder\DNGDecoder.cs" />

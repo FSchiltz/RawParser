@@ -9,15 +9,6 @@ using System.Threading.Tasks;
 
 namespace RawNet.Decoder
 {
-    class DngStrip
-    {
-        public DngStrip() { offset = count = offsetY = 0; h = 0; }
-        public uint h;
-        public uint offset; // Offset in bytes
-        public uint count;
-        public uint offsetY;
-    };
-
     internal class DNGDecoder : TIFFDecoder
     {
         bool mFixLjpeg;
@@ -136,152 +127,93 @@ namespace RawNet.Decoder
                 ReadCFA(raw);
             }
             // Now load the image
-            if (compression == 1)
+            switch (compression)
             {
-                // Uncompressed.
-                uint cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
-                if (cpp > 4)
-                    throw new RawDecoderException("More than 4 samples per pixel is not supported.");
-                rawImage.cpp = cpp;
-
-                Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
-                Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
-                uint yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
-                uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-                uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-
-                if (counts.dataCount != offsets.dataCount)
-                {
-                    throw new RawDecoderException("Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
-                }
-
-                uint offY = 0;
-                List<DngStrip> slices = new List<DngStrip>();
-                for (int s = 0; s < offsets.dataCount; s++)
-                {
-                    DngStrip slice = new DngStrip()
-                    {
-                        offset = offsets.GetUInt(s),
-                        count = counts.GetUInt(s),
-                        offsetY = offY
-                    };
-                    if (offY + yPerSlice > height)
-                        slice.h = height - offY;
-                    else
-                        slice.h = yPerSlice;
-
-                    offY += yPerSlice;
-
-                    if (reader.IsValid(slice.offset, slice.count)) // Only decode if size is valid
-                        slices.Add(slice);
-                }
-
-                for (int i = 0; i < slices.Count; i++)
-                {
-                    DngStrip slice = slices[i];
-                    TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, slice.offset);
-                    Point2D size = new Point2D(width, slice.h);
-                    Point2D pos = new Point2D(0, slice.offsetY);
-
+                case 1:
+                    uint cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                    if (cpp > 4)
+                        throw new RawDecoderException("More than 4 samples per pixel is not supported.");
+                    rawImage.cpp = cpp;
                     bool big_endian = (raw.endian == Endianness.Big);
                     // DNG spec says that if not 8 or 16 bit/sample, always use big endian
                     if (bps != 8 && bps != 16)
                         big_endian = true;
-                    try
+                    DecodeUncompressed(raw, big_endian ? BitOrder.Jpeg : BitOrder.Plain);
+                    break;
+                case 7:
+                case 0x884c:
+                    rawImage.cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);                    // Let's try loading it as tiles instead
+
+                    if (sampleFormat != 1)
+                        throw new RawDecoderException("Only 16 bit unsigned data supported for compressed data.");
+
+                    DngDecoderSlices slices = new DngDecoderSlices(reader, rawImage);
+                    if (raw.tags.ContainsKey(TagType.TILEOFFSETS))
                     {
-                        RawDecompressor.ReadUncompressedRaw(input, size, pos, (int)(rawImage.cpp * width * bps / 8), bps, big_endian ? BitOrder.Jpeg : BitOrder.Plain, rawImage);
-                    }
-                    catch (IOException ex)
-                    {
-                        if (i > 0)
-                            rawImage.errors.Add(ex.Message);
-                        else
-                            throw new RawDecoderException("IO error occurred in first slice, unable to decode more. Error is: " + ex.Message);
-                    }
-                }
+                        int tilew = raw.GetEntry(TagType.TILEWIDTH).GetInt(0);
+                        int tileh = raw.GetEntry(TagType.TILELENGTH).GetInt(0);
+                        if (tilew == 0 || tileh == 0)
+                            throw new RawDecoderException("Invalid tile size");
 
-            }
-            else if (compression == 7 || compression == 0x884c)
-            {
-                // Let's try loading it as tiles instead
-                rawImage.cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                        long tilesX = (rawImage.raw.dim.Width + tilew - 1) / tilew;
+                        long tilesY = (rawImage.raw.dim.Height + tileh - 1) / tileh;
+                        long nTiles = tilesX * tilesY;
 
-                if (sampleFormat != 1)
-                    throw new RawDecoderException("Only 16 bit unsigned data supported for compressed data.");
+                        Tag offsets = raw.GetEntry(TagType.TILEOFFSETS);
+                        Tag counts = raw.GetEntry(TagType.TILEBYTECOUNTS);
+                        if (offsets.dataCount != counts.dataCount || offsets.dataCount != nTiles)
+                            throw new RawDecoderException("Tile count mismatch: offsets:" + offsets.dataCount + " count:" + counts.dataCount + ", calculated:" + nTiles);
 
-                DngDecoderSlices slices = new DngDecoderSlices(reader, rawImage, compression);
-                if (raw.tags.ContainsKey(TagType.TILEOFFSETS))
-                {
-                    int tilew = raw.GetEntry(TagType.TILEWIDTH).GetInt(0);
-                    int tileh = raw.GetEntry(TagType.TILELENGTH).GetInt(0);
-                    if (tilew == 0 || tileh == 0)
-                        throw new RawDecoderException("Invalid tile size");
+                        slices.FixLjpeg = mFixLjpeg;
 
-                    long tilesX = (rawImage.raw.dim.Width + tilew - 1) / tilew;
-                    long tilesY = (rawImage.raw.dim.Height + tileh - 1) / tileh;
-                    long nTiles = tilesX * tilesY;
-
-                    Tag offsets = raw.GetEntry(TagType.TILEOFFSETS);
-                    Tag counts = raw.GetEntry(TagType.TILEBYTECOUNTS);
-                    if (offsets.dataCount != counts.dataCount || offsets.dataCount != nTiles)
-                        throw new RawDecoderException("Tile count mismatch: offsets:" + offsets.dataCount + " count:" + counts.dataCount + ", calculated:" + nTiles);
-
-                    slices.FixLjpeg = mFixLjpeg;
-
-                    for (int y = 0; y < tilesY; y++)
-                    {
-                        for (int x = 0; x < tilesX; x++)
+                        for (int y = 0; y < tilesY; y++)
                         {
-                            DngSliceElement e = new DngSliceElement(offsets.GetUInt((int)(x + y * tilesX)), counts.GetUInt((int)(x + y * tilesX)), (uint)(tilew * x), (uint)(tileh * y))
+                            for (int x = 0; x < tilesX; x++)
                             {
-                                mUseBigtable = tilew * tileh > 1024 * 1024
-                            };
-                            slices.slices.Add(e);
+                                DngSliceElement e = new DngSliceElement(offsets.GetUInt((int)(x + y * tilesX)), counts.GetUInt((int)(x + y * tilesX)), (uint)(tilew * x), (uint)(tileh * y))
+                                {
+                                    mUseBigtable = tilew * tileh > 1024 * 1024
+                                };
+                                slices.slices.Add(e);
+                            }
                         }
                     }
-                }
-                else
-                {  // Strips
-                    Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
-                    Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
+                    else
+                    {  // Strips
+                        Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
+                        Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
+                        uint yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
 
-                    uint yPerSlice = raw.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+                        if (counts.dataCount != offsets.dataCount)
+                            throw new RawDecoderException("Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
 
-                    if (counts.dataCount != offsets.dataCount)
-                    {
-                        throw new RawDecoderException("Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
-                    }
+                        if (yPerSlice == 0 || yPerSlice > rawImage.raw.dim.Height)
+                            throw new RawDecoderException("Invalid y per slice");
 
-                    if (yPerSlice == 0 || yPerSlice > rawImage.raw.dim.Height)
-                        throw new RawDecoderException("Invalid y per slice");
-
-                    uint offY = 0;
-                    for (int s = 0; s < counts.dataCount; s++)
-                    {
-                        DngSliceElement e = new DngSliceElement(offsets.GetUInt(s), counts.GetUInt(s), 0, offY)
+                        uint offY = 0;
+                        for (int s = 0; s < counts.dataCount; s++)
                         {
-                            mUseBigtable = yPerSlice * rawImage.raw.dim.Height > 1024 * 1024
-                        };
-                        offY += yPerSlice;
+                            DngSliceElement e = new DngSliceElement(offsets.GetUInt(s), counts.GetUInt(s), 0, offY)
+                            {
+                                mUseBigtable = yPerSlice * rawImage.raw.dim.Height > 1024 * 1024
+                            };
+                            offY += yPerSlice;
 
-                        if (reader.IsValid(e.byteOffset, e.byteCount)) // Only decode if size is valid
-                            slices.slices.Add(e);
+                            if (reader.IsValid(e.byteOffset, e.byteCount)) // Only decode if size is valid
+                                slices.slices.Add(e);
+                        }
                     }
-                }
-                if (slices.slices.Count == 0)
-                    throw new RawDecoderException("No valid slices found.");
 
-                slices.DecodeSlice();
+                    if (slices.slices.Count == 0)
+                        throw new RawDecoderException("No valid slices found.");
 
-                if (rawImage.errors.Count >= slices.slices.Count)
-                    throw new RawDecoderException("Too many errors encountered. Giving up.\nFirst Error:" + rawImage.errors[0]);
-
+                    slices.DecodeSlice();
+                    if (rawImage.errors.Count >= slices.slices.Count)
+                        throw new RawDecoderException("Too many errors encountered. Giving up.\nFirst Error:" + rawImage.errors[0]);
+                    break;
+                default:
+                    throw new RawDecoderException("Unknown compression: " + compression);
             }
-            else
-            {
-                throw new RawDecoderException("Unknown compression: " + compression);
-            }
-
 
             Tag as_shot_neutral = ifd.GetEntryRecursive(TagType.ASSHOTNEUTRAL);
             if (as_shot_neutral != null)
@@ -358,7 +290,6 @@ namespace RawNet.Decoder
             if (rawImage.raw.dim.Area() <= 0)
                 throw new RawDecoderException("No image left after crop");
 
-
             // Apply stage 1 opcodes
             var opcodes = ifd.GetEntryRecursive(TagType.OPCODELIST1);
             if (opcodes != null)
@@ -420,11 +351,9 @@ namespace RawNet.Decoder
                     //Rescaling
                     //val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[offset + x % 2]);
                     val *= coeff;//change to take into consideration each individual blacklevel
-                                 //Clip
+
                     if (val > maxVal) val = maxVal;
                     else if (val < 0) val = 0;
-                    //val *= maxVal;
-                    //rescale to colordepth of the original                        
                     rawImage.raw.rawView[pos] = (ushort)val;
                 }
             });
@@ -535,7 +464,6 @@ namespace RawNet.Decoder
             if (blackdim.Width < 2 || blackdim.Height < 2)
             {
                 // We so not have enough to fill all individually, read a single and copy it
-                //TODO check if float
                 float value = black_entry.GetFloat(0);
                 for (int y = 0; y < 2; y++)
                 {
