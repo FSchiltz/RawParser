@@ -53,6 +53,7 @@ namespace RawEditor.View.Pages
         public ImageEffect OldValue = new ImageEffect();
         public HistoryList History = new HistoryList();
         public Bindable<bool> DebugEnabled = new Bindable<bool>(SettingStorage.EnableDebug);
+        private int rotation;
 
         /*
         private float blurAmount = 5;
@@ -113,6 +114,7 @@ namespace RawEditor.View.Pages
         {
             //empty the previous image data
             raw = null;
+            ImageBoxPlain.Source = null;
             CropUI.SetThumbAsync(null);
             //empty the image display
             ImageBox.Source = null;
@@ -139,6 +141,7 @@ namespace RawEditor.View.Pages
                 raw.preview.offset = new Point2D(0, 0);
                 raw.preview.dim = new Point2D(raw.preview.uncroppedDim.Width, raw.preview.uncroppedDim.Height);
             }
+            ImageBoxPlain.Visibility = Visibility.Collapsed;
             ResetButtonVisibility.Value = false;
             HideCropUI();
         }
@@ -220,9 +223,9 @@ namespace RawEditor.View.Pages
                         {
                             algo = SettingStorage.DemosAlgo;
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
-                            algo = DemosaicAlgorithm.None;
+                            algo = DemosaicAlgorithm.FastAdams;
                         }
                         Demosaic.Demos(raw, algo);
                     }
@@ -335,7 +338,7 @@ namespace RawEditor.View.Pages
                 {
                     try
                     {
-                        var result = await ApplyUserModifAsync(raw.raw);
+                        var result = await ApplyUserModifAsync(raw.raw, EditionValue);
                         FormatHelper.SaveAsync(file, result.Item2);
                     }
                     catch (Exception ex)
@@ -404,7 +407,7 @@ namespace RawEditor.View.Pages
             {
                 Task.Run(async () =>
                 {
-                    var result = await ApplyUserModifAsync(raw.preview);
+                    var result = await ApplyUserModifAsync(raw.preview, EditionValue);
                     DisplayImage(result.Item2, move);
                     Histo.FillAsync(result.Item1, raw.preview.dim.Height, raw.preview.dim.Width);
                 });
@@ -412,7 +415,7 @@ namespace RawEditor.View.Pages
         }
 
         //Apply the change over the image preview       
-        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(RawNet.ImageComponent image)
+        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ImageComponent image, ImageEffect edition)
         {
             SoftwareBitmap bitmap = null;
             //Needs to run in UI thread
@@ -427,7 +430,7 @@ namespace RawEditor.View.Pages
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.Width, (int)image.dim.Height);
                 }
             });
-            var tmp = EditionValue?.Apply(image, bitmap) ?? DefaultValue.Apply(image, bitmap);
+            var tmp = edition?.Apply(image, bitmap) ?? DefaultValue.Apply(image, bitmap);
             return Tuple.Create(tmp, bitmap);
         }
 
@@ -503,7 +506,7 @@ namespace RawEditor.View.Pages
                 //TODO regionalise text
                 //generate the bitmap
                 Load.Show();
-                var result = await ApplyUserModifAsync(raw.raw);
+                var result = await ApplyUserModifAsync(raw.raw, EditionValue);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -574,7 +577,7 @@ namespace RawEditor.View.Pages
                 {
                     dim = raw.preview.uncroppedDim
                 };
-                var result = await ApplyUserModifAsync(img);
+                var result = await ApplyUserModifAsync(img, EditionValue);
                 //display the preview
                 CropUI.SetThumbAsync(result.Item2);
             }
@@ -683,6 +686,28 @@ namespace RawEditor.View.Pages
         private void ListView_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             History.SetCurrent(((ListView)sender).SelectedIndex);
+        }
+
+        private async void ShowBeforeDisplay()
+        {
+            //if first time create the image
+            if (ImageBoxPlain.Source == null || rotation != EditionValue.Rotation)
+            {
+                var edit = DefaultValue.GetCopy();
+                rotation = edit.Rotation = EditionValue.Rotation;
+                var image = (await ApplyUserModifAsync(raw.preview, edit)).Item2;
+                WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
+                image.CopyToBuffer(bitmap.PixelBuffer);
+                ImageBoxPlain.Source = bitmap;
+                image.Dispose();
+            }
+            //toggle visibility
+            ImageBoxPlain.Visibility = Visibility.Visible;
+        }
+
+        private void HideBeforeDisplay()
+        {
+            ImageBoxPlain.Visibility = Visibility.Collapsed;
         }
     }
 }

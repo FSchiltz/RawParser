@@ -139,7 +139,7 @@
     <value>Demosaicing algorythm</value>
   </data>
   <data name="DemosWarningText.Text" xml:space="preserve">
-    <value>Warning, do not change unless you know what you are doing. Some of these may not be implemented yet and won&apos;t do anyting. Deflate just convert the image to a RGB imag e without filling the missing pixels.</value>
+    <value>Warning, do not change unless you know what you are doing. Some of these may not be implemented yet and won't do anyting. Deflate just convert the image to a RGB imag e without filling the missing pixels.</value>
   </data>
   <data name="Display.Text" xml:space="preserve">
     <value>Display</value>
@@ -246,5 +246,7 @@
   <data name="Undo.Label" xml:space="preserve">
     <value>Undo</value>
   </data>
-
+  <data name="Before.Label" xml:space="preserve">
+    <value>Show Before</value>
+  </data>
 </root>
