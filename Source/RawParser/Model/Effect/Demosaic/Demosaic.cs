@@ -37,13 +37,16 @@ namespace RawEditor.Effect
                         Bilinear.Demosaic(image);
                         break;
                     case DemosaicAlgorithm.Adams:
-                        SSDD.Demosaic(image, false);
+                        new AdamsDemosaic().Demosaic(image);
                         break;
                     case DemosaicAlgorithm.FastAdams:
-                        SSDD.Demosaic(image, true);
+                        new FastAdamsDemosaic().Demosaic(image);
                         break;
                     case DemosaicAlgorithm.Malvar:
                         Malvar.Demosaic(image);
+                        break;
+                    case DemosaicAlgorithm.SSDD:
+                        new SSDDemosaic().Demosaic(image);
                         break;
                 }
             }

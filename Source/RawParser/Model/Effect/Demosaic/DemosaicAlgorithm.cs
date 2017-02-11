@@ -9,6 +9,7 @@ namespace RawEditor.Effect
         None,       
         Adams,
         Malvar,
-        FastAdams
+        FastAdams,
+        SSDD
     }
 }

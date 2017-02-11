@@ -138,12 +138,14 @@
     <Compile Include="Model\Base\Bindable.cs" />
     <Compile Include="Model\Effect\Color.cs" />
     <Compile Include="Model\Effect\Curve.cs" />
+    <Compile Include="Model\Effect\Demosaic\AdamsDemosaic.cs" />
     <Compile Include="Model\Effect\Demosaic\Bilinear.cs" />
     <Compile Include="Model\Effect\Demosaic\DemosaicAlgorithm.cs" />
+    <Compile Include="Model\Effect\Demosaic\FastAdamsDemosaic.cs" />
     <Compile Include="Model\Effect\Demosaic\FujiDemos.cs" />
     <Compile Include="Model\Effect\Demosaic\FujiSSDD.cs" />
     <Compile Include="Model\Effect\Demosaic\Malvar.cs" />
-    <Compile Include="Model\Effect\Demosaic\SSDD.cs" />
+    <Compile Include="Model\Effect\Demosaic\SSDDemosaic.cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
     <Compile Include="Model\Effect\Demosaic\Demosaic.cs" />
     <Compile Include="Model\Effect\ImageEffect.cs" />
