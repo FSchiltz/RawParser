@@ -713,16 +713,45 @@ namespace RawEditor.View.Pages
         private void ChooseNeutralPoint()
         {
             //enable selection mode over the image
+            select = true;
+            ControlVisibilty.Value = false;
+        }
 
-            //get the correct pixel
+        private bool select = false;
 
-            //Calculate the multiplier
+        private void ImageBox_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            if (select)
+            {
+                //get the correct pixel
+                var position = e.GetPosition(ImageBox);
+                int pixelPos = (int)((position.Y + raw.preview.offset.Height) * raw.preview.uncroppedDim.Width + position.X + raw.preview.offset.Width);
+                //Calculate the multiplier
+                double rMul = raw.preview.red[pixelPos];
+                double gMul = raw.preview.green[pixelPos];
+                double bMul = raw.preview.blue[pixelPos];
+                rMul /= gMul;
+                bMul /= gMul;
+                //add an history object
+                History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
+                {
+                    oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
+                    value = new double[] { rMul, 1, bMul }
+                });
 
-            //apply them
+                //apply them
+                EditionValue.RMul = rMul;
+                EditionValue.BMul = bMul;
+                EditionValue.GMul = 1;
+                //update preview
 
-            //update preview
+                UpdatePreview(false);
+                //add an history object
 
-            //add an history object
+                //selection back to disable
+                ControlVisibilty.Value = true;
+                select = false;
+            }
         }
     }
 }
