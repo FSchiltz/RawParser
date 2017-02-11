@@ -725,13 +725,14 @@ namespace RawEditor.View.Pages
             {
                 //get the correct pixel
                 var position = e.GetPosition(ImageBox);
-                int pixelPos = (int)((position.Y + raw.preview.offset.Height) * raw.preview.uncroppedDim.Width + position.X + raw.preview.offset.Width);
+                uint width = (uint)((position.X / ImageBox.ActualWidth) * raw.raw.dim.Width) + raw.raw.offset.Width;
+                uint height = (uint)((position.Y / ImageBox.ActualHeight) * raw.raw.dim.Height) + raw.raw.offset.Height;
+                long pixelPos = height * raw.raw.uncroppedDim.Width + width;
                 //Calculate the multiplier
-                double rMul = raw.preview.red[pixelPos];
-                double gMul = raw.preview.green[pixelPos];
-                double bMul = raw.preview.blue[pixelPos];
-                rMul /= gMul;
-                bMul /= gMul;
+                double gMul = raw.raw.green[pixelPos];
+                double rMul = gMul / raw.raw.red[pixelPos];
+                double bMul = gMul / raw.raw.blue[pixelPos];
+
                 //add an history object
                 History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
                 {
