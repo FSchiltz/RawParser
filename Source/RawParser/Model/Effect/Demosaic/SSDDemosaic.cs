@@ -20,8 +20,8 @@ namespace RawEditor.Effect
         public new void Demosaic(RawImage image)
         {
             base.Demosaic(image);
-            var h = 16.0;
             /*
+            var h = 16.0;
             demosaicking_nlmeans(dbloc, h, redx, redy, image.raw);
             chromatic_median(iter, redx, redy, projflag, side, image.raw);
 
@@ -31,7 +31,7 @@ namespace RawEditor.Effect
 
             h = 1.0;
             demosaicking_nlmeans(dbloc, h, redx, redy, image.raw);
-            chromatic_median(iter, redx, redy, projflag, side, image.arw); */
+            chromatic_median(iter, redx, redy, projflag, side, image.raw);*/
         }
 
         /**

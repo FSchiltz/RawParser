@@ -11,9 +11,10 @@ namespace RawEditor.Effect
     {
         static protected double threshold = 2.0;
 
+        protected int redx, redy, bluex, bluey;
+        protected CFAColor[] mask;
         public void Demosaic(RawImage image)
         {
-            int redx, redy;
             switch (image.colorFilter.ToString())
             {
                 case "RGGB":
@@ -35,9 +36,12 @@ namespace RawEditor.Effect
                 default:
                     throw new FormatException("Pattern " + image.colorFilter.ToString() + " is not supported");
             }
+            // Initializations
+            bluex = 1 - redx;
+            bluey = 1 - redy;
 
             // Mask of color per pixel
-            CFAColor[] mask = new CFAColor[image.raw.dim.Width * image.raw.dim.Height];
+            mask = new CFAColor[image.raw.dim.Width * image.raw.dim.Height];
             Parallel.For(0, image.raw.dim.Width, x =>
             {
                 for (int y = 0; y < image.raw.dim.Height; y++)
@@ -46,34 +50,14 @@ namespace RawEditor.Effect
                 }
             });
 
-            // Initializations
-            int bluex = 1 - redx;
-            int bluey = 1 - redy;
-            DemosaickingAdams(redx, redy, image.raw, mask);
+            DemosaickingAdams(image.raw);
             // compute the bilinear on the differences of the red and blue with the already interpolated green
-            DemosaickingBilinearRedBlue(redx, redy, image.raw, mask, image.raw.red, CFAColor.Red);
-            DemosaickingBilinearRedBlue(bluex, bluey, image.raw, mask, image.raw.blue, CFAColor.Blue);
-
-            /*
-            h = 16.0;
-            demosaicking_nlmeans(dbloc, h, redx, redy, image.raw);
-            //chromatic_median(iter, redx, redy, projflag, side, image.raw);
-
-            h = 4.0;
-            demosaicking_nlmeans(dbloc, h, redx, redy, image.raw);
-           // chromatic_median(iter, redx, redy, projflag, side, image.raw);
-
-            h = 1.0;
-            demosaicking_nlmeans(dbloc, h, redx, redy, image.raw);
-            //chromatic_median(iter, redx, redy, projflag, side, image.arw);*/
+            DemosaickingBilinearRedBlue(redx, redy, image.raw, image.raw.red, CFAColor.Red);
+            DemosaickingBilinearRedBlue(bluex, bluey, image.raw, image.raw.blue, CFAColor.Blue);
         }
 
-        protected void DemosaickingAdams(int redx, int redy, ImageComponent image, CFAColor[] mask)
+        protected void DemosaickingAdams(ImageComponent image)
         {
-            // Initializations
-            int bluex = 1 - redx;
-            int bluey = 1 - redy;
-
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West
             Parallel.For(0, image.dim.Height, row =>
@@ -164,7 +148,7 @@ namespace RawEditor.Effect
             });
         }
 
-        protected void DemosaickingBilinearRedBlue(int colorX, int colorY, ImageComponent image, CFAColor[] mask, ushort[] output, CFAColor COLORPOSITION)
+        protected void DemosaickingBilinearRedBlue(int colorX, int colorY, ImageComponent image, ushort[] output, CFAColor COLORPOSITION)
         {
             var dim = image.dim;
             int[] red = new int[dim.Width * dim.Height];
