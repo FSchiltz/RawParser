@@ -17,7 +17,8 @@ namespace RawEditor.Settings
         WhiteBalance,
         ReverseGamma,
         HistoEqualisation,
-        Unkown = 0
+        Unkown = 0,
+        AutoExposure = 15
     }
 
     public class HistoryObject
@@ -45,13 +46,19 @@ namespace RawEditor.Settings
             {
                 switch (target)
                 {
-                    case EffectType.WhiteBalance: return "Set to default";
+                    case EffectType.WhiteBalance:
+                        return "Set to default";
                     case EffectType.Crop:
                     case EffectType.Rotate:
-                    case EffectType.Reset: return "";
+                    case EffectType.AutoExposure:
+                    case EffectType.Zoom:
+                    case EffectType.Reset:
+                        return "";
                     case EffectType.HistoEqualisation:
-                    case EffectType.ReverseGamma: return "from " + oldValue + " to " + value;
-                    default: return "from " + ((double)oldValue).ToString("F") + " to " + ((double)value).ToString("F");
+                    case EffectType.ReverseGamma:
+                        return "from " + oldValue + " to " + value;
+                    default:
+                        return "from " + ((double)oldValue).ToString("F") + " to " + ((double)value).ToString("F");
                 }
             }
         }

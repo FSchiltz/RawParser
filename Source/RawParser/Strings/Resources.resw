@@ -252,4 +252,7 @@
   <data name="WBNeutralButton.Content" xml:space="preserve">
     <value>Choose gray point</value>
   </data>
+  <data name="AutoExposureButton.Content" xml:space="preserve">
+    <value>Auto</value>
+  </data>
 </root>
