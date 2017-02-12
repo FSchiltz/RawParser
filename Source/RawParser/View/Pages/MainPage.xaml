@@ -9,13 +9,15 @@
             <CommandBar.Content>
                 <uihelper:LoadBar x:Name="Load" />
             </CommandBar.Content>
-            <AppBarToggleButton IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="RotateCamera"
+            <AppBarToggleButton Visibility="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Icon="RotateCamera"
                     x:Uid="Before" Checked="{x:Bind ShowBeforeDisplay}" Unchecked="{x:Bind HideBeforeDisplay}"
-                    IsChecked="False" />
-            <AppBarButton IsEnabled="{x:Bind History.IsUndoEnabled,Mode=OneWay}" Icon="Undo" x:Uid="Undo"
-                    Tapped="{x:Bind History.Undo}" />
-            <AppBarButton IsEnabled="{x:Bind History.IsRedoEnabled,Mode=OneWay}" Icon="Redo" x:Uid="Redo"
-                    Tapped="{x:Bind History.Redo}" />
+                    IsChecked="False" IsEnabled="{x:Bind ResetButtonVisibility.Value, Mode=OneWay}" />
+            <AppBarButton Icon="Undo" x:Uid="Undo" Tapped="{x:Bind History.Undo}"
+                    Visibility="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                    IsEnabled="{x:Bind History.IsUndoEnabled,Mode=OneWay}" />
+            <AppBarButton Icon="Redo" x:Uid="Redo" Tapped="{x:Bind History.Redo}"
+                    Visibility="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                    IsEnabled="{x:Bind History.IsRedoEnabled,Mode=OneWay}" />
             <AppBarSeparator />
             <AppBarButton Icon="BrowsePhotos" x:Uid="OpenImage" Click="ImageChooseClickAsync" />
             <AppBarButton Icon="SaveLocal" x:Uid="Save" Click="SaveButtonClickAsync" VerticalAlignment="Top"
@@ -95,7 +97,7 @@
                 <Image x:Name="ImageBoxPlain" Visibility="Collapsed" />
             </Grid>
         </ScrollViewer>
-        <Slider x:Name="ZoomSlider" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Minimum="0.1" Maximum="2"
+        <Slider x:Name="ZoomSlider" Visibility="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Minimum="0.1" Maximum="2"
                 SmallChange="0.1" StepFrequency="0.1" Canvas.ZIndex="3" Margin="10,0,0,10"
                 Value="{x:Bind ImageDisplay.ZoomFactor, Mode=OneWay}" ValueChanged="Slider_ValueChanged"
                 Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom" />
@@ -168,7 +170,8 @@
                                     <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                             Tapped="{x:Bind ChooseNeutralPoint}" FontSize="12"
                                             HorizontalAlignment="Center" x:Uid="WBNeutralButton" Margin="0,10" />
-                                    <StackPanel Orientation="Horizontal" Visibility="{x:Bind select.Value,Mode=OneWay}"
+                                    <StackPanel Orientation="Horizontal"
+                                            Visibility="{x:Bind selectManualWB.Value,Mode=OneWay}"
                                             VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,6">
                                         <Button Tapped="{x:Bind ChooseNeutralPointReject}" Margin="0,0,6,0">
                                             <SymbolIcon Symbol="Cancel"></SymbolIcon>
