@@ -18,7 +18,7 @@
             <AppBarButton Icon="Redo" x:Uid="Redo" Tapped="{x:Bind History.Redo}"
                     Visibility="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                     IsEnabled="{x:Bind History.IsRedoEnabled,Mode=OneWay}" />
-            <AppBarSeparator />
+            <AppBarSeparator Visibility="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
             <AppBarButton Icon="BrowsePhotos" x:Uid="OpenImage" Click="ImageChooseClickAsync" />
             <AppBarButton Icon="SaveLocal" x:Uid="Save" Click="SaveButtonClickAsync" VerticalAlignment="Top"
                     IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
@@ -137,8 +137,9 @@
                         <uihelper:CollapsibleBox x:Uid="ExposureSettings">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                            Tapped="{x:Bind AutoExpose}" x:Uid="AutoExposureButton" Margin="0,12"></Button>
                                     <ToggleSwitch IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14"
-                                            Visibility="{x:Bind DebugEnabled.Value}"
                                             IsOn="{x:Bind EditionValue.HistoEqualisation, Mode=TwoWay}"
                                             HorizontalAlignment="Left" Toggled="{x:Bind EditingControlChanged}"
                                             HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
@@ -281,7 +282,7 @@
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
-                        <uihelper:CollapsibleBox x:Uid="CameraProfile" Visibility="{x:Bind DebugEnabled.Value}">
+                        <uihelper:CollapsibleBox x:Uid="CameraProfile" Visibility="Collapsed">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14">Vignet</TextBlock>

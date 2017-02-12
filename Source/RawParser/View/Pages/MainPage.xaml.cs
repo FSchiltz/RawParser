@@ -52,7 +52,6 @@ namespace RawEditor.View.Pages
         public ImageEffect DefaultValue = new ImageEffect();
         public ImageEffect OldValue = new ImageEffect();
         public HistoryList History = new HistoryList();
-        public Bindable<bool> DebugEnabled = new Bindable<bool>(SettingStorage.EnableDebug);
         private Bindable<Boolean> selectManualWB = new Bindable<bool>(false);
         private int rotation;
 
@@ -767,6 +766,18 @@ namespace RawEditor.View.Pages
             //selection back to disable
             ControlVisibilty.Value = true;
             selectManualWB.Value = false;
+        }
+
+        void AutoExpose()
+        {
+            //get an editing object
+            var autoval = AutoExposure.Get(raw.preview);
+            //add history object
+            History.Add(new HistoryObject(EffectType.AutoExposure, EditionValue.GetCopy()));
+
+            //apply it
+            EditionValue.Copy(autoval);
+            UpdatePreview(false);
         }
     }
 }

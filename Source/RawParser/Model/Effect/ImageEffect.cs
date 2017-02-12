@@ -412,30 +412,31 @@ namespace RawEditor.Effect
                 }
 
                 //denoise
-                if (Denoise != 0) {
-
-                }
-
-                //sharpening
                 /*
-                if (Sharpness != 0)
-                    Parallel.For(1, buffer.GetPlaneDescription(0).Height - 1, y =>
-                    {
-                        int realY = y * buffer.GetPlaneDescription(0).Width;
-                        for (int x = 1; x < buffer.GetPlaneDescription(0).Width - 1; x++)
-                        {
-                            int realX = (realY + x) * 4;
-                            temp[realX + 1] = (byte)((9 * temp[realX + 1])
-                            + (-1 * temp[(realY + x + 1) * 4 + 1])
-                            + (-1 * temp[(realY + x - 1) * 4 + 1])
-                            + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
-                            + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
-                            + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
-                            + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x - 1) * 4 + 1])
-                            + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
-                            + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x - 1) * 4 + 1]));
-                        }
-                    });*/
+             if (Denoise != 0) {
+
+             }
+
+             //sharpening
+
+             if (Sharpness != 0)
+                 Parallel.For(1, buffer.GetPlaneDescription(0).Height - 1, y =>
+                 {
+                     int realY = y * buffer.GetPlaneDescription(0).Width;
+                     for (int x = 1; x < buffer.GetPlaneDescription(0).Width - 1; x++)
+                     {
+                         int realX = (realY + x) * 4;
+                         temp[realX + 1] = (byte)((9 * temp[realX + 1])
+                         + (-1 * temp[(realY + x + 1) * 4 + 1])
+                         + (-1 * temp[(realY + x - 1) * 4 + 1])
+                         + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
+                         + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
+                         + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
+                         + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x - 1) * 4 + 1])
+                         + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
+                         + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x - 1) * 4 + 1]));
+                     }
+                 });*/
                 return histogram;
             }
         }
