@@ -53,6 +53,7 @@ namespace RawEditor.View.Pages
         public ImageEffect OldValue = new ImageEffect();
         public HistoryList History = new HistoryList();
         public Bindable<bool> DebugEnabled = new Bindable<bool>(SettingStorage.EnableDebug);
+        private Bindable<Boolean> selectManualWB = new Bindable<bool>(false);
         private int rotation;
 
         /*
@@ -713,15 +714,16 @@ namespace RawEditor.View.Pages
         private void ChooseNeutralPoint()
         {
             //enable selection mode over the image
-            select = true;
+            selectManualWB.Value = true;
             ControlVisibilty.Value = false;
+            //save old editing value
+            OldValue.Copy(EditionValue);
         }
 
-        private bool select = false;
 
         private void ImageBox_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            if (select)
+            if (selectManualWB.Value)
             {
                 //get the correct pixel
                 var position = e.GetPosition(ImageBox);
@@ -729,30 +731,42 @@ namespace RawEditor.View.Pages
                 uint height = (uint)((position.Y / ImageBox.ActualHeight) * raw.raw.dim.Height) + raw.raw.offset.Height;
                 long pixelPos = height * raw.raw.uncroppedDim.Width + width;
                 //Calculate the multiplier
-                double gMul = raw.raw.green[pixelPos];
-                double rMul = gMul / raw.raw.red[pixelPos];
-                double bMul = gMul / raw.raw.blue[pixelPos];
-
-                //add an history object
-                History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
-                {
-                    oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
-                    value = new double[] { rMul, 1, bMul }
-                });
+                double gMul = raw.raw.green[pixelPos] + 1;
+                double rMul = gMul / (raw.raw.red[pixelPos] + 1);
+                double bMul = gMul / (raw.raw.blue[pixelPos] + 1);
 
                 //apply them
                 EditionValue.RMul = rMul;
                 EditionValue.BMul = bMul;
                 EditionValue.GMul = 1;
                 //update preview
-
                 UpdatePreview(false);
-                //add an history object
-
-                //selection back to disable
-                ControlVisibilty.Value = true;
-                select = false;
             }
+        }
+
+        void ChooseNeutralPointAccept()
+        {
+            //add an history object
+            History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
+            {
+                value = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
+                oldValue = new double[] { OldValue.RMul, OldValue.GMul, OldValue.BMul }
+            });
+            ResetButtonVisibility.Value = true;
+            //selection back to disable
+            ControlVisibilty.Value = true;
+            selectManualWB.Value = false;
+        }
+
+        void ChooseNeutralPointReject()
+        {
+            //revert change
+            EditionValue.Copy(OldValue);
+            UpdatePreview(false);
+
+            //selection back to disable
+            ControlVisibilty.Value = true;
+            selectManualWB.Value = false;
         }
     }
 }
