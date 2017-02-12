@@ -137,7 +137,7 @@
                         <uihelper:CollapsibleBox x:Uid="ExposureSettings">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
-                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Visibility="Collapsed"
                                             Tapped="{x:Bind AutoExpose}" x:Uid="AutoExposureButton" Margin="0,12"></Button>
                                     <ToggleSwitch IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14"
                                             IsOn="{x:Bind EditionValue.HistoEqualisation, Mode=TwoWay}"

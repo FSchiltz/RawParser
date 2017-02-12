@@ -155,7 +155,7 @@ namespace RawEditor.View.Pages
                 var old = new ImageEffect();
                 old.Copy(EditionValue);
                 History.Add(new HistoryObject(EffectType.Reset, EditionValue.GetCopy()) { oldValue = old });
-                UpdatePreview(false);
+                UpdatePreview(true);
             }
         }
 
@@ -771,7 +771,7 @@ namespace RawEditor.View.Pages
         void AutoExpose()
         {
             //get an editing object
-            var autoval = AutoExposure.Get(raw.preview);
+            var autoval = AutoExposure.Get(raw.preview,Histo.PointsL);
             //add history object
             History.Add(new HistoryObject(EffectType.AutoExposure, EditionValue.GetCopy()));
 
