@@ -92,9 +92,11 @@
                 VerticalScrollBarVisibility="Auto" RelativePanel.AlignTopWithPanel="True"
                 RelativePanel.AlignLeftWithPanel="True" HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch">
-            <Grid>
-                <Image x:Name="ImageBox" Tapped="ImageBox_Tapped" />
-                <Image x:Name="ImageBoxPlain" Visibility="Collapsed" />
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Image x:Name="ImageBox" Tapped="ImageBox_Tapped" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+                <Image x:Name="ImageBoxPlain" Visibility="Collapsed" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
             </Grid>
         </ScrollViewer>
         <Slider x:Name="ZoomSlider" Visibility="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Minimum="0.1" Maximum="2"

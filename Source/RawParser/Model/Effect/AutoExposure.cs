@@ -26,7 +26,7 @@ namespace RawEditor.Effect
             //find the higlight shift
 
             //find the contrast 
-            return new ImageEffect() { Exposure = Math.Log(Math.Abs(shift), 2)*sign };
+            return new ImageEffect() { Exposure = Math.Log(Math.Abs(shift)/8, 2)*sign };
         }
     }
 }
