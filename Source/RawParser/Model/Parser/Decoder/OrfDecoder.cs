@@ -110,21 +110,23 @@ namespace RawNet.Decoder
          * Also there is no way to multithread this code, since prediction
          * is based on the output of all previous pixel (bar the first four)
          */
-        private unsafe void DecodeCompressed(TIFFBinaryReader s, uint w, uint h)
+        private void DecodeCompressed(TIFFBinaryReader s, uint w, uint h)
         {
-            int nbits, sign, low, high, left0, nw0, left1, nw1, i;
+            int nbits;
+            long left0, nw0, left1, nw1;
+            long sign, low, high;
             long[] acarry0 = new long[3], acarry1 = new long[3];
-            int pred, diff;
+            long pred, diff;
 
             //uint pitch = rawImage.pitch;
 
             /* Build a table to quickly look up "high" value */
             byte[] bittable = new byte[4096];
-            for (i = 0; i < 4096; i++)
+            for (int i = 0; i < 4096; i++)
             {
                 int b = i;
                 for (high = 0; high < 12; high++)
-                    if (((b >> (11 - high)) & 1) != 0)
+                    if (((b >> (11 - (int)high)) & 1) != 0)
                         break;
                 bittable[i] = (byte)Math.Min(12, high);
             }
@@ -134,146 +136,142 @@ namespace RawNet.Decoder
 
             for (int y = 0; y < h; y++)
             {
-                fixed (UInt16* dest = &rawImage.raw.rawView[y * rawImage.raw.uncroppedDim.Width])
+                var pos = y * rawImage.raw.uncroppedDim.Width;
+                acarry0 = new long[3];
+                acarry1 = new long[3];
+                bool y_border = y < 2;
+                bool border = true;
+                for (int x = 0; x < w; x++)
                 {
-                    acarry0 = new long[3];
-                    acarry1 = new long[3];
-                    bool y_border = y < 2;
-                    bool border = true;
-                    for (int x = 0; x < w; x++)
+                    bits.CheckPos();
+                    bits.Fill();
+                    int i = 0;
+                    if (acarry0[2] < 3) i = 2;
+
+                    for (nbits = 2 + i; acarry0[0] >> (nbits + i) != 0; nbits++) ;
+
+                    uint b = bits.PeekBitsNoFill(15);
+                    sign = (b >> 14) * -1;
+                    low = (b >> 12) & 3;
+                    high = bittable[b & 4095];
+
+                    // Skip bytes used above or read bits
+                    if (high == 12)
                     {
-                        bits.CheckPos();
-                        bits.Fill();
-
-                        if (acarry0[2] < 3) i = 2;
-                        else i = 0;
-
-                        for (nbits = 2 + i; (UInt16)acarry0[0] >> (nbits + i) != 0; nbits++) ;
-
-                        uint b = bits.PeekBitsNoFill(15);
-                        sign = (int)(b >> 14) * -1;
-                        low = (int)(b >> 12) & 3;
-                        high = bittable[b & 4095];
-
-                        // Skip bytes used above or read bits
-                        if (high == 12)
-                        {
-                            bits.SkipBitsNoFill(15);
-                            high = (int)bits.GetBits(16 - nbits) >> 1;
-                        }
-                        else
-                        {
-                            bits.SkipBitsNoFill(high + 1 + 3);
-                        }
-
-                        acarry0[0] = (uint)(high << nbits) | bits.GetBits(nbits);
-                        diff = (int)((acarry0[0] ^ sign) + acarry0[1]);
-                        acarry0[1] = (diff * 3 + acarry0[1]) >> 5;
-                        acarry0[2] = acarry0[0] > 16 ? 0 : acarry0[2] + 1;
-
-                        if (border)
-                        {
-                            if (y_border && x < 2)
-                                pred = 0;
-                            else if (y_border)
-                                pred = left0;
-                            else
-                            {
-                                pred = dest[-rawImage.raw.uncroppedDim.Width + x];
-                                nw0 = pred;
-                            }
-                            dest[x] = (ushort)(pred + ((diff << 2) | low));
-                            // Set predictor
-                            left0 = dest[x];
-                        }
-                        else
-                        {
-                            // Have local variables for values used several tiles
-                            // (having a "UInt16 *dst_up" that caches dest[-pitch+((int)x)] is actually slower, probably stack spill or aliasing)
-                            int up = dest[-rawImage.raw.uncroppedDim.Width + x];
-                            int leftMinusNw = left0 - nw0;
-                            int upMinusNw = up - nw0;
-                            // Check if sign is different, and one is not zero
-                            if (leftMinusNw * upMinusNw < 0)
-                            {
-                                if (Other_abs(leftMinusNw) > 32 || Other_abs(upMinusNw) > 32)
-
-                                    pred = left0 + upMinusNw;
-                                else
-                                    pred = (left0 + up) >> 1;
-                            }
-                            else
-                                pred = Other_abs(leftMinusNw) > Other_abs(upMinusNw) ? left0 : up;
-
-                            dest[x] = (ushort)(pred + ((diff << 2) | low));
-                            // Set predictors
-                            left0 = dest[x];
-                            nw0 = up;
-                        }
-
-                        // ODD PIXELS
-                        x += 1;
-                        bits.Fill();
-                        if (acarry1[2] < 3) i = 2;
-                        else i = 0;
-                        for (nbits = 2 + i; (UInt16)acarry1[0] >> (nbits + i) != 0; nbits++) ;
-                        b = bits.PeekBitsNoFill(15);
-                        sign = (int)(b >> 14) * -1;
-                        low = (int)(b >> 12) & 3;
-                        high = bittable[b & 4095];
-
-                        // Skip bytes used above or read bits
-                        if (high == 12)
-                        {
-                            bits.SkipBitsNoFill(15);
-                            high = (int)bits.GetBits(16 - nbits) >> 1;
-                        }
-                        else
-                        {
-                            bits.SkipBitsNoFill(high + 1 + 3);
-                        }
-
-                        acarry1[0] = (uint)(high << nbits) | bits.GetBits(nbits);
-                        diff = (int)((acarry1[0] ^ sign) + acarry1[1]);
-                        acarry1[1] = (diff * 3 + acarry1[1]) >> 5;
-                        acarry1[2] = acarry1[0] > 16 ? 0 : acarry1[2] + 1;
-
-                        if (border)
-                        {
-                            if (y_border && x < 2)
-                                pred = 0;
-                            else if (y_border)
-                                pred = left1;
-                            else
-                            {
-                                pred = dest[-rawImage.raw.uncroppedDim.Width + x];
-                                nw1 = pred;
-                            }
-                            dest[x] = (ushort)(left1 = pred + ((diff << 2) | low));
-                        }
-                        else
-                        {
-                            int up = dest[-rawImage.raw.uncroppedDim.Width + x];
-                            int leftminusNw = left1 - nw1;
-                            int upminusNw = up - nw1;
-
-                            // Check if sign is different, and one is not zero
-                            if (leftminusNw * upminusNw < 0)
-                            {
-                                if (Other_abs(leftminusNw) > 32 || Other_abs(upminusNw) > 32)
-
-                                    pred = left1 + upminusNw;
-                                else
-                                    pred = (left1 + up) >> 1;
-                            }
-                            else
-                                pred = Other_abs(leftminusNw) > Other_abs(upminusNw) ? left1 : up;
-
-                            dest[x] = (ushort)(left1 = pred + ((diff << 2) | low));
-                            nw1 = up;
-                        }
-                        border = y_border;
+                        bits.SkipBitsNoFill(15);
+                        high = bits.GetBits(16 - nbits) >> 1;
                     }
+                    else
+                    {
+                        bits.SkipBitsNoFill((int)high + 1 + 3);
+                    }
+
+                    acarry0[0] = (high << nbits) | bits.GetBits(nbits);
+                    diff = (acarry0[0] ^ sign) + acarry0[1];
+                    acarry0[1] = (diff * 3 + acarry0[1]) >> 5;
+                    acarry0[2] = acarry0[0] > 16 ? 0 : acarry0[2] + 1;
+
+                    if (border)
+                    {
+                        if (y_border && x < 2)
+                            pred = 0;
+                        else if (y_border)
+                            pred = left0;
+                        else
+                        {
+                            pred = nw0 = rawImage.raw.rawView[pos - rawImage.raw.uncroppedDim.Width + x];
+                        }
+                        rawImage.raw.rawView[pos + x] = (ushort)(pred + ((diff << 2) | low));
+                        // Set predictor
+                        left0 = rawImage.raw.rawView[pos + x];
+                    }
+                    else
+                    {
+                        // Have local variables for values used several tiles
+                        // (having a "UInt16 *dst_up" that caches dest[-pitch+((int)x)] is actually slower, probably stack spill or aliasing)
+                        int up = rawImage.raw.rawView[pos - rawImage.raw.uncroppedDim.Width + x];
+                        long leftMinusNw = left0 - nw0;
+                        long upMinusNw = up - nw0;
+                        // Check if sign is different, and one is not zero
+                        if (leftMinusNw * upMinusNw < 0)
+                        {
+                            if (Other_abs(leftMinusNw) > 32 || Other_abs(upMinusNw) > 32)
+
+                                pred = left0 + upMinusNw;
+                            else
+                                pred = (left0 + up) >> 1;
+                        }
+                        else
+                            pred = Other_abs(leftMinusNw) > Other_abs(upMinusNw) ? left0 : up;
+
+                        rawImage.raw.rawView[pos + x] = (ushort)(pred + ((diff << 2) | low));
+                        // Set predictors
+                        left0 = rawImage.raw.rawView[pos + x];
+                        nw0 = up;
+                    }
+
+                    // ODD PIXELS
+                    x += 1;
+                    bits.Fill();
+                    i = 0;
+                    if (acarry1[2] < 3) i = 2;
+
+                    for (nbits = 2 + i; acarry1[0] >> (nbits + i) != 0; nbits++) ;
+                    b = bits.PeekBitsNoFill(15);
+                    sign = (b >> 14) * -1;
+                    low = (b >> 12) & 3;
+                    high = bittable[b & 4095];
+
+                    // Skip bytes used above or read bits
+                    if (high == 12)
+                    {
+                        bits.SkipBitsNoFill(15);
+                        high = bits.GetBits(16 - nbits) >> 1;
+                    }
+                    else
+                    {
+                        bits.SkipBitsNoFill((int)high + 1 + 3);
+                    }
+
+                    acarry1[0] = (high << nbits) | bits.GetBits(nbits);
+                    diff = (acarry1[0] ^ sign) + acarry1[1];
+                    acarry1[1] = (diff * 3 + acarry1[1]) >> 5;
+                    acarry1[2] = acarry1[0] > 16 ? 0 : acarry1[2] + 1;
+
+                    if (border)
+                    {
+                        if (y_border && x < 2)
+                            pred = 0;
+                        else if (y_border)
+                            pred = left1;
+                        else
+                        {
+                            pred = nw1 = rawImage.raw.rawView[pos - rawImage.raw.uncroppedDim.Width + x];
+                        }
+                        rawImage.raw.rawView[pos + x] = (ushort)(left1 = pred + ((diff << 2) | low));
+                    }
+                    else
+                    {
+                        int up = rawImage.raw.rawView[pos - rawImage.raw.uncroppedDim.Width + x];
+                        long leftminusNw = left1 - nw1;
+                        long upminusNw = up - nw1;
+
+                        // Check if sign is different, and one is not zero
+                        if (leftminusNw * upminusNw < 0)
+                        {
+                            if (Other_abs(leftminusNw) > 32 || Other_abs(upminusNw) > 32)
+
+                                pred = left1 + upminusNw;
+                            else
+                                pred = (left1 + up) >> 1;
+                        }
+                        else
+                            pred = Other_abs(leftminusNw) > Other_abs(upminusNw) ? left1 : up;
+
+                        rawImage.raw.rawView[pos + x] = (ushort)(left1 = pred + ((diff << 2) | low));
+                        nw1 = up;
+                    }
+                    border = y_border;
                 }
             }
         }

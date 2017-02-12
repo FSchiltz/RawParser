@@ -54,9 +54,9 @@ namespace RawNet
         public abstract void DecodeMetadata();
 
         /* This is faster - at least when compiled on visual studio 32 bits */
-        protected int Other_abs(int x)
+        protected long Other_abs(long x)
         {
-            int mask = x >> 31;
+            long mask = x >> 31;
             return (x + mask) ^ mask;
         }
     }
