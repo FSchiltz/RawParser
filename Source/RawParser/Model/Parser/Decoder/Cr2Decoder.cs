@@ -3,20 +3,11 @@ using RawNet.Format.TIFF;
 using RawNet.JPEG;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace RawNet.Decoder
 {
-    class Cr2Slice
-    {
-        public uint w;
-        public uint h;
-        public uint offset;
-        public uint count;
-    };
-
     internal class Cr2Decoder : TIFFDecoder
     {
         int[] sraw_coeffs = new int[3];
@@ -102,14 +93,14 @@ namespace RawNet.Decoder
             rawImage.raw.ColorDepth = 14;
             rawImage.Init(false);
 
-            List<Cr2Slice> slices = new List<Cr2Slice>();
+            List<RawSlice> slices = new List<RawSlice>();
             Tag offsets = raw.GetEntry(TagType.STRIPOFFSETS);
             Tag counts = raw.GetEntry(TagType.STRIPBYTECOUNTS);
             // Iterate through all slices
             for (int s = 0; s < offsets.dataCount; s++)
             {
                 LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
-                Cr2Slice slice = new Cr2Slice()
+                RawSlice slice = new RawSlice()
                 {
                     offset = offsets.GetUInt(s),
                     count = counts.GetUInt(s)
@@ -144,7 +135,7 @@ namespace RawNet.Decoder
             uint offY = 0;
             for (int i = 0; i < slices.Count; i++)
             {
-                Cr2Slice slice = slices[i];
+                RawSlice slice = slices[i];
                 new LJPEGPlain(reader, rawImage, true, false)
                 {
                     slicesW = s_width,
