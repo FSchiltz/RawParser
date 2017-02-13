@@ -11,7 +11,7 @@ namespace RawNet.Decoder
 {
     internal class DNGDecoder : TIFFDecoder
     {
-        bool mFixLjpeg;
+        bool fixLjpeg;
 
         //DNG thumbnail are tiff so no need to override 
         internal DNGDecoder(Stream file) : base(file)
@@ -34,9 +34,9 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("Not a supported DNG image format: " + v[0] + v[1] + v[2] + v[3]);
 
             if ((v[0] <= 1) && (v[1] < 1))  // Prior to v1.1.xxx  fix LJPEG encoding bug
-                mFixLjpeg = true;
+                fixLjpeg = true;
             else
-                mFixLjpeg = false;
+                fixLjpeg = false;
         }
 
         public override void DecodeMetadata()
@@ -164,7 +164,7 @@ namespace RawNet.Decoder
                         if (offsets.dataCount != counts.dataCount || offsets.dataCount != nTiles)
                             throw new RawDecoderException("Tile count mismatch: offsets:" + offsets.dataCount + " count:" + counts.dataCount + ", calculated:" + nTiles);
 
-                        slices.FixLjpeg = mFixLjpeg;
+                        slices.FixLjpeg = fixLjpeg;
 
                         for (int y = 0; y < tilesY; y++)
                         {
