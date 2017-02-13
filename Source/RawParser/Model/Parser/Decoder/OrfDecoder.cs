@@ -284,72 +284,53 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("ORF Meta Decoder: Model name found");
             SetMetaData(rawImage.metadata.Model);
 
+            rawImage.metadata.Lens = ifd.GetEntryRecursive((TagType)42036)?.DataAsString;
+
             var rMul = ifd.GetEntryRecursive(TagType.OLYMPUSREDMULTIPLIER);
             var bMul = ifd.GetEntryRecursive(TagType.OLYMPUSBLUEMULTIPLIER);
             if (rMul != null && bMul != null)
             {
-                rawImage.metadata.WbCoeffs[0] = ifd.GetEntryRecursive(TagType.OLYMPUSREDMULTIPLIER).GetShort(0);
-                rawImage.metadata.WbCoeffs[1] = 256.0f;
-                rawImage.metadata.WbCoeffs[2] = ifd.GetEntryRecursive(TagType.OLYMPUSBLUEMULTIPLIER).GetShort(0);
+                rawImage.metadata.WbCoeffs = new WhiteBalance(
+                    ifd.GetEntryRecursive(TagType.OLYMPUSREDMULTIPLIER).GetShort(0),
+                    1,
+                    ifd.GetEntryRecursive(TagType.OLYMPUSREDMULTIPLIER).GetShort(0));
             }
             else
             {
-                // Newer cameras process the Image Processing SubIFD in the makernote
-                Tag img_entry = ifd.GetEntryRecursive(TagType.OLYMPUSIMAGEPROCESSING);
-                if (img_entry != null)
+                IFD image_processing = ifd.GetIFDWithType(IFDType.Makernote).subIFD[0];
+                Tag wb = image_processing.GetEntry((TagType)0x0100);
+                // Get the WB
+                if (wb?.dataCount == 2 || wb?.dataCount == 4)
                 {
-                    uint offset = (uint)(img_entry.GetUInt(0) - img_entry.parent_offset + 12);
-                    try
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), 256, wb.GetInt(1), rawImage.raw.ColorDepth);
+                }
+
+                //TODO fix (the sub makernote doesn't read the correct value
+                rawImage.metadata.WbCoeffs = new WhiteBalance(1,1,1);
+
+                Tag blackEntry = image_processing.GetEntry((TagType)0x0600);
+                // Get the black levels
+                if (blackEntry != null)
+                {
+                    // Order is assumed to be RGGB
+                    if (blackEntry.dataCount == 4)
                     {
-                        IFD image_processing = new IFD(reader, offset, ifd.endian, ifd.Depth);
-                        Tag wb = image_processing.GetEntry((TagType)0x0100);
-                        // Get the WB
-                        if (wb != null)
+                        //blackEntry.parent_offset = img_entry.parent_offset - 12;
+                        //blackEntry.offsetFromParent();
+                        for (int i = 0; i < 4; i++)
                         {
-                            if (wb.dataCount == 4)
-                            {
-                                wb.parent_offset = img_entry.parent_offset - 12;
-                                // wb.offsetFromParent();
-                            }
-                            if (wb.dataCount == 2 || wb.dataCount == 4)
-                            {
-                                rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0);
-                                rawImage.metadata.WbCoeffs[1] = 256.0f;
-                                rawImage.metadata.WbCoeffs[2] = wb.GetFloat(1);
-                            }
+                            if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Red)
+                                rawImage.blackLevelSeparate[i] = blackEntry.GetShort(0);
+                            else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Blue)
+                                rawImage.blackLevelSeparate[i] = blackEntry.GetShort(3);
+                            else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Green && i < 2)
+                                rawImage.blackLevelSeparate[i] = blackEntry.GetShort(1);
+                            else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Green)
+                                rawImage.blackLevelSeparate[i] = blackEntry.GetShort(2);
                         }
-
-
-                        Tag blackEntry = image_processing.GetEntry((TagType)0x0600);
-                        // Get the black levels
-                        if (blackEntry != null)
-                        {
-                            // Order is assumed to be RGGB
-                            if (blackEntry.dataCount == 4)
-                            {
-                                //blackEntry.parent_offset = img_entry.parent_offset - 12;
-                                //blackEntry.offsetFromParent();
-                                for (int i = 0; i < 4; i++)
-                                {
-                                    if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Red)
-                                        rawImage.blackLevelSeparate[i] = blackEntry.GetShort(0);
-                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Blue)
-                                        rawImage.blackLevelSeparate[i] = blackEntry.GetShort(3);
-                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Green && i < 2)
-                                        rawImage.blackLevelSeparate[i] = blackEntry.GetShort(1);
-                                    else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Green)
-                                        rawImage.blackLevelSeparate[i] = blackEntry.GetShort(2);
-                                }
-                                // Adjust whitelevel based on the read black (we assume the dynamic range is the same)
-                                rawImage.whitePoint -= rawImage.BlackLevel - rawImage.blackLevelSeparate[0];
-                            }
-                        }
+                        // Adjust whitelevel based on the read black (we assume the dynamic range is the same)
+                        rawImage.whitePoint -= rawImage.BlackLevel - rawImage.blackLevelSeparate[0];
                     }
-                    catch (RawDecoderException e)
-                    {
-                        rawImage.errors.Add(e.Message);
-                    }
-
                 }
             }
         }
@@ -431,7 +412,7 @@ namespace RawNet.Decoder
     { "Olympus E-PM2", 0, 0,
     { 8380,-2630,-639,-2887,10725,2496,-627,1427,5438 } },
     { "Olympus E-M10", 0, 0,	// also E-M10 Mark II 
-	{ 8380,-2630,-639,-2887,10725,2496,-627,1427,5438 } },
+    { 8380,-2630,-639,-2887,10725,2496,-627,1427,5438 } },
     { "Olympus E-M1", 0, 0,
     { 7687,-1984,-606,-4327,11928,2721,-1381,2339,6452 } },
     { "Olympus E-M5MarkII", 0, 0,

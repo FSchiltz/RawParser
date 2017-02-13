@@ -24,6 +24,7 @@ namespace RawNet.Decoder
         public Cr2Decoder(Stream file) : base(file)
         {
             ScaleValue = true;
+            rawImage.IsGammaCorrected = false;
         }
 
         public override Thumbnail DecodeThumb()
@@ -276,10 +277,7 @@ namespace RawNet.Decoder
                 if (wb != null)
                 {
                     //try to use this as white balance
-
-                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0);
-                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(1);
-                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(3);
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), wb.GetInt(1), wb.GetInt(3), rawImage.raw.ColorDepth);
                 }
                 else
                 {
@@ -298,9 +296,7 @@ namespace RawNet.Decoder
                         }
 
                         offset /= 2;
-                        rawImage.metadata.WbCoeffs[0] = wb.GetFloat(offset + 0);
-                        rawImage.metadata.WbCoeffs[1] = wb.GetFloat(offset + 1);
-                        rawImage.metadata.WbCoeffs[2] = wb.GetFloat(offset + 3);
+                        rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(offset), wb.GetInt(offset + 1), wb.GetInt(offset + 3), rawImage.raw.ColorDepth);
                     }
                     else
                     {
@@ -314,10 +310,7 @@ namespace RawNet.Decoder
                             UInt16 wb_index = shot_info.GetUShort(7);
                             int wb_offset = (wb_index < 18) ? "012347800000005896"[wb_index] - '0' : 0;
                             wb_offset = wb_offset * 8 + 2;
-
-                            rawImage.metadata.WbCoeffs[0] = g9_wb.GetInt(wb_offset + 1);
-                            rawImage.metadata.WbCoeffs[1] = (g9_wb.GetInt(wb_offset + 0) + (float)g9_wb.GetInt(wb_offset + 3)) / 2.0f;
-                            rawImage.metadata.WbCoeffs[2] = g9_wb.GetInt(wb_offset + 2);
+                            rawImage.metadata.WbCoeffs = new WhiteBalance(g9_wb.GetInt(wb_offset + 1), (g9_wb.GetInt(wb_offset + 0) + g9_wb.GetInt(wb_offset + 3)) / 2, g9_wb.GetInt(wb_offset + 2), rawImage.raw.ColorDepth);
                         }
                         else
                         {
@@ -328,9 +321,7 @@ namespace RawNet.Decoder
                             {
                                 if (wb.dataCount >= 3)
                                 {
-                                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0);
-                                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(1);
-                                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(2);
+                                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), wb.GetInt(1), wb.GetInt(2), rawImage.raw.ColorDepth);
                                 }
                             }
                         }
@@ -355,10 +346,6 @@ namespace RawNet.Decoder
             {
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
-
-            rawImage.metadata.WbCoeffs[0] = rawImage.metadata.WbCoeffs[0] / rawImage.metadata.WbCoeffs[1];
-            rawImage.metadata.WbCoeffs[2] = rawImage.metadata.WbCoeffs[2] / rawImage.metadata.WbCoeffs[1];
-            rawImage.metadata.WbCoeffs[1] = rawImage.metadata.WbCoeffs[1] / rawImage.metadata.WbCoeffs[1];
         }
 
         protected void SetMetadata(string model)
@@ -451,8 +438,8 @@ namespace RawNet.Decoder
                     case "PowerShot Pro70":
                         rawImage.raw.dim.Height = 1024;
                         rawImage.raw.dim.Width = 1552;
-                        //filters = 0x1e4b4e1b;
-                        canon_a5:
+                    //filters = 0x1e4b4e1b;
+                    canon_a5:
                         //colors = 4;
                         rawImage.raw.ColorDepth = 10;
                         //load_raw = &CLASS packed_load_raw;

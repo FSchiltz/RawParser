@@ -226,7 +226,7 @@ namespace RawNet.Decoder
                 if (hints.ContainsKey("jpeg32_bitorder"))
                     RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Jpeg32, rawImage);
                 else
-                    RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Plain,rawImage);
+                    RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Plain, rawImage);
             }
         }
 
@@ -290,9 +290,7 @@ namespace RawNet.Decoder
             {
                 if (wb.dataCount == 3)
                 {
-                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(1) / wb.GetFloat(0);
-                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
-                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(2) / wb.GetFloat(0);
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(1), wb.GetInt(0), wb.GetInt(2), rawImage.raw.ColorDepth);
                 }
             }
             else
@@ -302,9 +300,7 @@ namespace RawNet.Decoder
                 {
                     if (wb.dataCount == 8)
                     {
-                        rawImage.metadata.WbCoeffs[0] = wb.GetFloat(1) / wb.GetFloat(0);
-                        rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
-                        rawImage.metadata.WbCoeffs[2] = wb.GetFloat(3) / wb.GetFloat(0);
+                        rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(1), wb.GetInt(0), wb.GetInt(3), rawImage.raw.ColorDepth);
                     }
                 }
             }
