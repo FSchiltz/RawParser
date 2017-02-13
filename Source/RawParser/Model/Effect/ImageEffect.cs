@@ -212,7 +212,7 @@ namespace RawEditor.Effect
             get { return rMul; }
             set
             {
-                if (rMul != value)
+                if (rMul != value && !Double.IsNaN(value) && !Double.IsInfinity(value))
                 {
                     rMul = value;
                     OnPropertyChanged();
@@ -226,7 +226,7 @@ namespace RawEditor.Effect
             get { return gMul; }
             set
             {
-                if (gMul != value)
+                if (gMul != value && !Double.IsNaN(value) && !Double.IsInfinity(value))
                 {
                     gMul = value;
                     OnPropertyChanged();
@@ -240,7 +240,7 @@ namespace RawEditor.Effect
             get { return bMul; }
             set
             {
-                if (bMul != value)
+                if (bMul != value && !Double.IsNaN(value) && !Double.IsInfinity(value))
                 {
                     bMul = value;
                     OnPropertyChanged();

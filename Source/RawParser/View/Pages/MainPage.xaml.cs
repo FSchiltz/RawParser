@@ -165,7 +165,7 @@ namespace RawEditor.View.Pages
             History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
             {
                 oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
-                value = new double[] { raw?.metadata.WbCoeffs[0] ?? 1, raw?.metadata.WbCoeffs[1] ?? 1, raw?.metadata.WbCoeffs[2] ?? 1 }
+                value = new double[] { raw?.metadata.WbCoeffs.Red ?? 1, raw?.metadata.WbCoeffs.Green?? 1, raw?.metadata.WbCoeffs.Blue ?? 1 }
             });
             EditionValue.RMul = DefaultValue.RMul;
             EditionValue.GMul = DefaultValue.GMul;
@@ -248,9 +248,9 @@ namespace RawEditor.View.Pages
 #endif
                     DefaultValue.Rotation = raw.metadata.OriginalRotation;
                     DefaultValue.ReverseGamma = raw.IsGammaCorrected;
-                    DefaultValue.RMul = raw?.metadata.WbCoeffs[0] ?? 1;
-                    DefaultValue.GMul = raw?.metadata.WbCoeffs[1] ?? 1;
-                    DefaultValue.BMul = raw?.metadata.WbCoeffs[2] ?? 1;
+                    DefaultValue.RMul = raw?.metadata.WbCoeffs?.Red ?? 1;
+                    DefaultValue.GMul = raw?.metadata.WbCoeffs?.Green ?? 1;
+                    DefaultValue.BMul = raw?.metadata.WbCoeffs?.Blue ?? 1;
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         var exif = raw.ParseExif();

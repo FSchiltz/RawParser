@@ -39,7 +39,7 @@ namespace RawNet
         public double PixelAspectRatio { get; set; }
 
         // White balance coefficients of the image
-        public float[] WbCoeffs { get; set; } = new float[4];
+        public WhiteBalance WbCoeffs;
 
         // How many pixels far down the left edge and far up the right edge the image 
         // corners are when the image is rotated 45 degrees in Fuji rotated sensors.
@@ -74,7 +74,6 @@ namespace RawNet
             IsoSpeed = 0;
             PixelAspectRatio = 1;
             FujiRotationPos = 0;
-            WbCoeffs[0] = WbCoeffs[1] = WbCoeffs[2] = WbCoeffs[3] = 1;
         }
 
         public string ExposureAsString => (Exposure >= 1) ? Exposure + "s" : "1/" + (1 / Exposure).ToString("F0") + "s";

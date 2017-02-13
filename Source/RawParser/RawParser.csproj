@@ -173,6 +173,7 @@
     <Compile Include="Model\Parser\Format\TIFF\IFDType.cs" />
     <Compile Include="Model\Parser\Image\ExifValue.cs" />
     <Compile Include="Model\Parser\Image\ImageComponent.cs" />
+    <Compile Include="Model\Parser\Image\WhiteBalance.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="Model\Parser\Base\Common.cs" />

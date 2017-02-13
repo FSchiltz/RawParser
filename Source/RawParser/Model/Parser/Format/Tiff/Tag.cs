@@ -13,6 +13,7 @@ namespace RawNet.Format.TIFF
         public static uint[] datashifts = { 0, 0, 0, 1, 2, 3, 0, 0, 1, 2, 3, 2, 3, 2 };
         // 0-1-2-3-4-5-6-7-8-9-10-11-12-13
     }
+
     /*
      * Tag data type information.
      *
@@ -44,6 +45,140 @@ namespace RawNet.Format.TIFF
         public uint dataOffset;
         public object[] data;
         internal int parent_offset;
+
+        public Tag(TagType id, TiffDataType type, uint count)
+        {
+            TagId = id;
+            dataType = type;
+            dataCount = count;
+            data = new Object[dataCount];
+        }
+
+        public Tag(TIFFBinaryReader fileStream, int baseOffset)
+        {
+            parent_offset = baseOffset;
+            TagId = (TagType)fileStream.ReadUInt16();
+            dataType = (TiffDataType)fileStream.ReadUInt16();
+            if (TagId == TagType.FUJI_RAW_IFD)
+            {
+                if (dataType == TiffDataType.OFFSET) // FUJI - correct type
+                    dataType = TiffDataType.LONG;
+            }
+
+            dataCount = fileStream.ReadUInt32();
+            dataOffset = 0;
+            if (((dataCount * GetTypeSize(dataType) > 4)))
+            {
+                dataOffset = fileStream.ReadUInt32();
+            }
+            else
+            {
+                GetData(fileStream);
+                int k = (int)dataCount * GetTypeSize(dataType);
+                if (k < 4)
+                    fileStream.ReadBytes(4 - k);
+            }
+            /*            if (dataOffset < fileStream.BaseStream.Length && dataOffset > 1)
+            {
+                long firstPosition = fileStream.Position;
+                fileStream.Position = dataOffset + parent_offset;
+                GetData(fileStream);
+                fileStream.BaseStream.Position = firstPosition;
+            ¨*/
+        }
+
+        public void ReadData(TIFFBinaryReader fileStream)
+        {
+            if (data == null && dataOffset + parent_offset < fileStream.BaseStream.Length && dataOffset > 1)
+            {
+                long firstPosition = fileStream.Position;
+                fileStream.Position = dataOffset + parent_offset;
+                GetData(fileStream);
+                fileStream.BaseStream.Position = firstPosition;
+            }
+        }
+
+        private void GetData(TIFFBinaryReader fileStream)
+        {
+            data = new Object[dataCount];
+            for (int j = 0; j < dataCount; j++)
+            {
+                switch (dataType)
+                {
+                    case TiffDataType.BYTE:
+                    case TiffDataType.UNDEFINED:
+                    case TiffDataType.ASCII:
+                        data[j] = fileStream.ReadByte();
+                        break;
+                    case TiffDataType.SHORT:
+                        data[j] = fileStream.ReadUInt16();
+                        break;
+                    case TiffDataType.LONG:
+                    case TiffDataType.OFFSET:
+                        data[j] = fileStream.ReadUInt32();
+                        break;
+                    case TiffDataType.SBYTE:
+                        data[j] = fileStream.ReadSByte();
+                        break;
+                    case TiffDataType.SSHORT:
+                        data[j] = fileStream.ReadInt16();
+                        //if ( dataOffset == 0 &&  dataCount == 1) fileStream.ReadInt16();
+                        break;
+                    case TiffDataType.SLONG:
+                        data[j] = fileStream.ReadInt32();
+                        break;
+                    case TiffDataType.SRATIONAL:
+                    case TiffDataType.RATIONAL:
+                        //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.                              
+                        if (dataOffset == 0)
+                        {
+                            data[j] = .0;
+                        }
+                        else
+                        {
+                            data[j] = fileStream.ReadRational();
+                        }
+                        break;
+                    case TiffDataType.FLOAT:
+                        data[j] = fileStream.ReadSingle();
+                        break;
+                    case TiffDataType.DOUBLE:
+                        data[j] = fileStream.ReadDouble();
+                        break;
+                }
+            }
+        }
+
+        protected static int GetTypeSize(TiffDataType id)
+        {
+            int size = 0;
+            switch (id)
+            {
+                case TiffDataType.BYTE:
+                case TiffDataType.ASCII:
+                case TiffDataType.SBYTE:
+                case TiffDataType.UNDEFINED:
+                    size = 1;
+                    break;
+                case TiffDataType.SHORT:
+                case TiffDataType.SSHORT:
+                    size = 2;
+                    break;
+                case TiffDataType.LONG:
+                case TiffDataType.SLONG:
+                case TiffDataType.FLOAT:
+                case TiffDataType.OFFSET:
+                    size = 4;
+                    break;
+                case TiffDataType.RATIONAL:
+                case TiffDataType.DOUBLE:
+                case TiffDataType.SRATIONAL:
+                    size = 8;
+                    break;
+            }
+            return size;
+        }
+
 
         public string DataAsString
         {
@@ -118,139 +253,6 @@ namespace RawNet.Format.TIFF
                 }
                 else return "";
             }
-        }
-
-        public Tag(TagType id, TiffDataType type, uint count)
-        {
-            TagId = id;
-            dataType = type;
-            dataCount = count;
-            data = new Object[dataCount];
-        }
-
-        public Tag(TIFFBinaryReader fileStream, int baseOffset)
-        {
-            parent_offset = baseOffset;
-            TagId = (TagType)fileStream.ReadUInt16();
-            dataType = (TiffDataType)fileStream.ReadUInt16();
-            if (TagId == TagType.FUJI_RAW_IFD)
-            {
-                if (dataType == TiffDataType.OFFSET) // FUJI - correct type
-                    dataType = TiffDataType.LONG;
-            }
-
-            dataCount = fileStream.ReadUInt32();
-            dataOffset = 0;
-            if (((dataCount * GetTypeSize(dataType) > 4)))
-            {
-                dataOffset = fileStream.ReadUInt32();
-            }
-
-            //Get the tag data
-            data = new Object[dataCount];
-            long firstPosition = fileStream.Position;
-
-            if (dataOffset < fileStream.BaseStream.Length && TagId != TagType.MAKERNOTE && TagId != TagType.MAKERNOTE_ALT)
-            {
-                if (dataOffset > 1)
-                {
-                    fileStream.Position = dataOffset + baseOffset;
-                }
-
-                try
-                {
-                    for (int j = 0; j < dataCount; j++)
-                    {
-                        switch (dataType)
-                        {
-                            case TiffDataType.BYTE:
-                            case TiffDataType.UNDEFINED:
-                            case TiffDataType.ASCII:
-                                data[j] = fileStream.ReadByte();
-                                break;
-                            case TiffDataType.SHORT:
-                                data[j] = fileStream.ReadUInt16();
-                                break;
-                            case TiffDataType.LONG:
-                            case TiffDataType.OFFSET:
-                                data[j] = fileStream.ReadUInt32();
-                                break;
-                            case TiffDataType.SBYTE:
-                                data[j] = fileStream.ReadSByte();
-                                break;
-                            case TiffDataType.SSHORT:
-                                data[j] = fileStream.ReadInt16();
-                                //if ( dataOffset == 0 &&  dataCount == 1) fileStream.ReadInt16();
-                                break;
-                            case TiffDataType.SLONG:
-                                data[j] = fileStream.ReadInt32();
-                                break;
-                            case TiffDataType.SRATIONAL:
-                            case TiffDataType.RATIONAL:
-                                //Because the nikonmakernote is broken with the tag 0x19 wich is double but offset of zero.                              
-                                if (dataOffset == 0)
-                                {
-                                    data[j] = .0;
-                                }
-                                else
-                                {
-                                    data[j] = fileStream.ReadRational();
-                                }
-                                break;
-                            case TiffDataType.FLOAT:
-                                data[j] = fileStream.ReadSingle();
-                                break;
-                            case TiffDataType.DOUBLE:
-                                data[j] = fileStream.ReadDouble();
-                                break;
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    //we ignore invalid tag (Ugly but that's the specification
-                }
-            }
-            if (dataOffset > 1)
-            {
-                fileStream.BaseStream.Position = firstPosition;
-            }
-            else if (dataOffset == 0)
-            {
-                int k = (int)dataCount * GetTypeSize(dataType);
-                if (k < 4)
-                    fileStream.ReadBytes(4 - k);
-            }
-        }
-
-        protected static int GetTypeSize(TiffDataType id)
-        {
-            int size = 0;
-            switch (id)
-            {
-                case TiffDataType.BYTE:
-                case TiffDataType.ASCII:
-                case TiffDataType.SBYTE:
-                case TiffDataType.UNDEFINED:
-                case TiffDataType.OFFSET:
-                    size = 1;
-                    break;
-                case TiffDataType.SHORT:
-                case TiffDataType.SSHORT:
-                    size = 2;
-                    break;
-                case TiffDataType.LONG:
-                case TiffDataType.SLONG:
-                case TiffDataType.FLOAT:
-                    size = 4;
-                    break;
-                case TiffDataType.RATIONAL:
-                case TiffDataType.DOUBLE:
-                case TiffDataType.SRATIONAL:
-                    size = 8;
-                    break;
-            }
-            return size;
         }
 
         internal ushort[] GetUShortArray()
@@ -341,26 +343,16 @@ namespace RawNet.Format.TIFF
             return ((((uint)(data)[pos + 0]) << 24) | (((uint)(data)[pos + 1]) << 16) | (((uint)(data)[pos + 2]) << 8) | ((uint)(data)[pos + 3]));
         }
 
-        internal UInt64 Get8LE(uint pos)
+        internal ulong Get8LE(uint pos)
         {
-            return ((((UInt64)(data)[pos + 7]) << 56) | (((UInt64)(data)[pos + 6]) << 48) | (((UInt64)(data)[pos + 5]) << 40) |
-      (((UInt64)(data)[pos + 4]) << 32) |
-      (((UInt64)(data)[pos + 3]) << 24) |
-      (((UInt64)(data)[pos + 2]) << 16) |
-      (((UInt64)(data)[pos + 1]) << 8) |
-       ((UInt64)(data)[pos]));
+            return ((((ulong)(data)[pos + 7]) << 56) | (((ulong)(data)[pos + 6]) << 48) | (((ulong)(data)[pos + 5]) << 40) | (((ulong)(data)[pos + 4]) << 32) |
+                 (((ulong)(data)[pos + 3]) << 24) | (((ulong)(data)[pos + 2]) << 16) | (((ulong)(data)[pos + 1]) << 8) | ((ulong)(data)[pos]));
         }
 
-        internal UInt64 Get8BE(uint pos)
+        internal ulong Get8BE(uint pos)
         {
-            return ((((UInt64)(data)[pos + 0]) << 56) |
-                (((UInt64)(data)[pos + 1]) << 48) |
-                (((UInt64)(data)[pos + 2]) << 40) |
-(((UInt64)(data)[pos + 3]) << 32) |
-(((UInt64)(data)[pos + 4]) << 24) |
-(((UInt64)(data)[pos + 5]) << 16) |
-(((UInt64)(data)[pos + 6]) << 8) |
-((UInt64)(data)[pos + 7]));
+            return ((((ulong)(data)[pos + 0]) << 56) | (((ulong)(data)[pos + 1]) << 48) | (((ulong)(data)[pos + 2]) << 40) | (((ulong)(data)[pos + 3]) << 32) |
+                (((ulong)(data)[pos + 4]) << 24) | (((ulong)(data)[pos + 5]) << 16) | (((ulong)(data)[pos + 6]) << 8) | ((ulong)(data)[pos + 7]));
         }
     }
 }

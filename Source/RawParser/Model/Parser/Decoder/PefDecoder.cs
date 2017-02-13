@@ -46,17 +46,9 @@ namespace RawNet.Decoder
 
             rawImage.raw.dim = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
             rawImage.Init(false);
-            try
-            {
-                PentaxDecompressor l = new PentaxDecompressor(reader, rawImage);
-                l.DecodePentax(ifd, offsets.GetUInt(0), counts.GetUInt(0));
-                reader.Dispose();
-            }
-            catch (IOException e)
-            {
-                rawImage.errors.Add(e.Message);
-                // Let's ignore it, it may have delivered somewhat useful data.
-            }
+            PentaxDecompressor l = new PentaxDecompressor(reader, rawImage);
+            l.DecodePentax(ifd, offsets.GetUInt(0), counts.GetUInt(0));
+            reader.Dispose();
         }
 
         public override void DecodeMetadata()
@@ -77,30 +69,17 @@ namespace RawNet.Decoder
 
             // Read black level
             Tag black = ifd.GetEntryRecursive((TagType)0x200);
-            if (black != null)
+            if (black?.dataCount == 4)
             {
-                if (black.dataCount == 4)
-                {
-                    for (int i = 0; i < 4; i++)
-                        rawImage.blackLevelSeparate[i] = black.GetInt(i);
-                }
+                for (int i = 0; i < 4; i++)
+                    rawImage.blackLevelSeparate[i] = black.GetInt(i);
             }
 
             // Set the whitebalance
             Tag wb = ifd.GetEntryRecursive((TagType)0x0201);
-            if (wb != null)
+            if (wb?.dataCount == 4)
             {
-                if (wb.dataCount == 4)
-                {
-                    rawImage.metadata.WbCoeffs[0] = wb.GetInt(0);
-                    rawImage.metadata.WbCoeffs[1] = wb.GetInt(1);
-                    rawImage.metadata.WbCoeffs[2] = wb.GetInt(3);
-
-                    rawImage.metadata.WbCoeffs[0] /= rawImage.metadata.WbCoeffs[1];
-                    rawImage.metadata.WbCoeffs[2] /= rawImage.metadata.WbCoeffs[1];
-                    rawImage.metadata.WbCoeffs[1] /= rawImage.metadata.WbCoeffs[1];
-                }
-
+                rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), wb.GetInt(1), wb.GetInt(3));
             }
         }
 

@@ -456,10 +456,8 @@ namespace RawNet.Decoder
             //first get the matrix of level for each pixel (a 2*2 array corresponding to the rgb bayer matrice used     
             if (colorLevel != null)
             {
-                rawImage.metadata.WbCoeffs[0] = colorLevel.GetFloat(0);
-                rawImage.metadata.WbCoeffs[1] = colorLevel.GetFloat(2);
-                rawImage.metadata.WbCoeffs[2] = colorLevel.GetFloat(1);
-                if (rawImage.metadata.WbCoeffs[1] == 0.0f) rawImage.metadata.WbCoeffs[1] = 1.0f;
+                rawImage.metadata.WbCoeffs = new WhiteBalance(colorLevel.GetFloat(0), colorLevel.GetFloat(2), colorLevel.GetFloat(1));
+                if (rawImage.metadata.WbCoeffs.Green == 0.0f) rawImage.metadata.WbCoeffs.Green = 1.0f;
             }
             else if (colorBalance != null)
             {
@@ -478,30 +476,33 @@ namespace RawNet.Decoder
                     {
                         reader = new TIFFBinaryReader(colorBalance.GetByteArray());
                     }
+
+                    var wb = new ushort[4];
                     switch (version)
                     {
                         case 100:
                             reader.Position = 72;
                             for (int c = 0; c < 4; c++)
                             {
-                                rawImage.metadata.WbCoeffs[(c >> 1) | ((c & 1) << 1)] = reader.ReadUInt16();
+                                wb[(c >> 1) | ((c & 1) << 1)] = reader.ReadUInt16();
                             }
                             break;
                         case 102:
                             reader.Position = 10;
                             for (int c = 0; c < 4; c++)
                             {
-                                rawImage.metadata.WbCoeffs[c ^ (c >> 1)] = reader.ReadUInt16();
+                                wb[c ^ (c >> 1)] = reader.ReadUInt16();
                             }
                             break;
                         case 103:
                             reader.Position = 20;
                             for (int c = 0; c < 3; c++)
                             {
-                                rawImage.metadata.WbCoeffs[c] = reader.ReadUInt16();
+                                wb[c] = reader.ReadUInt16();
                             }
                             break;
                     }
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb[0], wb[1], wb[2], rawImage.raw.ColorDepth);
                     reader.Dispose();
                 }
                 else
@@ -580,30 +581,7 @@ namespace RawNet.Decoder
                     // Finally set the WB coeffs
                     uint off = (uint)((version == 0x204) ? 6 : 14);
                     off += bitOff;
-                    rawImage.metadata.WbCoeffs[0] = colorBalance.Get2BE(off);
-                    rawImage.metadata.WbCoeffs[1] = colorBalance.Get2BE(off + 2);
-                    rawImage.metadata.WbCoeffs[2] = colorBalance.Get2BE(off + 6);
-
-                    /*
-                    //DCRAW decompression,may be better
-                    byte ci, cj, ck;
-                    ci = xlat[0][serialno & 0xff];
-                    byte[] shutterAsByte = BitConverter.GetBytes((uint)shutterCountTag.data[0]);
-                    cj = xlat[1][shutterAsByte[0] ^ shutterAsByte[1] ^ shutterAsByte[2] ^ shutterAsByte[3]];
-                    ck = 0x60;
-                    for (int i = 0; i < 324; i++)
-                    {
-                        buff[i] ^= (cj += (byte)(ci * ck++));
-                    }
-                    int offset = "66666>666;6A;:;55"[version - 200] - '0';
-                    for (int c = 0; c < 4; c++)
-                    {
-                        camMul[c ^ (c >> 1) ^ (offset & 1)] = fileStream.readUshortFromArray(ref buff, (offset & -2) + c * 2);
-                    }
-                    for (int c = 0; c < 4; c++)
-                    {
-                        camMul[c] = (camMul[c] / 0.93783628940582275) * 65535.0 / 16383;
-                    }*/
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(colorBalance.Get2BE(off), colorBalance.Get2BE(off + 2), colorBalance.Get2BE(off + 6));
                 }
             }
             else if (oldColorBalance != null)
@@ -612,9 +590,8 @@ namespace RawNet.Decoder
                 {
                     uint red = oldColorBalance.GetUInt(1249) | (oldColorBalance.GetUInt(1248) << 8);
                     uint blue = oldColorBalance.GetUInt(1251) | (oldColorBalance.GetUInt(1250) << 8);
-                    rawImage.metadata.WbCoeffs[0] = red / 256.0f;
-                    rawImage.metadata.WbCoeffs[1] = 1.0f;
-                    rawImage.metadata.WbCoeffs[2] = blue / 256.0f;
+
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(red / 256.0f, 1.0f, blue / 256.0f);
                 }
                 else if (oldColorBalance.DataAsString.StartsWith("NRW "))
                 {
@@ -627,16 +604,10 @@ namespace RawNet.Decoder
                     if (offset != 0)
                     {
                         //TODO check if  tag is byte type
-                        rawImage.metadata.WbCoeffs[0] = oldColorBalance.Get4LE(offset) << 2;
-                        rawImage.metadata.WbCoeffs[1] = oldColorBalance.Get4LE(offset + 4) + colorBalance.Get4LE(offset + 8);
-                        rawImage.metadata.WbCoeffs[2] = oldColorBalance.Get4LE(offset + 12) << 2;
+                        rawImage.metadata.WbCoeffs = new WhiteBalance(oldColorBalance.Get4LE(offset) << 2, oldColorBalance.Get4LE(offset + 4) + colorBalance.Get4LE(offset + 8), oldColorBalance.Get4LE(offset + 12) << 2);
                     }
                 }
             }
-            //normalize white balance
-            rawImage.metadata.WbCoeffs[0] /= rawImage.metadata.WbCoeffs[1];
-            rawImage.metadata.WbCoeffs[2] /= rawImage.metadata.WbCoeffs[1];
-            rawImage.metadata.WbCoeffs[1] = 1.0f;
 
             string mode = GetMode();
             SetMetadata(rawImage.metadata.Model);
@@ -708,9 +679,7 @@ namespace RawNet.Decoder
             if (wb_r == 0.0f || wb_b == 0.0f)
                 throw new RawDecoderException("White balance has zero value");
 
-            rawImage.metadata.WbCoeffs[0] = wb_r;
-            rawImage.metadata.WbCoeffs[1] = 1.0f;
-            rawImage.metadata.WbCoeffs[2] = wb_b;
+            rawImage.metadata.WbCoeffs = new WhiteBalance(wb_r, 1, wb_b);
 
             int inv_wb_r = (int)(1024.0 / wb_r);
             int inv_wb_b = (int)(1024.0 / wb_b);
@@ -864,8 +833,8 @@ namespace RawNet.Decoder
             switch (model.Trim())
             {
                 case "D1":
-                    rawImage.metadata.WbCoeffs[0] *= 256f / 527.0f;
-                    rawImage.metadata.WbCoeffs[2] *= 256f / 317.0f;
+                    rawImage.metadata.WbCoeffs.Red *= 256f / 527.0f;
+                    rawImage.metadata.WbCoeffs.Blue *= 256f / 317.0f;
                     break;
                 case "D1X":
                     rawImage.raw.dim.Width -= 4;

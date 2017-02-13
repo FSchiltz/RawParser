@@ -136,9 +136,7 @@ namespace RawNet.Decoder
             var bWBTag = raw.GetEntry((TagType)0x0026);
             if (rWBTag != null && gWBTag != null && bWBTag != null)
             {
-                rawImage.metadata.WbCoeffs[0] = rWBTag.GetShort(0);
-                rawImage.metadata.WbCoeffs[1] = gWBTag.GetShort(0);
-                rawImage.metadata.WbCoeffs[2] = bWBTag.GetShort(0);
+                rawImage.metadata.WbCoeffs = new WhiteBalance(rWBTag.GetShort(0), gWBTag.GetShort(0), bWBTag.GetShort(0));
             }
             else
             {
@@ -146,14 +144,9 @@ namespace RawNet.Decoder
                 var wb2Tag = raw.GetEntry((TagType)0x0012);
                 if (wb1Tag != null && wb2Tag != null)
                 {
-                    rawImage.metadata.WbCoeffs[0] = wb1Tag.GetShort(0);
-                    rawImage.metadata.WbCoeffs[1] = 256.0f;
-                    rawImage.metadata.WbCoeffs[2] = wb2Tag.GetShort(0);
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb1Tag.GetShort(0), 1, wb2Tag.GetShort(0));
                 }
             }
-            rawImage.metadata.WbCoeffs[0] /= rawImage.metadata.WbCoeffs[1];
-            rawImage.metadata.WbCoeffs[2] /= rawImage.metadata.WbCoeffs[1];
-            rawImage.metadata.WbCoeffs[1] /= rawImage.metadata.WbCoeffs[1];
         }
 
         unsafe void DecodeRw2()
@@ -229,11 +222,6 @@ namespace RawNet.Decoder
                     }
                 }
             }
-            /*
-            if (zero_is_bad && zero_pos.Count != 0)
-            {
-                rawImage.mBadPixelPositions.insert(rawImage.mBadPixelPositions.end(), zero_pos.begin(), zero_pos.end());
-            }*/
         }
 
         public override void DecodeMetadata()

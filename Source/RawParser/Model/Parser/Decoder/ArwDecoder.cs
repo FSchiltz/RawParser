@@ -9,7 +9,10 @@ namespace RawNet.Decoder
 {
     class ArwDecoder : TIFFDecoder
     {
-        internal ArwDecoder(Stream file) : base(file) { }
+        internal ArwDecoder(Stream file) : base(file)
+        {
+            rawImage.IsGammaCorrected = false;
+        }
 
         public override Thumbnail DecodeThumb()
         {
@@ -35,107 +38,28 @@ namespace RawNet.Decoder
 
         public override void DecodeRaw()
         {
-            IFD raw = null;
+
             List<IFD> data = ifd.GetIFDsWithTag(TagType.STRIPOFFSETS);
 
             if (data.Count == 0)
             {
                 Tag model = ifd.GetEntryRecursive(TagType.MODEL);
-
                 if (model != null && model.DataAsString == "DSLR-A100")
                 {
-                    // We've caught the elusive A100 in the wild, a transitional format
-                    // between the simple sanity of the MRW custom format and the wordly
-                    // wonderfullness of the Tiff-based ARW format, let's shoot from the hip
-                    data = ifd.GetIFDsWithTag(TagType.SUBIFDS);
-                    if (data.Count == 0)
-                        throw new RawDecoderException("ARW: A100 format, couldn't find offset");
-                    raw = data[0];
-                    uint offset = raw.GetEntry(TagType.SUBIFDS).GetUInt(0);
-                    uint w = 3881;
-                    uint h = 2608;
-
-                    rawImage.raw.dim = new Point2D(w, h);
-                    rawImage.Init(false);
-                    reader = new TIFFBinaryReader(reader.BaseStream, offset);
-
-                    try
-                    {
-                        DecodeARW(reader, w, h);
-                    }
-                    catch (IOException e)
-                    {
-                        rawImage.errors.Add(e.Message);
-                        // Let's ignore it, it may have delivered somewhat useful data.
-                    }
-
-                    return;
-                }
-                else if (hints.ContainsKey("srf_format"))
-                {
-
-                    data = ifd.GetIFDsWithTag(TagType.IMAGEWIDTH);
-                    if (data.Count == 0)
-                        throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
-                    raw = data[0];
-
-                    uint w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-                    uint h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-                    uint len = (w * h * 2);
-
-                    // Constants taken from dcraw
-                    uint offtemp = 862144;
-                    uint key_off = 200896;
-                    uint head_off = 164600;
-
-                    // Replicate the dcraw contortions to get the "decryption" key
-                    base.reader.Position = key_off; ;
-                    int offset = base.reader.ReadByte() * 4;
-                    base.reader.Position = key_off + offset;
-                    byte[] d = base.reader.ReadBytes(4);
-                    uint key = (((uint)(d[0]) << 24) | ((uint)(d[1]) << 16) | ((uint)(d[2]) << 8) | d[3]);
-                    base.reader.Position = head_off;
-                    byte[] head = base.reader.ReadBytes(40);
-
-                    SonyDecrypt(head, 10, key);
-
-                    for (int i = 26; i-- > 22;)
-                        key = key << 8 | head[i];
-
-                    // "Decrypt" the whole image buffer in place
-                    base.reader.Position = offtemp;
-                    byte[] imageData = base.reader.ReadBytes((int)len);
-
-                    SonyDecrypt(imageData, len / 4, key);
-
-                    // And now decode as a normal 16bit raw
-                    rawImage.raw.dim = new Point2D(w, h);
-                    rawImage.Init(false);
-                    using (TIFFBinaryReader reader = new TIFFBinaryReader(imageData, len))
-                    {
-                        RawDecompressor.Decode16BitRawUnpacked(reader, w, h, rawImage);
-                    }
+                    DecodeA100();
                     return;
                 }
                 else
                 {
-                    throw new RawDecoderException("ARW Decoder: No image data found");
+                    DecodeCryptedUncompressed();
+                    return;
                 }
             }
-
-            raw = data[0];
+            IFD raw = data[0];
             int compression = raw.GetEntry(TagType.COMPRESSION).GetInt(0);
             if (1 == compression)
             {
-                try
-                {
-                    DecodeUncompressed(raw);
-                }
-                catch (IOException e)
-                {
-                    rawImage.errors.Add(e.Message);
-                }
-
+                DecodeUncompressed(raw);
                 return;
             }
 
@@ -191,9 +115,12 @@ namespace RawNet.Decoder
                 curve[i] = (ushort)i;
 
             for (int i = 0; i < 5; i++)
+            {
                 for (uint j = sony_curve[i] + 1; j <= sony_curve[i + 1]; j++)
+                {
                     curve[j] = (ushort)(curve[j - 1] + (1 << i));
-
+                }
+            }
 
             rawImage.SetTable(curve, 0x4000, true);
 
@@ -222,6 +149,71 @@ namespace RawNet.Decoder
             }
 
             // mRaw.setTable(null);
+        }
+
+        private void DecodeCryptedUncompressed()
+        {
+            var data = ifd.GetIFDsWithTag(TagType.IMAGEWIDTH);
+            if (data.Count == 0)
+                throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
+            var raw = data[0];
+
+            uint w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
+            uint h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
+            uint len = (w * h * 2);
+
+            // Constants taken from dcraw
+            uint offtemp = 862144;
+            uint key_off = 200896;
+            uint head_off = 164600;
+
+            // Replicate the dcraw contortions to get the "decryption" key
+            base.reader.Position = key_off; ;
+            int offset = base.reader.ReadByte() * 4;
+            base.reader.Position = key_off + offset;
+            byte[] d = base.reader.ReadBytes(4);
+            uint key = (((uint)(d[0]) << 24) | ((uint)(d[1]) << 16) | ((uint)(d[2]) << 8) | d[3]);
+            base.reader.Position = head_off;
+            byte[] head = base.reader.ReadBytes(40);
+
+            SonyDecrypt(head, 10, key);
+
+            for (int i = 26; i-- > 22;)
+                key = key << 8 | head[i];
+
+            // "Decrypt" the whole image buffer in place
+            base.reader.Position = offtemp;
+            byte[] imageData = base.reader.ReadBytes((int)len);
+
+            SonyDecrypt(imageData, len / 4, key);
+
+            // And now decode as a normal 16bit raw
+            rawImage.raw.dim = new Point2D(w, h);
+            rawImage.Init(false);
+            using (TIFFBinaryReader reader = new TIFFBinaryReader(imageData, len))
+            {
+                RawDecompressor.Decode16BitRawUnpacked(reader, w, h, rawImage);
+            }
+        }
+
+        private void DecodeA100()
+        {
+            // We've caught the elusive A100 in the wild, a transitional format
+            // between the simple sanity of the MRW custom format and the wordly
+            // wonderfullness of the Tiff-based ARW format, let's shoot from the hip
+            var data = ifd.GetIFDsWithTag(TagType.SUBIFDS);
+            if (data.Count == 0)
+                throw new RawDecoderException("ARW: A100 format, couldn't find offset");
+            var raw = data[0];
+            uint offset = raw.GetEntry(TagType.SUBIFDS).GetUInt(0);
+            uint w = 3881;
+            uint h = 2608;
+
+            rawImage.raw.dim = new Point2D(w, h);
+            rawImage.Init(false);
+            reader = new TIFFBinaryReader(reader.BaseStream, offset);
+
+            DecodeARW(reader, w, h);
         }
 
         void DecodeUncompressed(IFD raw)
@@ -371,8 +363,7 @@ namespace RawNet.Decoder
 
             // Set the whitebalance
             if (rawImage.metadata.Model == "DSLR-A100")
-            { // Handle the MRW style WB of the A100
-
+            {
                 Tag priv = ifd.GetEntryRecursive(TagType.DNGPRIVATEDATA);
                 if (priv != null)
                 {
@@ -395,13 +386,10 @@ namespace RawNet.Decoder
                             UInt16[] tmp = new UInt16[4];
                             for (int i = 0; i < 4; i++)
                                 tmp[i] = (ushort)(stringdata[(currpos + 12 + i * 2) + 1] << 8 | stringdata[currpos + 12 + i * 2]);
-
-                            rawImage.metadata.WbCoeffs[0] = (float)tmp[0] / tmp[1];
-                            rawImage.metadata.WbCoeffs[1] = (float)tmp[1] / tmp[1];
-                            rawImage.metadata.WbCoeffs[2] = (float)tmp[3] / tmp[1];
+                            rawImage.metadata.WbCoeffs = new WhiteBalance(tmp[0], tmp[1], tmp[3], rawImage.raw.ColorDepth);
                             break;
                         }
-                        currpos += (int)Math.Max(len + 8, 1); // Math.Max(,1) to make sure we make progress
+                        currpos += (int)Math.Max(len + 8, 1); // To make sure we make progress
                     }
                 }
             }
@@ -505,8 +493,8 @@ namespace RawNet.Decoder
                 }
                 for (int p = 0; p < 127; p++)
                 {
-                    pad[p] = ((((uint)((byte*)&pad[p])[0]) << 24) | (((uint)((byte*)&pad[p])[1]) << 16) |
-                        (((uint)((byte*)&pad[p])[2]) << 8) | ((byte*)&pad[p])[3]);
+                    pad[p] = (uint)(((((byte*)&pad[p])[0]) << 24) | ((((byte*)&pad[p])[1]) << 16) |
+                        ((((byte*)&pad[p])[2]) << 8) | ((byte*)&pad[p])[3]);
                 }
                 int p2 = 127;
                 // Decrypt the buffer in place using the pad
@@ -534,12 +522,12 @@ namespace RawNet.Decoder
                 Tag sony_length = sony_private.GetEntryRecursive(TagType.SONY_LENGTH);
                 Tag sony_key = sony_private.GetEntryRecursive(TagType.SONY_KEY);
                 if (sony_offset == null || sony_length == null || sony_key == null || sony_key.dataCount != 4)
-                    throw new RawDecoderException("ARW: couldn't find the correct metadata for WB decoding");
+                    throw new RawDecoderException("Couldn't find the correct metadata for white balance decoding");
 
                 off = sony_offset.GetUInt(0);
                 uint len = sony_length.GetUInt(0);
                 data = sony_key.GetByteArray();
-                uint key = ((((uint)(data)[3]) << 24) | (((uint)(data)[2]) << 16) | (((uint)(data)[1]) << 8) | (data)[0]);
+                uint key = (uint)((data[3] << 24) | (data[2] << 16) | (data[1] << 8) | (data)[0]);
                 reader.BaseStream.Position = off;
                 byte[] ifp_data = reader.ReadBytes((int)len);
                 SonyDecrypt(ifp_data, len / 4, key);
@@ -547,26 +535,23 @@ namespace RawNet.Decoder
                 {
                     sony_private = new IFD(reader, 0, ifd.endian, 0, -(int)off);
                 }
-                if (sony_private.tags.ContainsKey(TagType.SONYGRBGLEVELS))
+                Tag wb = sony_private.GetEntry(TagType.SONYGRBGLEVELS);
+                if (wb != null)
                 {
-                    Tag wb = sony_private.GetEntry(TagType.SONYGRBGLEVELS);
+
                     if (wb.dataCount != 4)
-                        throw new RawDecoderException("ARW: WB has " + wb.dataCount + " entries instead of 4");
-                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(1) / wb.GetFloat(0);
-                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(0) / wb.GetFloat(0);
-                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(2) / wb.GetFloat(0);
+                        throw new RawDecoderException("White balance has " + wb.dataCount + " entries instead of 4");
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(1), wb.GetInt(0), wb.GetInt(2), rawImage.raw.ColorDepth);
                 }
-                else if (sony_private.tags.ContainsKey(TagType.SONYRGGBLEVELS))
+                else if ((wb = sony_private.GetEntry(TagType.SONYRGGBLEVELS)) != null)
                 {
-                    Tag wb = sony_private.GetEntry(TagType.SONYRGGBLEVELS);
                     if (wb.dataCount != 4)
-                        throw new RawDecoderException("ARW: WB has " + wb.dataCount + " entries instead of 4");
-                    rawImage.metadata.WbCoeffs[0] = wb.GetFloat(0) / wb.GetFloat(1);
-                    rawImage.metadata.WbCoeffs[1] = wb.GetFloat(1) / wb.GetFloat(1);
-                    rawImage.metadata.WbCoeffs[2] = wb.GetFloat(3) / wb.GetFloat(1);
+                        throw new RawDecoderException("White balance has " + wb.dataCount + " entries instead of 4");
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), wb.GetInt(1), wb.GetInt(3), rawImage.raw.ColorDepth);
                 }
             }
         }
+
         /*
         private CamRGB[] colorM = {
     { "Sony DSC-F828", 0, 0,

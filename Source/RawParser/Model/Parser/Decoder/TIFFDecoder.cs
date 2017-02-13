@@ -34,7 +34,7 @@ namespace RawNet.Decoder
                 //open binaryreader
                 reader = new TIFFBinaryReaderRE(stream);
                 endian = Endianness.Big;
-                if (data[3] != 42 && data[2] != 0x4f) // ORF sometimes has 0x4f!
+                if (data[3] != 42 && data[3] != 0x4f) // ORF sometimes has 0x4f!
                     throw new RawDecoderException("Not a TIFF file (magic 42)");
             }
             else if (data[0] == 0x49 || data[1] == 0x49)
