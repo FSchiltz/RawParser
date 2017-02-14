@@ -10,8 +10,8 @@ namespace RawNet.Decoder.Decompressor
 {
     class LJPEGPlain : JPEGDecompressor
     {
-        public LJPEGPlain(byte[] data, RawImage img, bool UseBigTable, bool DNGCompatible) : this(new TIFFBinaryReader(data), img, UseBigTable, DNGCompatible) { }
-        public LJPEGPlain(TIFFBinaryReader file, RawImage img, bool DNGCompatible, bool UseBigTable) : base(file, img, DNGCompatible, UseBigTable)
+        public LJPEGPlain(byte[] data, RawImage<ushort>  img, bool UseBigTable, bool DNGCompatible) : this(new TIFFBinaryReader(data), img, UseBigTable, DNGCompatible) { }
+        public LJPEGPlain(TIFFBinaryReader file, RawImage<ushort>  img, bool DNGCompatible, bool UseBigTable) : base(file, img, DNGCompatible, UseBigTable)
         {
             huff = new HuffmanTable[4] {
                 new HuffmanTable(UseBigTable, DNGCompatible),
