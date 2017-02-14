@@ -11,7 +11,7 @@ namespace RawNet.Decoder.Decompressor
     {
         public TIFFBinaryReader input;
         public BitPump bits;
-        public RawImage raw;
+        public RawImage<ushort>  raw;
         public SOFInfo frame = new SOFInfo();
         public List<uint> slicesW = new List<uint>(1);
         public int predictor;
@@ -60,7 +60,7 @@ namespace RawNet.Decoder.Decompressor
         * ON AN "AS IS" BASIS, AND CORNELL UNIVERSITY HAS NO OBLIGATION TO
         * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
         */
-        public JPEGDecompressor(TIFFBinaryReader file, RawImage img, bool DNGCompatible, bool UseBigTable)
+        public JPEGDecompressor(TIFFBinaryReader file, RawImage<ushort>  img, bool DNGCompatible, bool UseBigTable)
         {
             raw = img;
             input = file;

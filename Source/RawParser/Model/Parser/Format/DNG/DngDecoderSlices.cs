@@ -29,10 +29,10 @@ namespace RawNet.DNG
     {
         public List<DngSliceElement> slices = new List<DngSliceElement>();
         TIFFBinaryReader file;
-        RawImage raw;
+        RawImage<ushort>  raw;
         public bool FixLjpeg { get; set; }
 
-        public DngDecoderSlices(TIFFBinaryReader file, RawImage img)
+        public DngDecoderSlices(TIFFBinaryReader file, RawImage<ushort>  img)
         {
             this.file = file;
             raw = img;

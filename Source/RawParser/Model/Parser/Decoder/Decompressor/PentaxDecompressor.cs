@@ -8,7 +8,7 @@ namespace RawNet.Decoder.Decompressor
 
     class PentaxDecompressor : JPEGDecompressor
     {
-        public PentaxDecompressor(TIFFBinaryReader file, RawImage img) : base(file, img, false, false)
+        public PentaxDecompressor(TIFFBinaryReader file, RawImage<ushort>  img) : base(file, img, false, false)
         {
             huff[0] = new PentaxHuffman();
         }

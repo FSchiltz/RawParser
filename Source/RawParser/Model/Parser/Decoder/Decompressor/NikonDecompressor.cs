@@ -8,7 +8,7 @@ namespace RawNet.Decoder.Decompressor
     {
         private UInt16[] curve = new UInt16[65536];
       
-        public NikonDecompressor(TIFFBinaryReader file, RawImage img) : base(file, img, false, false)
+        public NikonDecompressor(TIFFBinaryReader file, RawImage<ushort>  img) : base(file, img, false, false)
         {
             huff[0] = new NikonHuffman();
             for (int i = 0; i < 0x8000; i++)
@@ -63,7 +63,7 @@ namespace RawNet.Decoder.Decompressor
             huff[0].Create(huffSelect);
 
             raw.whitePoint = curve[max - 1];
-            raw.BlackLevel = curve[0];
+            raw.black = curve[0];
             raw.SetTable(curve, max, true);
 
             huff[0].bitPump = new BitPumpMSB(input, offset, size);

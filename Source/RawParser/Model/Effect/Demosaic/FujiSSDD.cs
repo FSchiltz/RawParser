@@ -21,13 +21,13 @@ namespace RawEditor.Model.Effect.Demosaic
         //static double COEFF_YR = 0.299;
         //static double COEFF_YG = 0.587;
         //static double COEFF_YB = 0.114;
-       // static double LUTMAX = 30.0;
+        // static double LUTMAX = 30.0;
         //static double LUTMAXM1 = 29.0;
         //static double LUTPRECISION = 1000.0;
         static double threshold = 2.0;
 
 
-        public static unsafe void Demosaic(RawImage image)
+        public static unsafe void Demosaic(RawImage<ushort>  image)
         {
             // Mask of color per pixel
             byte[] mask = new byte[image.raw.dim.Width * image.raw.dim.Height];
@@ -130,7 +130,7 @@ namespace RawEditor.Model.Effect.Demosaic
 
         }
 
-        static unsafe void demosaicking_bilinearSimple_red_blue(ImageComponent image, byte[] mask, ushort[] input, int COLORPOSITION)
+        static unsafe void demosaicking_bilinearSimple_red_blue(ImageComponent<ushort> image, byte[] mask, ushort[] input, int COLORPOSITION)
         {
             // Interpolate the red differences making the average of possible values depending on the CFA structure
             Parallel.For(0, image.dim.Width, x =>

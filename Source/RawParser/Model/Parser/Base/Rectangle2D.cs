@@ -29,7 +29,7 @@ namespace RawNet
             Position = position;
         }
 
-        public UInt32 Area() { return Dimension.Area(); }
+        public UInt32 Area { get { return Dimension.Area; } }
         public void Offset(Point2D offset) { Position += offset; }
         public bool IsThisInside(Rectangle2D otherPoint)
         {
@@ -69,22 +69,22 @@ namespace RawNet
 
         /* This will make sure that offset is positive, and make the area smaller if needed */
         /* This will return true if there is any area left */
-       /* public bool CropOffsetToZero()
-        {
-            Point2D crop_pixels = new Point2D();
-            if (Position.Width < 0)
-            {
-                crop_pixels.Width = -(Position.Width);
-                Position.Width = 0;
-            }
-            if (Position.Height < 0)
-            {
-                crop_pixels.Height = -Position.Height;
-                Position.Height = 0;
-            }
-            Dimension -= crop_pixels;
-            return CropArea();
-        }*/
+        /* public bool CropOffsetToZero()
+         {
+             Point2D crop_pixels = new Point2D();
+             if (Position.Width < 0)
+             {
+                 crop_pixels.Width = -(Position.Width);
+                 Position.Width = 0;
+             }
+             if (Position.Height < 0)
+             {
+                 crop_pixels.Height = -Position.Height;
+                 Position.Height = 0;
+             }
+             Dimension -= crop_pixels;
+             return CropArea();
+         }*/
         /*
         Rectangle2D GetOverlap(Rectangle2D other)
         {

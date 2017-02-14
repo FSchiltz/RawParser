@@ -825,7 +825,7 @@ namespace RawNet.Decoder
                 if (colorM[i].name.Contains(model))
                 {
                     rawImage.convertionM = colorM[i].matrix;
-                    if (colorM[i].black != 0) rawImage.BlackLevel = colorM[i].black;
+                    if (colorM[i].black != 0) rawImage.black = colorM[i].black;
                     if (colorM[i].white != 0) rawImage.whitePoint = colorM[i].white;
                     break;
                 }

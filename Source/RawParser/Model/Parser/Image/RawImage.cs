@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 
 namespace RawNet
 {
-    public class RawImage
+    public class RawImage<T>
     {
-        public ImageComponent preview = new ImageComponent(), thumb, raw = new ImageComponent();
+        public ImageComponent<ushort> preview = new ImageComponent<ushort>();
+        public ImageComponent<byte> thumb;
+        public ImageComponent<T> raw = new ImageComponent<T>();
         public ColorFilterArray colorFilter = new ColorFilterArray();
         public double[,] convertionM;
         public double[] camMul, curve;
@@ -17,18 +19,10 @@ namespace RawNet
 
         public ImageMetadata metadata = new ImageMetadata();
         public uint cpp, pitch;
-        public int whitePoint;
-        public int[] blackLevelSeparate = new int[4];
-        private int black;
-        public int BlackLevel
-        {
-            set { black = value; }
-            get
-            {
-                if (blackLevelSeparate[0] != 0) return blackLevelSeparate[0];
-                else return black;
-            }
-        }
+        public long whitePoint;
+        public long[] blackLevelSeparate = new long[4];
+        public long black;
+
         public List<String> errors = new List<string>();
         public bool isCFA = true;
         public bool isFujiTrans = false;
@@ -58,13 +52,13 @@ namespace RawNet
             pitch = (uint)(((raw.dim.Width * Bpp) + 15) / 16) * 16;
             if (RGB)
             {
-                raw.red = new ushort[raw.dim.Width * raw.dim.Height];
-                raw.green = new ushort[raw.dim.Width * raw.dim.Height];
-                raw.blue = new ushort[raw.dim.Width * raw.dim.Height];
+                raw.red = new T[raw.dim.Width * raw.dim.Height];
+                raw.green = new T[raw.dim.Width * raw.dim.Height];
+                raw.blue = new T[raw.dim.Width * raw.dim.Height];
             }
             else
-                raw.rawView = new ushort[raw.dim.Width * raw.dim.Height * cpp];
-            raw.uncroppedDim = new Point2D(raw.dim.Width, raw.dim.Height);
+                raw.rawView = new T[raw.dim.Width * raw.dim.Height * cpp];
+            raw.UncroppedDim = new Point2D(raw.dim.Width, raw.dim.Height);
         }
 
         public void SetTable(ushort[] table, int nfilled, bool dither)
@@ -151,33 +145,28 @@ namespace RawNet
 
         public void ScaleValues()
         {
-            ushort maxValue = (ushort)((1 << raw.ColorDepth) - 1);
-            Debug.Assert(whitePoint > 0);
-            if (whitePoint == 0)
-            {
-                whitePoint = (1 << raw.ColorDepth) - 1;
-            }
+            Debug.Assert(Convert.ToInt32(whitePoint) > 0);
+
             try
             {
-                if (BlackLevel == 0 && blackLevelSeparate[0] != 0)
+                if (Convert.ToInt32(black) == 0 && Convert.ToInt32(blackLevelSeparate[0]) != 0)
                 {
                     for (int i = 0; i < blackLevelSeparate.Length; i++)
                     {
-                        BlackLevel += blackLevelSeparate[i];
+                        // black += blackLevelSeparate[i];
                     }
-                    BlackLevel /= blackLevelSeparate.Length;
+                    //black /= blackLevelSeparate.Length;
                 }
-                if (BlackLevel != 0 || whitePoint != maxValue)
+                if (Convert.ToInt32(black) != 0)
                 {
-                    double factor = (double)maxValue / (maxValue - BlackLevel);
                     Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
                     {
-                        long v = y * raw.uncroppedDim.Width * cpp;
+                        long v = y * raw.UncroppedDim.Width * cpp;
                         for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
                         {
-                            ulong value = (ulong)((raw.rawView[x + v] - BlackLevel) * factor);
-                            if (value > maxValue) value = maxValue;
-                            raw.rawView[x + v] = (ushort)value;
+                            /* T value = (ulong)((raw.rawView[x + v] - black) * factor);
+                             if (value > whitePoint) value = whitePoint;
+                             raw.rawView[x + v] = value;*/
                         }
                     });
                 }
@@ -186,7 +175,7 @@ namespace RawNet
                 {
                     Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
                     {
-                        long v = y * raw.uncroppedDim.Width * cpp;
+                        long v = y * raw.UncroppedDim.Width * cpp;
                         for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
                         {
                             raw.rawView[x + v] = table.tables[raw.rawView[x + v]];
@@ -207,7 +196,7 @@ namespace RawNet
             int maxValue = (1 << ColorDepth) - 1;
             Parallel.For(0, raw.dim.Height, y =>
             {
-                long realY = (y + raw.offset.Height) * raw.uncroppedDim.Width * 3;
+                long realY = (y + raw.offset.Height) * raw.UncroppedDim.Width * 3;
                 for (int x = 0; x < raw.dim.Width; x++)
                 {
                     long realX = y + 3 * (x + raw.offset.Width);
@@ -241,7 +230,7 @@ namespace RawNet
         {
             const int skipBorder = 250;
             int gw = (int)((raw.dim.Width - skipBorder + raw.offset.Width) * cpp);
-            if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && BlackLevel < 0) || whitePoint >= 65536)
+            if ((blackAreas.Count == 0 && blackLevelSeparate[0] < 0 && black < 0) || whitePoint >= 65536)
             {  // Estimate
                 int b = 65536;
                 int m = 0;
@@ -256,15 +245,15 @@ namespace RawNet
                         pix++;
                     }
                 }
-                if (BlackLevel < 0)
-                    BlackLevel = b;
+                if (black < 0)
+                    black = b;
                 if (whitePoint >= 65536)
                     whitePoint = m;
                 //ConsoleContent.Value +=("ISO:" + metadata.isoSpeed + ", Estimated black:" + blackLevel + " Estimated white: " + whitePoint);
             }
 
             // Skip, if not needed 
-            if ((blackAreas.Count == 0 && BlackLevel == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || raw.dim.Area() <= 0)
+            if ((blackAreas.Count == 0 && black == 0 && whitePoint == 65535 && blackLevelSeparate[0] < 0) || raw.dim.Area <= 0)
                 return;
 
             // If filter has not set separate blacklevel, compute or fetch it 
@@ -292,7 +281,7 @@ namespace RawNet
                 // Process horizontal area 
                 if (!area.IsVertical)
                 {
-                    if (area.Offset + area.Size > raw.uncroppedDim.Height)
+                    if (area.Offset + area.Size > raw.UncroppedDim.Height)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
                     for (uint y = area.Offset; y < area.Offset + area.Size; y++)
                     {
@@ -309,7 +298,7 @@ namespace RawNet
                 // Process vertical area 
                 if (area.IsVertical)
                 {
-                    if (area.Offset + area.Size > raw.uncroppedDim.Width)
+                    if (area.Offset + area.Size > raw.UncroppedDim.Width)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
                     for (uint y = raw.offset.Height; y < raw.dim.Height + raw.offset.Height; y++)
                     {
@@ -327,7 +316,7 @@ namespace RawNet
             if (totalpixels == 0)
             {
                 for (int i = 0; i < 4; i++)
-                    blackLevelSeparate[i] = BlackLevel;
+                    blackLevelSeparate[i] = black;
                 return;
             }
 
@@ -391,7 +380,7 @@ namespace RawNet
 
             preview.dim = new Point2D(raw.dim.Width / previewFactor, raw.dim.Height / previewFactor);
             preview.ColorDepth = raw.ColorDepth;
-            preview.uncroppedDim = new Point2D(preview.dim.Width, preview.dim.Height);
+            preview.UncroppedDim = new Point2D(preview.dim.Width, preview.dim.Height);
             preview.green = new ushort[preview.dim.Height * preview.dim.Width];
             preview.red = new ushort[preview.dim.Height * preview.dim.Width];
             preview.blue = new ushort[preview.dim.Height * preview.dim.Width];
@@ -414,9 +403,9 @@ namespace RawNet
                          {
                              xk++;
                              UInt64 realX = (UInt64)(realY + (x * previewFactor + k));
-                             r += raw.red[realX];
-                             g += raw.green[realX];
-                             b += raw.blue[realX];
+                             r += Convert.ToInt64(raw.red[realX]);
+                             g += Convert.ToInt64(raw.green[realX]);
+                             b += Convert.ToInt64(raw.blue[realX]);
                          }
                      }
                      r = (ushort)(r / doubleFactor);
@@ -442,7 +431,7 @@ namespace RawNet
                 new ExifValue("Dimension", "" + raw.dim.Width + " x " + raw.dim.Height, ExifGroup.Camera),
                 new ExifValue("Sensor size", "" + ((metadata.RawDim.Width * metadata.RawDim.Height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
                 new ExifValue("Sensor dimension", "" + metadata.RawDim.Width + " x " + metadata.RawDim.Height, ExifGroup.Camera),
-                new ExifValue("Black level", "" + BlackLevel, ExifGroup.Image),
+                new ExifValue("Black level", "" + black, ExifGroup.Image),
                 new ExifValue("White level", "" + whitePoint, ExifGroup.Image),
                 new ExifValue("Color depth", "" + raw.ColorDepth + " bits", ExifGroup.Image),
                 new ExifValue("Color space", "" + metadata.ColorSpace.ToString(), ExifGroup.Shot)

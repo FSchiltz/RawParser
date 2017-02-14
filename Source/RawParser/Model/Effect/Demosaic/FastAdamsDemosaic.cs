@@ -5,7 +5,7 @@ namespace RawEditor.Effect
 {
     class FastAdamsDemosaic : AdamsDemosaic
     {
-        protected new void DemosaickingAdams(ImageComponent image)
+        protected new void DemosaickingAdams(ImageComponent<ushort> image)
         {
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West
@@ -31,7 +31,7 @@ namespace RawEditor.Effect
             });
         }
 
-        protected new void DemosaickingBilinearRedBlue(int colorX, int colorY, ImageComponent image, ushort[] output, CFAColor COLORPOSITION)
+        protected new void DemosaickingBilinearRedBlue(int colorX, int colorY, ImageComponent<ushort> image, ushort[] output, CFAColor COLORPOSITION)
         {
             Parallel.For(0, image.dim.Height, row =>
             {

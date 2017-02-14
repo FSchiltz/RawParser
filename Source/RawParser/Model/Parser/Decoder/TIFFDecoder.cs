@@ -79,7 +79,7 @@ namespace RawNet.Decoder
             uint width = ifd.GetEntryRecursive((TagType)0x0100)?.GetUInt(0) ?? throw new FormatException("File not correct");
             rawImage.isCFA = false;
             rawImage.raw.dim = new Point2D(width, height);
-            rawImage.raw.uncroppedDim = rawImage.raw.dim;
+            rawImage.raw.UncroppedDim = rawImage.raw.dim;
             rawImage.raw.ColorDepth = ifd.GetEntryRecursive((TagType)0x0102)?.GetUShort(0) ?? throw new FormatException("File not correct");
             rawImage.cpp = 3;
             rawImage.Init(true);
@@ -206,7 +206,7 @@ namespace RawNet.Decoder
 
             if (rawImage.whitePoint == 0)
             {
-                rawImage.whitePoint = ifd.GetEntryRecursive(TagType.WHITELEVEL)?.GetInt(0) ?? 0;
+                rawImage.whitePoint = ifd.GetEntryRecursive(TagType.WHITELEVEL)?.GetUShort(0) ?? 0;
 
             }
             rawImage.metadata.TimeTake = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL)?.DataAsString;
@@ -260,7 +260,7 @@ namespace RawNet.Decoder
                         break;
                 }
             }
-            rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.Width, rawImage.raw.uncroppedDim.Height);
+            rawImage.metadata.RawDim = new Point2D(rawImage.raw.UncroppedDim.Width, rawImage.raw.UncroppedDim.Height);
             try
             {
                 //gps info
@@ -399,7 +399,7 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("RAW Decoder: No valid slices found. File probably truncated.");
 
             rawImage.raw.dim = new Point2D(width, offY);
-            rawImage.whitePoint = (1 << bitPerPixel) - 1;
+            rawImage.whitePoint = (ushort)((1 << bitPerPixel) - 1);
 
             offY = 0;
             for (int i = 0; i < slices.Count; i++)

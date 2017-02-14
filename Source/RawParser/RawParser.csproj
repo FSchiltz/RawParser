@@ -147,9 +147,12 @@
     <Compile Include="Model\Effect\Demosaic\FujiSSDD.cs" />
     <Compile Include="Model\Effect\Demosaic\Malvar.cs" />
     <Compile Include="Model\Effect\Demosaic\SSDDemosaic.cs" />
+    <Compile Include="Model\Effect\Denoising.cs" />
+    <Compile Include="Model\Effect\HistogramHelper.Cs" />
     <Compile Include="Model\Effect\Luminance.cs" />
     <Compile Include="Model\Effect\Demosaic\Demosaic.cs" />
     <Compile Include="Model\Effect\ImageEffect.cs" />
+    <Compile Include="Model\Effect\Sharpening.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\BitPump\IBitPump.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\HuffmanCompressor\NikonHuffman.cs" />
     <Compile Include="Model\Parser\Decoder\Decompressor\HuffmanCompressor\PentaxHuffman.cs" />

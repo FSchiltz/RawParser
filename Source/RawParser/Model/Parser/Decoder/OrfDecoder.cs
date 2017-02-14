@@ -136,7 +136,7 @@ namespace RawNet.Decoder
 
             for (int y = 0; y < h; y++)
             {
-                var pos = y * rawImage.raw.uncroppedDim.Width;
+                var pos = y * rawImage.raw.UncroppedDim.Width;
                 acarry0 = new long[3];
                 acarry1 = new long[3];
                 bool y_border = y < 2;
@@ -179,7 +179,7 @@ namespace RawNet.Decoder
                             pred = left0;
                         else
                         {
-                            pred = nw0 = rawImage.raw.rawView[pos - rawImage.raw.uncroppedDim.Width + x];
+                            pred = nw0 = rawImage.raw.rawView[pos - rawImage.raw.UncroppedDim.Width + x];
                         }
                         rawImage.raw.rawView[pos + x] = (ushort)(pred + ((diff << 2) | low));
                         // Set predictor
@@ -189,7 +189,7 @@ namespace RawNet.Decoder
                     {
                         // Have local variables for values used several tiles
                         // (having a "UInt16 *dst_up" that caches dest[-pitch+((int)x)] is actually slower, probably stack spill or aliasing)
-                        int up = rawImage.raw.rawView[pos - rawImage.raw.uncroppedDim.Width + x];
+                        int up = rawImage.raw.rawView[pos - rawImage.raw.UncroppedDim.Width + x];
                         long leftMinusNw = left0 - nw0;
                         long upMinusNw = up - nw0;
                         // Check if sign is different, and one is not zero
@@ -246,13 +246,13 @@ namespace RawNet.Decoder
                             pred = left1;
                         else
                         {
-                            pred = nw1 = rawImage.raw.rawView[pos - rawImage.raw.uncroppedDim.Width + x];
+                            pred = nw1 = rawImage.raw.rawView[pos - rawImage.raw.UncroppedDim.Width + x];
                         }
                         rawImage.raw.rawView[pos + x] = (ushort)(left1 = pred + ((diff << 2) | low));
                     }
                     else
                     {
-                        int up = rawImage.raw.rawView[pos - rawImage.raw.uncroppedDim.Width + x];
+                        int up = rawImage.raw.rawView[pos - rawImage.raw.UncroppedDim.Width + x];
                         long leftminusNw = left1 - nw1;
                         long upminusNw = up - nw1;
 
@@ -329,7 +329,7 @@ namespace RawNet.Decoder
                                 rawImage.blackLevelSeparate[i] = blackEntry.GetShort(2);
                         }
                         // Adjust whitelevel based on the read black (we assume the dynamic range is the same)
-                        rawImage.whitePoint -= rawImage.BlackLevel - rawImage.blackLevelSeparate[0];
+                        rawImage.whitePoint -= rawImage.black - rawImage.blackLevelSeparate[0];
                     }
                 }
             }

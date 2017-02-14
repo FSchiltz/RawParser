@@ -1,12 +1,12 @@
-﻿using System;
-using RawNet;
+﻿using RawNet;
+using System;
 using Windows.UI.Xaml.Media;
 
 namespace RawEditor.Effect
 {
     static class AutoExposure
     {
-        public static ImageEffect Get(ImageComponent preview, PointCollection histo)
+        public static ImageEffect Get(ImageComponent<ushort> preview, PointCollection histo)
         {
             //find the exposure shift needed
             //caclute the mean
@@ -18,7 +18,7 @@ namespace RawEditor.Effect
             }
             mean /= count;
             var shift = 78 - mean;
-            var sign = Math.Sign(shift);            
+            var sign = Math.Sign(shift);
             //get the shift until the mean
 
             //find the shadow shift
@@ -26,7 +26,7 @@ namespace RawEditor.Effect
             //find the higlight shift
 
             //find the contrast 
-            return new ImageEffect() { Exposure = Math.Log(Math.Abs(shift)/8, 2)*sign };
+            return new ImageEffect() { Exposure = Math.Log(Math.Abs(shift) / 8, 2) * sign };
         }
     }
 }
