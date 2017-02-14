@@ -284,7 +284,7 @@ namespace RawNet.Decoder
                 if (rawImage.isCFA && cropped.Position.Height % 2 == 1)
                     rawImage.colorFilter.ShiftDown(1);
             }
-            if (rawImage.raw.dim.Area() <= 0)
+            if (rawImage.raw.dim.Area <= 0)
                 throw new RawDecoderException("No image left after crop");
 
             // Apply stage 1 opcodes
@@ -433,7 +433,7 @@ namespace RawNet.Decoder
             return rawImage.blackAreas.Count != 0;
         }
 
-        bool DecodeBlackLevels(IFD raw)
+        bool Decodeblacks(IFD raw)
         {
             Point2D blackdim = new Point2D(1, 1);
 
@@ -514,7 +514,7 @@ namespace RawNet.Decoder
                 if (DecodeMaskedAreas(raw))
                     return;
             if (raw.GetEntry(TagType.BLACKLEVEL) != null)
-                DecodeBlackLevels(raw);
+                Decodeblacks(raw);
         }
 
         protected void ReadCFA(IFD raw)
@@ -532,7 +532,7 @@ namespace RawNet.Decoder
 
             Point2D cfaSize = new Point2D(pDim.GetUInt(1), pDim.GetUInt(0));
             rawImage.colorFilter.SetSize(cfaSize);
-            if (cfaSize.Area() != raw.GetEntry(TagType.CFAPATTERN).dataCount)
+            if (cfaSize.Area != raw.GetEntry(TagType.CFAPATTERN).dataCount)
                 throw new RawDecoderException("CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
 
             for (uint y = 0; y < cfaSize.Height; y++)

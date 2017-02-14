@@ -33,7 +33,7 @@ namespace RawEditor.Effect
                     + image.red[afterRow - 1]
                     + image.red[beforeRow]
                     + image.red[beforeRow + 1]
-                    + image.red[beforeRow - 1]) / 9;
+                    + image.red[beforeRow - 1]) / factor;
 
                     buffer.green[realX] = ((mul * image.green[realX])
                     + image.green[realX + 1]
@@ -43,7 +43,7 @@ namespace RawEditor.Effect
                     + image.green[afterRow - 1]
                     + image.green[beforeRow]
                     + image.green[beforeRow + 1]
-                    + image.green[beforeRow - 1]) / 9;
+                    + image.green[beforeRow - 1]) / factor;
 
                     buffer.blue[realX] = ((mul * image.blue[realX])
                     + image.blue[realX + 1]
@@ -53,7 +53,7 @@ namespace RawEditor.Effect
                     + image.blue[afterRow - 1]
                     + image.blue[beforeRow]
                     + image.blue[beforeRow + 1]
-                    + image.blue[beforeRow - 1]) / 9;
+                    + image.blue[beforeRow - 1]) / factor;
                 }
             });
 

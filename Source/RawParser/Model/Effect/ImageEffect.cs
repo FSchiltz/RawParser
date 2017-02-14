@@ -340,7 +340,9 @@ namespace RawEditor.Effect
 
                 //apply sharpening (always last step)
                 if (sharpness != 0)
+                {
                     buffer = Sharpening.Apply(buffer, sharpness);
+                }
 
                 //Clip the image
                 Luminance.Clip(buffer, 8);
