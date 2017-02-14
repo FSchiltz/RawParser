@@ -336,14 +336,12 @@ namespace RawEditor.Effect
 
                 //apply denoising 
                 if (denoise != 0)
-                    buffer = Denoising.Apply(buffer, denoise);
+                    buffer = Denoising.Apply(buffer, (int)denoise);
 
                 //apply sharpening (always last step)
                 if (sharpness != 0)
-                {
-                    buffer = Sharpening.Apply(buffer, sharpness);
-                }
-
+                    buffer = Sharpening.Apply(buffer, (int)sharpness);
+                
                 //Clip the image
                 Luminance.Clip(buffer, 8);
 

@@ -10,8 +10,8 @@ namespace RawNet.Decoder.Decompressor
 {
     class LJPEGPlain : JPEGDecompressor
     {
-        public LJPEGPlain(byte[] data, RawImage<ushort>  img, bool UseBigTable, bool DNGCompatible) : this(new TIFFBinaryReader(data), img, UseBigTable, DNGCompatible) { }
-        public LJPEGPlain(TIFFBinaryReader file, RawImage<ushort>  img, bool DNGCompatible, bool UseBigTable) : base(file, img, DNGCompatible, UseBigTable)
+        public LJPEGPlain(byte[] data, RawImage<ushort> img, bool UseBigTable, bool DNGCompatible) : this(new TIFFBinaryReader(data), img, UseBigTable, DNGCompatible) { }
+        public LJPEGPlain(TIFFBinaryReader file, RawImage<ushort> img, bool DNGCompatible, bool UseBigTable) : base(file, img, DNGCompatible, UseBigTable)
         {
             huff = new HuffmanTable[4] {
                 new HuffmanTable(UseBigTable, DNGCompatible),
@@ -53,34 +53,33 @@ namespace RawNet.Decoder.Decompressor
                 if (frame.ComponentInfo[0].superV == 2)
                 {
                     // Something like Cr2 sRaw1, use fast decoder
-                    decodeN_X_Y(3, 2, 2);
+                    DecodeN_X_Y(3, 2, 2);
                 }
                 else // frame.compInfo[0].superV == 1
                 {
                     // Something like Cr2 sRaw2, use fast decoder
-                    decodeN_X_Y(3, 2, 1);
+                    DecodeN_X_Y(3, 2, 1);
                 }
             }
             else
             {
-
                 //this will be useful for optimisation
                 if (frame.numComponents == 2)
-                    decode2_1_1();
+                    Decode2_1_1();
                 else /*if (frame.numComponents == 3)
                     decodeN_X_Y(3, 1, 1);
                 else if (frame.numComponents == 4)
                     decodeN_X_Y(4, 1, 1);
                 else
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Unsupported component direction count.");*/
-                    decodeN_X_Y((int)frame.numComponents, 1, 1);
+                    DecodeN_X_Y((int)frame.numComponents, 1, 1);
             }
         }
 
         // N_COMP == number of components (2, 3 or 4)
         // X_S_F  == x/horizontal sampling factor (1 or 2)
         // Y_S_F  == y/vertical   sampling factor (1 or 2)
-        void decodeN_X_Y(int N_COMP, int X_S_F, int Y_S_F)
+        void DecodeN_X_Y(int N_COMP, int X_S_F, int Y_S_F)
         {
             Debug.Assert(frame.ComponentInfo[0].superH == X_S_F);
             Debug.Assert(frame.ComponentInfo[0].superV == Y_S_F);
@@ -213,7 +212,7 @@ namespace RawNet.Decoder.Decompressor
         // N_COMP == number of components (2, 3 or 4)
         // X_S_F  == x/horizontal sampling factor (1 or 2)
         // Y_S_F  == y/vertical   sampling factor (1 or 2)
-        void decode2_1_1()
+        void Decode2_1_1()
         {
             Debug.Assert(frame.ComponentInfo[0].superH == 1);
             Debug.Assert(frame.ComponentInfo[0].superV == 1);
