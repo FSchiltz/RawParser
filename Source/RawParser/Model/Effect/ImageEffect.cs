@@ -341,7 +341,7 @@ namespace RawEditor.Effect
                 //apply sharpening (always last step)
                 if (sharpness != 0)
                     buffer = Sharpening.Apply(buffer, (int)sharpness);
-                
+
                 //Clip the image
                 Luminance.Clip(buffer, 8);
 
@@ -502,7 +502,24 @@ namespace RawEditor.Effect
                 history.oldValue = Rotation;
                 history.value = effect.Rotation;
             }
-            else if (Gamma != effect.Gamma) { }
+            else if (Gamma != effect.Gamma)
+            {
+                history.target = EffectType.Gamma;
+                history.oldValue = Gamma;
+                history.value = effect.Gamma;
+            }
+            else if (Sharpness != effect.Sharpness)
+            {
+                history.target = EffectType.Sharpness;
+                history.oldValue = Sharpness;
+                history.value = effect.Sharpness;
+            }
+            else if (Denoise != effect.Denoise)
+            {
+                history.target = EffectType.Denoise;
+                history.oldValue = Denoise;
+                history.value = effect.Denoise;
+            }
             return history;
         }
     }
