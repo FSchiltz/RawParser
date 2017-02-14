@@ -18,7 +18,10 @@ namespace RawEditor.Settings
         ReverseGamma,
         HistoEqualisation,
         Unkown = 0,
-        AutoExposure = 15
+        AutoExposure = 15,
+        Gamma = 16,
+        Sharpness = 17,
+        Denoise = 18
     }
 
     public class HistoryObject
