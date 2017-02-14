@@ -33,7 +33,6 @@ namespace RawEditor.View.Pages
         public SettingsView()
         {
             InitializeComponent();
-            DebugToggle.IsOn = SettingStorage.EnableDebug;
             var enumval = Enum.GetValues(typeof(DemosaicAlgorithm)).Cast<DemosaicAlgorithm>();
             DemosComboBox.ItemsSource = enumval.ToList();
 
