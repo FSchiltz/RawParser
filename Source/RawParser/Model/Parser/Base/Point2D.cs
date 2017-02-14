@@ -37,6 +37,12 @@ namespace RawNet
                 }
             }
         }
+
+        public UInt32 Area
+        {
+            get { return width * height; }
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is Point2D) return this == (Point2D)obj;
@@ -80,10 +86,6 @@ namespace RawNet
             return a.Width != b.Width || a.Height != b.Height;
         }
 
-        public UInt32 Area()
-        {
-            return (uint)Math.Abs(width * height);
-        }
         public bool IsThisInside(Point2D otherPoint) { return (width <= otherPoint.Width && height <= otherPoint.Height); }
         public Point2D GetSmallest(Point2D otherPoint) { return new Point2D(Math.Min(width, otherPoint.Width), Math.Min(height, otherPoint.Height)); }
 

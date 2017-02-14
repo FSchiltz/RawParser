@@ -40,7 +40,7 @@ namespace RawEditor.View.Pages
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        public RawImage raw;
+        public RawImage<ushort> raw;
         public bool ImageSelected { set; get; } = false;
         public Thumbnail thumbnail;
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
@@ -137,9 +137,9 @@ namespace RawEditor.View.Pages
             if (raw != null)
             {
                 raw.raw.offset = new Point2D(0, 0);
-                raw.raw.dim = new Point2D(raw.raw.uncroppedDim.Width, raw.raw.uncroppedDim.Height);
+                raw.raw.dim = new Point2D(raw.raw.UncroppedDim);
                 raw.preview.offset = new Point2D(0, 0);
-                raw.preview.dim = new Point2D(raw.preview.uncroppedDim.Width, raw.preview.uncroppedDim.Height);
+                raw.preview.dim = new Point2D(raw.preview.UncroppedDim);
             }
             ImageBoxPlain.Visibility = Visibility.Collapsed;
             ResetButtonVisibility.Value = false;
@@ -165,7 +165,7 @@ namespace RawEditor.View.Pages
             History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
             {
                 oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
-                value = new double[] { raw?.metadata.WbCoeffs.Red ?? 1, raw?.metadata.WbCoeffs.Green?? 1, raw?.metadata.WbCoeffs.Blue ?? 1 }
+                value = new double[] { raw?.metadata.WbCoeffs.Red ?? 1, raw?.metadata.WbCoeffs.Green ?? 1, raw?.metadata.WbCoeffs.Blue ?? 1 }
             });
             EditionValue.RMul = DefaultValue.RMul;
             EditionValue.GMul = DefaultValue.GMul;
@@ -415,7 +415,7 @@ namespace RawEditor.View.Pages
         }
 
         //Apply the change over the image preview       
-        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ImageComponent image, ImageEffect edition)
+        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ImageComponent<ushort> image, ImageEffect edition)
         {
             SoftwareBitmap bitmap = null;
             //Needs to run in UI thread
@@ -430,7 +430,7 @@ namespace RawEditor.View.Pages
                     bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.Width, (int)image.dim.Height);
                 }
             });
-            var tmp = edition?.Apply(image, bitmap) ?? DefaultValue.Apply(image, bitmap);
+            var tmp = edition?.Apply(image, bitmap, 8) ?? DefaultValue.Apply(image, bitmap, 8);
             return Tuple.Create(tmp, bitmap);
         }
 
@@ -554,13 +554,13 @@ namespace RawEditor.View.Pages
                 uint h, w;
                 if (EditionValue.Rotation == 1 || EditionValue.Rotation == 3)
                 {
-                    h = raw.preview.uncroppedDim.Width;
-                    w = raw.preview.uncroppedDim.Height;
+                    h = raw.preview.UncroppedDim.Width;
+                    w = raw.preview.UncroppedDim.Height;
                 }
                 else
                 {
-                    h = raw.preview.uncroppedDim.Height;
-                    w = raw.preview.uncroppedDim.Width;
+                    h = raw.preview.UncroppedDim.Height;
+                    w = raw.preview.UncroppedDim.Width;
                 }
                 double factor;
                 if (w > h)
@@ -573,9 +573,9 @@ namespace RawEditor.View.Pages
                 }
                 CropUI.SetSize((int)(w * factor * 0.7), (int)(h * factor * 0.7), EditionValue.Rotation);
                 //create a preview of the image
-                ImageComponent img = new ImageComponent(raw.preview)
+                ImageComponent<ushort> img = new ImageComponent<ushort>(raw.preview)
                 {
-                    dim = raw.preview.uncroppedDim
+                    dim = raw.preview.UncroppedDim
                 };
                 var result = await ApplyUserModifAsync(img, EditionValue);
                 //display the preview
@@ -592,10 +592,10 @@ namespace RawEditor.View.Pages
             double bottom = CropUI.Bottom;
             if (raw?.raw != null && raw?.preview != null)
             {
-                raw.raw.offset = new Point2D((uint)(raw.raw.uncroppedDim.Width * left), (uint)(raw.raw.uncroppedDim.Height * top));
-                raw.raw.dim = new Point2D((uint)(raw.raw.uncroppedDim.Width * right), (uint)(raw.raw.uncroppedDim.Height * bottom));
-                raw.preview.offset = new Point2D((uint)(raw.preview.uncroppedDim.Width * left), (uint)(raw.preview.uncroppedDim.Height * top));
-                raw.preview.dim = new Point2D((uint)(raw.preview.uncroppedDim.Width * right), (uint)(raw.preview.uncroppedDim.Height * bottom));
+                raw.raw.offset = new Point2D((uint)(raw.raw.UncroppedDim.Width * left), (uint)(raw.raw.UncroppedDim.Height * top));
+                raw.raw.dim = new Point2D((uint)(raw.raw.UncroppedDim.Width * right), (uint)(raw.raw.UncroppedDim.Height * bottom));
+                raw.preview.offset = new Point2D((uint)(raw.preview.UncroppedDim.Width * left), (uint)(raw.preview.UncroppedDim.Height * top));
+                raw.preview.dim = new Point2D((uint)(raw.preview.UncroppedDim.Width * right), (uint)(raw.preview.UncroppedDim.Height * bottom));
                 UpdatePreview(true);
             }
             var t = new HistoryObject(EffectType.Crop, EditionValue.GetCopy()) { oldValue = 0 };
@@ -728,7 +728,7 @@ namespace RawEditor.View.Pages
                 var position = e.GetPosition(ImageBox);
                 uint width = (uint)((position.X / ImageBox.ActualWidth) * raw.raw.dim.Width) + raw.raw.offset.Width;
                 uint height = (uint)((position.Y / ImageBox.ActualHeight) * raw.raw.dim.Height) + raw.raw.offset.Height;
-                long pixelPos = height * raw.raw.uncroppedDim.Width + width;
+                long pixelPos = height * raw.raw.UncroppedDim.Width + width;
                 //Calculate the multiplier
                 double gMul = raw.raw.green[pixelPos] + 1;
                 double rMul = gMul / (raw.raw.red[pixelPos] + 1);
@@ -771,7 +771,7 @@ namespace RawEditor.View.Pages
         void AutoExpose()
         {
             //get an editing object
-            var autoval = AutoExposure.Get(raw.preview,Histo.PointsL);
+            var autoval = AutoExposure.Get(raw.preview, Histo.PointsL);
             //add history object
             History.Add(new HistoryObject(EffectType.AutoExposure, EditionValue.GetCopy()));
 

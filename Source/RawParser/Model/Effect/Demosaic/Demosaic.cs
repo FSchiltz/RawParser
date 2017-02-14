@@ -6,7 +6,7 @@ namespace RawEditor.Effect
 {
     public static class Demosaic
     {
-        public static void Demos(RawImage image, DemosaicAlgorithm algo)
+        public static void Demos(RawImage<ushort> image, DemosaicAlgorithm algo)
         {
             image.cpp = 3;
             image.raw.red = new ushort[image.raw.dim.Width * image.raw.dim.Height];
@@ -53,14 +53,14 @@ namespace RawEditor.Effect
 
             //set correct dim
             image.raw.offset = new Point2D();
-            image.raw.uncroppedDim = new Point2D(image.raw.dim.Width, image.raw.dim.Height);
+            image.raw.UncroppedDim = new Point2D(image.raw.dim.Width, image.raw.dim.Height);
         }
 
-        private static void Deflate(RawImage image)
+        private static void Deflate(RawImage<ushort> image)
         {
             Parallel.For(0, image.raw.dim.Height, row =>
             {
-                long realRow = (row + image.raw.offset.Height) * image.raw.uncroppedDim.Width;
+                long realRow = (row + image.raw.offset.Height) * image.raw.UncroppedDim.Width;
                 long cfarow = (row % image.colorFilter.Size.Height) * image.colorFilter.Size.Width;
                 for (int col = 0; col < image.raw.dim.Width; col++)
                 {

@@ -30,7 +30,7 @@ namespace RawNet.Decoder
             //fill useless metadata
             rawImage.IsGammaCorrected = false;
             rawImage.whitePoint = byte.MaxValue;
-            rawImage.metadata.RawDim = new Point2D(rawImage.raw.uncroppedDim.Width, rawImage.raw.uncroppedDim.Height);
+            rawImage.metadata.RawDim = new Point2D(rawImage.raw.UncroppedDim.Width, rawImage.raw.UncroppedDim.Height);
             /*List<string> list = new List<string>
             {
                 "/app1/ifd/{ushort=271}"

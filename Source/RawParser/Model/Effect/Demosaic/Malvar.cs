@@ -26,7 +26,7 @@ namespace RawEditor.Effect
        * image.raw.dim.Width*image.raw.dim.Height in row-major order.  redx, redy are the coordinates of the 
        * upper-rightmost red pixel to specify the CFA pattern.
        */
-        public static void Demosaic(RawImage image)
+        public static void Demosaic(RawImage<ushort>  image)
         {
             int redx, redy;
             switch (image.colorFilter.ToString())

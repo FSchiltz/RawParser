@@ -11,13 +11,13 @@ namespace RawNet.DNG
 
         /* Will be called exactly once, when input changes */
         /* Can be used for preparing pre-calculated values, etc */
-        public virtual RawImage CreateOutput(RawImage input) { return input; }
+        public virtual RawImage<ushort>  CreateOutput(RawImage<ushort>  input) { return input; }
 
         /* Will be called for actual processing */
         /* If multiThreaded is true, it will be called several times, */
         /* otherwise only once */
         /* Properties of out will not have changed from createOutput */
-        public virtual void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY) { }
+        public virtual void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY) { }
 
         public Rectangle2D aoi = new Rectangle2D();
         public int flags;
@@ -107,12 +107,12 @@ namespace RawNet.DNG
             }
         }
 
-        public RawImage ApplyOpCodes(RawImage img)
+        public RawImage<ushort>  ApplyOpCodes(RawImage<ushort>  img)
         {
             int codes = opcodes.Count;
             for (int i = 0; i < codes; i++)
             {
-                RawImage img_out = opcodes[i].CreateOutput(img);
+                RawImage<ushort>  img_out = opcodes[i].CreateOutput(img);
                 Rectangle2D fullImage = new Rectangle2D(0, 0, img.raw.dim.Width, img.raw.dim.Height);
 
                 if (!opcodes[i].aoi.IsThisInside(fullImage))
@@ -130,8 +130,8 @@ namespace RawNet.DNG
 
     public class OpcodeFixBadPixelsConstant : DngOpcode
     {
-        virtual RawImage createOutput(RawImage input);
-        virtual void apply(RawImage input, RawImage output, UInt32 startY, UInt32 endY);
+        virtual RawImage<ushort>  createOutput(RawImage<ushort>  input);
+        virtual void apply(RawImage<ushort>  input, RawImage<ushort>  output, UInt32 startY, UInt32 endY);
         public int mValue;
     };
 
@@ -141,7 +141,7 @@ namespace RawNet.DNG
         public:
     OpcodeFixBadPixelsList(byte[] parameters, UInt32 param_max_bytes, UInt32* bytes_used);
         virtual ~OpcodeFixBadPixelsList(void) {};
-    virtual void apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY);
+    virtual void apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY);
         private:
     vector<UInt32> bad_pos;
     };
@@ -163,7 +163,7 @@ namespace RawNet.DNG
             bytes_used = 16;
         }
 
-        public override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
+        public override void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY)
         {
             Rectangle2D crop = new Rectangle2D((uint)mLeft, (uint)mTop, (uint)(mRight - mLeft), (uint)(mBottom - mTop));
             output.raw.offset = crop.TopLeft;
@@ -218,7 +218,7 @@ namespace RawNet.DNG
             flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
-        public override RawImage CreateOutput(RawImage input)
+        public override RawImage<ushort>  CreateOutput(RawImage<ushort>  input)
         {
             if (firstPlane > input.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
@@ -229,7 +229,7 @@ namespace RawNet.DNG
             return input;
         }
 
-        public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY)
         {
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
@@ -289,7 +289,7 @@ namespace RawNet.DNG
             flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
-        public override RawImage CreateOutput(RawImage input)
+        public override RawImage<ushort>  CreateOutput(RawImage<ushort>  input)
         {
             if (mFirstPlane > input.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
@@ -309,7 +309,7 @@ namespace RawNet.DNG
             return input;
         }
 
-        public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY)
         {
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
@@ -381,7 +381,7 @@ namespace RawNet.DNG
             flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
-        public override RawImage CreateOutput(RawImage input)
+        public override RawImage<ushort>  CreateOutput(RawImage<ushort>  input)
         {
             if (firstPlane > input.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
@@ -402,12 +402,12 @@ namespace RawNet.DNG
             return input;
         }
 
-        public unsafe override void Apply(RawImage input, ref RawImage output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY)
         {
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
                 ulong realY = (y - startY);
-                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.uncroppedDim.Width + aoi.Left])
+                fixed (UInt16* t = &output.raw.rawView[(int)y * output.raw.UncroppedDim.Width + aoi.Left])
                 {
                     var src = t;
                     // Add offset, so this is always first plane
@@ -438,8 +438,8 @@ class OpcodeDeltaPerCol : public DngOpcode
 public:
 OpcodeDeltaPerCol(byte[] parameters, UInt32 param_max_bytes, UInt32* bytes_used);
 virtual ~OpcodeDeltaPerCol(void);
-virtual RawImage& createOutput(RawImage &in);
-virtual void apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY);
+virtual RawImage& createOutput(RawImage<ushort>  &in);
+virtual void apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY);
 private:
 UInt64 mFirstPlane, mPlanes, mRowPitch, mColPitch, mCount;
 float* mDelta;
@@ -451,8 +451,8 @@ class OpcodeScalePerRow : public DngOpcode
 public:
 OpcodeScalePerRow(byte[] parameters, UInt32 param_max_bytes, UInt32* bytes_used);
 virtual ~OpcodeScalePerRow(void) {};
-virtual RawImage& createOutput(RawImage &in);
-virtual void apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY);
+virtual RawImage& createOutput(RawImage<ushort>  &in);
+virtual void apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY);
 private:
 UInt64 mFirstPlane, mPlanes, mRowPitch, mColPitch, mCount;
 float* mDelta;
@@ -463,8 +463,8 @@ class OpcodeScalePerCol : public DngOpcode
 public:
 OpcodeScalePerCol(byte[] parameters, UInt32 param_max_bytes, UInt32* bytes_used);
 virtual ~OpcodeScalePerCol(void);
-virtual RawImage& createOutput(RawImage &in);
-virtual void apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY);
+virtual RawImage& createOutput(RawImage<ushort>  &in);
+virtual void apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY);
 private:
 UInt64 mFirstPlane, mPlanes, mRowPitch, mColPitch, mCount;
 float* mDelta;
@@ -484,7 +484,7 @@ int* mDeltaX;
     mFlags = MultiThreaded;
 }
 
-RawImage& OpcodeFixBadPixelsConstant::createOutput(RawImage &in )
+RawImage& OpcodeFixBadPixelsConstant::createOutput(RawImage<ushort>  &in )
 {
   // These limitations are present within the DNG SDK as well.
   if (in.getDataType() != TYPE_USHORT16)
@@ -496,7 +496,7 @@ RawImage& OpcodeFixBadPixelsConstant::createOutput(RawImage &in )
   return in;
 }
 
-void OpcodeFixBadPixelsConstant::apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY)
+void OpcodeFixBadPixelsConstant::apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY)
 {
     iPoint2D crop = in.getCropOffset();
     UInt32 offset = crop.x | (crop.y << 16);
@@ -557,7 +557,7 @@ bytes_used[0] += 16;
   }
 }
 
-void OpcodeFixBadPixelsList::apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY)
+void OpcodeFixBadPixelsList::apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY)
 {
     iPoint2D crop = in.getCropOffset();
     UInt32 offset = crop.x | (crop.y << 16);
@@ -601,7 +601,7 @@ mFlags = MultiThreaded;
 }
 
 
-RawImage& OpcodeDeltaPerRow::createOutput(RawImage &in )
+RawImage& OpcodeDeltaPerRow::createOutput(RawImage<ushort>  &in )
 {
   if (mFirstPlane > in.getCpp())
     throw new RawDecoderException("OpcodeDeltaPerRow: Not that many planes in actual image");
@@ -612,7 +612,7 @@ RawImage& OpcodeDeltaPerRow::createOutput(RawImage &in )
   return in;
 }
 
-void OpcodeDeltaPerRow::apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY)
+void OpcodeDeltaPerRow::apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY)
 {
     if (in.getDataType() == TYPE_USHORT16) {
         int cpp = out.getCpp();
@@ -685,7 +685,7 @@ OpcodeDeltaPerCol::~OpcodeDeltaPerCol( void )
 }
 
 
-RawImage& OpcodeDeltaPerCol::createOutput(RawImage &in )
+RawImage& OpcodeDeltaPerCol::createOutput(RawImage<ushort>  &in )
 {
   if (mFirstPlane > in.getCpp())
     throw new RawDecoderException("OpcodeDeltaPerCol: Not that many planes in actual image");
@@ -704,7 +704,7 @@ mDeltaX = new int[w];
   return in;
 }
 
-void OpcodeDeltaPerCol::apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY)
+void OpcodeDeltaPerCol::apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY)
 {
     if (in.getDataType() == TYPE_USHORT16) {
         int cpp = out.getCpp();
@@ -768,7 +768,7 @@ mFlags = MultiThreaded;
 }
 
 
-RawImage& OpcodeScalePerRow::createOutput(RawImage &in )
+RawImage& OpcodeScalePerRow::createOutput(RawImage<ushort>  &in )
 {
   if (mFirstPlane > in.getCpp())
     throw new RawDecoderException("OpcodeScalePerRow: Not that many planes in actual image");
@@ -779,7 +779,7 @@ RawImage& OpcodeScalePerRow::createOutput(RawImage &in )
   return in;
 }
 
-void OpcodeScalePerRow::apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY)
+void OpcodeScalePerRow::apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY)
 {
     if (in.getDataType() == TYPE_USHORT16) {
         int cpp = out.getCpp();
@@ -853,7 +853,7 @@ OpcodeScalePerCol::~OpcodeScalePerCol( void )
 }
 
 
-RawImage OpcodeScalePerCol::createOutput(RawImage &in )
+RawImage<ushort>  OpcodeScalePerCol::createOutput(RawImage<ushort>  &in )
 {
     if (mFirstPlane > in.getCpp())
     throw new RawDecoderException("OpcodeScalePerCol: Not that many planes in actual image");
@@ -872,7 +872,7 @@ RawImage OpcodeScalePerCol::createOutput(RawImage &in )
     return in;
 }
 
-void OpcodeScalePerCol::apply(RawImage &in, RawImage &out, UInt32 startY, UInt32 endY)
+void OpcodeScalePerCol::apply(RawImage<ushort>  &in, RawImage<ushort>  &out, UInt32 startY, UInt32 endY)
 {
     if (in.getDataType() == TYPE_USHORT16) {
         int cpp = out.getCpp();

@@ -308,137 +308,96 @@ namespace RawEditor.Effect
             return curve;
         }
 
-        public unsafe HistoRaw Apply(ImageComponent image, SoftwareBitmap bitmap)
+        public unsafe HistoRaw Apply(ImageComponent<ushort> image, SoftwareBitmap bitmap, int outputColorDepth)
         {
+            //change the pipeline
+            //calculte the shift between colordepth input and output
             int shift = image.ColorDepth - 8;
+
+            //calculate the max value for clip
             maxValue = (uint)(1 << image.ColorDepth) - 1;
-            using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
-            using (var reference = buffer.CreateReference())
+            HistoRaw histo;
+            //cut the image in patch to reduce memory 
             {
-                int startIndex = buffer.GetPlaneDescription(0).StartIndex;
-                ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                double[] curve = CreateCurve();
-                HistoRaw histogram = new HistoRaw()
-                {
-                    luma = new int[256],
-                    red = new int[256],
-                    blue = new int[256],
-                    green = new int[256]
-                };
-                Parallel.For(0, image.dim.Height, y =>
-                {
-                    long realY = (y + image.offset.Height) * image.uncroppedDim.Width;
-                    for (int x = 0; x < image.dim.Width; x++)
-                    {
-                        long realPix = realY + x + image.offset.Width;
-                        long bufferPix = Rotate(x, y, image.dim.Width, image.dim.Height) * 4;
-                        double red = image.red[realPix] * rMul, green = image.green[realPix] * gMul, blue = image.blue[realPix] * bMul;
-                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
-                        Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
-                        //vignet correction
-                        //int xV = (x + off.Width);
-                        //int yV = (y + off.Height);
-                        //var v = Math.Abs(xV - (uncrop.Width / 2.0)) / uncrop.Width;
-                        //l *= 1 + (vignet * Math.Sin((xV - uncrop.Width / 2) / uncrop.Width) + Math.Sin((yV - uncrop.Height / 2) / uncrop.Width));
-                        Luminance.Clip(ref l);
-                        l = curve[(uint)(l * maxValue)] / maxValue;
-                        Luminance.Clip(ref l);
-                        Interlocked.Increment(ref histogram.luma[(int)(l * 255)]);
-                        s *= saturation;
-                        // s += vibrance;
-                        Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
-                        Luminance.Clip(ref red, ref green, ref blue, maxValue);
+                var buffer = new ImageComponent<int>(image.dim, image.ColorDepth);
+                //apply the single pixel processing 
+                SinglePixelProcessing(image, buffer, CreateCurve());
 
-                        temp[bufferPix] = (byte)((int)blue >> shift);
-                        temp[bufferPix + 1] = (byte)((int)green >> shift);
-                        temp[bufferPix + 2] = (byte)((int)red >> shift);
-                        temp[bufferPix + 3] = 255; //set transparency to 255 else image will be blank
-                        Interlocked.Increment(ref histogram.red[(int)red >> shift]);
-                        Interlocked.Increment(ref histogram.green[(int)green >> shift]);
-                        Interlocked.Increment(ref histogram.blue[(int)blue >> shift]);
-                    }
-                });
+                //clip
+                Luminance.Clip(buffer);
 
+                //calculate the histogram
+                histo = HistogramHelper.CalculateHistogram(buffer, image.ColorDepth);
+                //apply histogram equalisation if any
                 if (histoEqual)
                 {
-                    //apply histogram equalisation if needed using the histogram
-                    //create a lookup table
-                    byte[] lut = new byte[256];
-                    double pixelCount = image.dim.Height * image.dim.Width;
-
-                    int sum = 0;
-                    // build a LUT containing scale factor
-                    for (int i = 0; i < 256; ++i)
-                    {
-                        sum += histogram.luma[i];
-                        lut[i] = (byte)(sum * 255 / pixelCount);
-                        /*
-                        double val = (byte)(value.luma[i] / pixelCount);
-                        if (val > 255) val = 255;
-                        lut[i] = (byte)val;*/
-
-                    }
-                    //reset the histogram
-                    histogram = new HistoRaw()
-                    {
-                        luma = new int[256],
-                        red = new int[256],
-                        blue = new int[256],
-                        green = new int[256]
-                    };
-
-                    // transform image using sum histogram as a LUT
-                    Parallel.For(0, buffer.GetPlaneDescription(0).Height, y =>
-                     {
-                         int realY = y * buffer.GetPlaneDescription(0).Width;
-                         for (int x = 0; x < buffer.GetPlaneDescription(0).Width; x++)
-                         {
-                             int realX = (realY + x) * 4;
-                             double red = temp[realX], green = temp[realX + 1], blue = temp[realX + 2];
-                             Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
-                             l = lut[(int)(l * 255.0)] / 255.0;
-                             Interlocked.Increment(ref histogram.luma[(int)(l * 255)]);
-                             Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
-                             Luminance.Clip(ref red, ref green, ref blue, 255);
-                             temp[realX] = (byte)(red);
-                             temp[realX + 1] = (byte)(green);
-                             temp[realX + 2] = (byte)(blue);
-                             //update the histogram
-                             Interlocked.Increment(ref histogram.red[(int)red]);
-                             Interlocked.Increment(ref histogram.green[(int)green]);
-                             Interlocked.Increment(ref histogram.blue[(int)blue]);
-                         }
-                     });
+                    HistogramHelper.HistogramEqualisation(buffer, histo);
                 }
 
-                //denoise
-                /*
-             if (Denoise != 0) {
+                //apply denoising 
+                if (denoise != 0)
+                    buffer = Denoising.Apply(buffer, denoise);
 
-             }
+                //apply sharpening (always last step)
+                if (sharpness != 0)
+                    buffer = Sharpening.Apply(buffer, sharpness);
 
-             //sharpening
+                //Clip the image
+                Luminance.Clip(buffer, 8);
 
-             if (Sharpness != 0)
-                 Parallel.For(1, buffer.GetPlaneDescription(0).Height - 1, y =>
-                 {
-                     int realY = y * buffer.GetPlaneDescription(0).Width;
-                     for (int x = 1; x < buffer.GetPlaneDescription(0).Width - 1; x++)
-                     {
-                         int realX = (realY + x) * 4;
-                         temp[realX + 1] = (byte)((9 * temp[realX + 1])
-                         + (-1 * temp[(realY + x + 1) * 4 + 1])
-                         + (-1 * temp[(realY + x - 1) * 4 + 1])
-                         + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
-                         + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
-                         + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
-                         + (-1 * temp[(((y + 1) * buffer.GetPlaneDescription(0).Width) + x - 1) * 4 + 1])
-                         + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x + 1) * 4 + 1])
-                         + (-1 * temp[(((y - 1) * buffer.GetPlaneDescription(0).Width) + x - 1) * 4 + 1]));
-                     }
-                 });*/
-                return histogram;
+                //calculate the new histogram (create a 8 bits histogram)
+                histo = HistogramHelper.CalculateHistogram(buffer, 8);
+
+                //copy the buffer to the image with clipping
+                {
+                    //calculte the shift between colordepth input and output
+                    shift = image.ColorDepth - 8;
+                    using (BitmapBuffer buff = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
+                    using (var reference = buff.CreateReference())
+                    {
+                        ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
+                        Parallel.For(0, image.dim.Height, y =>
+                        {
+                            long realY = y * image.dim.Width;
+                            for (int x = 0; x < image.dim.Width; x++)
+                            {
+                                long realPix = realY + x;
+                                long bufferPix = realPix * 4;
+                                temp[bufferPix] = (byte)(buffer.blue[realPix]);
+                                temp[bufferPix + 1] = (byte)(buffer.green[realPix]);
+                                temp[bufferPix + 2] = (byte)(buffer.red[realPix]);
+                                temp[bufferPix + 3] = 255; //set transparency to 255 else image will be blank
+                            }
+                        });
+                    }
+                }
             }
+            //return the final histogram
+            return histo;
+        }
+
+        protected unsafe void SinglePixelProcessing(ImageComponent<ushort> image, ImageComponent<int> buffer, double[] curve)
+        {
+            Parallel.For(0, image.dim.Height, y =>
+            {
+                long realY = (y + image.offset.Height) * image.UncroppedDim.Width;
+                for (int x = 0; x < image.dim.Width; x++)
+                {
+                    long realPix = realY + x + image.offset.Width;
+                    double red = image.red[realPix] * rMul, green = image.green[realPix] * gMul, blue = image.blue[realPix] * bMul;
+                    Luminance.Clip(ref red, ref green, ref blue, maxValue);
+                    Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
+                    Luminance.Clip(ref l);
+                    l = curve[(uint)(l * maxValue)] / maxValue;
+                    s *= saturation;
+                    Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+
+                    long bufferPix = Rotate(x, y, image.dim.Width, image.dim.Height);
+                    buffer.red[bufferPix] = (int)red;
+                    buffer.green[bufferPix] = (int)green;
+                    buffer.blue[bufferPix] = (int)blue;
+                }
+            });
         }
 
         public void Copy(ImageEffect effect)
@@ -456,6 +415,8 @@ namespace RawEditor.Effect
             Rotation = effect.Rotation;
             ReverseGamma = effect.ReverseGamma;
             Gamma = effect.Gamma;
+            Denoise = effect.Denoise;
+            Sharpness = effect.Sharpness;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

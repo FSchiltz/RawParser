@@ -35,7 +35,7 @@ namespace RawNet
             cfa = null;
             SetSize(other.Size);
             if (cfa != null)
-                Common.Memcopy(cfa, other.cfa, Size.Area());
+                Common.Memcopy(cfa, other.cfa, Size.Area);
         }
 
         public override string ToString()
@@ -76,7 +76,7 @@ namespace RawNet
         {
             SetSize(other.Size);
             if (cfa != null)
-                Common.Memcopy(cfa, other.cfa, Size.Area() * sizeof(CFAColor));
+                Common.Memcopy(cfa, other.cfa, Size.Area * sizeof(CFAColor));
             return this;
         }
 
@@ -84,11 +84,11 @@ namespace RawNet
         {
             Size = size;
             cfa = null;
-            if (Size.Area() > 100)
-                throw new RawDecoderException("if your CFA pattern is really " + Size.Area() + " pixels in area we may as well give up now");
-            if (Size.Area() <= 0)
+            if (Size.Area > 100)
+                throw new RawDecoderException("if your CFA pattern is really " + Size.Area + " pixels in area we may as well give up now");
+            if (Size.Area <= 0)
                 return;
-            cfa = new CFAColor[Size.Area()];
+            cfa = new CFAColor[Size.Area];
             if (cfa == null)
                 throw new RawDecoderException("Unable to allocate memory");
         }

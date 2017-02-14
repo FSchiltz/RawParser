@@ -85,7 +85,7 @@ namespace RawNet.Decoder
 
             IFD raw = data[0];
             Tag sensorInfoE = ifd.GetEntryRecursive(TagType.CANON_SENSOR_INFO) ?? throw new RawDecoderException("Failed to get sensor info from Makernote");
-            rawImage = new RawImage(sensorInfoE.GetUInt(1), sensorInfoE.GetUInt(2))
+            rawImage = new RawImage<ushort>(sensorInfoE.GetUInt(1), sensorInfoE.GetUInt(2))
             {
                 //cpp = componentsPerPixel,
                 isCFA = true
@@ -203,7 +203,7 @@ namespace RawNet.Decoder
                 // We now have a double width half height image we need to convert to the
                 // normal format
                 var final_size = new Point2D(width, height);
-                RawImage procRaw = new RawImage();
+                RawImage<ushort> procRaw = new RawImage<ushort>();
                 procRaw.raw.dim = final_size;
                 procRaw.metadata = rawImage.metadata;
                 procRaw.Init(false);
@@ -348,7 +348,7 @@ namespace RawNet.Decoder
                 if (colorM[i].name.Contains(model))
                 {
                     rawImage.convertionM = colorM[i].matrix;
-                    if (colorM[i].black != 0) rawImage.BlackLevel = colorM[i].black;
+                    if (colorM[i].black != 0) rawImage.black = colorM[i].black;
                     if (colorM[i].white != 0) rawImage.whitePoint = colorM[i].white;
                     break;
                 }
@@ -429,8 +429,8 @@ namespace RawNet.Decoder
                     case "PowerShot Pro70":
                         rawImage.raw.dim.Height = 1024;
                         rawImage.raw.dim.Width = 1552;
-                    //filters = 0x1e4b4e1b;
-                    canon_a5:
+                        //filters = 0x1e4b4e1b;
+                        canon_a5:
                         //colors = 4;
                         rawImage.raw.ColorDepth = 10;
                         //load_raw = &CLASS packed_load_raw;
@@ -449,7 +449,7 @@ namespace RawNet.Decoder
                         break;
                     case "EOS D2000C":
                         rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Green, CFAColor.Red, CFAColor.Blue, CFAColor.Green);
-                        rawImage.BlackLevel = (int)rawImage.curve[200];
+                        rawImage.black = (int)rawImage.curve[200];
                         break;
                 }
         }

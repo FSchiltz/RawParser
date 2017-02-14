@@ -1,5 +1,4 @@
-﻿d
-    <Page x:Class="RawEditor.View.Pages.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Page x:Class="RawEditor.View.Pages.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:rawnet="using:RawNet"
@@ -140,12 +139,13 @@
                         <uihelper:CollapsibleBox x:Uid="ExposureSettings">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
-                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Visibility="Collapsed"
-                                            Tapped="{x:Bind AutoExpose}" x:Uid="AutoExposureButton" Margin="0,12"></Button>
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
+                                            Visibility="Collapsed" Tapped="{x:Bind AutoExpose}"
+                                            x:Uid="AutoExposureButton" Margin="0,12"></Button>
                                     <ToggleSwitch IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14"
                                             IsOn="{x:Bind EditionValue.HistoEqualisation, Mode=TwoWay}"
-                                            Visibility="Collapsed" HorizontalAlignment="Left" Toggled="{x:Bind EditingControlChanged}"
-                                            HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
+                                            Visibility="Collapsed" HorizontalAlignment="Left"
+                                            Toggled="{x:Bind EditingControlChanged}" HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
                                     <TextBlock FontSize="14" x:Uid="Exposure" />
                                     <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" Minimum="-5"
                                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" StepFrequency="0.3"
@@ -285,7 +285,7 @@
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>
-                        <uihelper:CollapsibleBox x:Uid="CameraProfile" Visibility="Collapsed">
+                        <uihelper:CollapsibleBox x:Uid="CameraProfile">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel>
                                     <TextBlock FontSize="14">Vignet</TextBlock>
@@ -297,8 +297,8 @@
                                             Value="{x:Bind EditionValue.Sharpness, Mode=TwoWay}" Minimum="-10"
                                             IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
                                     <TextBlock FontSize="14" x:Uid="Denoise">Noise reduction</TextBlock>
-                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10"
-                                            Minimum="-10" IsEnabled="False"
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="10" Minimum="0"
+                                            IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}"
                                             Value="{x:Bind EditionValue.Denoise, Mode=TwoWay}" />
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>

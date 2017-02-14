@@ -17,7 +17,7 @@ namespace RawEditor.Effect
         static protected double LUTMAXM1 = 29.0;
         static protected double LUTPRECISION = 1000.0;
 
-        public new void Demosaic(RawImage image)
+        public new void Demosaic(RawImage<ushort>  image)
         {
             base.Demosaic(image);
             /*
@@ -47,7 +47,7 @@ namespace RawEditor.Effect
          * @param[in]  width, height size of the image
          *
          */
-        void chromatic_median(int iter, int redx, int redy, bool projflag, double side, ImageComponent image)
+        void chromatic_median(int iter, int redx, int redy, bool projflag, double side, ImageComponent<ushort> image)
         {
             uint size = image.dim.Height * image.dim.Width;
             // Auxiliary variables for computing chromatic components
@@ -107,7 +107,7 @@ namespace RawEditor.Effect
          * @param[in]  width, height size of the image
          *
          */
-        void demosaicking_nlmeans(int bloc, double h, int redx, int redy, ImageComponent image, CFAColor[] mask)
+        void demosaicking_nlmeans(int bloc, double h, int redx, int redy, ImageComponent<ushort> image, CFAColor[] mask)
         {
             // Initializations
             int bluex = 1 - redx;

@@ -10,7 +10,7 @@ namespace RawNet
     {
 
         /* The decoded image - undefined if image has not or could not be decoded. */
-        public RawImage rawImage;
+        public RawImage<ushort> rawImage;
 
         /* Apply stage 1 DNG opcodes. */
         /* This usually maps out bad pixels, etc */
@@ -35,7 +35,7 @@ namespace RawNet
         protected RawDecoder(Stream stream)
         {
             this.stream = stream;
-            rawImage = new RawImage();
+            rawImage = new RawImage<ushort>();
             ApplyStage1DngOpcodes = true;
             FujiRotate = true;
         }

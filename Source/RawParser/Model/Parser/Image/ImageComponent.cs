@@ -2,20 +2,32 @@
 
 namespace RawNet
 {
-    public class ImageComponent
+    public class ImageComponent<T>
     {
-        public ushort[] red, blue, green, rawView;
+        public T[] red, blue, green, rawView;
         public bool IsLumaOnly { get; set; }//if is true,only green is filled
-        public Point2D dim, offset = new Point2D(), uncroppedDim;
+        public Point2D dim, offset = new Point2D();
+        public Point2D UncroppedDim { get; set; }
 
 
         public ImageComponent() { }
-        public ImageComponent(ImageComponent image)
+        public ImageComponent(Point2D dim, ushort colorDepth)
+        {
+            var d = dim.Area;
+            red = new T[d];
+            blue = new T[d];
+            green = new T[d];
+            UncroppedDim = dim;
+            this.dim = new Point2D(dim);
+            ColorDepth = colorDepth;
+        }
+
+        public ImageComponent(ImageComponent<T> image)
         {
             red = image.red;
             green = image.green;
             blue = image.blue;
-            uncroppedDim = image.uncroppedDim;
+            UncroppedDim = image.UncroppedDim;
             ColorDepth = image.ColorDepth;
         }
 

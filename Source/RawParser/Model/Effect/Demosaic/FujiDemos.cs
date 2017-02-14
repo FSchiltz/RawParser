@@ -9,7 +9,7 @@ namespace RawEditor.Effect
 {
     static class FujiDemos
     {
-        static unsafe public void Demosaic(RawImage image)
+        static unsafe public void Demosaic(RawImage<ushort>  image)
         {
             short[,] greenPosition = new short[,] { { 0, 0 }, { 0, 2 }, { 2, 0 }, { 2, 2 } };//position for green whithout the center
             short[,] colorPosition = new short[,] { { 0, 1 }, { 2, 1 }, { 1, 0 }, { 1, 2 } };

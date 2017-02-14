@@ -412,7 +412,7 @@ namespace RawNet.Decoder
         {
             if (rawImage.raw.dim.Width > 3888)
             {
-                rawImage.BlackLevel = 128 << (rawImage.raw.ColorDepth - 12);
+                rawImage.black = 128 << (rawImage.raw.ColorDepth - 12);
             }
 
             switch (rawImage.raw.dim.Width)
@@ -427,7 +427,7 @@ namespace RawNet.Decoder
                 case 4600:
                     if (model.Contains("DSLR-A350"))
                         rawImage.raw.dim.Height -= 4;
-                    rawImage.BlackLevel = 0;
+                    rawImage.black = 0;
                     break;
                 case 4928:
                     if (rawImage.raw.dim.Height < 3280) rawImage.raw.dim.Width -= 8;
@@ -435,7 +435,7 @@ namespace RawNet.Decoder
                 case 5504:
                     rawImage.raw.dim.Width -= (uint)((rawImage.raw.dim.Height > 3664) ? 8 : 32);
                     if (model.StartsWith("DSC"))
-                        rawImage.BlackLevel = 200 << (rawImage.raw.ColorDepth - 12);
+                        rawImage.black = 200 << (rawImage.raw.ColorDepth - 12);
                     break;
                 case 6048:
                     rawImage.raw.dim.Width -= 24;
@@ -451,7 +451,7 @@ namespace RawNet.Decoder
                     {
                         rawImage.raw.ColorDepth = 14;
                         //load_raw = &CLASS unpacked_load_raw;
-                        rawImage.BlackLevel = 512;
+                        rawImage.black = 512;
                     }
                     break;
             }
@@ -460,7 +460,7 @@ namespace RawNet.Decoder
                 if (rawImage.raw.dim.Width == 3880)
                 {
                     rawImage.raw.dim.Height--;
-                    rawImage.raw.dim.Width = ++rawImage.raw.uncroppedDim.Width;
+                    rawImage.raw.dim.Width = ++rawImage.raw.UncroppedDim.Width;
                 }
                 else
                 {
