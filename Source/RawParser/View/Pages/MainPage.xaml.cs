@@ -334,6 +334,13 @@ namespace RawEditor.View.Pages
                 if (file == null) return;
 
                 Load.Show();
+
+                //TODO
+                //show an option Ui
+                //when user click ok save the properties to a bitmapProperies
+                //check isuser chose 16bits or not
+                //save
+
                 var task = Task.Run(() =>
                 {
                     try
@@ -458,8 +465,6 @@ namespace RawEditor.View.Pages
 
         private void EditingControlChanged()
         {
-            //generate the new object
-            //ImageEffect newEffect = GetEffects();
             //find the changed value
             History.Add(OldValue.GetHistory(EditionValue));
             OldValue.Copy(EditionValue);

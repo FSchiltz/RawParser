@@ -61,35 +61,38 @@ namespace RawNet
             CachedFileManager.DeferUpdates(file);
             using (var filestream = await file.OpenAsync(FileAccessMode.ReadWrite))
             {
+                Guid type;
+                var propertySet = new BitmapPropertySet();
                 BitmapEncoder encoder = null;
                 // write to file
                 if (file.FileType == ".jxr")
                 {
-                    encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegXREncoderId, filestream);
+                    type = BitmapEncoder.JpegXREncoderId;
                 }
                 else if (file.FileType == ".jpg" || file.FileType == ".jpeg")
                 {
-                    encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, filestream);
+                    type = BitmapEncoder.JpegEncoderId;
                 }
                 else if (file.FileType == ".png")
                 {
-                    encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, filestream);
+                    type = BitmapEncoder.PngEncoderId;
                 }
                 else if (file.FileType == ".bmp")
                 {
-                    encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.BmpEncoderId, filestream);
+                    type = BitmapEncoder.BmpEncoderId;
                 }
                 else if (file.FileType == ".tiff" || file.FileType == ".tif")
                 {
-                    var propertySet = new BitmapPropertySet();
                     var compressionValue = new BitmapTypedValue(
                         TiffCompressionMode.None, // no compression
                         PropertyType.UInt8
                         );
                     propertySet.Add("TiffCompressionMethod", compressionValue);
-                    encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.TiffEncoderId, filestream, propertySet);
+                    type = BitmapEncoder.TiffEncoderId;
                 }
                 else throw new FormatException("Format not supported: " + file.FileType);
+
+                encoder = await BitmapEncoder.CreateAsync(type, filestream, propertySet);
                 //Needs to run in the UI thread because fuck performance
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
