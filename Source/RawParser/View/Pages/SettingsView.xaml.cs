@@ -132,11 +132,6 @@ namespace RawEditor.View.Pages
         {
             SettingStorage.SelectedTheme = ((ThemeEnum)e.AddedItems[0]);
         }
-
-        private void DebugToggle_Toggled(object sender, RoutedEventArgs e)
-        {
-            SettingStorage.EnableDebug = DebugToggle.IsOn;
-        }
     }
 }
 

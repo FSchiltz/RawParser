@@ -334,12 +334,12 @@ namespace RawEditor.View.Pages
                 if (file == null) return;
 
                 Load.Show();
-                var task = Task.Run(async () =>
+                var task = Task.Run(() =>
                 {
                     try
                     {
-                        var result = await ApplyUserModifAsync(raw.raw, EditionValue);
-                        FormatHelper.SaveAsync(file, result.Item2);
+                        var result = ApplyImageEffect8bitsNoHisto(raw.raw, EditionValue);
+                        FormatHelper.SaveAsync(file, result);
                     }
                     catch (Exception ex)
                     {
@@ -405,33 +405,55 @@ namespace RawEditor.View.Pages
         {
             if (raw?.preview != null)
             {
-                Task.Run(async () =>
+                Task.Run(() =>
                 {
-                    var result = await ApplyUserModifAsync(raw.preview, EditionValue);
+                    var result = ApplyImageEffect8bits(raw.preview, EditionValue);
                     DisplayImage(result.Item2, move);
                     Histo.FillAsync(result.Item1, raw.preview.dim.Height, raw.preview.dim.Width);
                 });
             }
         }
 
-        //Apply the change over the image preview       
-        async private Task<Tuple<HistoRaw, SoftwareBitmap>> ApplyUserModifAsync(ImageComponent<ushort> image, ImageEffect edition)
+        private SoftwareBitmap CreateBitmap(BitmapPixelFormat format, int rotation, Point2D dim)
         {
             SoftwareBitmap bitmap = null;
             //Needs to run in UI thread
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (EditionValue.Rotation == 1 || EditionValue.Rotation == 3)
+                if (rotation == 1 || rotation == 3)
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.Height, (int)image.dim.Width);
+                    bitmap = new SoftwareBitmap(format, (int)dim.Height, (int)dim.Width);
                 }
                 else
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)image.dim.Width, (int)image.dim.Height);
+                    bitmap = new SoftwareBitmap(format, (int)dim.Width, (int)dim.Height);
                 }
-            });
-            var tmp = edition?.Apply(image, bitmap, 8) ?? DefaultValue.Apply(image, bitmap, 8);
+            }).AsTask().Wait();
+            return bitmap;
+        }
+
+        //Apply the change over the image preview       
+        private Tuple<HistoRaw, SoftwareBitmap> ApplyImageEffect8bits(ImageComponent<ushort> image, ImageEffect edition)
+        {
+            SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Bgra8, edition.Rotation, image.dim);
+            var tmp = edition.ApplyTo8bits(image, bitmap, true);
             return Tuple.Create(tmp, bitmap);
+        }
+
+        //Apply the change over the image preview       
+        private SoftwareBitmap ApplyImageEffect8bitsNoHisto(ImageComponent<ushort> image, ImageEffect edition)
+        {
+            SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Bgra8, edition.Rotation, image.dim);
+            edition.ApplyTo8bits(image, bitmap, false);
+            return bitmap;
+        }
+
+        //Apply the change over the image preview       
+        private SoftwareBitmap ApplyImageEffect16bits(ImageComponent<ushort> image, ImageEffect edition)
+        {
+            SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Rgba16, edition.Rotation, image.dim);
+            edition.ApplyTo16bits(image, bitmap, false);
+            return bitmap;
         }
 
         private void EditingControlChanged()
@@ -506,18 +528,18 @@ namespace RawEditor.View.Pages
                 //TODO regionalise text
                 //generate the bitmap
                 Load.Show();
-                var result = await ApplyUserModifAsync(raw.raw, EditionValue);
+                var result = ApplyImageEffect8bitsNoHisto(raw.raw, EditionValue);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
                 //Needs to run in the UI thread because fuck performance
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    encoder.SetSoftwareBitmap(result.Item2);
+                    encoder.SetSoftwareBitmap(result);
                 });
                 await encoder.FlushAsync();
                 encoder = null;
-                result.Item2.Dispose();
+                result.Dispose();
                 Load.Hide();
 
                 request.Data.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
@@ -577,9 +599,9 @@ namespace RawEditor.View.Pages
                 {
                     dim = raw.preview.UncroppedDim
                 };
-                var result = await ApplyUserModifAsync(img, EditionValue);
+                var result = ApplyImageEffect8bitsNoHisto(img, EditionValue);
                 //display the preview
-                CropUI.SetThumbAsync(result.Item2);
+                CropUI.SetThumbAsync(result);
             }
         }
 
@@ -688,14 +710,14 @@ namespace RawEditor.View.Pages
             History.SetCurrent(((ListView)sender).SelectedIndex);
         }
 
-        private async void ShowBeforeDisplay()
+        private void ShowBeforeDisplay()
         {
             //if first time create the image
             if (ImageBoxPlain.Source == null || rotation != EditionValue.Rotation)
             {
                 var edit = DefaultValue.GetCopy();
                 rotation = edit.Rotation = EditionValue.Rotation;
-                var image = (await ApplyUserModifAsync(raw.preview, edit)).Item2;
+                var image = ApplyImageEffect8bitsNoHisto(raw.preview, edit);
                 WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                 image.CopyToBuffer(bitmap.PixelBuffer);
                 ImageBoxPlain.Source = bitmap;

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using RawEditor.Settings;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace RawEditor.Effect
 {
@@ -308,72 +309,119 @@ namespace RawEditor.Effect
             return curve;
         }
 
-        public unsafe HistoRaw Apply(ImageComponent<ushort> image, SoftwareBitmap bitmap, int outputColorDepth)
+        public unsafe HistoRaw ApplyTo16bits(ImageComponent<ushort> image, SoftwareBitmap bitmap, bool histogram)
         {
-            //change the pipeline
+            Debug.Assert(bitmap.BitmapPixelFormat == BitmapPixelFormat.Rgba16);
+
+            var buffer = Apply(image);
+            //Clip the image
+            Luminance.Clip(buffer, 16);
+
+            HistoRaw histo = null;
+            //calculate the new histogram (create a 8 bits histogram)
+            if (histogram)
+                histo = HistogramHelper.CalculateHistogram(buffer, 8);
+
+            //copy the buffer to the image with clipping
+            //calculte the shift between colordepth input and output
+            int shift = image.ColorDepth - 16;
+
+            using (BitmapBuffer buff = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
+            using (var reference = buff.CreateReference())
+            {
+                ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
+                Parallel.For(0, image.dim.Height, y =>
+                {
+                    long realY = y * image.dim.Width;
+                    for (int x = 0; x < image.dim.Width; x++)
+                    {
+                        long realPix = realY + x;
+                        long bufferPix = realPix * 8;
+                        temp[bufferPix] = (byte)(buffer.red[realPix] >> 8);
+                        temp[bufferPix + 1] = (byte)(buffer.red[realPix]);
+
+                        temp[bufferPix + 2] = (byte)(buffer.green[realPix] >> 8);
+                        temp[bufferPix + 3] = (byte)(buffer.green[realPix]);
+
+                        temp[bufferPix + 4] = (byte)(buffer.blue[realPix] >> 8);
+                        temp[bufferPix + 5] = (byte)(buffer.blue[realPix]);
+
+                        temp[bufferPix + 6] = 255; //set transparency to 255 else image will be blank
+                        temp[bufferPix + 7] = 255; //set transparency to 255 else image will be blank
+                    }
+                });
+            }
+            return histo;
+        }
+
+        public unsafe HistoRaw ApplyTo8bits(ImageComponent<ushort> image, SoftwareBitmap bitmap, bool histogram)
+        {
+            var buffer = Apply(image);
+            //Clip the image
+            Luminance.Clip(buffer, 8);
+
+            //calculate the new histogram (create a 8 bits histogram)
+            HistoRaw histo = null;
+            if (histogram)
+                histo = HistogramHelper.CalculateHistogram(buffer, 8);
+
+            //copy the buffer to the image with clipping
             //calculte the shift between colordepth input and output
             int shift = image.ColorDepth - 8;
+
+            using (BitmapBuffer buff = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
+            using (var reference = buff.CreateReference())
+            {
+                ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
+                Parallel.For(0, image.dim.Height, y =>
+                {
+                    long realY = y * image.dim.Width;
+                    for (int x = 0; x < image.dim.Width; x++)
+                    {
+                        long realPix = realY + x;
+                        long bufferPix = realPix * 4;
+                        temp[bufferPix] = (byte)(buffer.blue[realPix]);
+                        temp[bufferPix + 1] = (byte)(buffer.green[realPix]);
+                        temp[bufferPix + 2] = (byte)(buffer.red[realPix]);
+                        temp[bufferPix + 3] = 255; //set transparency to 255 else image will be blank
+                    }
+                });
+            }
+            return histo;
+        }
+
+        protected unsafe ImageComponent<int> Apply(ImageComponent<ushort> image)
+        {
+            //change the pipeline
 
             //calculate the max value for clip
             maxValue = (uint)(1 << image.ColorDepth) - 1;
             HistoRaw histo;
             //cut the image in patch to reduce memory 
-            {
-                var buffer = new ImageComponent<int>(image.dim, image.ColorDepth);
-                //apply the single pixel processing 
-                SinglePixelProcessing(image, buffer, CreateCurve());
 
-                //clip
-                Luminance.Clip(buffer);
+            var buffer = new ImageComponent<int>(image.dim, image.ColorDepth);
+            //apply the single pixel processing 
+            SinglePixelProcessing(image, buffer, CreateCurve());
 
-                //calculate the histogram
-                histo = HistogramHelper.CalculateHistogram(buffer, image.ColorDepth);
-                //apply histogram equalisation if any
-                if (histoEqual)
-                {
-                    HistogramHelper.HistogramEqualisation(buffer, histo);
-                }
+            //clip
+            Luminance.Clip(buffer);
 
-                //apply denoising 
-                if (denoise != 0)
-                    buffer = Denoising.Apply(buffer, (int)denoise);
+            //calculate the histogram
+            histo = HistogramHelper.CalculateHistogram(buffer, image.ColorDepth);
+            //apply histogram equalisation if any
+            if (histoEqual)
+                HistogramHelper.HistogramEqualisation(buffer, histo);
 
-                //apply sharpening (always last step)
-                if (sharpness != 0)
-                    buffer = Sharpening.Apply(buffer, (int)sharpness);
+            //apply denoising 
+            if (denoise != 0)
+                buffer = Denoising.Apply(buffer, (int)denoise);
 
-                //Clip the image
-                Luminance.Clip(buffer, 8);
+            //apply sharpening (always last step)
+            if (sharpness != 0)
+                buffer = Sharpening.Apply(buffer, (int)sharpness);
 
-                //calculate the new histogram (create a 8 bits histogram)
-                histo = HistogramHelper.CalculateHistogram(buffer, 8);
-
-                //copy the buffer to the image with clipping
-                {
-                    //calculte the shift between colordepth input and output
-                    shift = image.ColorDepth - 8;
-                    using (BitmapBuffer buff = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
-                    using (var reference = buff.CreateReference())
-                    {
-                        ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                        Parallel.For(0, image.dim.Height, y =>
-                        {
-                            long realY = y * image.dim.Width;
-                            for (int x = 0; x < image.dim.Width; x++)
-                            {
-                                long realPix = realY + x;
-                                long bufferPix = realPix * 4;
-                                temp[bufferPix] = (byte)(buffer.blue[realPix]);
-                                temp[bufferPix + 1] = (byte)(buffer.green[realPix]);
-                                temp[bufferPix + 2] = (byte)(buffer.red[realPix]);
-                                temp[bufferPix + 3] = 255; //set transparency to 255 else image will be blank
-                            }
-                        });
-                    }
-                }
-            }
             //return the final histogram
-            return histo;
+            return buffer;
         }
 
         protected unsafe void SinglePixelProcessing(ImageComponent<ushort> image, ImageComponent<int> buffer, double[] curve)
