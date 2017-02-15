@@ -194,7 +194,6 @@ namespace RawEditor.View.Pages
                         try
                         {
                             thumbnail = decoder.DecodeThumb();
-
                             Task.Run(() =>
                             {
                                 var result = thumbnail?.GetSoftwareBitmap();

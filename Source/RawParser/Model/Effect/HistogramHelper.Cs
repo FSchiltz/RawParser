@@ -1,13 +1,15 @@
 ﻿using System.Threading.Tasks;
 using RawNet;
 using RawEditor.View.UIHelper;
+using System;
+
 namespace RawEditor.Effect
 {
     static class HistogramHelper
     {
-        internal static HistoRaw CalculateHistogram(ImageComponent<int> image, uint colorDepth2)
+        internal static HistoRaw CalculateHistogram(ImageComponent<int> image)
         {
-            var maxValue = 1 << (int)colorDepth2;
+            var maxValue = 1 << image.ColorDepth;
             HistoRaw histogram = new HistoRaw()
             {
                 luma = new int[maxValue],
@@ -15,8 +17,6 @@ namespace RawEditor.Effect
                 blue = new int[maxValue],
                 green = new int[maxValue]
             };
-            //calculte the shift between colordepth input and output
-            int shift = (int)(image.ColorDepth - colorDepth2);
 
             for (int y = 0; y < image.dim.Height; y++)
             {
@@ -24,14 +24,36 @@ namespace RawEditor.Effect
                 for (int x = 0; x < image.dim.Width; x++)
                 {
                     long realPix = realY + x + image.offset.Width;
-                    //TODO add back luminance hsitogram
-                    histogram.red[image.red[realPix] >> shift]++;
-                    histogram.green[image.green[realPix] >> shift]++;
-                    histogram.blue[image.blue[realPix] >> shift]++;
+                    histogram.luma[(int)(0.299 * image.red[realPix] + 0.587 * image.green[realPix] + 0.114 * image.blue[realPix])]++;
+                    histogram.red[image.red[realPix]]++;
+                    histogram.green[image.green[realPix]]++;
+                    histogram.blue[image.blue[realPix]]++;
                 }
             }
             return histogram;
         }
+
+        internal static HistoRaw CalculateLumaHistogram(ImageComponent<int> image)
+        {
+            HistoRaw histogram = new HistoRaw()
+            {
+                luma = new int[1 << (int)image.ColorDepth]
+            };
+
+            for (int y = 0; y < image.dim.Height; y++)
+            {
+                long realY = (y + image.offset.Height) * image.UncroppedDim.Width;
+                for (int x = 0; x < image.dim.Width; x++)
+                {
+                    long realPix = realY + x + image.offset.Width;
+
+                    histogram.luma[(int)((Math.Max(Math.Max(image.red[realPix], image.green[realPix]), image.blue[realPix])
+                        + Math.Min(Math.Min(image.red[realPix], image.green[realPix]), image.blue[realPix])) / 2.0)]++;
+                }
+            }
+            return histogram;
+        }
+
 
         internal static void HistogramEqualisation(ImageComponent<int> image, HistoRaw histogram)
         {
