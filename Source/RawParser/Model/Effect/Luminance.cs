@@ -61,10 +61,11 @@ namespace RawEditor.Effect
             });
         }
 
-        internal static void Clip(ImageComponent<int> image, int colorDepth)
+        internal static void Clip(ImageComponent<int> image, ushort colorDepth)
         {
             var maxValue = (1 << colorDepth) - 1;
             var shift = image.ColorDepth - colorDepth;
+            image.ColorDepth = colorDepth;
             Parallel.For(0, image.dim.Height, y =>
             {
                 long realY = y * image.dim.Width;

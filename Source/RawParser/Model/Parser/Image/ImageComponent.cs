@@ -17,7 +17,7 @@ namespace RawNet
             red = new T[d];
             blue = new T[d];
             green = new T[d];
-            UncroppedDim = dim;
+            UncroppedDim =   new Point2D(dim);
             this.dim = new Point2D(dim);
             ColorDepth = colorDepth;
         }

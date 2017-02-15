@@ -288,7 +288,7 @@ namespace RawEditor.Effect
             xCurve[2] = maxValue;
             yCurve[2] = (maxValue + ((contrast + hightlight) * (maxValue / 200))) * exposure;
 
-            var curve = Curve.CubicSpline(xCurve, yCurve);
+            double[] curve = Curve.CubicSpline(xCurve, yCurve);
             if (ReverseGamma)
             {
                 double param = 1 / gamma;
@@ -306,6 +306,11 @@ namespace RawEditor.Effect
                     curve[i] *= maxValue;
                 }
             }
+            for (int i = 0; i < curve.Length; i++)
+            {
+                if (curve[i] > maxValue) curve[i] = 1;
+                else curve[i] /= maxValue;
+            }
             return curve;
         }
 
@@ -320,7 +325,7 @@ namespace RawEditor.Effect
             HistoRaw histo = null;
             //calculate the new histogram (create a 8 bits histogram)
             if (histogram)
-                histo = HistogramHelper.CalculateHistogram(buffer, 8);
+                histo = HistogramHelper.CalculateHistogram(buffer);
 
             //copy the buffer to the image with clipping
             //calculte the shift between colordepth input and output
@@ -330,10 +335,10 @@ namespace RawEditor.Effect
             using (var reference = buff.CreateReference())
             {
                 ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                Parallel.For(0, image.dim.Height, y =>
+                Parallel.For(0, buffer.dim.Height, y =>
                 {
-                    long realY = y * image.dim.Width;
-                    for (int x = 0; x < image.dim.Width; x++)
+                    long realY = y * buffer.dim.Width;
+                    for (int x = 0; x < buffer.dim.Width; x++)
                     {
                         long realPix = realY + x;
                         long bufferPix = realPix * 8;
@@ -363,7 +368,7 @@ namespace RawEditor.Effect
             //calculate the new histogram (create a 8 bits histogram)
             HistoRaw histo = null;
             if (histogram)
-                histo = HistogramHelper.CalculateHistogram(buffer, 8);
+                histo = HistogramHelper.CalculateHistogram(buffer);
 
             //copy the buffer to the image with clipping
             //calculte the shift between colordepth input and output
@@ -373,10 +378,10 @@ namespace RawEditor.Effect
             using (var reference = buff.CreateReference())
             {
                 ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                Parallel.For(0, image.dim.Height, y =>
+                Parallel.For(0, buffer.dim.Height, y =>
                 {
-                    long realY = y * image.dim.Width;
-                    for (int x = 0; x < image.dim.Width; x++)
+                    long realY = y * buffer.dim.Width;
+                    for (int x = 0; x < buffer.dim.Width; x++)
                     {
                         long realPix = realY + x;
                         long bufferPix = realPix * 4;
@@ -397,20 +402,30 @@ namespace RawEditor.Effect
             //calculate the max value for clip
             maxValue = (uint)(1 << image.ColorDepth) - 1;
             HistoRaw histo;
-            //cut the image in patch to reduce memory 
+
+            //TODO cut the image in patch to reduce memory 
 
             var buffer = new ImageComponent<int>(image.dim, image.ColorDepth);
+
             //apply the single pixel processing 
             SinglePixelProcessing(image, buffer, CreateCurve());
+
+            if (Rotation == 1 || Rotation == 3)
+            {
+                buffer.dim.Flip();
+                buffer.UncroppedDim.Flip();
+            }
 
             //clip
             Luminance.Clip(buffer);
 
-            //calculate the histogram
-            histo = HistogramHelper.CalculateHistogram(buffer, image.ColorDepth);
             //apply histogram equalisation if any
             if (histoEqual)
+            {
+                //calculate the histogram
+                histo = HistogramHelper.CalculateLumaHistogram(buffer);
                 HistogramHelper.HistogramEqualisation(buffer, histo);
+            }
 
             //apply denoising 
             if (denoise != 0)
@@ -435,8 +450,7 @@ namespace RawEditor.Effect
                     double red = image.red[realPix] * rMul, green = image.green[realPix] * gMul, blue = image.blue[realPix] * bMul;
                     Luminance.Clip(ref red, ref green, ref blue, maxValue);
                     Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
-                    Luminance.Clip(ref l);
-                    l = curve[(uint)(l * maxValue)] / maxValue;
+                    l = curve[(int)(l * maxValue)];
                     s *= saturation;
                     Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
 

@@ -5,7 +5,6 @@ namespace RawEditor.Effect
 {
     static public class Color
     {
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RgbToHsl(double red, double green, double blue, uint maxValue, out double h, out double s, out double l)
         {
