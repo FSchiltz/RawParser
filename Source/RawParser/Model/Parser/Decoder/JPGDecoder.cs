@@ -31,6 +31,7 @@ namespace RawNet.Decoder
             rawImage.IsGammaCorrected = false;
             rawImage.whitePoint = byte.MaxValue;
             rawImage.metadata.RawDim = new Point2D(rawImage.raw.UncroppedDim.Width, rawImage.raw.UncroppedDim.Height);
+            rawImage.metadata.WbCoeffs = new WhiteBalance(1, 1, 1);
             /*List<string> list = new List<string>
             {
                 "/app1/ifd/{ushort=271}"
