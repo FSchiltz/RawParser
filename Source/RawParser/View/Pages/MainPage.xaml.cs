@@ -143,6 +143,7 @@ namespace RawEditor.View.Pages
             }
             ImageBoxPlain.Visibility = Visibility.Collapsed;
             ResetButtonVisibility.Value = false;
+            BeforeToggle.IsChecked = false;
             HideCropUI();
         }
 
@@ -344,7 +345,7 @@ namespace RawEditor.View.Pages
                 {
                     try
                     {
-                        var result = ApplyImageEffect8bitsNoHisto(raw.raw, EditionValue);
+                        var result = ApplyImageEffect8bitsNoHistoAsync(raw.raw, EditionValue);
                         FormatHelper.SaveAsync(file, result);
                     }
                     catch (Exception ex)
@@ -447,7 +448,7 @@ namespace RawEditor.View.Pages
         }
 
         //Apply the change over the image preview       
-        private SoftwareBitmap ApplyImageEffect8bitsNoHisto(ImageComponent<ushort> image, ImageEffect edition)
+        private SoftwareBitmap ApplyImageEffect8bitsNoHistoAsync(ImageComponent<ushort> image, ImageEffect edition)
         {
             SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Bgra8, edition.Rotation, image.dim);
             edition.ApplyTo8bits(image, bitmap, false);
@@ -455,7 +456,7 @@ namespace RawEditor.View.Pages
         }
 
         //Apply the change over the image preview       
-        private SoftwareBitmap ApplyImageEffect16bits(ImageComponent<ushort> image, ImageEffect edition)
+        private SoftwareBitmap ApplyImageEffect16bitsAsync(ImageComponent<ushort> image, ImageEffect edition)
         {
             SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Rgba16, edition.Rotation, image.dim);
             edition.ApplyTo16bits(image, bitmap, false);
@@ -532,7 +533,7 @@ namespace RawEditor.View.Pages
                 //TODO regionalise text
                 //generate the bitmap
                 Load.Show();
-                var result = ApplyImageEffect8bitsNoHisto(raw.raw, EditionValue);
+                var result = ApplyImageEffect8bitsNoHistoAsync(raw.raw, EditionValue);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -603,7 +604,7 @@ namespace RawEditor.View.Pages
                 {
                     dim = raw.preview.UncroppedDim
                 };
-                var result = ApplyImageEffect8bitsNoHisto(img, EditionValue);
+                var result = ApplyImageEffect8bitsNoHistoAsync(img, EditionValue);
                 //display the preview
                 CropUI.SetThumbAsync(result);
             }
@@ -714,14 +715,17 @@ namespace RawEditor.View.Pages
             History.SetCurrent(((ListView)sender).SelectedIndex);
         }
 
-        private void ShowBeforeDisplay()
+        private async void ShowBeforeDisplayAsync()
         {
             //if first time create the image
             if (ImageBoxPlain.Source == null || rotation != EditionValue.Rotation)
             {
                 var edit = DefaultValue.GetCopy();
                 rotation = edit.Rotation = EditionValue.Rotation;
-                var image = ApplyImageEffect8bitsNoHisto(raw.preview, edit);
+                SoftwareBitmap image = await Task.Run(() =>
+                {
+                    return ApplyImageEffect8bitsNoHistoAsync(raw.preview, edit);
+                });
                 WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                 image.CopyToBuffer(bitmap.PixelBuffer);
                 ImageBoxPlain.Source = bitmap;

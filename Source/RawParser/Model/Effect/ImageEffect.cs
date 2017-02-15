@@ -397,8 +397,6 @@ namespace RawEditor.Effect
 
         protected unsafe ImageComponent<int> Apply(ImageComponent<ushort> image)
         {
-            //change the pipeline
-
             //calculate the max value for clip
             maxValue = (uint)(1 << image.ColorDepth) - 1;
             HistoRaw histo;
