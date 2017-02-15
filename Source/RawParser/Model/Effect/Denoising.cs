@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using RawNet;
 
 namespace RawEditor.Effect
@@ -20,11 +16,13 @@ namespace RawEditor.Effect
             Parallel.For(1, image.dim.Height - 1, y =>
             {
                 long realY = y * image.dim.Width;
+                var beforeY = ((y - 1) * image.dim.Width);
+                var afterY = ((y + 1) * image.dim.Width);
                 for (int x = 1; x < image.dim.Width - 1; x++)
                 {
                     long realX = realY + x;
-                    var beforeRow = ((y - 1) * image.dim.Width) + x;
-                    var afterRow = ((y + 1) * image.dim.Width) + x;
+                    var beforeRow = beforeY + x;
+                    var afterRow = afterY + x;
                     buffer.red[realX] = ((mul * image.red[realX])
                     + image.red[realX + 1]
                     + image.red[realX - 1]

@@ -19,24 +19,28 @@ namespace RawEditor.Effect
             Parallel.For(1, image.dim.Height - 1, y =>
             {
                 var realY = y * image.dim.Width;
+                var beforeY = ((y - 1) * image.dim.Width);
+                var afterY = ((y + 1) * image.dim.Width);
+                //TODO add cache for first column (loop 2 by 2 pixel)
                 for (int x = 1; x < image.dim.Width - 1; x++)
                 {
                     var realX = realY + x;
-                    var beforeRow = ((y - 1) * image.dim.Width) + x;
-                    var afterRow = ((y + 1) * image.dim.Width) + x;
+                    var beforeRow = beforeY + x;
+                    var afterRow = afterY + x;
                     buffer.red[realX] = ((mul * image.red[realX])
-                        - image.red[(realX + 1)]
-                        - image.red[(realX - 1)]
-                        - image.red[afterRow]
-                        - image.red[afterRow + 1]
-                        - image.red[afterRow - 1]
                         - image.red[beforeRow]
+                        - image.red[afterRow]
+                        - image.red[realX - 1]
+                        - image.red[afterRow - 1]
+                        - image.red[beforeRow - 1]
+                        - image.red[realX + 1]
+                        - image.red[afterRow + 1]
                         - image.red[beforeRow + 1]
-                        - image.red[beforeRow - 1]) / factor;
+                       ) / factor;
 
                     buffer.green[realX] = ((mul * image.green[realX])
-                        - image.green[realY + x + 1]
-                        - image.green[realY + x - 1]
+                        - image.green[realX + 1]
+                        - image.green[realX - 1]
                         - image.green[afterRow]
                         - image.green[afterRow + 1]
                         - image.green[afterRow - 1]
