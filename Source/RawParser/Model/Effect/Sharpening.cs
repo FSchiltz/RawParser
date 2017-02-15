@@ -59,15 +59,16 @@ namespace RawEditor.Effect
                         - image.blue[beforeRow - 1]) / factor;
                 }
             });
-
-
+            
             //fill in the edge
             Parallel.For(0, buffer.dim.Height, y =>
             {
-                var pos = y * image.dim.Width;
+                var pos = y * buffer.dim.Width;
+
                 buffer.red[pos] = image.red[pos];
                 buffer.green[pos] = image.green[pos];
                 buffer.blue[pos] = image.blue[pos];
+
                 pos += image.dim.Width - 1;
                 buffer.red[pos] = image.red[pos];
                 buffer.green[pos] = image.green[pos];
