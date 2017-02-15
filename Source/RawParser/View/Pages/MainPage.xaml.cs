@@ -140,6 +140,7 @@ namespace RawEditor.View.Pages
                 raw.raw.dim = new Point2D(raw.raw.UncroppedDim);
                 raw.preview.offset = new Point2D(0, 0);
                 raw.preview.dim = new Point2D(raw.preview.UncroppedDim);
+                SetImageSizeText();
             }
             ImageBoxPlain.Visibility = Visibility.Collapsed;
             ResetButtonVisibility.Value = false;
@@ -261,6 +262,7 @@ namespace RawEditor.View.Pages
                         ResetControls();
                         UpdatePreview(true);
                         ControlVisibilty.Value = true;
+                        SetImageSizeText();
                     });
                     if (raw.errors.Count > 0)
                     {
@@ -416,7 +418,7 @@ namespace RawEditor.View.Pages
                 {
                     var result = ApplyImageEffect8bits(raw.preview, EditionValue);
                     DisplayImage(result.Item2, move);
-                    Histo.FillAsync(result.Item1, raw.preview.dim.Height, raw.preview.dim.Width);
+                    Histo.FillAsync(result.Item1);
                 });
             }
         }
@@ -599,14 +601,15 @@ namespace RawEditor.View.Pages
                     factor = ImageDisplay.ActualHeight / (h + 160);
                 }
                 CropUI.SetSize((int)(w * factor * 0.7), (int)(h * factor * 0.7), EditionValue.Rotation);
-                //create a preview of the image
-                ImageComponent<ushort> img = new ImageComponent<ushort>(raw.preview)
+                ImageComponent<ushort> img = new ImageComponent<ushort>(raw.preview) { offset = new Point2D(), dim = new Point2D(raw.preview.UncroppedDim) };
+                raw.preview.dim = new Point2D(raw.preview.UncroppedDim);
+                //create a preview of the image             
+                SoftwareBitmap image = await Task.Run(() =>
                 {
-                    dim = raw.preview.UncroppedDim
-                };
-                var result = ApplyImageEffect8bitsNoHistoAsync(img, EditionValue);
+                    return ApplyImageEffect8bitsNoHistoAsync(img, EditionValue);
+                });
                 //display the preview
-                CropUI.SetThumbAsync(result);
+                CropUI.SetThumbAsync(image);
             }
         }
 
@@ -624,10 +627,19 @@ namespace RawEditor.View.Pages
                 raw.preview.offset = new Point2D((uint)(raw.preview.UncroppedDim.Width * left), (uint)(raw.preview.UncroppedDim.Height * top));
                 raw.preview.dim = new Point2D((uint)(raw.preview.UncroppedDim.Width * right), (uint)(raw.preview.UncroppedDim.Height * bottom));
                 UpdatePreview(true);
+                //set the display size
+                SetImageSizeText();
             }
             var t = new HistoryObject(EffectType.Crop, EditionValue.GetCopy()) { oldValue = 0 };
             History.Add(t);
             ResetButtonVisibility.Value = true;
+        }
+
+        //TODO replace by binding if possible
+        private void SetImageSizeText()
+        {
+            ImageHeight.Text = raw.raw.dim.Height + "px";
+            ImageWidth.Text = raw.raw.dim.Width + "px";
         }
 
         #region blur

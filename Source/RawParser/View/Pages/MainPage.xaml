@@ -233,9 +233,9 @@
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                                         <TextBlock>Width:</TextBlock>
-                                        <TextBlock Margin="0,0,5,0" Text="{x:Bind raw.raw.dim.Height,Mode=OneWay, FallbackValue=0px, TargetNullValue=0px}"></TextBlock>
+                                        <TextBlock Margin="0,0,5,0" x:Name="ImageWidth"></TextBlock>
                                         <TextBlock>Height:</TextBlock>
-                                        <TextBlock Text="{x:Bind raw.raw.dim.Height,Mode=OneWay, FallbackValue=0px, TargetNullValue=0px}"></TextBlock>
+                                        <TextBlock x:Name="ImageHeight"></TextBlock>
                                     </StackPanel>
                                     <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="CropButton_TappedAsync">
                                         <StackPanel Orientation="Horizontal">
