@@ -439,6 +439,7 @@ namespace RawEditor.Effect
 
         protected unsafe void SinglePixelProcessing(ImageComponent<ushort> image, ImageComponent<int> buffer, double[] curve)
         {
+            var watch = Stopwatch.StartNew();
             Parallel.For(0, image.dim.Height, y =>
             {
                 long realY = (y + image.offset.Height) * image.UncroppedDim.Width;
@@ -458,6 +459,8 @@ namespace RawEditor.Effect
                     buffer.blue[bufferPix] = (int)blue;
                 }
             });
+            watch.Stop();
+            Debug.WriteLine(watch.ElapsedMilliseconds + "ms");
         }
 
         public void Copy(ImageEffect effect)
