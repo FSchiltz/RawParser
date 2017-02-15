@@ -22,7 +22,7 @@ namespace RawEditor.View.UIHelper
         public PointCollection PointsG { get; } = new PointCollection();
         public PointCollection PointsB { get; } = new PointCollection();
 
-        public async void FillAsync(HistoRaw value, uint height, uint width)
+        public async void FillAsync(HistoRaw value)
         {
             ClearAsync();
             //smooth the histogramm
