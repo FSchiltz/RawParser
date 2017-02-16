@@ -33,7 +33,7 @@ namespace RawNet.Format.TIFF
                 buffer = new TIFFBinaryReader(data);
                 endian = Endianness.Little;
             }
-            else throw new RawDecoderException("Makernote endianess unknown " + data[0]);
+            else throw new RawDecoderException("Makernote endianness unknown " + data[0]);
             buffer.BaseStream.Position = 2;
             buffer.ReadUInt16();
             uint TIFFoffset = buffer.ReadUInt32();

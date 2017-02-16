@@ -64,7 +64,7 @@ namespace RawNet.Decoder
                 ifd.subIFD.Add(new IFD(reader, nextIFD, endian, 0, (int)offset));
                 if (ifd.subIFD.Count > 100)
                 {
-                    throw new RawDecoderException("TIFF file has too many SubIFDs, probably broken");
+                    throw new RawDecoderException("TIFF file has too many Sub IFDs, probably broken");
                 }
                 nextIFD = (ifd.subIFD[ifd.subIFD.Count - 1]).NextOffset;
             }

@@ -21,7 +21,7 @@
             }
             else
             {
-                throw new RawDecoderException("Endianess not correct " + endian);
+                throw new RawDecoderException("Endianness not correct " + endian);
             }
 
             file.BaseStream.Position = offset;

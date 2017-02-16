@@ -276,7 +276,7 @@ namespace RawNet.Decoder.Decompressor
             {
                 byte idL = input.ReadByte();
                 if (idL != 0xff)
-                    throw new RawDecoderException("Expected marker not found. Propably corrupt file.");
+                    throw new RawDecoderException("Expected marker not found. Probably corrupt file.");
 
                 JpegMarker markL = (JpegMarker)input.ReadByte();
 

@@ -1,4 +1,5 @@
-﻿using Windows.ApplicationModel.Core;
+﻿using System.Diagnostics;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.UI.Core;
@@ -106,11 +107,13 @@ namespace RawEditor.View.UIHelper
         public void SetSize(int width, int height, int rotation)
         {
             //set the size
+            Debug.Assert(height >= 1);
+            Debug.Assert(width >= 1);
             CropZone.Height = CropSelection.Height = (height - 1);
             CropZone.Width = CropSelection.Width = (width - 1);
             Thumb.Height = Thumb2.Height = CropZone.Height;
             Thumb.Width = Thumb2.Width = CropZone.Width;
-            
+
             //move crop control to correct position
             if (rotation != this.rotation)
             {
