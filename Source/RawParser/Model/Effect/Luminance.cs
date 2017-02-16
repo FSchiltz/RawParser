@@ -90,5 +90,24 @@ namespace RawEditor.Effect
                 }
             });
         }
+
+        internal static void Clip(ImageComponent<int> image, ImageComponent<ushort> original)
+        {
+            var maxValue = (1 << original.ColorDepth) - 1;
+            Parallel.For(0, image.dim.Height, y =>
+            {
+                long realY = y * image.dim.Width;
+                for (int x = 0; x < image.dim.Width; x++)
+                {
+                    long realPix = realY + x;
+                    if (original.red[realPix] >= maxValue)
+                        image.red[realPix] = maxValue;
+                    if (original.green[realPix] >= maxValue)
+                        image.green[realPix] = maxValue;
+                    if (original.blue[realPix] >= maxValue)
+                        image.blue[realPix] = maxValue;
+                }
+            });
+        }
     }
 }

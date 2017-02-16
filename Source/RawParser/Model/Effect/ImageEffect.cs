@@ -442,6 +442,8 @@ namespace RawEditor.Effect
             if (sharpness != 0)
                 buffer = Sharpening.Apply(buffer, (int)sharpness);
 
+            //Not working yet
+            //Luminance.Clip(buffer,image);
             //return the final histogram
             return buffer;
         }

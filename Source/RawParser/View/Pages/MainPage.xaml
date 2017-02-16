@@ -129,7 +129,7 @@
                                     <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Visibility="Collapsed" Tapped="{x:Bind AutoExpose}"
                                             x:Uid="AutoExposureButton" Margin="0,12"></Button>
                                     <ToggleSwitch IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" FontSize="14"
-                                            IsOn="{x:Bind EditionValue.HistoEqualisation, Mode=TwoWay}" Visibility="Collapsed" HorizontalAlignment="Left"
+                                            IsOn="{x:Bind EditionValue.HistogramEqualisation, Mode=TwoWay}" Visibility="Collapsed" HorizontalAlignment="Left"
                                             Toggled="{x:Bind EditingControlChanged}" HorizontalContentAlignment="Left">Histogram equalization</ToggleSwitch>
                                     <TextBlock FontSize="14" x:Uid="Exposure" />
                                     <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="5" Minimum="-5"
