@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace RawNet.Format.TIFF
+namespace RawNet.Format.Tiff
 {
     //nikon makernote are not always self contained so use the file stream to parse
     class NikonMakerNote : Makernote

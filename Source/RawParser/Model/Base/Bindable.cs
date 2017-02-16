@@ -4,22 +4,22 @@ using System.Runtime.CompilerServices;
 
 namespace RawEditor.Base
 {
-    public class Bindable<Type> : INotifyPropertyChanged
+    public class Bindable<TValue> : INotifyPropertyChanged
     {
-        private Type val;
+        private TValue val;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public Bindable(Type defaultValue)
+        public Bindable(TValue defaultValue)
         {
             Value = defaultValue;
         }
 
-        public Type Value
+        public TValue Value
         {
             get { return val; }
             set
             {
-                if (!EqualityComparer<Type>.Default.Equals(this.val, value))
+                if (!EqualityComparer<TValue>.Default.Equals(this.val, value))
                 {
                     this.val = value;
                     OnPropertyChanged();

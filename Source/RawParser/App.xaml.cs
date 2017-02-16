@@ -84,7 +84,7 @@ namespace RawEditor
 
                 rootFrame.NavigationFailed += OnNavigationFailed;
 
-                if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                if (e?.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
                     //TODO: chargez l'état de l'application précédemment suspendue
                 }
@@ -124,7 +124,8 @@ namespace RawEditor
         /// <param name="e">Détails relatifs à l'échec de navigation</param>
         void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
-            TextDisplay.DisplayError("Failed to load Page " + e.SourcePageType.FullName);
+            var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+            TextDisplay.DisplayError(loader.GetString("LoadErrorMessage") + e.SourcePageType.FullName);
         }
 
         /// <summary>

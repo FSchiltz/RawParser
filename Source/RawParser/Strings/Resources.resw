@@ -255,4 +255,19 @@
   <data name="AutoExposureButton.Content" xml:space="preserve">
     <value>Auto</value>
   </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="ErrorOnLoadWarning" xml:space="preserve">
+    <value>This file is not fully supported, it may appear incorrectly</value>
+  </data>
+  <data name="LoadErrorMessage" xml:space="preserve">
+    <value>Failed to load Page </value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
 </root>

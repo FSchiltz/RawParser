@@ -9,15 +9,15 @@ namespace RawEditor.Effect
 {
     class SSDDemosaic : AdamsDemosaic
     {
-        protected int Max(int i, int j) { return ((i) < (j) ? (j) : (i)); }
-        protected int Min(int i, int j) { return ((i) < (j) ? (i) : (j)); }
+        protected static int Max(int i, int j) { return ((i) < (j) ? (j) : (i)); }
+        protected static int Min(int i, int j) { return ((i) < (j) ? (i) : (j)); }
 
         static protected double fTiny = 0.00000001;
         static protected double LUTMAX = 30.0;
         static protected double LUTMAXM1 = 29.0;
         static protected double LUTPRECISION = 1000.0;
 
-        public new void Demosaic(RawImage<ushort>  image)
+        public new void Demosaic(RawImage<ushort> image)
         {
             base.Demosaic(image);
             /*
@@ -47,7 +47,7 @@ namespace RawEditor.Effect
          * @param[in]  width, height size of the image
          *
          */
-        void chromatic_median(int iter, int redx, int redy, bool projflag, double side, ImageComponent<ushort> image)
+        void ChromaticMedian(int iter, int redx, int redy, double side, ImageComponent<ushort> image)
         {
             uint size = image.dim.Height * image.dim.Width;
             // Auxiliary variables for computing chromatic components
@@ -84,7 +84,7 @@ namespace RawEditor.Effect
          * @param[in]  lut    table of Exp(-x)
          *
          */
-        double sLUT(double dif, double[] lut)
+        static double LUT(double dif, double[] lut)
         {
             if (dif >= (float)LUTMAXM1) return 0.0;
             int x = (int)Math.Floor((double)dif * (float)LUTPRECISION);
@@ -107,11 +107,8 @@ namespace RawEditor.Effect
          * @param[in]  width, height size of the image
          *
          */
-        void demosaicking_nlmeans(int bloc, double h, int redx, int redy, ImageComponent<ushort> image, CFAColor[] mask)
+        void DemosaickingNlmeans(int bloc, double h, ImageComponent<ushort> image, CFAColor[] mask)
         {
-            // Initializations
-            int bluex = 1 - redx;
-            int bluey = 1 - redy;
 
             // Tabulate the function Exp(-x) for x>0.
             int luttaille = (int)(LUTMAX * LUTPRECISION);
@@ -163,20 +160,20 @@ namespace RawEditor.Effect
                                 {
                                     fixed (ushort* redPtr = image.red)
                                     {
-                                        some = l2_distance_r1(redPtr, x, y, i, j, image.dim.Width);
+                                        some = L2DistanceR1(redPtr, x, y, i, j, image.dim.Width);
                                     }
                                     fixed (ushort* greenPtr = image.red)
                                     {
-                                        some += l2_distance_r1(greenPtr, x, y, i, j, image.dim.Width);
+                                        some += L2DistanceR1(greenPtr, x, y, i, j, image.dim.Width);
                                     }
                                     fixed (ushort* bluePtr = image.red)
                                     {
-                                        some += l2_distance_r1(bluePtr, x, y, i, j, image.dim.Width);
+                                        some += L2DistanceR1(bluePtr, x, y, i, j, image.dim.Width);
                                     }
                                 }
                                 // Compute weight
                                 some = some / (27.0 * h);
-                                double weight = sLUT(some, lut);
+                                double weight = LUT(some, lut);
 
                                 // Add pixel to corresponding channel average
                                 if (mask[l0] == CFAColor.Green)
@@ -208,8 +205,6 @@ namespace RawEditor.Effect
 
                     if (mask[l] != CFAColor.Blue && bweight > fTiny) image.blue[l] = (ushort)(blue / bweight);
                     else image.blue[l] = image.blue[l];
-
-
                 }
         }
 
@@ -224,18 +219,15 @@ namespace RawEditor.Effect
          * @param[in]  width    width of the image
          *
          */
-        unsafe static double l2_distance_r1(ushort* u0, int i0, int j0, int i1, int j1, uint width)
+        unsafe static double L2DistanceR1(ushort* u0, int i0, int j0, int i1, int j1, uint width)
         {
-
             double diff, dist = 0.0;
-
             ushort* ptr0, ptr1;
 
             ptr0 = u0 + (j0 - 1) * width + i0 - 1;
             ptr1 = u0 + (j1 - 1) * width + i1 - 1;
 
             /* first line */
-
             diff = *ptr0++ - *ptr1++;
             dist += diff * diff;
             diff = *ptr0++ - *ptr1++;
@@ -246,7 +238,6 @@ namespace RawEditor.Effect
             /* second line */
             ptr0 += width - 2;
             ptr1 += width - 2;
-
             diff = *ptr0++ - *ptr1++;
             dist += diff * diff;
             diff = *ptr0++ - *ptr1++;
@@ -257,7 +248,6 @@ namespace RawEditor.Effect
             /* third line */
             ptr0 += width - 2;
             ptr1 += width - 2;
-
             diff = *ptr0++ - *ptr1++;
             dist += diff * diff;
             diff = *ptr0++ - *ptr1++;

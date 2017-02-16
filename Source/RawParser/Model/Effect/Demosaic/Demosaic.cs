@@ -1,13 +1,16 @@
 ﻿using RawNet;
 using System.Threading.Tasks;
 using System;
+using System.Diagnostics;
 
 namespace RawEditor.Effect
 {
     public static class Demosaic
     {
-        public static void Demos(RawImage<ushort> image, DemosaicAlgorithm algo)
+        public static void Demos(RawImage<ushort> image, DemosaicAlgorithm algorithm)
         {
+            Debug.Assert(image?.raw?.rawView != null);
+            Debug.Assert(image.raw.dim.Area > 4);
             image.cpp = 3;
             image.raw.red = new ushort[image.raw.dim.Width * image.raw.dim.Height];
             image.raw.green = new ushort[image.raw.dim.Width * image.raw.dim.Height];
@@ -16,10 +19,14 @@ namespace RawEditor.Effect
             image.raw.rawView = null;
             if (image.isFujiTrans)
             {
-                switch (algo)
+                switch (algorithm)
                 {
                     case DemosaicAlgorithm.None:
-                        // Deflate(image);
+                        break;
+                    case DemosaicAlgorithm.FastAdams:
+                    case DemosaicAlgorithm.Adams:
+                    case DemosaicAlgorithm.SSDD:
+                        FujiSSDD.Demosaic(image);
                         break;
                     default:
                         FujiDemos.Demosaic(image);
@@ -28,7 +35,7 @@ namespace RawEditor.Effect
             }
             else if (image.colorFilter.ToString() != "RGBG")
             {
-                switch (algo)
+                switch (algorithm)
                 {
                     case DemosaicAlgorithm.None:
                         //Deflate(image);

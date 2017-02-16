@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RawNet.Format.TIFF
+namespace RawNet.Format.Tiff
 {
     internal class PanasonicMakernote : Makernote
     {

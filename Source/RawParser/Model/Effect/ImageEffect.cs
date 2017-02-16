@@ -314,7 +314,7 @@ namespace RawEditor.Effect
             return curve;
         }
 
-        public unsafe HistoRaw ApplyTo16bits(ImageComponent<ushort> image, SoftwareBitmap bitmap, bool histogram)
+        public unsafe HistoRaw ApplyTo16Bits(ImageComponent<ushort> image, SoftwareBitmap bitmap, bool histogram)
         {
             Debug.Assert(bitmap.BitmapPixelFormat == BitmapPixelFormat.Rgba16);
 
@@ -359,8 +359,15 @@ namespace RawEditor.Effect
             return histo;
         }
 
-        public unsafe HistoRaw ApplyTo8bits(ImageComponent<ushort> image, SoftwareBitmap bitmap, bool histogram)
+        public unsafe HistoRaw ApplyTo8Bits(ImageComponent<ushort> image, SoftwareBitmap bitmap, bool histogram)
         {
+            Debug.Assert(image.red != null);
+            Debug.Assert(image.blue != null);
+            Debug.Assert(image.green != null);
+            Debug.Assert(image.dim.Area >= 4);
+            Debug.Assert(bitmap != null);
+            Debug.Assert(image.dim.Area == bitmap.PixelHeight * bitmap.PixelWidth);
+
             var buffer = Apply(image);
             //Clip the image
             Luminance.Clip(buffer, 8);
@@ -371,9 +378,6 @@ namespace RawEditor.Effect
                 histo = HistogramHelper.CalculateHistogram(buffer);
 
             //copy the buffer to the image with clipping
-            //calculte the shift between colordepth input and output
-            int shift = image.ColorDepth - 8;
-
             using (BitmapBuffer buff = bitmap.LockBuffer(BitmapBufferAccessMode.Write))
             using (var reference = buff.CreateReference())
             {
@@ -397,6 +401,11 @@ namespace RawEditor.Effect
 
         protected unsafe ImageComponent<int> Apply(ImageComponent<ushort> image)
         {
+            Debug.Assert(image.red != null);
+            Debug.Assert(image.blue != null);
+            Debug.Assert(image.green != null);
+            Debug.Assert(image.dim.Area >= 4);
+
             //calculate the max value for clip
             maxValue = (uint)(1 << image.ColorDepth) - 1;
             HistoRaw histo;
@@ -439,6 +448,16 @@ namespace RawEditor.Effect
 
         protected unsafe void SinglePixelProcessing(ImageComponent<ushort> image, ImageComponent<int> buffer, double[] curve)
         {
+            Debug.Assert(image.red != null);
+            Debug.Assert(image.blue != null);
+            Debug.Assert(image.green != null);
+            Debug.Assert(image.dim.Area >= 4);
+
+            Debug.Assert(buffer.red != null);
+            Debug.Assert(buffer.blue != null);
+            Debug.Assert(buffer.green != null);
+            Debug.Assert(buffer.dim.Area == image.dim.Area);
+
             Parallel.For(0, image.dim.Height, y =>
             {
                 long realY = (y + image.offset.Height) * image.UncroppedDim.Width;

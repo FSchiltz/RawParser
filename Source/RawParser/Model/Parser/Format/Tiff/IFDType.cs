@@ -1,4 +1,4 @@
-﻿namespace RawNet.Format.TIFF
+﻿namespace RawNet.Format.Tiff
 {
     public enum IFDType
     {

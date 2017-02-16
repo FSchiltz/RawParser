@@ -1,4 +1,5 @@
 ﻿using MathNet.Numerics;
+using System.Diagnostics;
 
 namespace RawEditor.Effect
 {
@@ -7,10 +8,13 @@ namespace RawEditor.Effect
         /*
          * Not working correcty
          */
-        public static double[] SimpleInterpol(double[] x, double[] y)
+        public static double[] SimpleInterpol(double[] xCoordinates, double[] yCoordinates)
         {
-            double[] curve = new double[(int)x[x.Length - 1]];
-            var f = Fit.PolynomialFunc(x, y, 3);
+            Debug.Assert(xCoordinates.Length >= 2);
+            Debug.Assert(yCoordinates.Length >= 2);
+            Debug.Assert(xCoordinates.Length == yCoordinates.Length);
+            double[] curve = new double[(int)xCoordinates[xCoordinates.Length - 1]];
+            var f = Fit.PolynomialFunc(xCoordinates, yCoordinates, 3);
             for (int i = 0; i < curve.Length; i++)
             {
                 curve[i] = f(i);
@@ -19,10 +23,13 @@ namespace RawEditor.Effect
         }
 
         //interpolate normalized value
-        public static double[] CubicSpline(double[] x, double[] y)
+        public static double[] CubicSpline(double[] xCoordinates, double[] yCoordinates)
         {
-            var curve = new double[(int)x[x.Length - 1] + 1];
-            var spline = MathNet.Numerics.Interpolation.CubicSpline.InterpolateNaturalInplace(x, y);
+            Debug.Assert(xCoordinates.Length >= 2);
+            Debug.Assert(yCoordinates.Length >= 2);
+            Debug.Assert(xCoordinates.Length == yCoordinates.Length);
+            var curve = new double[(int)xCoordinates[xCoordinates.Length - 1] + 1];
+            var spline = MathNet.Numerics.Interpolation.CubicSpline.InterpolateNaturalInplace(xCoordinates, yCoordinates);
 
             for (int i = 0; i < curve.Length; i++)
             {

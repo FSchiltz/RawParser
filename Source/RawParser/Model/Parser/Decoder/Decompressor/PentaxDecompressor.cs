@@ -1,6 +1,6 @@
 using RawNet.Decoder.HuffmanCompressor;
-using RawNet.Format.TIFF;
-using RawNet.JPEG;
+using RawNet.Format.Tiff;
+using RawNet.Jpeg;
 using System;
 
 namespace RawNet.Decoder.Decompressor

@@ -1,4 +1,4 @@
-﻿namespace RawNet.JPEG
+﻿namespace RawNet.Jpeg
 {
     public enum JpegMarker
     {       /* JPEG marker codes			*/

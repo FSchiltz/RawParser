@@ -24,11 +24,6 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-/*
-using Microsoft.Graphics.Canvas.Effects;
-using Windows.UI.Composition;
-using Windows.UI.Xaml.Hosting;
-using System.Numerics;*/
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
@@ -54,21 +49,6 @@ namespace RawEditor.View.Pages
         public HistoryList History = new HistoryList();
         private Bindable<Boolean> selectManualWB = new Bindable<bool>(false);
         private int rotation;
-
-        /*
-        private float blurAmount = 5;
-        private SpriteVisual _pivotGridSprite;
-        private Compositor _compositor;
-        private CompositionEffectBrush brush;
-        private GaussianBlurEffect graphicsEffect = new GaussianBlurEffect()
-        {
-            Name = "Blur",
-            BlurAmount = 0f,
-            Source = new CompositionEffectSourceParameter("ImageSource"),
-            Optimization = EffectOptimization.Balanced,
-            BorderMode = EffectBorderMode.Soft
-        };
-        private TimeSpan animationDuration = TimeSpan.FromMilliseconds(300);*/
 
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
@@ -266,7 +246,8 @@ namespace RawEditor.View.Pages
                     });
                     if (raw.errors.Count > 0)
                     {
-                        TextDisplay.DisplayWarning("This file is not fully supported, it may appear incorrectly");
+                        var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                        TextDisplay.DisplayWarning(loader.GetString("ErrorOnLoadWarning"));
 #if !DEBUG
                             //send an event with file extension and camera model and make if any                   
                             logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + "" + raw.errors.Count);
@@ -445,7 +426,7 @@ namespace RawEditor.View.Pages
         private Tuple<HistoRaw, SoftwareBitmap> ApplyImageEffect8bits(ImageComponent<ushort> image, ImageEffect edition)
         {
             SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Bgra8, edition.Rotation, image.dim);
-            var tmp = edition.ApplyTo8bits(image, bitmap, true);
+            var tmp = edition.ApplyTo8Bits(image, bitmap, true);
             return Tuple.Create(tmp, bitmap);
         }
 
@@ -453,7 +434,7 @@ namespace RawEditor.View.Pages
         private SoftwareBitmap ApplyImageEffect8bitsNoHistoAsync(ImageComponent<ushort> image, ImageEffect edition)
         {
             SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Bgra8, edition.Rotation, image.dim);
-            edition.ApplyTo8bits(image, bitmap, false);
+            edition.ApplyTo8Bits(image, bitmap, false);
             return bitmap;
         }
 
@@ -461,7 +442,7 @@ namespace RawEditor.View.Pages
         private SoftwareBitmap ApplyImageEffect16bitsAsync(ImageComponent<ushort> image, ImageEffect edition)
         {
             SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Rgba16, edition.Rotation, image.dim);
-            edition.ApplyTo16bits(image, bitmap, false);
+            edition.ApplyTo16Bits(image, bitmap, false);
             return bitmap;
         }
 
@@ -642,71 +623,10 @@ namespace RawEditor.View.Pages
             ImageWidth.Text = raw.raw.dim.Width + "px";
         }
 
-        #region blur
-        /*
-        private void Blur(bool visibility)
-        {
-            if (visibility)
-            {
-                PivotGrid.IsEnabled = false;
-                try
-                {
-                    // Get the current compositor
-                    _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
-                    // Create the destinatio sprite, sized to cover the entire list
-                    _pivotGridSprite = _compositor.CreateSpriteVisual();
-                    _pivotGridSprite.Size = new Vector2((float)PivotGrid.ActualWidth, (float)PivotGrid.ActualHeight);
-                    ElementCompositionPreview.SetElementChildVisual(PivotGrid, _pivotGridSprite);
-                    // Create the effect factory and instantiate a brush
-                    CompositionEffectFactory _effectFactory = _compositor.CreateEffectFactory(graphicsEffect, new[] { "Blur.BlurAmount" });
-                    brush = _effectFactory.CreateBrush();
-                    // Set the destination brush as the source of the image content
-                    brush.SetSourceParameter("ImageSource", _compositor.CreateBackdropBrush());
-                    // Update the destination layer with the fully configured brush
-                    _pivotGridSprite.Brush = brush;
-
-                    ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
-                    blurAnimation.InsertKeyFrame(0.0f, 0.0f);
-                    blurAnimation.InsertKeyFrame(1.0f, blurAmount);
-                    blurAnimation.Duration = animationDuration;
-                    blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
-                    blurAnimation.IterationCount = 1;
-                    brush.StartAnimation("Blur.BlurAmount", blurAnimation);
-                }
-                catch (Exception e)
-                {
-                    //no blur if exception (bug on some phone)
-                }
-            }
-            else
-            {
-
-                PivotGrid.IsEnabled = true;
-                try
-                {
-                    // Update the destination layer with the fully configured brush
-                    _pivotGridSprite.Brush = brush;
-                    ScalarKeyFrameAnimation blurAnimation = _compositor.CreateScalarKeyFrameAnimation();
-                    blurAnimation.InsertKeyFrame(0.0f, blurAmount);
-                    blurAnimation.InsertKeyFrame(1.0f, 0.0f);
-                    blurAnimation.Duration = animationDuration;
-                    blurAnimation.IterationBehavior = AnimationIterationBehavior.Count;
-                    blurAnimation.IterationCount = 1;
-                    brush.StartAnimation("Blur.BlurAmount", blurAnimation);
-                }
-                catch (Exception e)
-                {
-                }
-            }
-        }
-       */
-        #endregion
-
         private void HideCropUI()
         {
             if (CropGrid.Visibility == Visibility.Visible)
             {
-                //Blur(false);
                 Load.Hide();
                 CropGrid.Visibility = Visibility.Collapsed;
                 CropUI.isRightDragging = CropUI.isTopDragging = false;

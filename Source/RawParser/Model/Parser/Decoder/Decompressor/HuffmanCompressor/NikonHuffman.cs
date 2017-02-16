@@ -1,4 +1,4 @@
-﻿using RawNet.JPEG;
+﻿using RawNet.Jpeg;
 using System;
 using System.Collections.Generic;
 using System.Linq;
