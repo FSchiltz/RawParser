@@ -15,7 +15,7 @@
             }
             else
             {
-                throw new RawDecoderException("Makernote endianess unknown " + data[0]);
+                throw new RawDecoderException("Makernote endianness unknown " + data[0]);
             }
             buffer.BaseStream.Position += (offset + 2);
             RelativeOffset = -parentOffset;
