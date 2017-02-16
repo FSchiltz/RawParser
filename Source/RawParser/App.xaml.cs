@@ -93,7 +93,7 @@ namespace RawEditor
                 Window.Current.Content = rootFrame;
             }
 
-            if (!e.PrelaunchActivated)
+            if (!(e?.PrelaunchActivated ?? false))
             {
                 if (rootFrame.Content == null)
                 {

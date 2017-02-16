@@ -28,7 +28,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public BitPumpMSB16(TIFFBinaryReader reader)
+        public BitPumpMSB16(TiffBinaryReader reader)
         {
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
             reader.Read(buffer, (int)reader.Position, (int)reader.BaseStream.Length);

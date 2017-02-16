@@ -4,14 +4,14 @@
     {
         public PentaxMakernote(byte[] data, int offset, int parentOffset, Endianness endian, int depth) : base(endian, depth)
         {
-            TIFFBinaryReader buffer;
+            TiffBinaryReader buffer;
             if (data[offset] == 0x4D && data[offset + 1] == 0x4D)
             {
-                buffer = new TIFFBinaryReaderRE(data);
+                buffer = new TiffBinaryReaderBigEndian(data);
             }
             else if (data[offset] == 0x49 && data[offset + 1] == 0x49)
             {
-                buffer = new TIFFBinaryReaderRE(data);
+                buffer = new TiffBinaryReaderBigEndian(data);
             }
             else
             {

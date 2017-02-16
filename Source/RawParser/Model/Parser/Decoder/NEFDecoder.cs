@@ -151,11 +151,11 @@ namespace RawNet.Decoder
             try
             {
                 NikonDecompressor decompressor = new NikonDecompressor(reader, rawImage);
-                TIFFBinaryReader metastream;
+                TiffBinaryReader metastream;
                 if (data[0].endian == Endianness.Big)
-                    metastream = new TIFFBinaryReaderRE(meta.data, meta.dataType);
+                    metastream = new TiffBinaryReaderBigEndian(meta.data, meta.dataType);
                 else
-                    metastream = new TIFFBinaryReader(meta.data, meta.dataType);
+                    metastream = new TiffBinaryReader(meta.data, meta.dataType);
 
                 decompressor.DecompressNikon(metastream, offsets.GetUInt(0), counts.GetUInt(0));
                 metastream.Dispose();
@@ -279,7 +279,7 @@ namespace RawNet.Decoder
             for (Int32 i = 0; i < slices.Count; i++)
             {
                 NefSlice slice = slices[i];
-                TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, slice.offset);
+                TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, slice.offset);
                 Point2D size = new Point2D(width, slice.h);
                 Point2D pos = new Point2D(0, offY);
                 try
@@ -311,7 +311,7 @@ namespace RawNet.Decoder
             }
         }
 
-        void ReadCoolpixMangledRaw(TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
+        void ReadCoolpixMangledRaw(TiffBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
             // uint outPitch = rawImage.pitch;
             uint w = size.Width;
@@ -344,7 +344,7 @@ namespace RawNet.Decoder
             }
         }
 
-        void ReadCoolpixSplitRaw(TIFFBinaryReader input, Point2D size, Point2D offset, int inputPitch)
+        void ReadCoolpixSplitRaw(TiffBinaryReader input, Point2D size, Point2D offset, int inputPitch)
         {
             //uint outPitch = rawImage.pitch;
             uint w = size.Width;
@@ -399,7 +399,7 @@ namespace RawNet.Decoder
             uint h = 2024;
             rawImage.raw.ColorDepth = 12;
             rawImage.raw.dim = new Point2D(w, h);
-            TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset);
+            TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, offset);
             RawDecompressor.Decode12BitRawBEWithControl(input, w, h, rawImage);
         }
 
@@ -415,7 +415,7 @@ namespace RawNet.Decoder
             rawImage.cpp = 3;
             rawImage.isCFA = false;
             rawImage.raw.ColorDepth = 12;
-            TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset);
+            TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, offset);
 
             DecodeNikonSNef(input, w, h);
         }
@@ -467,14 +467,14 @@ namespace RawNet.Decoder
                 if (version < 200)
                 {
                     //open a bitstream
-                    TIFFBinaryReader reader;
+                    TiffBinaryReader reader;
                     if (ifd.endian == Endianness.Big)
                     {
-                        reader = new TIFFBinaryReaderRE(colorBalance.GetByteArray());
+                        reader = new TiffBinaryReaderBigEndian(colorBalance.GetByteArray());
                     }
                     else
                     {
-                        reader = new TIFFBinaryReader(colorBalance.GetByteArray());
+                        reader = new TiffBinaryReader(colorBalance.GetByteArray());
                     }
 
                     var wb = new ushort[4];
@@ -646,7 +646,7 @@ namespace RawNet.Decoder
         // We un-apply the whitebalance, so output matches lossless.
         // Note that values are scaled. See comment below on details.
         // TODO: It would be trivial to run this multithreaded.
-        void DecodeNikonSNef(TIFFBinaryReader input, uint w, uint h)
+        void DecodeNikonSNef(TiffBinaryReader input, uint w, uint h)
         {
             if (w < 6) throw new IOException("Got a " + w + " wide sNEF, aborting");
 

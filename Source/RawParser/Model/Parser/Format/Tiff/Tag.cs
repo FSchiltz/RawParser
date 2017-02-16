@@ -54,7 +54,7 @@ namespace RawNet.Format.Tiff
             data = new Object[dataCount];
         }
 
-        public Tag(TIFFBinaryReader fileStream, int baseOffset)
+        public Tag(TiffBinaryReader fileStream, int baseOffset)
         {
             parent_offset = baseOffset;
             TagId = (TagType)fileStream.ReadUInt16();
@@ -87,7 +87,7 @@ namespace RawNet.Format.Tiff
             ¨*/
         }
 
-        public void ReadData(TIFFBinaryReader fileStream)
+        public void ReadData(TiffBinaryReader fileStream)
         {
             if (data == null && dataOffset + parent_offset < fileStream.BaseStream.Length && dataOffset > 1)
             {
@@ -98,7 +98,7 @@ namespace RawNet.Format.Tiff
             }
         }
 
-        private void GetData(TIFFBinaryReader fileStream)
+        private void GetData(TiffBinaryReader fileStream)
         {
             data = new Object[dataCount];
             for (int j = 0; j < dataCount; j++)
@@ -149,34 +149,31 @@ namespace RawNet.Format.Tiff
             }
         }
 
-        protected static int GetTypeSize(TiffDataType id)
+        public static int GetTypeSize(TiffDataType id)
         {
-            int size = 0;
             switch (id)
             {
                 case TiffDataType.BYTE:
                 case TiffDataType.ASCII:
                 case TiffDataType.SBYTE:
                 case TiffDataType.UNDEFINED:
-                    size = 1;
-                    break;
+                    return 1;
                 case TiffDataType.SHORT:
                 case TiffDataType.SSHORT:
-                    size = 2;
-                    break;
+                    return 2;
                 case TiffDataType.LONG:
                 case TiffDataType.SLONG:
                 case TiffDataType.FLOAT:
                 case TiffDataType.OFFSET:
-                    size = 4;
-                    break;
+                    return 4;
                 case TiffDataType.RATIONAL:
                 case TiffDataType.DOUBLE:
                 case TiffDataType.SRATIONAL:
-                    size = 8;
-                    break;
+                    return 8;
+                case TiffDataType.NOTYPE:
+                default:
+                    return 0;
             }
-            return size;
         }
 
 
