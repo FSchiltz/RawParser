@@ -4,7 +4,7 @@ using System.Text;
 using System.Linq;
 using System.Diagnostics;
 
-namespace RawNet.Format.TIFF
+namespace RawNet.Format.Tiff
 {
     static internal class Data
     {

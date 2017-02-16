@@ -9,12 +9,14 @@ namespace RawEditor.View.UIHelper
     {
         public static void DisplayError(string message)
         {
-            Display(message, "Error", "Ok");
+            var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+            Display(message, loader.GetString("Error"), loader.GetString("Ok"));
         }
 
         public static void DisplayWarning(string message)
         {
-            Display(message, "Warning", "Ok");
+            var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+            Display(message, loader.GetString("Warning"), loader.GetString("Ok"));
         }
 
         public static void Display(string message, string title, string button)

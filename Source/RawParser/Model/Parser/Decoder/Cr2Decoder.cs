@@ -1,6 +1,6 @@
 using RawNet.Decoder.Decompressor;
-using RawNet.Format.TIFF;
-using RawNet.JPEG;
+using RawNet.Format.Tiff;
+using RawNet.Jpeg;
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -1,11 +1,8 @@
 ﻿using RawNet;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace RawEditor.Model.Effect.Demosaic
+namespace RawEditor.Effect
 {
     class FujiSSDD
     {
@@ -13,8 +10,8 @@ namespace RawEditor.Model.Effect.Demosaic
         static byte REDPOSITION = 0;
         static byte BLUEPOSITION = 2;
 
-        static int MAX(int i, int j) { return ((i) < (j) ? (j) : (i)); }
-        static int MIN(int i, int j) { return ((i) < (j) ? (i) : (j)); }
+        //static int MAX(int i, int j) { return ((i) < (j) ? (j) : (i)); }
+        //static int MIN(int i, int j) { return ((i) < (j) ? (i) : (j)); }
 
         //static double fTiny = 0.00000001;
 
@@ -27,7 +24,7 @@ namespace RawEditor.Model.Effect.Demosaic
         static double threshold = 2.0;
 
 
-        public static unsafe void Demosaic(RawImage<ushort>  image)
+        public static unsafe void Demosaic(RawImage<ushort> image)
         {
             // Mask of color per pixel
             byte[] mask = new byte[image.raw.dim.Width * image.raw.dim.Height];

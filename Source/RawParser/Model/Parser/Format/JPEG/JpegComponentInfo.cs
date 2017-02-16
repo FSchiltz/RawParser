@@ -1,4 +1,4 @@
-﻿namespace RawNet.JPEG
+﻿namespace RawNet.Jpeg
 {
     /*
     * The following structure stores basic information about one component.

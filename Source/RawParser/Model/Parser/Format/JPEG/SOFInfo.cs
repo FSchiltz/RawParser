@@ -1,4 +1,4 @@
-﻿namespace RawNet.JPEG
+﻿namespace RawNet.Jpeg
 {
     internal class SOFInfo
     {

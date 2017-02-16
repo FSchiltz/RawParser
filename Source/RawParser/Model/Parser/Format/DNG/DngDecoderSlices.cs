@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace RawNet.DNG
+namespace RawNet.Dng
 {
 
     internal class DngSliceElement

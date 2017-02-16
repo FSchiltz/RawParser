@@ -11,8 +11,8 @@ namespace RawEditor.Effect
     {
         static unsafe public void Demosaic(RawImage<ushort>  image)
         {
-            short[,] greenPosition = new short[,] { { 0, 0 }, { 0, 2 }, { 2, 0 }, { 2, 2 } };//position for green whithout the center
-            short[,] colorPosition = new short[,] { { 0, 1 }, { 2, 1 }, { 1, 0 }, { 1, 2 } };
+            //short[,] greenPosition = new short[,] { { 0, 0 }, { 0, 2 }, { 2, 0 }, { 2, 2 } };//position for green whithout the center
+            //short[,] colorPosition = new short[,] { { 0, 1 }, { 2, 1 }, { 1, 0 }, { 1, 2 } };
 
             //demosaic by group of 3x3
             Parallel.For(0, image.raw.dim.Height / 3, t =>

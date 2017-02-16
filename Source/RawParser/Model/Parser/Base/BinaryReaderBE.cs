@@ -1,4 +1,4 @@
-﻿using RawNet.Format.TIFF;
+﻿using RawNet.Format.Tiff;
 using System;
 using System.IO;
 using System.Text;
