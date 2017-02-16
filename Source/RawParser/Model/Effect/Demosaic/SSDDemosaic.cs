@@ -47,7 +47,7 @@ namespace RawEditor.Effect
          * @param[in]  width, height size of the image
          *
          */
-        void ChromaticMedian(int iter, int redx, int redy, double side, ImageComponent<ushort> image)
+        static void ChromaticMedian(int iter, int redx, int redy, double side, ImageComponent<ushort> image)
         {
             uint size = image.dim.Height * image.dim.Width;
             // Auxiliary variables for computing chromatic components
