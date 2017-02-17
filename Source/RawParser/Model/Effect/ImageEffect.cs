@@ -27,15 +27,15 @@ namespace RawEditor.Effect
         private uint maxValue;
 
         #region Binding
-        private bool histoEqual = false;
-        public bool HistoEqualisation
+        private bool histogramEqual = false;
+        public bool HistogramEqualisation
         {
-            get { return histoEqual; }
+            get { return histogramEqual; }
             set
             {
-                if (histoEqual != value)
+                if (histogramEqual != value)
                 {
-                    histoEqual = value;
+                    histogramEqual = value;
                     OnPropertyChanged();
                 }
             }
@@ -427,7 +427,7 @@ namespace RawEditor.Effect
             Luminance.Clip(buffer);
 
             //apply histogram equalisation if any
-            if (histoEqual)
+            if (histogramEqual)
             {
                 //calculate the histogram
                 histo = HistogramHelper.CalculateLumaHistogram(buffer);
@@ -442,6 +442,8 @@ namespace RawEditor.Effect
             if (sharpness != 0)
                 buffer = Sharpening.Apply(buffer, (int)sharpness);
 
+            //Not working yet
+            //Luminance.Clip(buffer,image);
             //return the final histogram
             return buffer;
         }
@@ -490,7 +492,7 @@ namespace RawEditor.Effect
             Hightlight = effect.Hightlight;
             Saturation = effect.Saturation;
             ReverseGamma = effect.ReverseGamma;
-            HistoEqualisation = effect.HistoEqualisation;
+            HistogramEqualisation = effect.HistogramEqualisation;
             Rotation = effect.Rotation;
             ReverseGamma = effect.ReverseGamma;
             Gamma = effect.Gamma;
@@ -569,11 +571,11 @@ namespace RawEditor.Effect
                 history.oldValue = ReverseGamma;
                 history.value = effect.ReverseGamma;
             }
-            else if (HistoEqualisation != effect.HistoEqualisation)
+            else if (HistogramEqualisation != effect.HistogramEqualisation)
             {
                 history.target = EffectType.HistoEqualisation;
-                history.oldValue = HistoEqualisation;
-                history.value = effect.HistoEqualisation;
+                history.oldValue = HistogramEqualisation;
+                history.value = effect.HistogramEqualisation;
             }
             else if (Rotation != effect.Rotation)
             {

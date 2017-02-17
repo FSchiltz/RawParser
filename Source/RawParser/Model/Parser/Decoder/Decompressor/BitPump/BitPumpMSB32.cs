@@ -23,7 +23,7 @@ namespace RawNet.Decoder.Decompressor
         }
 
         /*** Used for entropy encoded sections, for now only Nikon Coolpix ***/
-        public BitPumpMSB32(TIFFBinaryReader reader)
+        public BitPumpMSB32(TiffBinaryReader reader)
         {
             reader.Read(buffer, (int)reader.Position, (int)reader.BaseStream.Length);
             size = (uint)(reader.RemainingSize + sizeof(uint));

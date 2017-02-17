@@ -4,15 +4,15 @@
     {
         public FujiMakerNote(byte[] data, Endianness endian,int depth):base(endian, depth)
         {
-            TIFFBinaryReader file;
+            TiffBinaryReader file;
 
             if (endian == Endianness.Little)
             {
-                file = new TIFFBinaryReader(data);
+                file = new TiffBinaryReader(data);
             }
             else if (endian == Endianness.Big)
             {
-                file = new TIFFBinaryReaderRE(data);
+                file = new TiffBinaryReaderBigEndian(data);
             }
             else
             {

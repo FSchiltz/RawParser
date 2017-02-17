@@ -4,11 +4,11 @@ namespace RawNet.Decoder.Decompressor
 {
     class PanaBitpump
     {
-        TIFFBinaryReader input;
+        TiffBinaryReader input;
         byte[] buf = new byte[0x4000];
         int vbits;
         int load_flags;
-        internal PanaBitpump(TIFFBinaryReader _input, uint load)
+        internal PanaBitpump(TiffBinaryReader _input, uint load)
         {
             input = _input;
             vbits = 0;

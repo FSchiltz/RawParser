@@ -10,14 +10,14 @@
         public Makernote(byte[] data, uint offset, Endianness endian, int depth, int parentOffset) : base(endian, depth)
         {
             this.type = IFDType.Makernote;
-            TIFFBinaryReader file;
+            TiffBinaryReader file;
             if (endian == Endianness.Little)
             {
-                file = new TIFFBinaryReader(data);
+                file = new TiffBinaryReader(data);
             }
             else if (endian == Endianness.Big)
             {
-                file = new TIFFBinaryReaderRE(data);
+                file = new TiffBinaryReaderBigEndian(data);
             }
             else
             {
