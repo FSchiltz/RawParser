@@ -11,6 +11,7 @@ namespace RawNet.Decoder
     {
         UInt32 load_flags;
         TiffBinaryReader input_start;
+        IFD raw;
 
         internal RW2Decoder(Stream reader) : base(reader) { }
 
@@ -50,7 +51,7 @@ namespace RawNet.Decoder
                 isOldPanasonic = true;
             }
 
-            IFD raw = data[0];
+            raw = data[0];
             uint height = raw.GetEntry((TagType)3).GetUInt(0);
             uint width = raw.GetEntry((TagType)2).GetUInt(0);
 
@@ -119,38 +120,6 @@ namespace RawNet.Decoder
 
                 input_start = new TiffBinaryReader(stream, off);
                 DecodeRw2();
-            }
-            // Read blacklevels
-            var rTag = raw.GetEntry((TagType)0x1c);
-            var gTag = raw.GetEntry((TagType)0x1d);
-            var bTag = raw.GetEntry((TagType)0x1e);
-            if (rTag != null && gTag != null && bTag != null)
-            {
-                Debug.Assert(bTag.GetInt(0) + 15 == rTag.GetInt(0) + 15);
-                Debug.Assert(bTag.GetInt(0) + 15 == gTag.GetInt(0) + 15);
-                rawImage.black = rTag.GetInt(0) + 15; ;
-                /*
-                rawImage.blackLevelSeparate[0] = rTag.GetInt(0) + 15;
-                rawImage.blackLevelSeparate[1] = rawImage.blackLevelSeparate[2] = gTag.GetInt(0) + 15;
-                rawImage.blackLevelSeparate[3] = bTag.GetInt(0) + 15;*/
-            }
-
-            // Read WB levels
-            var rWBTag = raw.GetEntry((TagType)0x0024);
-            var gWBTag = raw.GetEntry((TagType)0x0025);
-            var bWBTag = raw.GetEntry((TagType)0x0026);
-            if (rWBTag != null && gWBTag != null && bWBTag != null)
-            {
-                rawImage.metadata.WbCoeffs = new WhiteBalance(rWBTag.GetShort(0), gWBTag.GetShort(0), bWBTag.GetShort(0));
-            }
-            else
-            {
-                var wb1Tag = raw.GetEntry((TagType)0x0011);
-                var wb2Tag = raw.GetEntry((TagType)0x0012);
-                if (wb1Tag != null && wb2Tag != null)
-                {
-                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb1Tag.GetShort(0), 1, wb2Tag.GetShort(0));
-                }
             }
         }
 
@@ -250,6 +219,38 @@ namespace RawNet.Decoder
                 if (t != null) rawImage.metadata.IsoSpeed = t.GetInt(0);
             }
 
+            // Read blacklevels
+            var rTag = raw.GetEntry((TagType)0x1c);
+            var gTag = raw.GetEntry((TagType)0x1d);
+            var bTag = raw.GetEntry((TagType)0x1e);
+            if (rTag != null && gTag != null && bTag != null)
+            {
+                Debug.Assert(bTag.GetInt(0) + 15 == rTag.GetInt(0) + 15);
+                Debug.Assert(bTag.GetInt(0) + 15 == gTag.GetInt(0) + 15);
+                rawImage.black = rTag.GetInt(0) + 15; ;
+                /*
+                rawImage.blackLevelSeparate[0] = rTag.GetInt(0) + 15;
+                rawImage.blackLevelSeparate[1] = rawImage.blackLevelSeparate[2] = gTag.GetInt(0) + 15;
+                rawImage.blackLevelSeparate[3] = bTag.GetInt(0) + 15;*/
+            }
+
+            // Read WB levels
+            var rWBTag = raw.GetEntry((TagType)0x0024);
+            var gWBTag = raw.GetEntry((TagType)0x0025);
+            var bWBTag = raw.GetEntry((TagType)0x0026);
+            if (rWBTag != null && gWBTag != null && bWBTag != null)
+            {
+                rawImage.metadata.WbCoeffs = new WhiteBalance(bWBTag.GetShort(0), gWBTag.GetShort(0), rWBTag.GetShort(0), rawImage.raw.ColorDepth);
+            }
+            else
+            {
+                var wb1Tag = raw.GetEntry((TagType)0x0011);
+                var wb2Tag = raw.GetEntry((TagType)0x0012);
+                if (wb1Tag != null && wb2Tag != null)
+                {
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb1Tag.GetShort(0), 1, wb2Tag.GetShort(0));
+                }
+            }
         }
 
         private void SetMetadata(string model)

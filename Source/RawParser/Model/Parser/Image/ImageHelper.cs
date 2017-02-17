@@ -74,7 +74,6 @@ namespace RawNet
         {
             Debug.Assert(image.raw.cpp == 1);
             Debug.Assert(Convert.ToInt32(image.whitePoint) > 0);
-
             long maxValue = (1 << image.raw.ColorDepth) - 1;
 
             //calculate the black level
