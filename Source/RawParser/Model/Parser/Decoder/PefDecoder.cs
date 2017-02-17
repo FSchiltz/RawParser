@@ -82,7 +82,7 @@ namespace RawNet.Decoder
             Tag wb = ifd.GetEntryRecursive((TagType)0x0201);
             if (wb?.dataCount == 4)
             {
-                rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), wb.GetInt(1), wb.GetInt(3));
+                rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), wb.GetInt(1), wb.GetInt(3), rawImage.raw.ColorDepth);
             }
         }
 

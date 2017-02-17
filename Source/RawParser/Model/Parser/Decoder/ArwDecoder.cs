@@ -76,6 +76,7 @@ namespace RawNet.Decoder
             uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
             int bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
             rawImage.raw.ColorDepth = (ushort)bitPerPixel;
+
             // Sony E-550 marks compressed 8bpp ARW with 12 bit per pixel
             // this makes the compression detect it as a ARW v1.
             // This camera has however another MAKER entry, so we MAY be able
@@ -86,7 +87,7 @@ namespace RawNet.Decoder
                 for (Int32 i = 0; i < data.Count; i++)
                 {
                     string make = data[i].GetEntry(TagType.MAKE).DataAsString;
-                    /* Check for maker "SONY" without spaces */
+                    // Check for maker "SONY" without spaces 
                     if (make != "SONY")
                         bitPerPixel = 8;
                 }
@@ -344,8 +345,6 @@ namespace RawNet.Decoder
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
-            /* rawImage.whitePoint >>= shiftDownScale;
-             rawImage.blackLevel >>= shiftDownScale;*/
 
             // Set the whitebalance
             if (rawImage.metadata.Model == "DSLR-A100")
@@ -392,15 +391,11 @@ namespace RawNet.Decoder
                 }
             }
             SetMetadata(rawImage.metadata.Model);
+            rawImage.whitePoint >>= 14 - rawImage.raw.ColorDepth;
         }
 
         protected void SetMetadata(string model)
         {
-            if (rawImage.raw.dim.Width > 3888)
-            {
-                rawImage.black = 128 << (rawImage.raw.ColorDepth - 12);
-            }
-
             switch (rawImage.raw.dim.Width)
             {
                 case 3984:
@@ -535,6 +530,11 @@ namespace RawNet.Decoder
                         throw new RawDecoderException("White balance has " + wb.dataCount + " entries instead of 4");
                     rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), wb.GetInt(1), wb.GetInt(3), rawImage.raw.ColorDepth);
                 }
+                Tag black = sony_private.GetEntry((TagType)0x7300) ?? sony_private.GetEntry((TagType)0x7310);
+                if (black != null) rawImage.black = black.GetLong(0);
+
+                Tag white = sony_private.GetEntry((TagType)0x787f);
+                if (white != null) rawImage.whitePoint = white.GetLong(0);
             }
         }
 
