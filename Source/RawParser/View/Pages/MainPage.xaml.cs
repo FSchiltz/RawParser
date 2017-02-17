@@ -227,7 +227,7 @@ namespace RawEditor.View.Pages
                     }
 #if !DEBUG
                     //send an event with file extension, camera model and make
-                    logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
+                    logger.Log("SuccessOpening " + rawImage?.metadata?.FileExtension.ToLower() + " " + rawImage?.metadata?.Make + " " + rawImage?.metadata?.Model);
 #endif
                     DefaultValue.Rotation = rawImage.metadata.OriginalRotation;
                     DefaultValue.ReverseGamma = rawImage.IsGammaCorrected;
@@ -251,8 +251,8 @@ namespace RawEditor.View.Pages
                         var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                         TextDisplay.DisplayWarning(loader.GetString("ErrorOnLoadWarning"));
 #if !DEBUG
-                            //send an event with file extension and camera model and make if any                   
-                            logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model + "" + raw.errors.Count);
+                        //send an event with file extension and camera model and make if any                   
+                        logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + rawImage?.metadata?.Make + " " + rawImage?.metadata?.Model + "" + rawImage.errors.Count);
 #endif
                     }
                     thumbnail = null;
@@ -261,7 +261,7 @@ namespace RawEditor.View.Pages
                 {
 #if !DEBUG
                     //send an event with file extension and camera model and make if any                   
-                    logger.Log("FailOpening " + file?.FileType.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
+                    logger.Log("FailOpening " + file?.FileType.ToLower() + " " + rawImage?.metadata?.Make + " " + rawImage?.metadata?.Model);
 #endif
 
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
