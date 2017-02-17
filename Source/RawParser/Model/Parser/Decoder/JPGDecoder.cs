@@ -48,7 +48,7 @@ namespace RawNet.Decoder
         public override void DecodeRaw()
         {
             rawImage.raw.ColorDepth = 8;
-            rawImage.cpp = 3;
+            rawImage.raw.cpp = 3;
             rawImage.isCFA = false;
             var decoder = BitmapDecoder.CreateAsync(stream.AsRandomAccessStream()).AsTask();
             decoder.Wait();

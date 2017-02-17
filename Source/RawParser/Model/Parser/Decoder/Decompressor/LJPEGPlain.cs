@@ -41,7 +41,7 @@ namespace RawNet.Decoder.Decompressor
                 if (raw.isCFA)
                     throw new RawDecoderException("Cannot decode subsampled image to CFA data");
 
-                if (raw.cpp != frame.numComponents)
+                if (raw.raw.cpp != frame.numComponents)
                     throw new RawDecoderException("Subsampled component count does not match image.");
 
                 if (frame.numComponents != 3 || frame.ComponentInfo[0].superH != 2 ||
@@ -144,7 +144,7 @@ namespace RawNet.Decoder.Decompressor
                     // see FIX_CANON_FRAME_VS_IMAGE_SIZE_MISMATCH
                     uint destX = processedLineSlices / raw.raw.dim.Height * slicesW[0];
                     uint destY = processedLineSlices % raw.raw.dim.Height;
-                    if (destX + offX >= raw.raw.dim.Width * raw.cpp)
+                    if (destX + offX >= raw.raw.dim.Width * raw.raw.cpp)
                         break;
 
                     long dest = (destX + offX) + (destY + offY) * raw.raw.dim.Width;
@@ -264,7 +264,7 @@ namespace RawNet.Decoder.Decompressor
                 {
                     uint destX = processedLineSlices / raw.raw.dim.Height * slicesW[0];
                     uint destY = processedLineSlices % raw.raw.dim.Height;
-                    if (destX + offX >= raw.raw.dim.Width * raw.cpp)
+                    if (destX + offX >= raw.raw.dim.Width * raw.raw.cpp)
                         break;
 
                     long dest = (destX + offX) + (destY + offY) * raw.raw.dim.Width;

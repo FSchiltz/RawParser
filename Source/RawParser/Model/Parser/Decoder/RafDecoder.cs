@@ -2,6 +2,7 @@ using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -275,33 +276,30 @@ namespace RawNet.Decoder
 
             //read lens
             rawImage.metadata.Lens = ifd.GetEntryRecursive((TagType)42036)?.DataAsString;
+
             Tag sep_black = ifd.GetEntryRecursive(TagType.FUJI_RGGBLEVELSBLACK);
-            if (sep_black != null)
-            {
-                if (sep_black.dataCount >= 4)
+            if (sep_black.dataCount > 1) Debug.Assert(sep_black?.GetInt(0) == sep_black?.GetInt(1));
+            rawImage.black = sep_black?.GetInt(0) ?? 0;
+            /*if (sep_black?.dataCount >= 4)
                 {
                     for (int k = 0; k < 4; k++)
                         rawImage.blackLevelSeparate[k] = sep_black.GetInt(k);
                 }
-            }
+            */
 
             Tag wb = ifd.GetEntryRecursive(TagType.FUJI_WB_GRBLEVELS);
-            if (wb != null)
+
+            if (wb?.dataCount == 3)
             {
-                if (wb.dataCount == 3)
-                {
-                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(1), wb.GetInt(0), wb.GetInt(2), rawImage.raw.ColorDepth);
-                }
+                rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(1), wb.GetInt(0), wb.GetInt(2), rawImage.raw.ColorDepth);
             }
             else
             {
                 wb = ifd.GetEntryRecursive(TagType.FUJIOLDWB);
-                if (wb != null)
+
+                if (wb?.dataCount == 8)
                 {
-                    if (wb.dataCount == 8)
-                    {
-                        rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(1), wb.GetInt(0), wb.GetInt(3), rawImage.raw.ColorDepth);
-                    }
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(1), wb.GetInt(0), wb.GetInt(3), rawImage.raw.ColorDepth);
                 }
             }
         }

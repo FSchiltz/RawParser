@@ -1,3 +1,4 @@
+using RawEditor.Effect;
 using RawNet.Decoder.Decompressor;
 using RawNet.Dng;
 using RawNet.Format.Tiff;
@@ -16,7 +17,7 @@ namespace RawNet.Decoder
         //DNG thumbnail are tiff so no need to override 
         internal DNGDecoder(Stream file) : base(file)
         {
-            ScaleValue = true;
+            ScaleValue = false; //dng already sclae them
             List<IFD> data = ifd.GetIFDsWithTag(TagType.DNGVERSION);
             /*
             if (data.Count != 0)
@@ -133,7 +134,7 @@ namespace RawNet.Decoder
                     uint cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
                     if (cpp > 4)
                         throw new RawDecoderException("More than 4 samples per pixel is not supported.");
-                    rawImage.cpp = cpp;
+                    rawImage.raw.cpp = cpp;
                     bool big_endian = (raw.endian == Endianness.Big);
                     // DNG spec says that if not 8 or 16 bit/sample, always use big endian
                     if (bps != 8 && bps != 16)
@@ -142,7 +143,7 @@ namespace RawNet.Decoder
                     break;
                 case 7:
                 case 0x884c:
-                    rawImage.cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);                    // Let's try loading it as tiles instead
+                    rawImage.raw.cpp = raw.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);                    // Let's try loading it as tiles instead
 
                     if (sampleFormat != 1)
                         throw new RawDecoderException("Only 16 bit unsigned data supported for compressed data.");
@@ -246,7 +247,6 @@ namespace RawNet.Decoder
                 if (active_area.dataCount != 4)
                     throw new RawDecoderException("Active area has " + active_area.dataCount + " values instead of 4");
 
-                //active_area.GetIntArray(out int[] corners, 4);
                 if (new Point2D(active_area.GetUInt(1), active_area.GetUInt(0)).IsThisInside(rawImage.raw.dim))
                 {
                     if (new Point2D(active_area.GetUInt(3), active_area.GetUInt(2)).IsThisInside(rawImage.raw.dim))
@@ -308,12 +308,8 @@ namespace RawNet.Decoder
             Tag lintable = raw.GetEntry(TagType.LINEARIZATIONTABLE);
             if (lintable != null)
             {
-                var table = lintable.GetUShortArray();
-                rawImage.SetTable(table, (int)lintable.dataCount, true);
-
-                //mRaw.sixteenBitLookup();
-                //mRaw.table = (null);
-
+                var table = new TableLookUp(lintable.GetUShortArray(), (int)lintable.dataCount, true);
+                table.ApplyTableLookUp(rawImage.raw);
             }
 
             // Default white level is (2 ** BitsPerSample) - 1
@@ -329,31 +325,7 @@ namespace RawNet.Decoder
             SetBlack(raw);
 
             //convert to linear value
-            double maxVal = Math.Pow(2, rawImage.raw.ColorDepth);
-            double coeff = maxVal / (rawImage.whitePoint - rawImage.blackLevelSeparate[0]);
-            Parallel.For(rawImage.raw.offset.Height, rawImage.raw.dim.Height + rawImage.raw.offset.Height, y =>
-            {
-                long realY = y * rawImage.raw.dim.Width;
-                for (uint x = rawImage.raw.offset.Width; x < rawImage.raw.dim.Width + rawImage.raw.offset.Width; x++)
-                {
-                    long pos = realY + x;
-                    double val;
-                    //Linearisation
-                    if (rawImage.table != null)
-                        val = rawImage.table.tables[rawImage.raw.rawView[pos]];
-                    else val = rawImage.raw.rawView[pos];
-                    //Black sub
-                    //val -= mRaw.blackLevelSeparate[offset + x % 2];
-                    val -= rawImage.blackLevelSeparate[0];
-                    //Rescaling
-                    //val /= (mRaw.whitePoint - mRaw.blackLevelSeparate[offset + x % 2]);
-                    val *= coeff;//change to take into consideration each individual blacklevel
-
-                    if (val > maxVal) val = maxVal;
-                    else if (val < 0) val = 0;
-                    rawImage.raw.rawView[pos] = (ushort)val;
-                }
-            });
+            Luminance.ScaleValues(rawImage);
             //*/
 
             // Apply opcodes to lossy DNG 
@@ -451,22 +423,20 @@ namespace RawNet.Decoder
             if (raw.GetEntry(TagType.BLACKLEVEL) == null)
                 return true;
 
-            if (rawImage.cpp != 1)
+            if (rawImage.raw.cpp != 1)
                 return false;
 
             Tag black_entry = raw.GetEntry(TagType.BLACKLEVEL);
             if ((int)black_entry.dataCount < blackdim.Width * blackdim.Height)
                 throw new RawDecoderException("Black level entry is too small");
 
+            if (black_entry.dataCount > 1) Debug.Assert(black_entry.GetFloat(0) == black_entry.GetFloat(1));
+            rawImage.black = (int)black_entry.GetFloat(0);
+            /*
             if (blackdim.Width < 2 || blackdim.Height < 2)
             {
                 // We so not have enough to fill all individually, read a single and copy it
-                float value = black_entry.GetFloat(0);
-                for (int y = 0; y < 2; y++)
-                {
-                    for (int x = 0; x < 2; x++)
-                        rawImage.blackLevelSeparate[y * 2 + x] = (int)value;
-                }
+                rawImage.black = (int)black_entry.GetFloat(0);
             }
             else
             {
@@ -475,35 +445,38 @@ namespace RawNet.Decoder
                     for (int x = 0; x < 2; x++)
                         rawImage.blackLevelSeparate[y * 2 + x] = (int)black_entry.GetFloat((int)(y * blackdim.Width + x));
                 }
-            }
+            }*/
 
             // DNG Spec says we must add black in deltav and deltah
-
             Tag blackleveldeltav = raw.GetEntry(TagType.BLACKLEVELDELTAV);
             if (blackleveldeltav != null)
             {
-                if ((int)blackleveldeltav.dataCount < rawImage.raw.dim.Height)
-                    throw new RawDecoderException("BLACKLEVELDELTAV array is too small");
+                if ((int)blackleveldeltav.dataCount < rawImage.raw.dim.Height) throw new RawDecoderException("BLACKLEVELDELTAV array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
                 for (int i = 0; i < rawImage.raw.dim.Height; i++)
+                {
                     black_sum[i & 1] += blackleveldeltav.GetFloat(i);
+                }
 
-                for (int i = 0; i < 4; i++)
-                    rawImage.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / rawImage.raw.dim.Height * 2.0f);
+                Debug.Assert(black_sum[0] == black_sum[1]);
+                rawImage.black += (int)(black_sum[0] / rawImage.raw.dim.Height * 2.0f);
+                //for (int i = 0; i < 4; i++)                  rawImage.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / rawImage.raw.dim.Height * 2.0f);
             }
 
 
             Tag blackleveldeltah = raw.GetEntry(TagType.BLACKLEVELDELTAH);
             if (blackleveldeltah != null)
             {
-                if ((int)blackleveldeltah.dataCount < rawImage.raw.dim.Width)
-                    throw new RawDecoderException("BLACKLEVELDELTAH array is too small");
+                if ((int)blackleveldeltah.dataCount < rawImage.raw.dim.Width) throw new RawDecoderException("BLACKLEVELDELTAH array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
                 for (int i = 0; i < rawImage.raw.dim.Width; i++)
+                {
                     black_sum[i & 1] += blackleveldeltah.GetFloat(i);
+                }
 
-                for (int i = 0; i < 4; i++)
-                    rawImage.blackLevelSeparate[i] += (int)(black_sum[i & 1] / rawImage.raw.dim.Width * 2.0f);
+                Debug.Assert(black_sum[0] == black_sum[1]);
+                rawImage.black += (int)(black_sum[0] / rawImage.raw.dim.Width * 2.0f);
+                //for (int i = 0; i < 4; i++)                    rawImage.blackLevelSeparate[i] += (int)(black_sum[i & 1] / rawImage.raw.dim.Width * 2.0f);
             }
             return true;
         }

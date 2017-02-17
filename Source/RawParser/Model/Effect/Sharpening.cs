@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using RawNet;
 
 namespace RawEditor.Effect
@@ -59,7 +55,7 @@ namespace RawEditor.Effect
                         - image.blue[beforeRow - 1]) / factor;
                 }
             });
-            
+
             //fill in the edge
             Parallel.For(0, buffer.dim.Height, y =>
             {

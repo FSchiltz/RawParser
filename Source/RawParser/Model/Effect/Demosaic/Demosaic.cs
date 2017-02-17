@@ -11,7 +11,7 @@ namespace RawEditor.Effect
         {
             Debug.Assert(image?.raw?.rawView != null);
             Debug.Assert(image.raw.dim.Area > 4);
-            image.cpp = 3;
+            image.raw.cpp = 3;
             image.raw.red = new ushort[image.raw.dim.Width * image.raw.dim.Height];
             image.raw.green = new ushort[image.raw.dim.Width * image.raw.dim.Height];
             image.raw.blue = new ushort[image.raw.dim.Width * image.raw.dim.Height];

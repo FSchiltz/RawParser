@@ -35,7 +35,7 @@ namespace RawEditor.View.Pages
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        public RawImage<ushort> raw;
+        public RawImage<ushort> rawImage;
         public bool ImageSelected { set; get; } = false;
         public Thumbnail thumbnail;
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
@@ -93,7 +93,7 @@ namespace RawEditor.View.Pages
         private void EmptyImage()
         {
             //empty the previous image data
-            raw = null;
+            rawImage = null;
             ImageBoxPlain.Source = null;
             CropUI.SetThumbAsync(null);
             //empty the image display
@@ -114,12 +114,12 @@ namespace RawEditor.View.Pages
             EditionValue.Copy(DefaultValue);
             CropUI.ResetCrop();
             CropUI.SetThumbAsync(null);
-            if (raw != null)
+            if (rawImage != null)
             {
-                raw.raw.offset = new Point2D(0, 0);
-                raw.raw.dim = new Point2D(raw.raw.UncroppedDim);
-                raw.preview.offset = new Point2D(0, 0);
-                raw.preview.dim = new Point2D(raw.preview.UncroppedDim);
+                rawImage.raw.offset = new Point2D(0, 0);
+                rawImage.raw.dim = new Point2D(rawImage.raw.UncroppedDim);
+                rawImage.preview.offset = new Point2D(0, 0);
+                rawImage.preview.dim = new Point2D(rawImage.preview.UncroppedDim);
                 SetImageSizeText();
             }
             ImageBoxPlain.Visibility = Visibility.Collapsed;
@@ -132,7 +132,7 @@ namespace RawEditor.View.Pages
         {
             ResetControls();
 
-            if (raw != null)
+            if (rawImage != null)
             {
                 var old = new ImageEffect();
                 old.Copy(EditionValue);
@@ -147,7 +147,7 @@ namespace RawEditor.View.Pages
             History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
             {
                 oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
-                value = new double[] { raw?.metadata.WbCoeffs.Red ?? 1, raw?.metadata.WbCoeffs.Green ?? 1, raw?.metadata.WbCoeffs.Blue ?? 1 }
+                value = new double[] { rawImage?.metadata.WbCoeffs.Red ?? 1, rawImage?.metadata.WbCoeffs.Green ?? 1, rawImage?.metadata.WbCoeffs.Blue ?? 1 }
             });
             EditionValue.RMul = DefaultValue.RMul;
             EditionValue.GMul = DefaultValue.GMul;
@@ -158,7 +158,7 @@ namespace RawEditor.View.Pages
         private void OpenFile(StorageFile file)
         {
             //Add a loading screen
-            if (raw != null)
+            if (rawImage != null)
             {
                 EmptyImage();
             }
@@ -188,15 +188,16 @@ namespace RawEditor.View.Pages
                         decoder.DecodeRaw();
                         decoder.DecodeMetadata();
                         watch.Stop();
-                        raw = decoder.rawImage;
-                        raw.metadata.ParsingTime = watch.ElapsedMilliseconds;
-                        //if (decoder.ScaleValue) raw.ScaleValues();
+                        rawImage = decoder.rawImage;
+                        rawImage.metadata.ParsingTime = watch.ElapsedMilliseconds;
+                        if (rawImage.table != null) rawImage.table.ApplyTableLookUp(rawImage.raw);
+                        if (decoder.ScaleValue) Luminance.ScaleValues(rawImage);
                     }
-                    raw.metadata.FileName = file.DisplayName;
-                    raw.metadata.FileNameComplete = file.Name;
-                    raw.metadata.FileExtension = file.FileType;
+                    rawImage.metadata.FileName = file.DisplayName;
+                    rawImage.metadata.FileNameComplete = file.Name;
+                    rawImage.metadata.FileExtension = file.FileType;
 
-                    if (raw.isCFA)
+                    if (rawImage.isCFA)
                     {
                         //get the algo from the settings
                         DemosaicAlgorithm algo;
@@ -208,18 +209,18 @@ namespace RawEditor.View.Pages
                         {
                             algo = DemosaicAlgorithm.FastAdams;
                         }
-                        Demosaic.Demos(raw, algo);
+                        Demosaic.Demos(rawImage, algo);
                     }
-                    /*
-                    if (raw.convertionM != null)
+
+                    if (rawImage.convertionM != null)
                     {
-                        raw.ConvertRGB();
-                    }*/
-                    raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+                        rawImage.ConvertRGB();
+                    }
+                    rawImage.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
                     GC.Collect();
                     //check if enough memory
-                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)raw.raw.green.Length * 3) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
+                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)rawImage.raw.green.Length * 3) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                     {
                         TextDisplay.DisplayWarning("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                     }
@@ -227,14 +228,14 @@ namespace RawEditor.View.Pages
                     //send an event with file extension, camera model and make
                     logger.Log("SuccessOpening " + raw?.metadata?.FileExtension.ToLower() + " " + raw?.metadata?.Make + " " + raw?.metadata?.Model);
 #endif
-                    DefaultValue.Rotation = raw.metadata.OriginalRotation;
-                    DefaultValue.ReverseGamma = raw.IsGammaCorrected;
-                    DefaultValue.RMul = raw?.metadata.WbCoeffs?.Red ?? 1;
-                    DefaultValue.GMul = raw?.metadata.WbCoeffs?.Green ?? 1;
-                    DefaultValue.BMul = raw?.metadata.WbCoeffs?.Blue ?? 1;
+                    DefaultValue.Rotation = rawImage.metadata.OriginalRotation;
+                    DefaultValue.ReverseGamma = rawImage.IsGammaCorrected;
+                    DefaultValue.RMul = rawImage?.metadata.WbCoeffs?.Red ?? 1;
+                    DefaultValue.GMul = rawImage?.metadata.WbCoeffs?.Green ?? 1;
+                    DefaultValue.BMul = rawImage?.metadata.WbCoeffs?.Blue ?? 1;
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        var exif = raw.ParseExif();
+                        var exif = rawImage.ParseExif();
                         //Group the data
                         var groups = from x in exif group x by x.Group into grp orderby grp.Key select grp;
                         //Set the grouped data to CollectionViewSource
@@ -244,7 +245,7 @@ namespace RawEditor.View.Pages
                         ControlVisibilty.Value = true;
                         SetImageSizeText();
                     });
-                    if (raw.errors.Count > 0)
+                    if (rawImage.errors.Count > 0)
                     {
                         var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
                         TextDisplay.DisplayWarning(loader.GetString("ErrorOnLoadWarning"));
@@ -300,13 +301,13 @@ namespace RawEditor.View.Pages
 
         private async void SaveButtonClickAsync(object sender, RoutedEventArgs e)
         {
-            if (raw?.raw != null)
+            if (rawImage?.raw != null)
             {
                 //Blur(true);
                 var savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                    SuggestedFileName = raw.metadata.FileName
+                    SuggestedFileName = rawImage.metadata.FileName
                 };
 
                 foreach (KeyValuePair<string, List<string>> format in FormatHelper.SaveSupportedFormat)
@@ -328,7 +329,7 @@ namespace RawEditor.View.Pages
                 {
                     try
                     {
-                        var result = ApplyImageEffect8bitsNoHistoAsync(raw.raw, EditionValue);
+                        var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.raw, EditionValue);
                         FormatHelper.SaveAsync(file, result);
                     }
                     catch (Exception ex)
@@ -393,11 +394,11 @@ namespace RawEditor.View.Pages
 
         private void UpdatePreview(bool move)
         {
-            if (raw?.preview != null)
+            if (rawImage?.preview != null)
             {
                 Task.Run(() =>
                 {
-                    var result = ApplyImageEffect8bits(raw.preview, EditionValue);
+                    var result = ApplyImageEffect8bits(rawImage.preview, EditionValue);
                     DisplayImage(result.Item2, move);
                     Histo.FillAsync(result.Item1);
                 });
@@ -474,7 +475,7 @@ namespace RawEditor.View.Pages
 
         private void RotateRightButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            if (raw != null)
+            if (rawImage != null)
             {
                 var t = new HistoryObject(EffectType.Rotate, EditionValue.GetCopy()) { oldValue = EditionValue.Rotation };
                 EditionValue.Rotation++;
@@ -487,7 +488,7 @@ namespace RawEditor.View.Pages
 
         private void RotateLeftButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            if (raw != null)
+            if (rawImage != null)
             {
                 var t = new HistoryObject(EffectType.Rotate, EditionValue.GetCopy()) { oldValue = EditionValue.Rotation };
                 EditionValue.Rotation--;
@@ -516,7 +517,7 @@ namespace RawEditor.View.Pages
                 //TODO regionalise text
                 //generate the bitmap
                 Load.Show();
-                var result = ApplyImageEffect8bitsNoHistoAsync(raw.raw, EditionValue);
+                var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.raw, EditionValue);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -551,7 +552,7 @@ namespace RawEditor.View.Pages
 
         private async void CropButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            if (raw?.raw != null)
+            if (rawImage?.raw != null)
             {
                 CropUI.SetThumbAsync(null);
                 Load.Show();
@@ -564,13 +565,13 @@ namespace RawEditor.View.Pages
                 uint h, w;
                 if (EditionValue.Rotation == 1 || EditionValue.Rotation == 3)
                 {
-                    h = raw.preview.UncroppedDim.Width;
-                    w = raw.preview.UncroppedDim.Height;
+                    h = rawImage.preview.UncroppedDim.Width;
+                    w = rawImage.preview.UncroppedDim.Height;
                 }
                 else
                 {
-                    h = raw.preview.UncroppedDim.Height;
-                    w = raw.preview.UncroppedDim.Width;
+                    h = rawImage.preview.UncroppedDim.Height;
+                    w = rawImage.preview.UncroppedDim.Width;
                 }
                 double factor;
                 if (w > h)
@@ -582,8 +583,8 @@ namespace RawEditor.View.Pages
                     factor = ImageDisplay.ActualHeight / (h + 160);
                 }
                 CropUI.SetSize((int)(w * factor * 0.7), (int)(h * factor * 0.7), EditionValue.Rotation);
-                ImageComponent<ushort> img = new ImageComponent<ushort>(raw.preview) { offset = new Point2D(), dim = new Point2D(raw.preview.UncroppedDim) };
-                raw.preview.dim = new Point2D(raw.preview.UncroppedDim);
+                ImageComponent<ushort> img = new ImageComponent<ushort>(rawImage.preview) { offset = new Point2D(), dim = new Point2D(rawImage.preview.UncroppedDim) };
+                rawImage.preview.dim = new Point2D(rawImage.preview.UncroppedDim);
                 //create a preview of the image             
                 SoftwareBitmap image = await Task.Run(() =>
                 {
@@ -601,12 +602,12 @@ namespace RawEditor.View.Pages
             double left = CropUI.Left;
             double right = CropUI.Right;
             double bottom = CropUI.Bottom;
-            if (raw?.raw != null && raw?.preview != null)
+            if (rawImage?.raw != null && rawImage?.preview != null)
             {
-                raw.raw.offset = new Point2D((uint)(raw.raw.UncroppedDim.Width * left), (uint)(raw.raw.UncroppedDim.Height * top));
-                raw.raw.dim = new Point2D((uint)(raw.raw.UncroppedDim.Width * right), (uint)(raw.raw.UncroppedDim.Height * bottom));
-                raw.preview.offset = new Point2D((uint)(raw.preview.UncroppedDim.Width * left), (uint)(raw.preview.UncroppedDim.Height * top));
-                raw.preview.dim = new Point2D((uint)(raw.preview.UncroppedDim.Width * right), (uint)(raw.preview.UncroppedDim.Height * bottom));
+                rawImage.raw.offset = new Point2D((uint)(rawImage.raw.UncroppedDim.Width * left), (uint)(rawImage.raw.UncroppedDim.Height * top));
+                rawImage.raw.dim = new Point2D((uint)(rawImage.raw.UncroppedDim.Width * right), (uint)(rawImage.raw.UncroppedDim.Height * bottom));
+                rawImage.preview.offset = new Point2D((uint)(rawImage.preview.UncroppedDim.Width * left), (uint)(rawImage.preview.UncroppedDim.Height * top));
+                rawImage.preview.dim = new Point2D((uint)(rawImage.preview.UncroppedDim.Width * right), (uint)(rawImage.preview.UncroppedDim.Height * bottom));
                 UpdatePreview(true);
                 //set the display size
                 SetImageSizeText();
@@ -619,8 +620,8 @@ namespace RawEditor.View.Pages
         //TODO replace by binding if possible
         private void SetImageSizeText()
         {
-            ImageHeight.Text = raw.raw.dim.Height + "px";
-            ImageWidth.Text = raw.raw.dim.Width + "px";
+            ImageHeight.Text = rawImage.raw.dim.Height + "px";
+            ImageWidth.Text = rawImage.raw.dim.Width + "px";
         }
 
         private void HideCropUI()
@@ -637,7 +638,7 @@ namespace RawEditor.View.Pages
         private void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             Load.Show();
-            raw.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+            rawImage.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
             UpdatePreview(true);
             Load.Hide();
         }
@@ -656,7 +657,7 @@ namespace RawEditor.View.Pages
                 rotation = edit.Rotation = EditionValue.Rotation;
                 SoftwareBitmap image = await Task.Run(() =>
                 {
-                    return ApplyImageEffect8bitsNoHistoAsync(raw.preview, edit);
+                    return ApplyImageEffect8bitsNoHistoAsync(rawImage.preview, edit);
                 });
                 WriteableBitmap bitmap = new WriteableBitmap(image.PixelWidth, image.PixelHeight);
                 image.CopyToBuffer(bitmap.PixelBuffer);
@@ -688,13 +689,13 @@ namespace RawEditor.View.Pages
             {
                 //get the correct pixel
                 var position = e.GetPosition(ImageBox);
-                uint width = (uint)((position.X / ImageBox.ActualWidth) * raw.raw.dim.Width) + raw.raw.offset.Width;
-                uint height = (uint)((position.Y / ImageBox.ActualHeight) * raw.raw.dim.Height) + raw.raw.offset.Height;
-                long pixelPos = height * raw.raw.UncroppedDim.Width + width;
+                uint width = (uint)((position.X / ImageBox.ActualWidth) * rawImage.raw.dim.Width) + rawImage.raw.offset.Width;
+                uint height = (uint)((position.Y / ImageBox.ActualHeight) * rawImage.raw.dim.Height) + rawImage.raw.offset.Height;
+                long pixelPos = height * rawImage.raw.UncroppedDim.Width + width;
                 //Calculate the multiplier
-                double gMul = raw.raw.green[pixelPos] + 1;
-                double rMul = gMul / (raw.raw.red[pixelPos] + 1);
-                double bMul = gMul / (raw.raw.blue[pixelPos] + 1);
+                double gMul = rawImage.raw.green[pixelPos] + 1;
+                double rMul = gMul / (rawImage.raw.red[pixelPos] + 1);
+                double bMul = gMul / (rawImage.raw.blue[pixelPos] + 1);
 
                 //apply them
                 EditionValue.RMul = rMul;
@@ -733,7 +734,7 @@ namespace RawEditor.View.Pages
         void AutoExpose()
         {
             //get an editing object
-            var autoval = AutoExposure.Get(raw.preview, Histo.PointsL);
+            var autoval = AutoExposure.Get(rawImage.preview, Histo.PointsL);
             //add history object
             History.Add(new HistoryObject(EffectType.AutoExposure, EditionValue.GetCopy()));
 

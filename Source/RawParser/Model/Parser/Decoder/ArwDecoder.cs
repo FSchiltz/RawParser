@@ -38,9 +38,7 @@ namespace RawNet.Decoder
 
         public override void DecodeRaw()
         {
-
             List<IFD> data = ifd.GetIFDsWithTag(TagType.STRIPOFFSETS);
-
             if (data.Count == 0)
             {
                 Tag model = ifd.GetEntryRecursive(TagType.MODEL);
@@ -104,6 +102,7 @@ namespace RawNet.Decoder
             rawImage.raw.dim = new Point2D(width, height);
             rawImage.Init(false);
 
+
             UInt16[] curve = new UInt16[0x4001];
             Tag c = raw.GetEntry(TagType.SONY_CURVE);
             uint[] sony_curve = { 0, 0, 0, 0, 0, 4095 };
@@ -121,8 +120,7 @@ namespace RawNet.Decoder
                     curve[j] = (ushort)(curve[j - 1] + (1 << i));
                 }
             }
-
-            rawImage.SetTable(curve, 0x4000, true);
+            var table = new TableLookUp(curve, 0x4000, true);
 
             long c2 = counts.GetUInt(0);
             uint off = offsets.GetUInt(0);
@@ -134,21 +132,13 @@ namespace RawNet.Decoder
                 c2 = reader.BaseStream.Length - off;
 
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, off);
+            if (arw1)
+                DecodeARW(input, width, height);
+            else
+                DecodeARW2(input, width, height, bitPerPixel);
 
-            try
-            {
-                if (arw1)
-                    DecodeARW(input, width, height);
-                else
-                    DecodeARW2(input, width, height, bitPerPixel);
-            }
-            catch (IOException e)
-            {
-                rawImage.errors.Add(e.Message);
-                // Let's ignore it, it may have delivered somewhat useful data.
-            }
-
-            // mRaw.setTable(null);
+            //table was already applyed
+            rawImage.table = null;
         }
 
         private void DecodeCryptedUncompressed()
@@ -254,7 +244,7 @@ namespace RawNet.Decoder
                         if (len != 0 && (diff & (1 << (len - 1))) == 0)
                             diff -= (uint)(1 << len) - 1;
                         sum += (int)diff;
-                        // Debug.Assert((sum >> 12) == 0);
+                        Debug.Assert((sum >> 12) == 0);
                         if (y < h) dest[x + y * rawImage.raw.dim.Width] = (ushort)sum;
                     }
                 }

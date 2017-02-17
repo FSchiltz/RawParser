@@ -85,11 +85,9 @@ namespace RawNet.Decoder
 
             IFD raw = data[0];
             Tag sensorInfoE = ifd.GetEntryRecursive(TagType.CANON_SENSOR_INFO) ?? throw new RawDecoderException("Failed to get sensor info from Makernote");
-            rawImage = new RawImage<ushort>(sensorInfoE.GetUInt(1), sensorInfoE.GetUInt(2))
-            {
-                //cpp = componentsPerPixel,
-                isCFA = true
-            };
+            rawImage.raw.dim = new Point2D(sensorInfoE.GetUInt(1), sensorInfoE.GetUInt(2));
+            //cpp = componentsPerPixel,
+            rawImage.isCFA = true;
             rawImage.raw.ColorDepth = 14;
             rawImage.Init(false);
 
@@ -222,18 +220,10 @@ namespace RawNet.Decoder
                 Tag curve = ifd.GetEntryRecursive((TagType)0x123);
                 if (curve.dataType == TiffDataType.SHORT && curve.dataCount == 4096)
                 {
-                    Tag linearization = ifd.GetEntryRecursive((TagType)0x123);
-                    var table = linearization.GetUShortArray();
-
-                    rawImage.SetTable(table, 4096, true);
-                    // Apply table
-                    //rawImage.sixteenBitLookup();
-                    // Delete table
-                    // rawImage.setTable(null);
-
+                    var table = new TableLookUp(curve.GetUShortArray(), 4096, true);
+                    table.ApplyTableLookUp(rawImage.raw);
                 }
             }
-
         }
 
         public override void DecodeRaw()

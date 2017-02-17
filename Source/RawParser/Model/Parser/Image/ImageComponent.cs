@@ -8,7 +8,7 @@ namespace RawNet
         public bool IsLumaOnly { get; set; }//if is true,only green is filled
         public Point2D dim, offset = new Point2D();
         public Point2D UncroppedDim { get; set; }
-
+        public uint cpp;
 
         public ImageComponent() { }
         public ImageComponent(Point2D dim, ushort colorDepth)
