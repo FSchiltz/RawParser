@@ -206,7 +206,7 @@ namespace RawNet.Decoder
 
             if (rawImage.whitePoint == 0)
             {
-                rawImage.whitePoint = ifd.GetEntryRecursive(TagType.WHITELEVEL)?.GetUShort(0) ?? 0;
+                rawImage.whitePoint = ifd.GetEntryRecursive(TagType.WHITELEVEL)?.GetUShort(0) ?? ifd.GetEntryRecursive(TagType.WHITEPOINT)?.GetUShort(0) ?? 0;
 
             }
             rawImage.metadata.TimeTake = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL)?.DataAsString;

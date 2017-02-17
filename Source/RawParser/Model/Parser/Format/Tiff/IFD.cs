@@ -151,7 +151,7 @@ namespace RawNet.Format.Tiff
             {
                 return new FujiMakerNote(data, parentEndian, Depth);
                 //offset = 12;
-                //mFile = new TIFFBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
+                //mFile = new TiffBinaryReader(reader.BaseStream, offset + off, (uint)data.Length);
             }
             else if (Common.Memcmp(nikon_v3_signature, data))
             {

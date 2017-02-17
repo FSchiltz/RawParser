@@ -156,14 +156,15 @@ namespace RawEditor.Effect
         //TODO Move to the RawNet Namespace
         public static void ScaleValues(RawImage<ushort> image)
         {
-            Debug.Assert(Convert.ToInt32(image.whitePoint) > 0);
             Debug.Assert(image.raw.cpp == 1);
+            Debug.Assert(Convert.ToInt32(image.whitePoint) > 0);
             long maxValue = 1 << image.raw.ColorDepth;
+            if (image.whitePoint == 0) image.whitePoint = maxValue - 1;
             if (image.black == 0) CalculateBlackArea(image);
-            double factor = (double)maxValue / (double)(image.whitePoint - image.black);
+            double factor = maxValue / (double)(image.whitePoint - image.black);
+            maxValue--;
             if (image.black != 0 || image.whitePoint != maxValue)
             {
-                maxValue--;
                 Parallel.For(image.raw.offset.Height, image.raw.dim.Height + image.raw.offset.Height, y =>
                 {
                     long pos = y * image.raw.UncroppedDim.Width;

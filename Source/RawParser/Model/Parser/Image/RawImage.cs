@@ -21,7 +21,7 @@ namespace RawNet
         public ImageMetadata metadata = new ImageMetadata();
         public uint pitch;
         public long whitePoint;
-       // public long[] blackLevelSeparate = new long[4];
+        // public long[] blackLevelSeparate = new long[4];
         public long black;
 
         public List<String> errors = new List<string>();
@@ -135,9 +135,14 @@ namespace RawNet
 
         internal void ConvertRGB()
         {
+            Debug.Assert(convertionM?.Length == 9);
             //the matrice is cxyz to cam
             //interpolate the cam to rgb
-
+            for (int k = 0; k < 3; k++)
+                for (int l = 0; l < 3; l++)
+                {
+                    convertionM[k, l] /= 1000;
+                }
             double[,] xyzToRGB = { { 0.412453, 0.357580, 0.180423 }, { 0.212671, 0.715160, 0.072169 }, { 0.019334, 0.119193, 0.950227 } };
             int maxValue = (1 << raw.ColorDepth) - 1;
             Parallel.For(0, raw.dim.Height, y =>
