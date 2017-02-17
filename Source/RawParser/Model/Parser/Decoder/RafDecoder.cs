@@ -202,9 +202,9 @@ namespace RawNet.Decoder
             // Some fuji SuperCCD cameras include a second raw image next to the first one
             // that is identical but darker to the first. The two combined can produce
             // a higher dynamic range image. Right now we're ignoring it.
-            bool double_width = hints.ContainsKey("double_width_unpacked");
+            //bool double_width = hints.ContainsKey("double_width_unpacked");
 
-            rawImage.raw.dim = new Point2D((uint)(width * (double_width ? 2 : 1)), height);
+            rawImage.raw.dim = new Point2D(width, height);
             rawImage.Init(false);
             TiffBinaryReader input = new TiffBinaryReader(stream, (uint)(off + raw.RelativeOffset));
             Point2D pos = new Point2D(0, 0);
@@ -213,20 +213,14 @@ namespace RawNet.Decoder
             {
                 throw new RawDecoderException("Don't know how to decode compressed images");
             }
-            else if (double_width)
-            {
-                RawDecompressor.Decode16BitRawUnpacked(input, width * 2, height, rawImage);
-            }
             else if (ifd.endian == Endianness.Big)
             {
                 RawDecompressor.Decode16BitRawUnpacked(input, width, height, rawImage);
             }
             else
             {
-                if (hints.ContainsKey("jpeg32_bitorder"))
-                    RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Jpeg32, rawImage);
-                else
-                    RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Plain, rawImage);
+                //       RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Jpeg32, rawImage);
+                RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Plain, rawImage);
             }
         }
 
@@ -237,6 +231,7 @@ namespace RawNet.Decoder
             if (rawImage.metadata.Model == null) throw new RawDecoderException("RAF Meta Decoder: Model name not found");
             if (rawImage.metadata.Make == null) throw new RawDecoderException("RAF Support: Make name not found");
             SetMetadata(rawImage.metadata.Model);
+            
             //get cfa
             var rawifd = ifd.GetIFDsWithTag(TagType.FUJI_LAYOUT);
             if (rawifd != null)

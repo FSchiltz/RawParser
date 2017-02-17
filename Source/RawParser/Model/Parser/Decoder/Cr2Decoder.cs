@@ -1,3 +1,4 @@
+using RawEditor.Effect;
 using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
 using RawNet.Jpeg;
@@ -173,16 +174,10 @@ namespace RawNet.Decoder
 
             // Every two lines can be encoded as a single line, probably to try and get
             // better compression by getting the same RGBG sequence in every line
-            if (hints.ContainsKey("double_line_ljpeg"))
-            {
-                height *= 2;
-                rawImage.raw.dim = new Point2D(width * 2, height / 2);
-            }
-            else
-            {
-                width *= 2;
-                rawImage.raw.dim = new Point2D(width, height);
-            }
+
+            width *= 2;
+            rawImage.raw.dim = new Point2D(width, height);
+
 
             rawImage.Init(false);
             LJPEGPlain l = new LJPEGPlain(reader, rawImage, false, false);
@@ -195,6 +190,7 @@ namespace RawNet.Decoder
                 rawImage.errors.Add(e.Message);
             }
 
+            /*
             if (hints.ContainsKey("double_line_ljpeg"))
             {
                 // We now have a double width half height image we need to convert to the
@@ -211,7 +207,7 @@ namespace RawNet.Decoder
                         procRaw.raw.rawView[x] = rawImage.raw.rawView[((y % 2 == 0) ? 0 : width) + x];
                 }
                 rawImage = procRaw;
-            }
+            }*/
 
             var tv = ifd.GetEntryRecursive((TagType)0x123);
             if (tv != null)
@@ -268,13 +264,6 @@ namespace RawNet.Decoder
                         // different parts, so find the offset, starting with the most common one
                         int offset = 126;
 
-                        hints.TryGetValue("wb_offset", out var s);
-                        // replace it with a hint if it exists
-                        if (s != null)
-                        {
-                            offset = Int32.Parse(s);
-                        }
-
                         offset /= 2;
                         rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(offset), wb.GetInt(offset + 1), wb.GetInt(offset + 3), rawImage.raw.ColorDepth);
                     }
@@ -313,7 +302,6 @@ namespace RawNet.Decoder
                 rawImage.errors.Add(e.Message);
                 // We caught an exception reading WB, just ignore it
             }
-            //setMetaData(metaData, make, model, mode);
 
             SetMetadata(rawImage.metadata.Model);
             //get cfa
@@ -326,12 +314,27 @@ namespace RawNet.Decoder
             {
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
+
+            //Set the black area
+            if (rawImage.raw.offset.Area > 0)
+            {
+                //there is a black area
+                long black = 0;
+                for (int y = 0; y < rawImage.raw.offset.Height; y++)
+                {
+                    for (int x = 0; x < rawImage.raw.offset.Width; x++)
+                    {
+                        black += rawImage.raw.rawView[y * rawImage.raw.UncroppedDim.Width + x];
+                    }
+                }
+                black /= rawImage.raw.offset.Area;
+                rawImage.black = black;
+            }
         }
 
         protected void SetMetadata(string model)
         {
             //find the color matrice
-
             for (int i = 0; i < colorM.Length; i++)
             {
                 if (colorM[i].name.Contains(model))
@@ -446,15 +449,13 @@ namespace RawNet.Decoder
         #region sraw
         uint GetHue()
         {
-            if (hints.ContainsKey("old_sraw_hue"))
-                return (rawImage.metadata.Subsampling.Height * rawImage.metadata.Subsampling.Width);
             var tc = ifd.GetEntryRecursive((TagType)0x10);
             if (tc == null)
             {
                 return 0;
             }
             uint model_id = ifd.GetEntryRecursive((TagType)0x10).GetUInt(0);
-            if (model_id >= 0x80000281 || model_id == 0x80000218 || (hints.ContainsKey("force_new_sraw_hue")))
+            if (model_id >= 0x80000281 || model_id == 0x80000218)
                 return ((rawImage.metadata.Subsampling.Height * rawImage.metadata.Subsampling.Width) - 1) >> 1;
 
             return (rawImage.metadata.Subsampling.Height * rawImage.metadata.Subsampling.Width);
@@ -475,31 +476,23 @@ namespace RawNet.Decoder
             sraw_coeffs[1] = (wb.GetShort(offset + 1) + wb.GetShort(offset + 2) + 1) >> 1;
             sraw_coeffs[2] = wb.GetShort(offset + 3);
 
-            if (hints.ContainsKey("invert_sraw_wb"))
-            {
-                sraw_coeffs[0] = (int)(1024.0f / (sraw_coeffs[0] / 1024.0f));
-                sraw_coeffs[2] = (int)(1024.0f / (sraw_coeffs[2] / 1024.0f));
-            }
-
-            // Determine sRaw coefficients 
-            bool isOldSraw = hints.ContainsKey("sraw_40d");
-            bool isNewSraw = hints.ContainsKey("sraw_new");
-
             if (rawImage.metadata.Subsampling.Height == 1 && rawImage.metadata.Subsampling.Width == 2)
             {
+                /*
                 if (isOldSraw)
                     Interpolate_422_old(rawImage.raw.dim.Width / 2, rawImage.raw.dim.Height);
                 else if (isNewSraw)
                     Interpolate_422_new(rawImage.raw.dim.Width / 2, rawImage.raw.dim.Height);
-                else
-                    Interpolate_422(rawImage.raw.dim.Width / 2, rawImage.raw.dim.Height);
+                else*/
+                Interpolate_422(rawImage.raw.dim.Width / 2, rawImage.raw.dim.Height);
             }
             else if (rawImage.metadata.Subsampling.Height == 2 && rawImage.metadata.Subsampling.Width == 2)
             {
+                /*
                 if (isNewSraw)
                     Interpolate_420_new(rawImage.raw.dim.Width / 2, rawImage.raw.dim.Height / 2);
-                else
-                    Interpolate_420(rawImage.raw.dim.Width / 2, rawImage.raw.dim.Height / 2);
+                else*/
+                Interpolate_420(rawImage.raw.dim.Width / 2, rawImage.raw.dim.Height / 2);
             }
             else
                 throw new RawDecoderException("CR2 Decoder: Unknown subsampling");

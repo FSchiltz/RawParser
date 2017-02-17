@@ -176,6 +176,7 @@
     <Compile Include="Model\Parser\Format\TIFF\IFDType.cs" />
     <Compile Include="Model\Parser\Image\ExifValue.cs" />
     <Compile Include="Model\Parser\Image\ImageComponent.cs" />
+    <Compile Include="Model\Parser\Image\ImageHelper.cs" />
     <Compile Include="Model\Parser\Image\WhiteBalance.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
@@ -200,7 +201,6 @@
     <Compile Include="Model\Parser\Decoder\TIFFDecoder.cs" />
     <Compile Include="Model\Parser\Exception\RawDecoderException.cs" />
     <Compile Include="Model\Parser\Format\DNG\DngDecoderSlices.cs" />
-    <Compile Include="Model\Parser\Format\DNG\DngOpcodes.cs" />
     <Compile Include="Model\Parser\Image\BlackArea.cs" />
     <Compile Include="Model\Parser\Image\ColorFilterArray.cs" />
     <Compile Include="Model\Parser\Image\FactorValue.cs" />

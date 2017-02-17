@@ -212,11 +212,10 @@ namespace RawNet.Decoder
             rawImage.raw.dim = new Point2D(width, height);
             rawImage.Init(false);
             TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, off);
-
-            if (hints.ContainsKey("sr2_format"))
+            /*
                 RawDecompressor.Decode14BitRawBEunpacked(input, width, height, rawImage);
-            else
-                RawDecompressor.Decode16BitRawUnpacked(input, width, height, rawImage);
+           */
+            RawDecompressor.Decode16BitRawUnpacked(input, width, height, rawImage);
         }
 
         unsafe void DecodeARW(TiffBinaryReader input, long w, long h)

@@ -21,7 +21,6 @@ namespace RawNet
         public ImageMetadata metadata = new ImageMetadata();
         public uint pitch;
         public long whitePoint;
-        // public long[] blackLevelSeparate = new long[4];
         public long black;
 
         public List<String> errors = new List<string>();

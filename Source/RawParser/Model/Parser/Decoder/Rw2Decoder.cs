@@ -161,8 +161,6 @@ namespace RawNet.Decoder
             uint w = rawImage.raw.dim.Width / 14;
 
             bool zero_is_bad = true;
-            if (hints.ContainsKey("zero_is_not_bad"))
-                zero_is_bad = false;
 
             PanaBitpump bits = new PanaBitpump(input_start, load_flags);
             List<Int32> zero_pos = new List<int>();

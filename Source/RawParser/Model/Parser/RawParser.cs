@@ -1,6 +1,7 @@
 ﻿using RawNet.Decoder;
 using System;
 using System.IO;
+using Windows.Storage;
 
 namespace RawNet
 {
@@ -205,9 +206,9 @@ namespace RawNet
             throw new FormatException("No decoder found. Sorry.");
         }
 
-        public static RawDecoder GetDecoder(Stream stream, string fileType)
+        public static RawDecoder GetDecoder(Stream stream, StorageFile file)
         {
-            switch (fileType.ToUpper())
+            switch (file.FileType.ToUpper())
             {
                 //TIFF based raw
                 case ".NEF":

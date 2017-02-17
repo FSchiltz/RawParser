@@ -91,7 +91,7 @@ namespace RawNet.Decoder.Decompressor
                     raw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), raw.raw.rawView, dest++, ref random);
                 }
             }
-            raw.table = new TableLookUp(curve, max, false);
+            raw.table = null;
         }
     }
 }
