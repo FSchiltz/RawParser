@@ -235,14 +235,14 @@
       <FileName>Model\Parser\Decoder\Decompressor\PentaxDecompressor.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="RawNet.TIFFBinaryReader" Collapsed="true">
+  <Class Name="RawNet.TiffBinaryReader" Collapsed="true">
     <Position X="0.5" Y="11.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>ABCAAAAAQAAACAAgAAgABAEAAAAAAAAAAAAAEAAAAAg=</HashCode>
       <FileName>Model\Parser\Decoder\Decompressor\Reader\BinaryReaderBE.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="RawNet.TIFFBinaryReaderRE" Collapsed="true">
+  <Class Name="RawNet.TiffBinaryReaderRE" Collapsed="true">
     <Position X="0.5" Y="13" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAACAAAACAAAAAgAhAAAAAACAAAAAAAREAAAAAg=</HashCode>
