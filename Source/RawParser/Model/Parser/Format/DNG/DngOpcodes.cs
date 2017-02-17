@@ -40,7 +40,7 @@ namespace RawNet.Dng
 
         unsafe public DngOpcodes(Tag entry)
         {
-            using (TIFFBinaryReaderRE reader = new TIFFBinaryReaderRE(entry.GetByteArray()))
+            using (TiffBinaryReaderBigEndian reader = new TiffBinaryReaderBigEndian(entry.GetByteArray()))
             {
                 UInt32 entry_size = entry.dataCount;
 
@@ -152,7 +152,7 @@ namespace RawNet.Dng
         UInt64 mTop, mLeft, mBottom, mRight;
         /***************** OpcodeTrimBounds   ****************/
 
-        public OpcodeTrimBounds(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref Int32 bytes_used)
+        public OpcodeTrimBounds(TiffBinaryReader parameters, UInt32 param_max_bytes, ref Int32 bytes_used)
         {
             if (param_max_bytes < 16)
                 throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
@@ -178,7 +178,7 @@ namespace RawNet.Dng
         UInt16[] Lookup = new UInt16[65536];
         /***************** OpcodeMapTable   ****************/
 
-        public OpcodeMapTable(TIFFBinaryReader parameters, ulong param_max_bytes, ref Int32 bytes_used, uint offset)
+        public OpcodeMapTable(TiffBinaryReader parameters, ulong param_max_bytes, ref Int32 bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
                 throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
@@ -256,7 +256,7 @@ namespace RawNet.Dng
         UInt64 mFirstPlane, mPlanes, mRowPitch, mColPitch, mDegree;
         double[] mCoefficient = new double[9];
         UInt16[] mLookup = new UInt16[65536];
-        public OpcodeMapPolynomial(TIFFBinaryReader parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
+        public OpcodeMapPolynomial(TiffBinaryReader parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
                 throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");
@@ -338,7 +338,7 @@ namespace RawNet.Dng
         //double[] coefficient = new double[9];
         //UInt16[] lookup = new UInt16[65536];
 
-        public OpcodeGainMap(TIFFBinaryReaderRE parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
+        public OpcodeGainMap(TiffBinaryReaderBigEndian parameters, UInt32 param_max_bytes, ref int bytes_used, uint offset)
         {
             if (param_max_bytes < 36)
                 throw new RawDecoderException("Not enough data to read parameters, only " + param_max_bytes + " bytes left.");

@@ -9,7 +9,7 @@ namespace RawNet.Decoder.Decompressor
 {
     internal abstract class JPEGDecompressor
     {
-        public TIFFBinaryReader input;
+        public TiffBinaryReader input;
         public BitPump bits;
         public RawImage<ushort>  raw;
         public SOFInfo frame = new SOFInfo();
@@ -60,7 +60,7 @@ namespace RawNet.Decoder.Decompressor
         * ON AN "AS IS" BASIS, AND CORNELL UNIVERSITY HAS NO OBLIGATION TO
         * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
         */
-        public JPEGDecompressor(TIFFBinaryReader file, RawImage<ushort>  img, bool DNGCompatible, bool UseBigTable)
+        public JPEGDecompressor(TiffBinaryReader file, RawImage<ushort>  img, bool DNGCompatible, bool UseBigTable)
         {
             raw = img;
             input = file;
@@ -73,9 +73,9 @@ namespace RawNet.Decoder.Decompressor
         {
             // JPEG is big endian
             if (Common.GetHostEndianness() == Endianness.Big)
-                input = new TIFFBinaryReader(input.BaseStream, offset);
+                input = new TiffBinaryReader(input.BaseStream, offset);
             else
-                input = new TIFFBinaryReaderRE(input.BaseStream, offset);
+                input = new TiffBinaryReaderBigEndian(input.BaseStream, offset);
 
             if (GetNextMarker(false) != JpegMarker.SOI)
                 throw new RawDecoderException("Image did not start with SOI. Probably not an LJPEG");
@@ -107,9 +107,9 @@ namespace RawNet.Decoder.Decompressor
 
             // JPEG is big endian
             if (Common.GetHostEndianness() == Endianness.Big)
-                input = new TIFFBinaryReader(input.BaseStream, offset);
+                input = new TiffBinaryReader(input.BaseStream, offset);
             else
-                input = new TIFFBinaryReaderRE(input.BaseStream, offset);
+                input = new TiffBinaryReaderBigEndian(input.BaseStream, offset);
 
             if (GetNextMarker(false) != JpegMarker.SOI)
                 throw new RawDecoderException("Image did not start with SOI. Probably not an LJPEG");

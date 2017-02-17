@@ -22,15 +22,15 @@ namespace RawNet.Format.Tiff
             //buffer.BaseStream.Position = 2 + offset;//jump the padding
             data = data.Skip(10).ToArray();
             //header = new Header(buffer, 0); //0 car beggining of the stream
-            TIFFBinaryReader buffer;
+            TiffBinaryReader buffer;
             if (data[0] == 0x4D && data[1] == 0x4D)
             {
-                buffer = new TIFFBinaryReaderRE(data);
+                buffer = new TiffBinaryReaderBigEndian(data);
                 endian = Endianness.Big;
             }
             else if (data[0] == 0x49 && data[1] == 0x49)
             {
-                buffer = new TIFFBinaryReader(data);
+                buffer = new TiffBinaryReader(data);
                 endian = Endianness.Little;
             }
             else throw new RawDecoderException("Makernote endianness unknown " + data[0]);

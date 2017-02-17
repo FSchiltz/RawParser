@@ -5,27 +5,29 @@ using System.Text;
 
 namespace RawNet
 {
-    public class TIFFBinaryReader : BinaryReader
+    public class TiffBinaryReader : BinaryReader
     {
         private uint offset;
         public long Position
         {
+            //TODO fix
             get { return BaseStream.Position; }
             set { BaseStream.Position = value + offset; }
         }
 
-        public TIFFBinaryReader(Stream data) : base(data, Encoding.ASCII) { }
-        public TIFFBinaryReader(Stream data, uint offset) : base(data, Encoding.ASCII)
+        public TiffBinaryReader(Stream data) : base(data, Encoding.ASCII) { }
+        public TiffBinaryReader(Stream data, uint offset) : base(data, Encoding.ASCII)
         {
             this.offset = offset;
+            if (data == null) throw new ArgumentNullException();
             data.Position = offset;
         }
 
-        public TIFFBinaryReader(byte[] data, uint offset) : this(StreamFromArray(data), offset) { }
-        public TIFFBinaryReader(byte[] data) : this(StreamFromArray(data)) { }
+        public TiffBinaryReader(byte[] data, uint offset) : this(StreamFromArray(data), offset) { }
+        public TiffBinaryReader(byte[] data) : this(StreamFromArray(data)) { }
 
-        public TIFFBinaryReader(object[] data, TiffDataType dataType) : this(StreamFromArray(data, dataType)) { }
-        public TIFFBinaryReader(object[] data, TiffDataType dataType, uint offset) : this(StreamFromArray(data, dataType), offset) { }
+        public TiffBinaryReader(object[] data, TiffDataType dataType) : this(StreamFromArray(data, dataType)) { }
+        public TiffBinaryReader(object[] data, TiffDataType dataType, uint offset) : this(StreamFromArray(data, dataType), offset) { }
 
         public void SkipToMarker()
         {
@@ -54,17 +56,17 @@ namespace RawNet
 
         public bool IsValid(uint offset, uint count)
         {
-            return offset + count <= this.BaseStream.Length;
+            return offset + count <= BaseStream.Length;
         }
 
         public bool IsValid(uint offset)
         {
-            return offset <= this.BaseStream.Length;
+            return offset <= BaseStream.Length;
         }
 
         public bool IsValid(uint offset, long count)
         {
-            return offset + count <= this.BaseStream.Length;
+            return offset + count <= BaseStream.Length;
         }
 
         protected static Stream StreamFromArray(byte[] data)
@@ -78,31 +80,31 @@ namespace RawNet
 
         protected static Stream StreamFromArray(object[] array, TiffDataType type)
         {
-            byte[] temp;
+            if (array == null || array.Length == 0)
+                throw new ArgumentNullException();
+
+            byte[] temp = new byte[array.Length * Tag.GetTypeSize(type)];
             //get type of array
             switch (type)
             {
-                case TiffDataType.BYTE: /* 8-bit unsigned integer */
-                case TiffDataType.ASCII: /* 8-bit bytes w/ last byte null */
-                case TiffDataType.UNDEFINED: /* !8-bit untyped data */
-                case TiffDataType.SBYTE: /* !8-bit signed integer */
-                    temp = new byte[array.Length];
+                case TiffDataType.BYTE:// 8-bit unsigned integer 
+                case TiffDataType.ASCII: // 8-bit bytes w/ last byte null 
+                case TiffDataType.UNDEFINED: // !8-bit untyped data 
+                case TiffDataType.SBYTE: // !8-bit signed integer 
                     for (int i = 0; i < array.Length; i++) temp[i] = (byte)array[i];
                     break;
-                case TiffDataType.SHORT: /* 16-bit unsigned integer */
-                case TiffDataType.SSHORT: /* !16-bit signed integer */
-                    temp = new byte[array.Length * 2];
+                case TiffDataType.SHORT: // 16-bit unsigned integer 
+                case TiffDataType.SSHORT: // !16-bit signed integer 
                     for (int i = 0; i < temp.Length; i++)
                     {
                         temp[i] = (byte)((int)array[i] >> 8);
                         temp[i + 1] = (byte)((int)array[i]);
                     }
                     break;
-                case TiffDataType.LONG: /* 32-bit unsigned integer */
-                case TiffDataType.OFFSET: /* 32-bit unsigned offset used in ORF at least */
-                case TiffDataType.FLOAT: /* !32-bit IEEE floating point */
-                case TiffDataType.SLONG: /* !32-bit signed integer */
-                    temp = new byte[array.Length * 4];
+                case TiffDataType.LONG: // 32-bit unsigned integer 
+                case TiffDataType.OFFSET: // 32-bit unsigned offset used in ORF at least 
+                case TiffDataType.FLOAT: // !32-bit IEEE floating point 
+                case TiffDataType.SLONG: // !32-bit signed integer 
                     for (int i = 0; i < temp.Length; i++)
                     {
                         temp[i] = (byte)((int)array[i] >> 24);
@@ -111,10 +113,9 @@ namespace RawNet
                         temp[i + 3] = (byte)((int)array[i]);
                     }
                     break;
-                case TiffDataType.SRATIONAL:/* !64-bit signed fraction */
-                case TiffDataType.DOUBLE: /* !64-bit IEEE floating point */
-                case TiffDataType.RATIONAL: /* 64-bit unsigned fraction */
-                    temp = new byte[array.Length * 8];
+                case TiffDataType.SRATIONAL:// !64-bit signed fraction 
+                case TiffDataType.DOUBLE: //* !64-bit IEEE floating point 
+                case TiffDataType.RATIONAL: //* 64-bit unsigned fraction 
                     for (int i = 0; i < temp.Length; i++)
                     {
                         temp[i] = (byte)((int)array[i] >> 56);
@@ -131,21 +132,20 @@ namespace RawNet
                     throw new IOException();
             }
 
-            Stream stream = new MemoryStream(temp)
+            return new MemoryStream(temp)
             {
                 Position = 0
             };
-            return stream;
         }
     }
 
-    public class TIFFBinaryReaderRE : TIFFBinaryReader
+    public class TiffBinaryReaderBigEndian : TiffBinaryReader
     {
-        public TIFFBinaryReaderRE(Stream data) : base(data) { }
-        public TIFFBinaryReaderRE(Stream data, uint offset) : base(data, offset) { }
-        public TIFFBinaryReaderRE(byte[] data, uint offset) : base(StreamFromArray(data), offset) { }
-        public TIFFBinaryReaderRE(byte[] data) : base(StreamFromArray(data)) { }
-        public TIFFBinaryReaderRE(object[] data, TiffDataType dataType) : base(StreamFromArray(data, dataType)) { }
+        public TiffBinaryReaderBigEndian(Stream data) : base(data) { }
+        public TiffBinaryReaderBigEndian(Stream data, uint offset) : base(data, offset) { }
+        public TiffBinaryReaderBigEndian(byte[] data, uint offset) : base(StreamFromArray(data), offset) { }
+        public TiffBinaryReaderBigEndian(byte[] data) : base(StreamFromArray(data)) { }
+        public TiffBinaryReaderBigEndian(object[] data, TiffDataType dataType) : base(StreamFromArray(data, dataType)) { }
 
         public override ushort ReadUInt16()
         {

@@ -22,7 +22,7 @@ namespace RawNet
         public bool ScaleValue { get; set; } = false;
 
         /* The Raw input file to be decoded */
-        protected TIFFBinaryReader reader;
+        protected TiffBinaryReader reader;
 
         /* Hints set for the camera after checkCameraSupported has been called from the implementation*/
         protected Dictionary<string, string> hints = new Dictionary<string, string>();

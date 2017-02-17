@@ -10,7 +10,7 @@ namespace RawNet.Decoder
     class RW2Decoder : TIFFDecoder
     {
         UInt32 load_flags;
-        TIFFBinaryReader input_start;
+        TiffBinaryReader input_start;
 
         internal RW2Decoder(Stream reader) : base(reader) { }
 
@@ -70,7 +70,7 @@ namespace RawNet.Decoder
                 rawImage.Init(false);
 
                 UInt32 size = (uint)(reader.BaseStream.Length - off);
-                input_start = new TIFFBinaryReader(stream, off);
+                input_start = new TiffBinaryReader(stream, off);
 
                 if (size >= width * height * 2)
                 {
@@ -117,7 +117,7 @@ namespace RawNet.Decoder
                 if (!reader.IsValid(off))
                     throw new RawDecoderException("Invalid image data offset, cannot decode.");
 
-                input_start = new TIFFBinaryReader(stream, off);
+                input_start = new TiffBinaryReader(stream, off);
                 DecodeRw2();
             }
             // Read blacklevels
