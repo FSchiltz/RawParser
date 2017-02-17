@@ -50,7 +50,7 @@ namespace RawEditor
             string message = "Ex ";
             if (sender is MainPage)
             {
-                message += ((MainPage)sender)?.raw?.metadata.FileNameComplete + " ";
+                message += ((MainPage)sender)?.rawImage?.metadata.FileNameComplete + " ";
             }
             else if (sender is RawDecoder)
             {

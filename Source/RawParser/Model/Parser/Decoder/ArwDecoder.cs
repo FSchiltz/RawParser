@@ -75,8 +75,8 @@ namespace RawNet.Decoder
             uint width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
             uint height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
             int bitPerPixel = raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
-            rawImage.raw.ColorDepth = (ushort)bitPerPixel;
 
+            rawImage.raw.ColorDepth = (ushort)bitPerPixel;
             // Sony E-550 marks compressed 8bpp ARW with 12 bit per pixel
             // this makes the compression detect it as a ARW v1.
             // This camera has however another MAKER entry, so we MAY be able
@@ -391,7 +391,8 @@ namespace RawNet.Decoder
                 }
             }
             SetMetadata(rawImage.metadata.Model);
-            rawImage.whitePoint >>= 14 - rawImage.raw.ColorDepth;
+           // rawImage.whitePoint >>= 14 - rawImage.raw.ColorDepth;
+           // rawImage.black >>= 14 - rawImage.raw.ColorDepth;
         }
 
         protected void SetMetadata(string model)
