@@ -69,11 +69,14 @@ namespace RawNet.Decoder
 
             // Read black level
             Tag black = ifd.GetEntryRecursive((TagType)0x200);
+            if (black.dataCount > 1) Debug.Assert(black.GetInt(0) == black.GetInt(1));
+            rawImage.black = black.GetInt(0);
+            /*
             if (black?.dataCount == 4)
             {
                 for (int i = 0; i < 4; i++)
                     rawImage.blackLevelSeparate[i] = black.GetInt(i);
-            }
+            }*/
 
             // Set the whitebalance
             Tag wb = ifd.GetEntryRecursive((TagType)0x0201);

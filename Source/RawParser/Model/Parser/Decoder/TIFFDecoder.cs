@@ -81,7 +81,7 @@ namespace RawNet.Decoder
             rawImage.raw.dim = new Point2D(width, height);
             rawImage.raw.UncroppedDim = rawImage.raw.dim;
             rawImage.raw.ColorDepth = ifd.GetEntryRecursive((TagType)0x0102)?.GetUShort(0) ?? throw new FormatException("File not correct");
-            rawImage.cpp = 3;
+            rawImage.raw.cpp = 3;
             rawImage.Init(true);
             rawImage.IsGammaCorrected = false;
 
@@ -407,7 +407,7 @@ namespace RawNet.Decoder
                 RawSlice slice = slices[i];
                 reader.BaseStream.Position = slice.offset;
                 bitPerPixel = (ushort)(slice.count * 8u / (slice.h * width));
-                RawDecompressor.ReadUncompressedRaw(reader, new Point2D(width, slice.h), new Point2D(0, slice.offsetY), rawImage.cpp * width * bitPerPixel / 8, bitPerPixel, order, rawImage);
+                RawDecompressor.ReadUncompressedRaw(reader, new Point2D(width, slice.h), new Point2D(0, slice.offsetY), rawImage.raw.cpp * width * bitPerPixel / 8, bitPerPixel, order, rawImage);
                 offY += slice.h;
             }
         }

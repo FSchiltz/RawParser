@@ -2,6 +2,7 @@ using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace RawNet.Decoder
@@ -125,9 +126,13 @@ namespace RawNet.Decoder
             var bTag = raw.GetEntry((TagType)0x1e);
             if (rTag != null && gTag != null && bTag != null)
             {
+                Debug.Assert(bTag.GetInt(0) + 15 == rTag.GetInt(0) + 15);
+                Debug.Assert(bTag.GetInt(0) + 15 == gTag.GetInt(0) + 15);
+                rawImage.black = rTag.GetInt(0) + 15; ;
+                /*
                 rawImage.blackLevelSeparate[0] = rTag.GetInt(0) + 15;
                 rawImage.blackLevelSeparate[1] = rawImage.blackLevelSeparate[2] = gTag.GetInt(0) + 15;
-                rawImage.blackLevelSeparate[3] = bTag.GetInt(0) + 15;
+                rawImage.blackLevelSeparate[3] = bTag.GetInt(0) + 15;*/
             }
 
             // Read WB levels

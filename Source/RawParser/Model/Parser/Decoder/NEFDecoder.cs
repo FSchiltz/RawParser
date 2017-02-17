@@ -316,7 +316,7 @@ namespace RawNet.Decoder
             // uint outPitch = rawImage.pitch;
             uint w = size.Width;
             long h = size.Height;
-            uint cpp = rawImage.cpp;
+            uint cpp = rawImage.raw.cpp;
             if (input.RemainingSize < (inputPitch * h))
             {
                 if (input.RemainingSize > inputPitch)
@@ -349,7 +349,7 @@ namespace RawNet.Decoder
             //uint outPitch = rawImage.pitch;
             uint w = size.Width;
             long h = size.Height;
-            uint cpp = rawImage.cpp;
+            uint cpp = rawImage.raw.cpp;
             if (input.RemainingSize < (inputPitch * h))
             {
                 if (input.RemainingSize > inputPitch)
@@ -412,7 +412,7 @@ namespace RawNet.Decoder
             uint h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
 
             rawImage.raw.dim = new Point2D(w, h);
-            rawImage.cpp = 3;
+            rawImage.raw.cpp = 3;
             rawImage.isCFA = false;
             rawImage.raw.ColorDepth = 12;
             TIFFBinaryReader input = new TIFFBinaryReader(reader.BaseStream, offset);
@@ -691,7 +691,7 @@ namespace RawNet.Decoder
                 int c = curve[i];
                 curve[i] = (ushort)Common.Clampbits(c << 2, 16);
             }
-            rawImage.SetTable(curve, 4095, true);
+            rawImage.table = new TableLookUp(curve, 4095, true);
 
             UInt16 tmp = 0;
             ushort[] tmpch = new ushort[2];
@@ -761,7 +761,7 @@ namespace RawNet.Decoder
                     rawImage.raw.rawView[x + 5 + (y * rawImage.raw.dim.Width)] = (ushort)Common.Clampbits((inv_wb_b * tmp + (1 << 9)) >> 10, 15);
                 }
             }
-            rawImage.table = (null);
+            rawImage.table = null;
         }
 
         double Sqr(double x) { return ((x) * (x)); }

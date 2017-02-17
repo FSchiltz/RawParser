@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace RawNet
 {
@@ -18,9 +19,9 @@ namespace RawNet
         public bool DitherScale { get; set; }          // Should upscaling be done with dither to mimize banding?
 
         public ImageMetadata metadata = new ImageMetadata();
-        public uint cpp, pitch;
+        public uint pitch;
         public long whitePoint;
-        public long[] blackLevelSeparate = new long[4];
+       // public long[] blackLevelSeparate = new long[4];
         public long black;
 
         public List<String> errors = new List<string>();
@@ -39,7 +40,7 @@ namespace RawNet
         public RawImage()
         {
             //Set for 16bit image non demos           
-            cpp = 1;
+            raw.cpp = 1;
             raw.ColorDepth = 16;
         }
 
@@ -57,15 +58,8 @@ namespace RawNet
                 raw.blue = new T[raw.dim.Width * raw.dim.Height];
             }
             else
-                raw.rawView = new T[raw.dim.Width * raw.dim.Height * cpp];
+                raw.rawView = new T[raw.dim.Width * raw.dim.Height * raw.cpp];
             raw.UncroppedDim = new Point2D(raw.dim.Width, raw.dim.Height);
-        }
-
-        public void SetTable(ushort[] table, int nfilled, bool dither)
-        {
-            TableLookUp t = new TableLookUp(1, dither);
-            t.SetTable(0, table, nfilled);
-            this.table = (t);
         }
 
         public void Crop(Rectangle2D crop)
@@ -101,11 +95,7 @@ namespace RawNet
                 return;
             }
             if (table.Dither)
-            {/*
-                uint lookup = (uint)(table.tables[value * 2] | table.tables[value * 2 + 1] << 16);
-                uint basevalue = lookup & 0xffff;
-                uint delta = lookup >> 16;*/
-
+            {
                 uint basevalue = table.tables[value * 2];
                 uint delta = table.tables[value * 2 + 1];
                 uint r = random;
@@ -143,63 +133,20 @@ namespace RawNet
             *dest = table.tables[value];
         }
 
-        public void ScaleValues()
-        {
-            Debug.Assert(Convert.ToInt32(whitePoint) > 0);
-
-            try
-            {
-                if (Convert.ToInt32(black) == 0 && Convert.ToInt32(blackLevelSeparate[0]) != 0)
-                {
-                    for (int i = 0; i < blackLevelSeparate.Length; i++)
-                    {
-                        // black += blackLevelSeparate[i];
-                    }
-                    //black /= blackLevelSeparate.Length;
-                }
-                if (Convert.ToInt32(black) != 0)
-                {
-                    Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
-                    {
-                        long v = y * raw.UncroppedDim.Width * cpp;
-                        for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
-                        {
-                            /* T value = (ulong)((raw.rawView[x + v] - black) * factor);
-                             if (value > whitePoint) value = whitePoint;
-                             raw.rawView[x + v] = value;*/
-                        }
-                    });
-                }
-                /*
-                if (table != null)
-                {
-                    Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
-                    {
-                        long v = y * raw.UncroppedDim.Width * cpp;
-                        for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * cpp; x++)
-                        {
-                            raw.rawView[x + v] = table.tables[raw.rawView[x + v]];
-                        }
-                    });
-                }*/
-            }
-            catch (Exception ex)
-            {
-                errors.Add("Linearisation went wrong:" + ex.Message);
-            }
-        }
-
-        /*
         internal void ConvertRGB()
         {
+            //the matrice is cxyz to cam
+            //interpolate the cam to rgb
+
             double[,] xyzToRGB = { { 0.412453, 0.357580, 0.180423 }, { 0.212671, 0.715160, 0.072169 }, { 0.019334, 0.119193, 0.950227 } };
-            int maxValue = (1 << ColorDepth) - 1;
+            int maxValue = (1 << raw.ColorDepth) - 1;
             Parallel.For(0, raw.dim.Height, y =>
             {
                 long realY = (y + raw.offset.Height) * raw.UncroppedDim.Width * 3;
                 for (int x = 0; x < raw.dim.Width; x++)
                 {
                     long realX = y + 3 * (x + raw.offset.Width);
+                    /*
                     double[] rgb = { raw.data[realX] / maxValue, raw.data[realX + 1] / maxValue, raw.data[realY + 2] / maxValue };
                     //convert to XYZ
                     double[] result = Mult3by1(convertionM, rgb);
@@ -207,7 +154,7 @@ namespace RawNet
                     double[] rgbConv = Mult3by1(xyzToRGB, result);
                     raw.data[realX] = (ushort)(rgb[0] * maxValue);
                     raw.data[realX + 1] = (ushort)(rgb[1] * maxValue);
-                    raw.data[realY + 2] = (ushort)(rgb[2] * maxValue);
+                    raw.data[realY + 2] = (ushort)(rgb[2] * maxValue);*/
                 }
             });
         }
@@ -223,7 +170,7 @@ namespace RawNet
                 }
             }
             return resultMatrix;
-        }*/
+        }
 
         /*
         public void ScaleBlackWhite()
@@ -262,92 +209,6 @@ namespace RawNet
 
             ScaleValues();
         }*/
-
-        /*
-        void CalculateBlackAreas()
-        {
-            int[] histogram = new int[4 * 65536 * sizeof(int)];
-            //memset(histogram, 0, 4 * 65536 * sizeof(int));
-            uint totalpixels = 0;
-
-            for (int i = 0; i < blackAreas.Count; i++)
-            {
-                BlackArea area = blackAreas[i];
-
-                // Make sure area sizes are multiple of two, 
-                 //  so we have the same amount of pixels for each CFA group 
-                area.Size = area.Size - (area.Size & 1);
-
-                // Process horizontal area 
-                if (!area.IsVertical)
-                {
-                    if (area.Offset + area.Size > raw.UncroppedDim.Height)
-                        throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
-                    for (uint y = area.Offset; y < area.Offset + area.Size; y++)
-                    {
-                        ushort[] pixel = preview.data.Skip((int)(raw.offset.Width + raw.dim.Width * y)).ToArray();
-                        int[] localhist = histogram.Skip((int)(y & 1) * (65536 * 2)).ToArray();
-                        for (uint x = raw.offset.Width; x < raw.dim.Width + raw.offset.Width; x++)
-                        {
-                            localhist[((x & 1) << 16) + pixel[0]]++;
-                        }
-                    }
-                    totalpixels += area.Size * raw.dim.Width;
-                }
-
-                // Process vertical area 
-                if (area.IsVertical)
-                {
-                    if (area.Offset + area.Size > raw.UncroppedDim.Width)
-                        throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
-                    for (uint y = raw.offset.Height; y < raw.dim.Height + raw.offset.Height; y++)
-                    {
-                        ushort[] pixel = preview.data.Skip((int)(area.Offset + raw.dim.Width * y)).ToArray();
-                        int[] localhist = histogram.Skip((int)(y & 1) * (65536 * 2)).ToArray();
-                        for (uint x = area.Offset; x < area.Size + area.Offset; x++)
-                        {
-                            localhist[((x & 1) << 16) + pixel[0]]++;
-                        }
-                    }
-                    totalpixels += area.Size * raw.dim.Height;
-                }
-            }
-
-            if (totalpixels == 0)
-            {
-                for (int i = 0; i < 4; i++)
-                    blackLevelSeparate[i] = black;
-                return;
-            }
-
-            //Calculate median value of black areas for each component 
-            // Adjust the number of total pixels so it is the same as the median of each histogram 
-            totalpixels /= 4 * 2;
-
-            for (int i = 0; i < 4; i++)
-            {
-                int[] localhist = histogram.Skip(i * 65536).ToArray();
-                int acc_pixels = localhist[0];
-                int pixel_value = 0;
-                while (acc_pixels <= totalpixels && pixel_value < 65535)
-                {
-                    pixel_value++;
-                    acc_pixels += localhist[pixel_value];
-                }
-                blackLevelSeparate[i] = pixel_value;
-            }
-
-            //If this is not a CFA image, we do not use separate blacklevels, use average 
-            if (!isCFA)
-            {
-                int total = 0;
-                for (int i = 0; i < 4; i++)
-                    total += blackLevelSeparate[i];
-                for (int i = 0; i < 4; i++)
-                    blackLevelSeparate[i] = (total + 2) >> 2;
-            }
-        }
-    */
 
         /**
          * Create a preview of the raw image using the scaling factor

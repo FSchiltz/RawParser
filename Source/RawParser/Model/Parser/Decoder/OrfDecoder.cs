@@ -2,6 +2,7 @@ using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace RawNet.Decoder
@@ -306,18 +307,20 @@ namespace RawNet.Decoder
                 }
 
                 //TODO fix (the sub makernote doesn't read the correct value
-                rawImage.metadata.WbCoeffs = new WhiteBalance(1,1,1);
+                rawImage.metadata.WbCoeffs = new WhiteBalance(1, 1, 1);
 
                 Tag blackEntry = image_processing.GetEntry((TagType)0x0600);
                 // Get the black levels
                 if (blackEntry != null)
                 {
+                    Debug.Assert(blackEntry.GetInt(0) == blackEntry.GetInt(1));
+                    rawImage.black = blackEntry.GetInt(0);
                     // Order is assumed to be RGGB
                     if (blackEntry.dataCount == 4)
                     {
                         //blackEntry.parent_offset = img_entry.parent_offset - 12;
                         //blackEntry.offsetFromParent();
-                        for (int i = 0; i < 4; i++)
+                        /*for (int i = 0; i < 4; i++)
                         {
                             if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Red)
                                 rawImage.blackLevelSeparate[i] = blackEntry.GetShort(0);
@@ -327,9 +330,9 @@ namespace RawNet.Decoder
                                 rawImage.blackLevelSeparate[i] = blackEntry.GetShort(1);
                             else if (rawImage.colorFilter.cfa[(i & 1) * 2 + i >> 1] == CFAColor.Green)
                                 rawImage.blackLevelSeparate[i] = blackEntry.GetShort(2);
-                        }
+                        }*/
                         // Adjust whitelevel based on the read black (we assume the dynamic range is the same)
-                        rawImage.whitePoint -= rawImage.black - rawImage.blackLevelSeparate[0];
+                        //rawImage.whitePoint -= rawImage.black - rawImage.bla[0];
                     }
                 }
             }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RawNet
 {
@@ -10,7 +12,12 @@ namespace RawNet
         public UInt16[] tables;
         public bool Dither { get; set; }
 
-        // Creates n numre of tables.
+        public TableLookUp(ushort[] table, int nfilled, bool dither) : this(1, dither)
+        {
+            SetTable(0, table, nfilled);
+        }
+
+        // Creates n numer of tables.
         public TableLookUp(int _ntables, bool _dither)
         {
             ntables = _ntables;
@@ -20,9 +27,23 @@ namespace RawNet
             {
                 throw new RawDecoderException("Cannot construct 0 tables");
             }
-
             tables = new ushort[ntables * TABLE_SIZE];
-            //Common.memset<ushort>(tables, 0, sizeof(ushort) * ntables * TABLE_SIZE);
+        }
+
+        public void ApplyTableLookUp(ImageComponent<ushort> raw)
+        {
+            Debug.Assert(raw?.rawView != null);
+            if (tables != null && ntables > 0)
+            {
+                Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
+                {
+                    long pos = y * raw.UncroppedDim.Width * raw.cpp;
+                    for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * raw.cpp; x++)
+                    {
+                        raw.rawView[x + pos] = tables[raw.rawView[x + pos]];
+                    }
+                });
+            }
         }
 
 

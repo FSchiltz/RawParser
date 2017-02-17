@@ -11,13 +11,13 @@ namespace RawNet.Dng
 
         /* Will be called exactly once, when input changes */
         /* Can be used for preparing pre-calculated values, etc */
-        public virtual RawImage<ushort>  CreateOutput(RawImage<ushort>  input) { return input; }
+        public virtual RawImage<ushort> CreateOutput(RawImage<ushort> input) { return input; }
 
         /* Will be called for actual processing */
         /* If multiThreaded is true, it will be called several times, */
         /* otherwise only once */
         /* Properties of out will not have changed from createOutput */
-        public virtual void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY) { }
+        public virtual void Apply(RawImage<ushort> input, ref RawImage<ushort> output, UInt32 startY, UInt32 endY) { }
 
         public Rectangle2D aoi = new Rectangle2D();
         public int flags;
@@ -107,12 +107,12 @@ namespace RawNet.Dng
             }
         }
 
-        public RawImage<ushort>  ApplyOpCodes(RawImage<ushort>  img)
+        public RawImage<ushort> ApplyOpCodes(RawImage<ushort> img)
         {
             int codes = opcodes.Count;
             for (int i = 0; i < codes; i++)
             {
-                RawImage<ushort>  img_out = opcodes[i].CreateOutput(img);
+                RawImage<ushort> img_out = opcodes[i].CreateOutput(img);
                 Rectangle2D fullImage = new Rectangle2D(0, 0, img.raw.dim.Width, img.raw.dim.Height);
 
                 if (!opcodes[i].aoi.IsThisInside(fullImage))
@@ -163,7 +163,7 @@ namespace RawNet.Dng
             bytes_used = 16;
         }
 
-        public override void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY)
+        public override void Apply(RawImage<ushort> input, ref RawImage<ushort> output, UInt32 startY, UInt32 endY)
         {
             Rectangle2D crop = new Rectangle2D((uint)mLeft, (uint)mTop, (uint)(mRight - mLeft), (uint)(mBottom - mTop));
             output.raw.offset = crop.TopLeft;
@@ -218,18 +218,18 @@ namespace RawNet.Dng
             flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
-        public override RawImage<ushort>  CreateOutput(RawImage<ushort>  input)
+        public override RawImage<ushort> CreateOutput(RawImage<ushort> input)
         {
-            if (firstPlane > input.cpp)
+            if (firstPlane > input.raw.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
 
-            if (firstPlane + planes > input.cpp)
+            if (firstPlane + planes > input.raw.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
 
             return input;
         }
 
-        public unsafe override void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage<ushort> input, ref RawImage<ushort> output, UInt32 startY, UInt32 endY)
         {
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {
@@ -242,7 +242,7 @@ namespace RawNet.Dng
                     {
                         for (uint p = 0; p < planes; p++)
                         {
-                            src[x * output.cpp + p] = Lookup[src[x * output.cpp + p]];
+                            src[x * output.raw.cpp + p] = Lookup[src[x * output.raw.cpp + p]];
                         }
                     }
                 }
@@ -289,12 +289,12 @@ namespace RawNet.Dng
             flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
-        public override RawImage<ushort>  CreateOutput(RawImage<ushort>  input)
+        public override RawImage<ushort> CreateOutput(RawImage<ushort> input)
         {
-            if (mFirstPlane > input.cpp)
+            if (mFirstPlane > input.raw.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
 
-            if (mFirstPlane + mPlanes > input.cpp)
+            if (mFirstPlane + mPlanes > input.raw.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
 
             // Create lookup
@@ -309,7 +309,7 @@ namespace RawNet.Dng
             return input;
         }
 
-        public unsafe override void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage<ushort> input, ref RawImage<ushort> output, UInt32 startY, UInt32 endY)
         {
             for (UInt64 y = startY; y < endY; y += mRowPitch)
             {
@@ -322,7 +322,7 @@ namespace RawNet.Dng
                     {
                         for (UInt64 p = 0; p < mPlanes; p++)
                         {
-                            src[x * output.cpp + p] = mLookup[src[x * output.cpp + p]];
+                            src[x * output.raw.cpp + p] = mLookup[src[x * output.raw.cpp + p]];
                         }
                     }
                 }
@@ -381,12 +381,12 @@ namespace RawNet.Dng
             flags = (int)Flags.MultiThreaded | (int)Flags.PureLookup;
         }
 
-        public override RawImage<ushort>  CreateOutput(RawImage<ushort>  input)
+        public override RawImage<ushort> CreateOutput(RawImage<ushort> input)
         {
-            if (firstPlane > input.cpp)
+            if (firstPlane > input.raw.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
 
-            if (firstPlane + planes > input.cpp)
+            if (firstPlane + planes > input.raw.cpp)
                 throw new RawDecoderException("Not that many planes in actual image");
 
             /*
@@ -402,7 +402,7 @@ namespace RawNet.Dng
             return input;
         }
 
-        public unsafe override void Apply(RawImage<ushort>  input, ref RawImage<ushort>  output, UInt32 startY, UInt32 endY)
+        public unsafe override void Apply(RawImage<ushort> input, ref RawImage<ushort> output, UInt32 startY, UInt32 endY)
         {
             for (UInt64 y = startY; y < endY; y += rowPitch)
             {

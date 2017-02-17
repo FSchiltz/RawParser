@@ -28,7 +28,7 @@ namespace RawNet.Decoder.Decompressor
             if (bitPerPixel > 16)
                 throw new RawDecoderException("Unsupported bit depth");
 
-            int skipBits = (int)(inputPitch - w * rawImage.cpp * bitPerPixel / 8);  // Skip per line
+            int skipBits = (int)(inputPitch - w * rawImage.raw.cpp * bitPerPixel / 8);  // Skip per line
             if (offset.Height > rawImage.raw.dim.Height)
                 throw new RawDecoderException("Invalid y offset");
             if (offset.Width + size.Width > rawImage.raw.dim.Width)
@@ -78,11 +78,11 @@ namespace RawNet.Decoder.Decompressor
                     break;
             }
 
-            w *= rawImage.cpp;
+            w *= rawImage.raw.cpp;
             for (; y < h; y++)
             {
                 bits.CheckPos();
-                var skip = (offset.Width + y * rawImage.raw.dim.Width) * rawImage.cpp;
+                var skip = (offset.Width + y * rawImage.raw.dim.Width) * rawImage.raw.cpp;
                 for (uint x = 0; x < w; x++)
                 {
                     rawImage.raw.rawView[x + skip] = (ushort)bits.GetBits(bitPerPixel); ;
