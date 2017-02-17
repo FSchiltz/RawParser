@@ -172,7 +172,7 @@ namespace RawEditor.View.Pages
                     using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                     {
                         var watch = Stopwatch.StartNew();
-                        RawDecoder decoder = RawParser.GetDecoder(stream, file.FileType);
+                        RawDecoder decoder = RawParser.GetDecoder(stream, file);
                         try
                         {
                             thumbnail = decoder.DecodeThumb();
@@ -190,9 +190,10 @@ namespace RawEditor.View.Pages
                         watch.Stop();
                         rawImage = decoder.rawImage;
                         rawImage.metadata.ParsingTime = watch.ElapsedMilliseconds;
-                        if (rawImage.table != null) rawImage.table.ApplyTableLookUp(rawImage.raw);
-                        if (decoder.ScaleValue) Luminance.ScaleValues(rawImage);
+                        rawImage.table?.ApplyTableLookUp(rawImage.raw);
+                        ImageHelper.ScaleValues(rawImage);
                     }
+
                     rawImage.metadata.FileName = file.DisplayName;
                     rawImage.metadata.FileNameComplete = file.Name;
                     rawImage.metadata.FileExtension = file.FileType;

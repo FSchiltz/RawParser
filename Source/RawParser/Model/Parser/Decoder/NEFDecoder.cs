@@ -2,7 +2,6 @@
 using RawNet.Format.Tiff;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -110,8 +109,7 @@ namespace RawNet.Decoder
                     return;
                 }
             }
-            hints.TryGetValue("force_uncompressed", out string v);
-            if (compression == 1 || (v != null) || NEFIsUncompressed(raw))
+            if (compression == 1 || NEFIsUncompressed(raw))
             {
                 DecodeUncompressed();
                 return;
@@ -261,17 +259,9 @@ namespace RawNet.Decoder
             rawImage.raw.dim = new Point2D(width, offY);
             if (bitPerPixel == 14 && width * slices[0].h * 2 == slices[0].count)
                 bitPerPixel = 16; // D3 & D810
-            hints.TryGetValue("real_bpp", out string v);
-            if (v != null)
-            {
-                bitPerPixel = UInt32.Parse(v);
-            }
 
             rawImage.raw.ColorDepth = (ushort)bitPerPixel;
             bool bitorder = true;
-            hints.TryGetValue("msb_override", out string v1);
-            if (v1 != null)
-                bitorder = (v1 == "true");
 
             offY = 0;
             //init the raw image
@@ -284,14 +274,13 @@ namespace RawNet.Decoder
                 Point2D pos = new Point2D(0, offY);
                 try
                 {
-                    hints.TryGetValue("coolpixmangled", out string mangled);
-                    hints.TryGetValue("coolpixsplit", out string split);
+                    /*
                     if (mangled != null)
                         ReadCoolpixMangledRaw(input, size, pos, (int)(width * bitPerPixel / 8));
                     else if (split != null)
                         ReadCoolpixSplitRaw(input, size, pos, (int)(width * bitPerPixel / 8));
-                    else
-                        RawDecompressor.ReadUncompressedRaw(input, size, pos, (int)(width * bitPerPixel / 8), (int)bitPerPixel, ((bitorder) ? BitOrder.Jpeg : BitOrder.Plain), rawImage);
+                    else*/
+                    RawDecompressor.ReadUncompressedRaw(input, size, pos, (int)(width * bitPerPixel / 8), (int)bitPerPixel, ((bitorder) ? BitOrder.Jpeg : BitOrder.Plain), rawImage);
                 }
                 catch (RawDecoderException e)
                 {

@@ -3,6 +3,7 @@ using RawNet.Format.Tiff;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Windows.Storage;
 
 namespace RawNet
 {
@@ -23,10 +24,6 @@ namespace RawNet
 
         /* The Raw input file to be decoded */
         protected TiffBinaryReader reader;
-
-        /* Hints set for the camera after checkCameraSupported has been called from the implementation*/
-        protected Dictionary<string, string> hints = new Dictionary<string, string>();
-
         protected Stream stream;
 
         /* Construct decoder instance - FileMap is a filemap of the file to be decoded */

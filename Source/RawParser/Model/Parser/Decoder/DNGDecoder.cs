@@ -13,20 +13,14 @@ namespace RawNet.Decoder
     internal class DNGDecoder : TIFFDecoder
     {
         bool fixLjpeg;
+        IFD raw;
 
         //DNG thumbnail are tiff so no need to override 
         internal DNGDecoder(Stream file) : base(file)
         {
-            ScaleValue = false; //dng already sclae them
+            ScaleValue = true;
             List<IFD> data = ifd.GetIFDsWithTag(TagType.DNGVERSION);
-            /*
-            if (data.Count != 0)
-            {  // We have a dng image entry
-                t.tags.TryGetValue(TagType.DNGVERSION, out Tag tag);
-                object[] c = tag.data;
-                if (Convert.ToInt32(c[0]) > 1)
-                    throw new RawDecoderException("DNG version too new.");            
-            }*/
+
             var v = data[0].GetEntry(TagType.DNGVERSION).GetIntArray();
 
             if (v[0] != 1)
@@ -57,16 +51,102 @@ namespace RawNet.Decoder
                     }
                 }
             }
+
             //get cfa
-            var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
-            if (cfa == null)
+            if (rawImage.isCFA)
             {
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
+                ReadCFA(raw);
+            }
+
+            // Linearization
+            Tag lintable = raw.GetEntry(TagType.LINEARIZATIONTABLE);
+            if (lintable != null)
+            {
+                rawImage.table = new TableLookUp(lintable.GetUShortArray(), (int)lintable.dataCount, true);
+            }
+
+            Tag as_shot_neutral = ifd.GetEntryRecursive(TagType.ASSHOTNEUTRAL);
+            if (as_shot_neutral != null)
+            {
+                if (as_shot_neutral.dataCount == 3)
+                {
+                    rawImage.metadata.WbCoeffs = new WhiteBalance(1.0f / as_shot_neutral.GetFloat(0), 1.0f / as_shot_neutral.GetFloat(1), 1.0f / as_shot_neutral.GetFloat(2));
+                }
             }
             else
             {
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
+                Tag as_shot_white_xy = ifd.GetEntryRecursive(TagType.ASSHOTWHITEXY);
+                if (as_shot_white_xy != null)
+                {
+                    if (as_shot_white_xy.dataCount == 2)
+                    {
+                        float[] d65_white = { 0.950456F, 1, 1.088754F };
+                        rawImage.metadata.WbCoeffs = new WhiteBalance(
+                            as_shot_white_xy.GetFloat(0) / d65_white[0],
+                            as_shot_white_xy.GetFloat(1) / d65_white[1],
+                            (1 - rawImage.metadata.WbCoeffs.Red - rawImage.metadata.WbCoeffs.Green) / d65_white[2]);
+                    }
+                }
             }
+
+            // Crop
+            Tag active_area = raw.GetEntry(TagType.ACTIVEAREA);
+            if (active_area != null)
+            {
+                if (active_area.dataCount != 4)
+                    throw new RawDecoderException("Active area has " + active_area.dataCount + " values instead of 4");
+
+                if (new Point2D(active_area.GetUInt(1), active_area.GetUInt(0)).IsThisInside(rawImage.raw.dim))
+                {
+                    if (new Point2D(active_area.GetUInt(3), active_area.GetUInt(2)).IsThisInside(rawImage.raw.dim))
+                    {
+                        Rectangle2D crop = new Rectangle2D(active_area.GetUInt(1), active_area.GetUInt(0),
+                            active_area.GetUInt(3) - active_area.GetUInt(1), active_area.GetUInt(2) - active_area.GetUInt(0));
+                        rawImage.Crop(crop);
+                    }
+                }
+            }
+
+            Tag origin_entry = raw.GetEntry(TagType.DEFAULTCROPORIGIN);
+            Tag size_entry = raw.GetEntry(TagType.DEFAULTCROPSIZE);
+            if (origin_entry != null && size_entry != null)
+            {
+                Rectangle2D cropped = new Rectangle2D(0, 0, rawImage.raw.dim.Width, rawImage.raw.dim.Height);
+                /* Read crop position (sometimes is rational so use float) */
+
+                if (new Point2D(origin_entry.GetUInt(0), origin_entry.GetUInt(1)).IsThisInside(rawImage.raw.dim))
+                    cropped = new Rectangle2D(origin_entry.GetUInt(0), origin_entry.GetUInt(1), 0, 0);
+
+                cropped.Dimension = rawImage.raw.dim - cropped.Position;
+                /* Read size (sometimes is rational so use float) */
+
+                Point2D size = new Point2D(size_entry.GetUInt(0), size_entry.GetUInt(1));
+                if ((size + cropped.Position).IsThisInside(rawImage.raw.dim))
+                    cropped.Dimension = size;
+
+                if (!cropped.HasPositiveArea())
+                    throw new RawDecoderException("No positive crop area");
+
+                rawImage.Crop(cropped);
+                if (rawImage.isCFA && cropped.Position.Width % 2 == 1)
+                    rawImage.colorFilter.ShiftLeft(1);
+                if (rawImage.isCFA && cropped.Position.Height % 2 == 1)
+                    rawImage.colorFilter.ShiftDown(1);
+            }
+            if (rawImage.raw.dim.Area <= 0)
+                throw new RawDecoderException("No image left after crop");
+
+            // Default white level is (2 ** BitsPerSample) - 1
+            rawImage.whitePoint = (1 >> raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0) - 1);
+
+            Tag whitelevel = raw.GetEntry(TagType.WHITELEVEL);
+            if (whitelevel != null)
+            {
+                rawImage.whitePoint = whitelevel.GetInt(0);
+            }
+
+            // Set black
+            SetBlack(raw);
         }
 
         public override void DecodeRaw()
@@ -96,7 +176,7 @@ namespace RawNet.Decoder
             if (data.Count == 0)
                 throw new RawDecoderException("No RAW chunks found");
 
-            IFD raw = data[0];
+            raw = data[0];
             int sampleFormat = 1;
             int bps = raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0);
 
@@ -123,10 +203,7 @@ namespace RawNet.Decoder
             rawImage.Init(false);
             rawImage.raw.ColorDepth = (ushort)bps;
             int compression = raw.GetEntry(TagType.COMPRESSION).GetShort(0);
-            if (rawImage.isCFA)
-            {
-                ReadCFA(raw);
-            }
+
             // Now load the image
             switch (compression)
             {
@@ -215,168 +292,12 @@ namespace RawNet.Decoder
                 default:
                     throw new RawDecoderException("Unknown compression: " + compression);
             }
-
-            Tag as_shot_neutral = ifd.GetEntryRecursive(TagType.ASSHOTNEUTRAL);
-            if (as_shot_neutral != null)
-            {
-                if (as_shot_neutral.dataCount == 3)
-                {
-                    rawImage.metadata.WbCoeffs = new WhiteBalance(1.0f / as_shot_neutral.GetFloat(0), 1.0f / as_shot_neutral.GetFloat(1), 1.0f / as_shot_neutral.GetFloat(2));
-                }
-            }
-            else
-            {
-                Tag as_shot_white_xy = ifd.GetEntryRecursive(TagType.ASSHOTWHITEXY);
-                if (as_shot_white_xy != null)
-                {
-                    if (as_shot_white_xy.dataCount == 2)
-                    {
-                        float[] d65_white = { 0.950456F, 1, 1.088754F };
-                        rawImage.metadata.WbCoeffs = new WhiteBalance(
-                            as_shot_white_xy.GetFloat(0) / d65_white[0],
-                            as_shot_white_xy.GetFloat(1) / d65_white[1],
-                            (1 - rawImage.metadata.WbCoeffs.Red - rawImage.metadata.WbCoeffs.Green) / d65_white[2]);
-                    }
-                }
-            }
-
-            // Crop
-            Tag active_area = raw.GetEntry(TagType.ACTIVEAREA);
-            if (active_area != null)
-            {
-                if (active_area.dataCount != 4)
-                    throw new RawDecoderException("Active area has " + active_area.dataCount + " values instead of 4");
-
-                if (new Point2D(active_area.GetUInt(1), active_area.GetUInt(0)).IsThisInside(rawImage.raw.dim))
-                {
-                    if (new Point2D(active_area.GetUInt(3), active_area.GetUInt(2)).IsThisInside(rawImage.raw.dim))
-                    {
-                        Rectangle2D crop = new Rectangle2D(active_area.GetUInt(1), active_area.GetUInt(0),
-                            active_area.GetUInt(3) - active_area.GetUInt(1), active_area.GetUInt(2) - active_area.GetUInt(0));
-                        rawImage.Crop(crop);
-                    }
-                }
-            }
-
-            Tag origin_entry = raw.GetEntry(TagType.DEFAULTCROPORIGIN);
-            Tag size_entry = raw.GetEntry(TagType.DEFAULTCROPSIZE);
-            if (origin_entry != null && size_entry != null)
-            {
-                Rectangle2D cropped = new Rectangle2D(0, 0, rawImage.raw.dim.Width, rawImage.raw.dim.Height);
-                /* Read crop position (sometimes is rational so use float) */
-
-                if (new Point2D(origin_entry.GetUInt(0), origin_entry.GetUInt(1)).IsThisInside(rawImage.raw.dim))
-                    cropped = new Rectangle2D(origin_entry.GetUInt(0), origin_entry.GetUInt(1), 0, 0);
-
-                cropped.Dimension = rawImage.raw.dim - cropped.Position;
-                /* Read size (sometimes is rational so use float) */
-
-                Point2D size = new Point2D(size_entry.GetUInt(0), size_entry.GetUInt(1));
-                if ((size + cropped.Position).IsThisInside(rawImage.raw.dim))
-                    cropped.Dimension = size;
-
-                if (!cropped.HasPositiveArea())
-                    throw new RawDecoderException("No positive crop area");
-
-                rawImage.Crop(cropped);
-                if (rawImage.isCFA && cropped.Position.Width % 2 == 1)
-                    rawImage.colorFilter.ShiftLeft(1);
-                if (rawImage.isCFA && cropped.Position.Height % 2 == 1)
-                    rawImage.colorFilter.ShiftDown(1);
-            }
-            if (rawImage.raw.dim.Area <= 0)
-                throw new RawDecoderException("No image left after crop");
-
-            // Apply stage 1 opcodes
-            var opcodes = ifd.GetEntryRecursive(TagType.OPCODELIST1);
-            if (opcodes != null)
-            {
-                // Apply stage 1 codes
-                try
-                {
-                    DngOpcodes codes = new DngOpcodes(opcodes);
-                    rawImage = codes.ApplyOpCodes(rawImage);
-                }
-                catch (RawDecoderException e)
-                {
-                    // We push back errors from the opcode parser, since the image may still be usable
-                    rawImage.errors.Add(e.Message);
-                }
-            }
-
-            // Linearization
-            Tag lintable = raw.GetEntry(TagType.LINEARIZATIONTABLE);
-            if (lintable != null)
-            {
-                var table = new TableLookUp(lintable.GetUShortArray(), (int)lintable.dataCount, true);
-                table.ApplyTableLookUp(rawImage.raw);
-            }
-
-            // Default white level is (2 ** BitsPerSample) - 1
-            rawImage.whitePoint = (1 >> raw.GetEntry(TagType.BITSPERSAMPLE).GetInt(0) - 1);
-
-            Tag whitelevel = raw.GetEntry(TagType.WHITELEVEL);
-            if (whitelevel != null)
-            {
-                rawImage.whitePoint = whitelevel.GetInt(0);
-            }
-
-            // Set black
-            SetBlack(raw);
-
-            //convert to linear value
-            Luminance.ScaleValues(rawImage);
-            //*/
-
-            // Apply opcodes to lossy DNG 
-            if (compression == 0x884c)
-            {
-                /*
-                if (raw.tags.ContainsKey(TagType.OPCODELIST2))
-                {
-                    // We must apply black/white scaling
-                    mRaw.scaleBlackWhite();
-                    // Apply stage 2 codes
-                    try
-                    {
-                        DngOpcodes codes = new DngOpcodes(raw.getEntry(TagType.OPCODELIST2));
-                        mRaw = codes.applyOpCodes(mRaw);
-                    }
-                    catch (RawDecoderException e)
-                    {
-                        // We push back errors from the opcode parser, since the image may still be usable
-                        mRaw.errors.Add(e.Message);
-                    }
-                    mRaw.blackAreas.Clear();
-                    mRaw.blackLevel = 0;
-                    mRaw.blackLevelSeparate[0] = mRaw.blackLevelSeparate[1] = mRaw.blackLevelSeparate[2] = mRaw.blackLevelSeparate[3] = 0;
-                    mRaw.whitePoint = 65535;
-                }
-
-            }*/
-                var opcodes2 = ifd.GetEntryRecursive(TagType.OPCODELIST2);
-                if (opcodes2 != null)
-                {
-                    // Apply stage 2 codes
-                    try
-                    {
-                        DngOpcodes codes = new DngOpcodes(opcodes2);
-                        rawImage = codes.ApplyOpCodes(rawImage);
-                    }
-                    catch (RawDecoderException e)
-                    {
-                        // We push back errors from the opcode parser, since the image may still be usable
-                        rawImage.errors.Add(e.Message);
-                    }
-                }
-            }
         }
 
         /* Decodes DNG masked areas into blackareas in the image */
         bool DecodeMaskedAreas(IFD raw)
         {
             Tag masked = raw.GetEntry(TagType.MASKEDAREAS);
-
             if (masked.dataType != TiffDataType.SHORT && masked.dataType != TiffDataType.LONG)
                 return false;
 
@@ -395,10 +316,12 @@ namespace RawNet.Decoder
                 Point2D bottomright = new Point2D(rects[i * 4 + 3], rects[i * 4 + 2]);
                 // Is this a horizontal box, only add it if it covers the active width of the image
                 if (topleft.Width <= top.Width && bottomright.Width >= (rawImage.raw.dim.Width + top.Width))
+                {
                     rawImage.blackAreas.Add(new BlackArea(topleft.Height, bottomright.Height - topleft.Height, false));
-                // Is it a vertical box, only add it if it covers the active height of the image
+                }
                 else if (topleft.Height <= top.Height && bottomright.Height >= (rawImage.raw.dim.Height + top.Height))
                 {
+                    // Is it a vertical box, only add it if it covers the active height of the image
                     rawImage.blackAreas.Add(new BlackArea(topleft.Width, bottomright.Width - topleft.Width, true));
                 }
             }
