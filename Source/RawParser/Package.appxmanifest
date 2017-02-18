@@ -55,6 +55,7 @@
               <uap:FileType ContentType="image/fuji">.raf</uap:FileType>
               <uap:FileType ContentType="image/panasonic">.raw</uap:FileType>
               <uap:FileType ContentType="image/olympus">.orf</uap:FileType>
+              <uap:FileType ContentType="image/panasonic">.rw2</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>

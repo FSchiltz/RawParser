@@ -34,6 +34,7 @@ namespace RawNet
                     ".pef",
                     ".arw",
                     ".raw",
+                    ".rw2",
                     ".orf",
                     ".raf"
                 };
