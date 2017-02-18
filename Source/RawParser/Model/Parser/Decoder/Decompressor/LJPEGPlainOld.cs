@@ -675,13 +675,11 @@ namespace RawNet.Decoder.Decompressor
                 {
                     for (; x < cw; x++)
                     {
-                        int diff = dctbl1.Decode();
-                        p1 += diff;
+                        p1 += dctbl1.Decode();
                         *dest++ = (ushort)p1;
                         //    Debug.Assert(p1 >= 0 && p1 < 65536);
-
-                        diff = dctbl2.Decode();
-                        p2 += diff;
+                        
+                        p2 += dctbl2.Decode();
                         *dest++ = (ushort)p2;
                         //      Debug.Assert(p2 >= 0 && p2 < 65536);
 

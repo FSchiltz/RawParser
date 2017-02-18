@@ -7,7 +7,6 @@ namespace RawNet
 {
     static class ImageHelper
     {
-
         internal static void CalculateBlackArea(RawImage<ushort> image)
         {
             Debug.Assert(image.black == 0);
@@ -97,6 +96,67 @@ namespace RawNet
                     }
                 });
             }
+        }
+
+        /**
+      * Create a preview of the raw image using the scaling factor
+      * The X and Y dimension will be both divided by the image
+      * 
+      */
+        public static void CreatePreview(FactorValue factor, double viewHeight, double viewWidth, RawImage<ushort> image)
+        {
+            //image will be size of windows
+            uint previewFactor = 0;
+            if (factor == FactorValue.Auto)
+            {
+                if (image.raw.dim.Height > image.raw.dim.Width)
+                {
+                    previewFactor = (uint)((image.raw.dim.Height / viewHeight) * 0.9);
+                }
+                else
+                {
+                    previewFactor = (uint)((image.raw.dim.Width / viewWidth) * 0.9);
+                }
+                if (previewFactor < 1)
+                {
+                    previewFactor = 1;
+                }
+            }
+            else
+            {
+                previewFactor = (uint)factor;
+            }
+
+            image.preview = new ImageComponent<ushort>(new Point2D(image.raw.dim.Width / previewFactor, image.raw.dim.Height / previewFactor), image.raw.ColorDepth);
+            uint doubleFactor = previewFactor * previewFactor;
+            ushort maxValue = (ushort)((1 << image.raw.ColorDepth) - 1);
+            //loop over each block
+            Parallel.For(0, image.preview.dim.Height, y =>
+            {
+                var posY = (y * image.preview.dim.Width);
+                var rY = (y * previewFactor);
+                for (int x = 0; x < image.preview.dim.Width; x++)
+                {
+                    var posX = posY + x;
+                    //find the mean of each block
+                    long r = 0, g = 0, b = 0;
+                    var rX = (x * previewFactor);
+                    for (int i = 0; i < previewFactor; i++)
+                    {
+                        long realY = (image.raw.dim.Width * (rY + i)) + rX;
+                        for (int k = 0; k < previewFactor; k++)
+                        {
+                            long realX = realY + k;
+                            r += image.raw.red[realX];
+                            g += image.raw.green[realX];
+                            b += image.raw.blue[realX];
+                        }
+                    }
+                    image.preview.red[posX] = (ushort)(r / doubleFactor);
+                    image.preview.green[posX] = (ushort)(g / doubleFactor);
+                    image.preview.blue[posX] = (ushort)(b / doubleFactor);
+                }
+            });
         }
     }
 }

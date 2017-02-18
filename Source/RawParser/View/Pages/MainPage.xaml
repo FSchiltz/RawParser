@@ -311,8 +311,6 @@
                             ManipulationMode="None" HorizontalAlignment="Left" FontSize="14">Memory usage</TextBlock>
                     <uihelper:MemoryBar></uihelper:MemoryBar>
                     <Button Margin="0,20,0,0" Tapped="{x:Bind EmptyImage}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center">Free image</Button>
-                    <Button Margin="0,20,0,0" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" HorizontalAlignment="Center" Tapped="Button_Tapped">Recreate preview</Button>
-                    <Button Margin="0,20,0,0" IsEnabled="False" HorizontalAlignment="Center">Save Thumbnail</Button>
                 </StackPanel>
             </PivotItem>
             <!--
