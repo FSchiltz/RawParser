@@ -56,7 +56,7 @@ namespace RawEditor.Effect
             DemosaickingBilinearRedBlue(bluex, bluey, image.raw, image.raw.blue, CFAColor.Blue);
         }
 
-        protected void DemosaickingAdams(ImageComponent<ushort> image)
+        protected virtual void DemosaickingAdams(ImageComponent<ushort> image)
         {
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West
@@ -148,7 +148,7 @@ namespace RawEditor.Effect
             });
         }
 
-        protected void DemosaickingBilinearRedBlue(int colorX, int colorY, ImageComponent<ushort> image, ushort[] output, CFAColor COLORPOSITION)
+        protected virtual void DemosaickingBilinearRedBlue(int colorX, int colorY, ImageComponent<ushort> image, ushort[] output, CFAColor COLORPOSITION)
         {
             var dim = image.dim;
             int[] red = new int[dim.Width * dim.Height];
