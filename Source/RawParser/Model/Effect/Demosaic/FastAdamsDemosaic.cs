@@ -122,19 +122,12 @@ namespace RawEditor.Effect
                         if (row % 2 == bluey)
                         {
                             image.blue[pos] = (ushort)((image.blue[posRow + ge] + image.blue[posRow + gw]) / 2);
+                            image.red[pos] = (ushort)((image.red[gn + col] + image.red[gs + col]) / 2);
                         }
-                        else if (col % 2 == bluey)
+                        else
                         {
                             image.blue[pos] = (ushort)((image.blue[gn + col] + image.blue[gs + col]) / 2);
-                        }
-
-                        if (row % 2 == redy)
-                        {
                             image.red[pos] = (ushort)((image.red[posRow + ge] + image.red[posRow + gw]) / 2);
-                        }
-                        else if (col % 2 == redx)
-                        {
-                            image.red[pos] = (ushort)((image.red[gn + col] + image.red[gs + col]) / 2);
                         }
                     }
                 }
