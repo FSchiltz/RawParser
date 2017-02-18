@@ -224,6 +224,7 @@ namespace RawNet
                 case ".ORF":
                     return new ORFDecoder(stream);
                 case ".RAW":
+                case ".RW2":
                     return new RW2Decoder(stream);
                 case ".RAF":
                     return new RAFDecoder(stream);
