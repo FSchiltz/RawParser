@@ -108,43 +108,37 @@ namespace RawEditor.Effect
                     {
                         //interpolate green                   
                         image.green[pos] = (ushort)((image.green[gn + col] + image.green[gs + col] + image.green[posRow + gw] + image.green[posRow + ge]) / 4);
-                        if (color == CFAColor.Blue)
-                            image.red[pos] = (ushort)((image.red[gn + ge] + image.red[gn + gw] + image.red[gs + ge] + image.red[gs + gw]) / 4);
-                        else
+                        if (color == CFAColor.Red)
+                        {
                             image.blue[pos] = (ushort)((image.blue[gn + ge] + image.blue[gn + gw] + image.blue[gs + ge] + image.blue[gs + gw]) / 4);
+                        }
+                        else
+                        {
+                            image.red[pos] = (ushort)((image.red[gn + ge] + image.red[gn + gw] + image.red[gs + ge] + image.red[gs + gw]) / 4);
+                        }
                     }
                     else
                     {
-                        //interpolate red
+                        if (row % 2 == bluey)
+                        {
+                            image.blue[pos] = (ushort)((image.blue[posRow + ge] + image.blue[posRow + gw]) / 2);
+                        }
+                        else if (col % 2 == bluey)
+                        {
+                            image.blue[pos] = (ushort)((image.blue[gn + col] + image.blue[gs + col]) / 2);
+                        }
+
                         if (row % 2 == redy)
                         {
                             image.red[pos] = (ushort)((image.red[posRow + ge] + image.red[posRow + gw]) / 2);
-                            image.blue[pos] = (ushort)((image.blue[gn + ge] + image.blue[gn + gw] + image.blue[gs + ge] + image.blue[gs + gw]) / 4);
                         }
                         else if (col % 2 == redx)
                         {
                             image.red[pos] = (ushort)((image.red[gn + col] + image.red[gs + col]) / 2);
-                            image.blue[pos] = (ushort)((image.blue[gn + ge] + image.blue[gn + gw] + image.blue[gs + ge] + image.blue[gs + gw]) / 4);
-                        }
-                        if (row % 2 == bluey)
-                        {
-                            image.blue[pos] = (ushort)((image.blue[posRow + ge] + image.blue[posRow + gw]) / 2);
-                            image.red[pos] = (ushort)((image.red[gn + ge] + image.red[gn + gw] + image.red[gs + ge] + image.red[gs + gw]) / 4);
-                        }
-                        else if (col % 2 == bluex)
-                        {
-                            image.blue[pos] = (ushort)((image.blue[gn + col] + image.blue[gs + col]) / 2);
-                            image.red[pos] = (ushort)((image.red[gn + ge] + image.red[gn + gw] + image.red[gs + ge] + image.red[gs + gw]) / 4);
-                        }
-                        else
-                        {
-                            image.red[pos] = (ushort)((image.red[gn + ge] + image.red[gn + gw] + image.red[gs + ge] + image.red[gs + gw]) / 4);
-                            image.blue[pos] = (ushort)((image.blue[gn + ge] + image.blue[gn + gw] + image.blue[gs + ge] + image.blue[gs + gw]) / 4);
                         }
                     }
                 }
             });
         }
-
     }
 }
