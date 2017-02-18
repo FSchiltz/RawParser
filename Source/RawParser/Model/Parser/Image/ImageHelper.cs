@@ -72,7 +72,6 @@ namespace RawNet
         //TODO Move to the RawNet Namespace
         public static void ScaleValues(RawImage<ushort> image)
         {
-            Debug.Assert(image.raw.cpp == 1);
             Debug.Assert(Convert.ToInt32(image.whitePoint) > 0);
             long maxValue = (1 << image.raw.ColorDepth) - 1;
 

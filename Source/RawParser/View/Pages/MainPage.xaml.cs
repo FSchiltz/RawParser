@@ -169,9 +169,10 @@ namespace RawEditor.View.Pages
                 try
                 {
                     ImageSelected = true;
+                    var watchTotal = Stopwatch.StartNew();
                     using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                     {
-                        var watch = Stopwatch.StartNew();
+                        var watchdecode = Stopwatch.StartNew();
                         RawDecoder decoder = RawParser.GetDecoder(stream, file);
                         try
                         {
@@ -187,11 +188,20 @@ namespace RawEditor.View.Pages
 
                         decoder.DecodeRaw();
                         decoder.DecodeMetadata();
-                        watch.Stop();
                         rawImage = decoder.rawImage;
-                        rawImage.metadata.ParsingTime = watch.ElapsedMilliseconds;
+
+                        watchdecode.Stop();
+                        Debug.WriteLine("Decoding done in " + watchdecode.ElapsedMilliseconds + " ms");
+
+                        var watchLook = Stopwatch.StartNew();
                         rawImage.table?.ApplyTableLookUp(rawImage.raw);
+                        watchLook.Stop();
+                        Debug.WriteLine("Lookup done in " + watchLook.ElapsedMilliseconds + " ms");
+
+                        var watchScale = Stopwatch.StartNew();
                         ImageHelper.ScaleValues(rawImage);
+                        watchScale.Stop();
+                        Debug.WriteLine("Scale done in " + watchScale.ElapsedMilliseconds + " ms");
                     }
 
                     rawImage.metadata.FileName = file.DisplayName;
@@ -200,6 +210,8 @@ namespace RawEditor.View.Pages
 
                     if (rawImage.isCFA)
                     {
+
+                        var watchDemos = Stopwatch.StartNew();
                         //get the algo from the settings
                         DemosaicAlgorithm algo;
                         try
@@ -211,14 +223,26 @@ namespace RawEditor.View.Pages
                             algo = DemosaicAlgorithm.FastAdams;
                         }
                         Demosaic.Demos(rawImage, algo);
+
+                        watchDemos.Stop();
+                        Debug.WriteLine("Demos done in " + watchDemos.ElapsedMilliseconds + " ms");
                     }
 
                     if (rawImage.convertionM != null)
                     {
+                        var watchConvert = Stopwatch.StartNew();
                         rawImage.ConvertRGB();
+                        watchConvert.Stop();
+                        Debug.WriteLine("ConvertRGB done in " + watchConvert.ElapsedMilliseconds + " ms");
                     }
-                    rawImage.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
 
+                    var watchPreview = Stopwatch.StartNew();
+                    rawImage.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+                    watchPreview.Stop();
+                    Debug.WriteLine("Preview done in " + watchPreview.ElapsedMilliseconds + " ms");
+
+                    watchTotal.Stop();
+                    rawImage.metadata.ParsingTime = watchTotal.ElapsedMilliseconds;
                     GC.Collect();
                     //check if enough memory
                     if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)rawImage.raw.green.Length * 3) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
