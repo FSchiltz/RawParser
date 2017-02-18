@@ -137,6 +137,7 @@ namespace RawNet
             Debug.Assert(convertionM?.Length == 9);
             //the matrice is cxyz to cam
             //interpolate the cam to rgb
+            /*
             for (int k = 0; k < 3; k++)
                 for (int l = 0; l < 3; l++)
                 {
@@ -150,7 +151,7 @@ namespace RawNet
                 for (int x = 0; x < raw.dim.Width; x++)
                 {
                     long realX = y + 3 * (x + raw.offset.Width);
-                    /*
+                    
                     double[] rgb = { raw.data[realX] / maxValue, raw.data[realX + 1] / maxValue, raw.data[realY + 2] / maxValue };
                     //convert to XYZ
                     double[] result = Mult3by1(convertionM, rgb);
@@ -158,9 +159,9 @@ namespace RawNet
                     double[] rgbConv = Mult3by1(xyzToRGB, result);
                     raw.data[realX] = (ushort)(rgb[0] * maxValue);
                     raw.data[realX + 1] = (ushort)(rgb[1] * maxValue);
-                    raw.data[realY + 2] = (ushort)(rgb[2] * maxValue);*/
+                    raw.data[realY + 2] = (ushort)(rgb[2] * maxValue);
                 }
-            });
+            });*/
         }
 
         public double[] Mult3by1(double[,] m1, double[] m2)
@@ -213,7 +214,7 @@ namespace RawNet
 
             ScaleValues();
         }*/
-     
+
         public List<ExifValue> ParseExif()
         {
             List<ExifValue> exif = new List<ExifValue>

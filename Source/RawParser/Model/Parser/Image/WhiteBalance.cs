@@ -8,15 +8,21 @@
 
         public WhiteBalance(double red, double green, double blue)
         {
-            Red = red;
-            Blue = blue;
-            Green = green;
+            if (!(red == 0 || green == 0 || blue == 0))
+            {
+                Red = red;
+                Blue = blue;
+                Green = green;
+            }
         }
 
         public WhiteBalance(int red, int green, int blue, uint colorDepth)
         {
-            Red = red/(double)green;
-            Blue = blue/(double)green;
+            if (!(red == 0 || green == 0 || blue == 0))
+            {
+                Red = red / (double)green;
+                Blue = blue / (double)green;
+            }
         }
     }
 }
