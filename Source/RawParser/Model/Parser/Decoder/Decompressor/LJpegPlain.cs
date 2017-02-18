@@ -214,6 +214,8 @@ namespace RawNet.Decoder.Decompressor
         // Y_S_F  == y/vertical   sampling factor (1 or 2)
         void Decode2_1_1()
         {
+            Debug.Assert(slicesW.Count < 16);  // We only have 4 bits for slice number.
+            Debug.Assert(!(slicesW.Count > 1 && skipX != 0)); // Check if this is a valid state
             Debug.Assert(frame.ComponentInfo[0].superH == 1);
             Debug.Assert(frame.ComponentInfo[0].superV == 1);
             Debug.Assert(frame.ComponentInfo[1].superH == 1);
@@ -244,17 +246,7 @@ namespace RawNet.Decoder.Decompressor
             // see FIX_CANON_FLIPPED_WIDTH_AND_HEIGHT
             long sliceH = frame.numComponents == 3 ? Math.Min(frame.width, frame.height) : frame.height;
 
-            // To understand the CR2 slice handling and sampling factor behavior, see
-            // https://github.com/lclevy/libcraw2/blob/master/docs/cr2_lossless.pdf?raw=true
-
             // inner loop decodes one group of pixels at a time
-            //  * for <N,1,1>: N  = N*1*1 (full raw)
-            //  * for <3,2,1>: 6  = 3*2*1
-            //  * for <3,2,2>: 12 = 3*2*2
-            // and advances x by N_COMP*X_S_F and y by Y_S_F
-            //int xStepSize = 2;
-            //int yStepSize = 1;
-
             uint processedPixels = 0;
             uint processedLineSlices = 0;
             long nextPredictor = offX + (offY * raw.raw.dim.Width);
@@ -270,7 +262,6 @@ namespace RawNet.Decoder.Decompressor
                     long dest = (destX + offX) + (destY + offY) * raw.raw.dim.Width;
                     for (uint x = 0; x < sliceW; x += 2)
                     {
-                        Debug.Assert((processedPixels <= frame.width));
                         // check if we processed one full raw row worth of pixels
                         if (processedPixels == frame.width)
                         {
@@ -281,7 +272,9 @@ namespace RawNet.Decoder.Decompressor
                         }
 
                         p[0] += ht[0].Decode();
+                        Debug.Assert(p[0] >= 0 && p[0] < 65536);
                         p[1] += ht[1].Decode();
+                        Debug.Assert(p[1] >= 0 && p[1] < 65536);
                         if (x + offX < raw.raw.dim.Width)
                         {
                             raw.raw.rawView[dest] = (ushort)(p[0]);

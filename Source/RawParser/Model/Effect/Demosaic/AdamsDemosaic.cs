@@ -42,21 +42,14 @@ namespace RawEditor.Effect
 
             // Mask of color per pixel
             mask = new CFAColor[image.raw.dim.Width * image.raw.dim.Height];
-            Parallel.For(0, image.raw.dim.Width, x =>
-            {
-                for (int y = 0; y < image.raw.dim.Height; y++)
-                {
-                    mask[y * image.raw.dim.Width + x] = image.colorFilter.cfa[((y % 2) * 2) + (x % 2)];
-                }
-            });
 
-            DemosaickingAdams(image.raw);
+            DemosaickingAdams(image.raw, image.colorFilter);
             // compute the bilinear on the differences of the red and blue with the already interpolated green
             DemosaickingBilinearRedBlue(redx, redy, image.raw, image.raw.red, CFAColor.Red);
             DemosaickingBilinearRedBlue(bluex, bluey, image.raw, image.raw.blue, CFAColor.Blue);
         }
 
-        protected virtual void DemosaickingAdams(ImageComponent<ushort> image)
+        protected virtual void DemosaickingAdams(ImageComponent<ushort> image, ColorFilterArray cfa)
         {
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West
@@ -69,7 +62,7 @@ namespace RawEditor.Effect
                         //skip to the end of line to reduce calculation
                         col = image.dim.Width - 4;
                     }
-                    else if ((mask[row * image.dim.Width + col] != CFAColor.Green))
+                    else if (((mask[row * image.dim.Width + col] = cfa.cfa[((row % 2) * 2) + (col % 2)]) != CFAColor.Green))
                     {
                         long gn, gs, ge, gw;
                         if (row > 0) gn = row - 1; else gn = 1;
@@ -92,7 +85,7 @@ namespace RawEditor.Effect
             {
                 for (int col = 3; col < image.dim.Width - 3; col++)
                 {
-                    if (mask[row * image.dim.Width + col] != CFAColor.Green)
+                    if (((mask[row * image.dim.Width + col] = cfa.cfa[((row % 2) * 2) + (col % 2)]) != CFAColor.Green))
                     {
                         long l = row * image.dim.Width + col;
                         long lp1 = (row + 1) * image.dim.Width + col;

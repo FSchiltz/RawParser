@@ -237,7 +237,7 @@ namespace RawEditor.View.Pages
                     }
 
                     var watchPreview = Stopwatch.StartNew();
-                    rawImage.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
+                    ImageHelper.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth,rawImage);
                     watchPreview.Stop();
                     Debug.WriteLine("Preview done in " + watchPreview.ElapsedMilliseconds + " ms");
 
@@ -423,9 +423,12 @@ namespace RawEditor.View.Pages
             {
                 Task.Run(() =>
                 {
+                    var watchScale = Stopwatch.StartNew();
                     var result = ApplyImageEffect8bits(rawImage.preview, EditionValue);
                     DisplayImage(result.Item2, move);
                     Histo.FillAsync(result.Item1);
+                    watchScale.Stop();
+                    Debug.WriteLine("Update done in " + watchScale.ElapsedMilliseconds + " ms");
                 });
             }
         }
@@ -658,15 +661,7 @@ namespace RawEditor.View.Pages
                 CropUI.isRightDragging = CropUI.isTopDragging = false;
                 ControlVisibilty.Value = true;
             }
-        }
-
-        private void Button_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
-        {
-            Load.Show();
-            rawImage.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth);
-            UpdatePreview(true);
-            Load.Hide();
-        }
+        }        
 
         private void ListView_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {

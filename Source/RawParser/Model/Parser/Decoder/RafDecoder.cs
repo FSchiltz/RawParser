@@ -231,7 +231,7 @@ namespace RawNet.Decoder
             if (rawImage.metadata.Model == null) throw new RawDecoderException("RAF Meta Decoder: Model name not found");
             if (rawImage.metadata.Make == null) throw new RawDecoderException("RAF Support: Make name not found");
             SetMetadata(rawImage.metadata.Model);
-            
+
             //get cfa
             var rawifd = ifd.GetIFDsWithTag(TagType.FUJI_LAYOUT);
             if (rawifd != null)
@@ -270,7 +270,7 @@ namespace RawNet.Decoder
 
             //read lens
             rawImage.metadata.Lens = ifd.GetEntryRecursive((TagType)42036)?.DataAsString;
-
+            rawImage.whitePoint = (1 << rawImage.raw.ColorDepth) - 1;
             Tag sep_black = ifd.GetEntryRecursive(TagType.FUJI_RGGBLEVELSBLACK);
             if (sep_black.dataCount > 1) Debug.Assert(sep_black?.GetInt(0) == sep_black?.GetInt(1));
             rawImage.black = sep_black?.GetInt(0) ?? 0;
