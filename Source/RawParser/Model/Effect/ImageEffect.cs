@@ -303,13 +303,19 @@ namespace RawEditor.Effect
                     {
                         curve[i] = Math.Pow(1.055 * normal, param) - 0.055;
                     }
-                    curve[i] *= maxValue;
+                }
+                for (int i = 0; i < curve.Length; i++)
+                {
+                    if (curve[i] > 1) curve[i] = 1;
                 }
             }
-            for (int i = 0; i < curve.Length; i++)
+            else
             {
-                if (curve[i] > maxValue) curve[i] = 1;
-                else curve[i] /= maxValue;
+                for (int i = 0; i < curve.Length; i++)
+                {
+                    if (curve[i] > maxValue) curve[i] = 1;
+                    else curve[i] /= maxValue;
+                }
             }
             return curve;
         }
