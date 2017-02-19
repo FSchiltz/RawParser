@@ -88,6 +88,17 @@ namespace RawNet.Decoder
 
         protected void SetMetadata(string model)
         {
+            //find the color matrice
+            for (int i = 0; i < colorM.Length; i++)
+            {
+                if (colorM[i].name.Contains(rawImage.metadata.Model))
+                {
+                    rawImage.convertionM = colorM[i].matrix;
+                    if (colorM[i].black != 0) rawImage.black = colorM[i].black;
+                    if (colorM[i].white != 0) rawImage.whitePoint = colorM[i].white;
+                    break;
+                }
+            }
             if (rawImage.raw.dim.Height == 2624 && rawImage.raw.dim.Width == 3936)    /* Pentax K10D */
             {
                 rawImage.raw.dim.Height = 2616;
@@ -132,29 +143,9 @@ namespace RawNet.Decoder
             }
         }
 
-        public override Thumbnail DecodeThumb()
-        {
-            //find the preview ifd Preview is in the rootIFD (smaller preview in subiFD use those)
-            List<IFD> possible = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT);
-            //no thumbnail
-            if (possible == null || possible.Count == 0) return null;
-            IFD preview = possible[possible.Count - 1];
 
-            var thumb = preview.GetEntry(TagType.JPEGINTERCHANGEFORMAT);
-            var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
-            if (size == null || thumb == null) return null;
-
-            reader.Position = thumb.GetUInt(0);
-            Thumbnail temp = new Thumbnail()
-            {
-                data = reader.ReadBytes(size.GetInt(0)),
-                Type = ThumbnailType.JPEG,
-                dim = new Point2D()
-            };
-            return temp;
-        }
-        /*
         private CamRGB[] colorM = {
+            /*
     { "Pentax *ist DL2", 0, 0,
     { 10504,-2438,-1189,-8603,16207,2531,-1022,863,12242 } },
     { "Pentax *ist DL", 0, 0,
@@ -200,8 +191,7 @@ namespace RawNet.Decoder
     { "Pentax K-S2", 0, 0,
     { 8662,-3280,-798,-3928,11771,2444,-586,1232,6054 } },
     { "Pentax Q-S1", 0, 0,
-    { 12995,-5593,-1107,-1879,10139,2027,-64,1233,4919 } },
-    { "Pentax 645D", 0, 0x3e00,
-    { 10646,-3593,-1158,-3329,11699,1831,-667,2874,6287 } }};*/
+    { 12995,-5593,-1107,-1879,10139,2027,-64,1233,4919 } },*/
+    new CamRGB( "Pentax 645D", 0, 0x3e00,new double[]    { 10646,-3593,-1158,-3329,11699,1831,-667,2874,6287 } )};
     }
 }
