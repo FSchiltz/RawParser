@@ -144,15 +144,18 @@ namespace RawEditor.View.Pages
         private void SetWBUpdate()
         {
             //add an history object
-            History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
+            if (EditionValue != null && DefaultValue != null)
             {
-                oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
-                value = new double[] { rawImage?.metadata.WbCoeffs.Red ?? 1, rawImage?.metadata.WbCoeffs.Green ?? 1, rawImage?.metadata.WbCoeffs.Blue ?? 1 }
-            });
-            EditionValue.RMul = DefaultValue.RMul;
-            EditionValue.GMul = DefaultValue.GMul;
-            EditionValue.BMul = DefaultValue.BMul;
-            UpdatePreview(false);
+                History.Add(new HistoryObject(EffectType.WhiteBalance, EditionValue.GetCopy())
+                {
+                    oldValue = new double[] { EditionValue.RMul, EditionValue.GMul, EditionValue.BMul },
+                    value = new double[] { rawImage?.metadata?.WbCoeffs.Red ?? 1, rawImage?.metadata?.WbCoeffs.Green ?? 1, rawImage?.metadata?.WbCoeffs.Blue ?? 1 }
+                });
+                EditionValue.RMul = DefaultValue.RMul;
+                EditionValue.GMul = DefaultValue.GMul;
+                EditionValue.BMul = DefaultValue.BMul;
+                UpdatePreview(false);
+            }
         }
 
         private void OpenFile(StorageFile file)

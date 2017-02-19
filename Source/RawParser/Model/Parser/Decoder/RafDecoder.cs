@@ -302,18 +302,18 @@ namespace RawNet.Decoder
         {
             if (model.Contains("S2Pro"))
             {
-                rawImage.raw.dim.Height = 2144;
-                rawImage.raw.dim.Width = 2880;
+                rawImage.raw.dim.height = 2144;
+                rawImage.raw.dim.width = 2880;
                 //flip = 6;
             }
             else if (model.Contains("X-Pro1"))
             {
-                rawImage.raw.dim.Width -= 168;
+                rawImage.raw.dim.width -= 168;
             }
             else if (model.Contains("FinePix X100"))
             {
-                rawImage.raw.dim.Width -= 144;
-                rawImage.raw.offset.Width = 74;
+                rawImage.raw.dim.width -= 144;
+                rawImage.raw.offset.width = 74;
             }
             else
             {
@@ -322,18 +322,18 @@ namespace RawNet.Decoder
                 //left_margin = (raw_width - width) >> 2 << 1;
                 // if (rawImage.raw.dim.Width == 2848 || rawImage.raw.dim.Width == 3664) filters = 0x16161616;
                 //if (rawImage.raw.dim.Width == 4032 || rawImage.raw.dim.Width == 4952 || rawImage.raw.dim.Width == 6032) rawImage.raw.offset.Width = 0;
-                if (rawImage.raw.dim.Width == 3328)
+                if (rawImage.raw.dim.width == 3328)
                 {
-                    rawImage.raw.offset.Width = 34;
-                    rawImage.raw.dim.Width -= 66;
+                    rawImage.raw.offset.width = 34;
+                    rawImage.raw.dim.width -= 66;
                 }
-                else if (rawImage.raw.dim.Width == 4936)
-                    rawImage.raw.offset.Width = 4;
+                else if (rawImage.raw.dim.width == 4936)
+                    rawImage.raw.offset.width = 4;
 
                 if (model.Contains("HS50EXR") || model.Contains("F900EXR"))
                 {
-                    rawImage.raw.dim.Width += 2;
-                    rawImage.raw.offset.Width = 0;
+                    rawImage.raw.dim.width += 2;
+                    rawImage.raw.offset.width = 0;
                 }
             }
         }
