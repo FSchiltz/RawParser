@@ -111,7 +111,7 @@ namespace RawNet.Decoder
             Tag size_entry = raw.GetEntry(TagType.DEFAULTCROPSIZE);
             if (origin_entry != null && size_entry != null)
             {
-                Rectangle2D cropped = new Rectangle2D(0, 0, rawImage.raw.dim.Width, rawImage.raw.dim.Height);
+                Rectangle2D cropped = new Rectangle2D(0, 0, rawImage.raw.dim.width, rawImage.raw.dim.height);
                 /* Read crop position (sometimes is rational so use float) */
 
                 if (new Point2D(origin_entry.GetUInt(0), origin_entry.GetUInt(1)).IsThisInside(rawImage.raw.dim))
@@ -128,9 +128,9 @@ namespace RawNet.Decoder
                     throw new RawDecoderException("No positive crop area");
 
                 rawImage.Crop(cropped);
-                if (rawImage.isCFA && cropped.Position.Width % 2 == 1)
+                if (rawImage.isCFA && cropped.Position.width % 2 == 1)
                     rawImage.colorFilter.ShiftLeft(1);
-                if (rawImage.isCFA && cropped.Position.Height % 2 == 1)
+                if (rawImage.isCFA && cropped.Position.height % 2 == 1)
                     rawImage.colorFilter.ShiftDown(1);
             }
             if (rawImage.raw.dim.Area <= 0)
@@ -196,8 +196,8 @@ namespace RawNet.Decoder
 
             rawImage.raw.dim = new Point2D()
             {
-                Width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0),
-                Height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0)
+                width = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0),
+                height = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0)
             };
 
             rawImage.Init(false);
@@ -233,8 +233,8 @@ namespace RawNet.Decoder
                         if (tilew == 0 || tileh == 0)
                             throw new RawDecoderException("Invalid tile size");
 
-                        long tilesX = (rawImage.raw.dim.Width + tilew - 1) / tilew;
-                        long tilesY = (rawImage.raw.dim.Height + tileh - 1) / tileh;
+                        long tilesX = (rawImage.raw.dim.width + tilew - 1) / tilew;
+                        long tilesY = (rawImage.raw.dim.height + tileh - 1) / tileh;
                         long nTiles = tilesX * tilesY;
 
                         Tag offsets = raw.GetEntry(TagType.TILEOFFSETS);
@@ -265,7 +265,7 @@ namespace RawNet.Decoder
                         if (counts.dataCount != offsets.dataCount)
                             throw new RawDecoderException("Byte count number does not match strip size: count:" + counts.dataCount + ", strips:" + offsets.dataCount);
 
-                        if (yPerSlice == 0 || yPerSlice > rawImage.raw.dim.Height)
+                        if (yPerSlice == 0 || yPerSlice > rawImage.raw.dim.height)
                             throw new RawDecoderException("Invalid y per slice");
 
                         uint offY = 0;
@@ -273,7 +273,7 @@ namespace RawNet.Decoder
                         {
                             DngSliceElement e = new DngSliceElement(offsets.GetUInt(s), counts.GetUInt(s), 0, offY)
                             {
-                                mUseBigtable = yPerSlice * rawImage.raw.dim.Height > 1024 * 1024
+                                mUseBigtable = yPerSlice * rawImage.raw.dim.height > 1024 * 1024
                             };
                             offY += yPerSlice;
 
@@ -315,14 +315,14 @@ namespace RawNet.Decoder
                 Point2D topleft = new Point2D(rects[i * 4 + 1], rects[i * 4]);
                 Point2D bottomright = new Point2D(rects[i * 4 + 3], rects[i * 4 + 2]);
                 // Is this a horizontal box, only add it if it covers the active width of the image
-                if (topleft.Width <= top.Width && bottomright.Width >= (rawImage.raw.dim.Width + top.Width))
+                if (topleft.width <= top.width && bottomright.width >= (rawImage.raw.dim.width + top.width))
                 {
-                    rawImage.blackAreas.Add(new BlackArea(topleft.Height, bottomright.Height - topleft.Height, false));
+                    rawImage.blackAreas.Add(new BlackArea(topleft.height, bottomright.height - topleft.height, false));
                 }
-                else if (topleft.Height <= top.Height && bottomright.Height >= (rawImage.raw.dim.Height + top.Height))
+                else if (topleft.height <= top.height && bottomright.height >= (rawImage.raw.dim.height + top.height))
                 {
                     // Is it a vertical box, only add it if it covers the active height of the image
-                    rawImage.blackAreas.Add(new BlackArea(topleft.Width, bottomright.Width - topleft.Width, true));
+                    rawImage.blackAreas.Add(new BlackArea(topleft.width, bottomright.width - topleft.width, true));
                 }
             }
             return rawImage.blackAreas.Count != 0;
@@ -340,7 +340,7 @@ namespace RawNet.Decoder
                 blackdim = new Point2D(bleveldim.GetUInt(0), bleveldim.GetUInt(1));
             }
 
-            if (blackdim.Width == 0 || blackdim.Height == 0)
+            if (blackdim.width == 0 || blackdim.height == 0)
                 return false;
 
             if (raw.GetEntry(TagType.BLACKLEVEL) == null)
@@ -350,7 +350,7 @@ namespace RawNet.Decoder
                 return false;
 
             Tag black_entry = raw.GetEntry(TagType.BLACKLEVEL);
-            if ((int)black_entry.dataCount < blackdim.Width * blackdim.Height)
+            if ((int)black_entry.dataCount < blackdim.width * blackdim.height)
                 throw new RawDecoderException("Black level entry is too small");
 
             if (black_entry.dataCount > 1) Debug.Assert(black_entry.GetFloat(0) == black_entry.GetFloat(1));
@@ -374,15 +374,15 @@ namespace RawNet.Decoder
             Tag blackleveldeltav = raw.GetEntry(TagType.BLACKLEVELDELTAV);
             if (blackleveldeltav != null)
             {
-                if ((int)blackleveldeltav.dataCount < rawImage.raw.dim.Height) throw new RawDecoderException("BLACKLEVELDELTAV array is too small");
+                if ((int)blackleveldeltav.dataCount < rawImage.raw.dim.height) throw new RawDecoderException("BLACKLEVELDELTAV array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
-                for (int i = 0; i < rawImage.raw.dim.Height; i++)
+                for (int i = 0; i < rawImage.raw.dim.height; i++)
                 {
                     black_sum[i & 1] += blackleveldeltav.GetFloat(i);
                 }
 
                 Debug.Assert(black_sum[0] == black_sum[1]);
-                rawImage.black += (int)(black_sum[0] / rawImage.raw.dim.Height * 2.0f);
+                rawImage.black += (int)(black_sum[0] / rawImage.raw.dim.height * 2.0f);
                 //for (int i = 0; i < 4; i++)                  rawImage.blackLevelSeparate[i] += (int)(black_sum[i >> 1] / rawImage.raw.dim.Height * 2.0f);
             }
 
@@ -390,15 +390,15 @@ namespace RawNet.Decoder
             Tag blackleveldeltah = raw.GetEntry(TagType.BLACKLEVELDELTAH);
             if (blackleveldeltah != null)
             {
-                if ((int)blackleveldeltah.dataCount < rawImage.raw.dim.Width) throw new RawDecoderException("BLACKLEVELDELTAH array is too small");
+                if ((int)blackleveldeltah.dataCount < rawImage.raw.dim.width) throw new RawDecoderException("BLACKLEVELDELTAH array is too small");
                 float[] black_sum = { 0.0f, 0.0f };
-                for (int i = 0; i < rawImage.raw.dim.Width; i++)
+                for (int i = 0; i < rawImage.raw.dim.width; i++)
                 {
                     black_sum[i & 1] += blackleveldeltah.GetFloat(i);
                 }
 
                 Debug.Assert(black_sum[0] == black_sum[1]);
-                rawImage.black += (int)(black_sum[0] / rawImage.raw.dim.Width * 2.0f);
+                rawImage.black += (int)(black_sum[0] / rawImage.raw.dim.width * 2.0f);
                 //for (int i = 0; i < 4; i++)                    rawImage.blackLevelSeparate[i] += (int)(black_sum[i & 1] / rawImage.raw.dim.Width * 2.0f);
             }
             return true;
@@ -431,11 +431,11 @@ namespace RawNet.Decoder
             if (cfaSize.Area != raw.GetEntry(TagType.CFAPATTERN).dataCount)
                 throw new RawDecoderException("CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
 
-            for (uint y = 0; y < cfaSize.Height; y++)
+            for (uint y = 0; y < cfaSize.height; y++)
             {
-                for (uint x = 0; x < cfaSize.Width; x++)
+                for (uint x = 0; x < cfaSize.width; x++)
                 {
-                    rawImage.colorFilter.SetColorAt(new Point2D(x, y), (CFAColor)cPat[x + y * cfaSize.Width]);
+                    rawImage.colorFilter.SetColorAt(new Point2D(x, y), (CFAColor)cPat[x + y * cfaSize.width]);
                 }
             }
         }
