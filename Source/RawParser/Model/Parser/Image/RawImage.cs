@@ -45,20 +45,20 @@ namespace RawNet
 
         internal void Init(bool RGB)
         {
-            if (raw.dim.Width > 65535 || raw.dim.Height > 65535)
+            if (raw.dim.width > 65535 || raw.dim.height > 65535)
                 throw new RawDecoderException("Dimensions too large for allocation.");
-            if (raw.dim.Width <= 0 || raw.dim.Height <= 0)
+            if (raw.dim.width <= 0 || raw.dim.height <= 0)
                 throw new RawDecoderException("Dimension of one sides is less than 1 - cannot allocate image.");
-            pitch = (uint)(((raw.dim.Width * Bpp) + 15) / 16) * 16;
+            pitch = (uint)(((raw.dim.width * Bpp) + 15) / 16) * 16;
             if (RGB)
             {
-                raw.red = new T[raw.dim.Width * raw.dim.Height];
-                raw.green = new T[raw.dim.Width * raw.dim.Height];
-                raw.blue = new T[raw.dim.Width * raw.dim.Height];
+                raw.red = new T[raw.dim.width * raw.dim.height];
+                raw.green = new T[raw.dim.width * raw.dim.height];
+                raw.blue = new T[raw.dim.width * raw.dim.height];
             }
             else
-                raw.rawView = new T[raw.dim.Width * raw.dim.Height * raw.cpp];
-            raw.UncroppedDim = new Point2D(raw.dim.Width, raw.dim.Height);
+                raw.rawView = new T[raw.dim.width * raw.dim.height * raw.cpp];
+            raw.UncroppedDim = new Point2D(raw.dim.width, raw.dim.height);
         }
 
         public void Crop(Rectangle2D crop)
@@ -67,7 +67,7 @@ namespace RawNet
             {
                 return;
             }
-            if (crop.Position.Width < 0 || crop.Position.Height < 0 || !crop.HasPositiveArea())
+            if (crop.Position.width < 0 || crop.Position.height < 0 || !crop.HasPositiveArea())
             {
                 return;
             }
@@ -76,9 +76,9 @@ namespace RawNet
 
             raw.dim = crop.Dimension;
 
-            if ((crop.Position.Width & 1) != 0)
+            if ((crop.Position.width & 1) != 0)
                 colorFilter.ShiftLeft(0);
-            if ((crop.Position.Height & 1) != 0)
+            if ((crop.Position.height & 1) != 0)
                 colorFilter.ShiftDown(0);
         }
 
@@ -221,10 +221,10 @@ namespace RawNet
             {
                 new ExifValue("File", metadata.FileNameComplete, ExifGroup.Parser),
                 new ExifValue("Parsing time", metadata.ParsingTimeAsString, ExifGroup.Parser),
-                new ExifValue("Size", "" + ((raw.dim.Width * raw.dim.Height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
-                new ExifValue("Dimension", "" + raw.dim.Width + " x " + raw.dim.Height, ExifGroup.Camera),
-                new ExifValue("Sensor size", "" + ((metadata.RawDim.Width * metadata.RawDim.Height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
-                new ExifValue("Sensor dimension", "" + metadata.RawDim.Width + " x " + metadata.RawDim.Height, ExifGroup.Camera),
+                new ExifValue("Size", "" + ((raw.dim.width * raw.dim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
+                new ExifValue("Dimension", "" + raw.dim.width + " x " + raw.dim.height, ExifGroup.Camera),
+                new ExifValue("Sensor size", "" + ((metadata.RawDim.width * metadata.RawDim.height) / 1000000.0).ToString("F") + " MPixels", ExifGroup.Camera),
+                new ExifValue("Sensor dimension", "" + metadata.RawDim.width + " x " + metadata.RawDim.height, ExifGroup.Camera),
                 new ExifValue("Black level", "" + black, ExifGroup.Image),
                 new ExifValue("White level", "" + whitePoint, ExifGroup.Image),
                 new ExifValue("Color depth", "" + raw.ColorDepth + " bits", ExifGroup.Image),

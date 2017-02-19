@@ -12,9 +12,9 @@ namespace RawEditor.Effect
             Debug.Assert(image?.raw?.rawView != null);
             Debug.Assert(image.raw.dim.Area > 4);
             image.raw.cpp = 3;
-            image.raw.red = new ushort[image.raw.dim.Width * image.raw.dim.Height];
-            image.raw.green = new ushort[image.raw.dim.Width * image.raw.dim.Height];
-            image.raw.blue = new ushort[image.raw.dim.Width * image.raw.dim.Height];
+            image.raw.red = new ushort[image.raw.dim.width * image.raw.dim.height];
+            image.raw.green = new ushort[image.raw.dim.width * image.raw.dim.height];
+            image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
             Deflate(image);
             image.raw.rawView = null;
             if (image.isFujiTrans)
@@ -60,29 +60,29 @@ namespace RawEditor.Effect
 
             //set correct dim
             image.raw.offset = new Point2D();
-            image.raw.UncroppedDim = new Point2D(image.raw.dim.Width, image.raw.dim.Height);
+            image.raw.UncroppedDim = new Point2D(image.raw.dim.width, image.raw.dim.height);
         }
 
         private static void Deflate(RawImage<ushort> image)
         {
-            Parallel.For(0, image.raw.dim.Height, row =>
+            Parallel.For(0, image.raw.dim.height, row =>
             {
-                long realRow = (row + image.raw.offset.Height) * image.raw.UncroppedDim.Width;
-                long cfarow = (row % image.colorFilter.Size.Height) * image.colorFilter.Size.Width;
-                for (int col = 0; col < image.raw.dim.Width; col++)
+                long realRow = (row + image.raw.offset.height) * image.raw.UncroppedDim.width;
+                long cfarow = (row % image.colorFilter.Size.height) * image.colorFilter.Size.width;
+                for (int col = 0; col < image.raw.dim.width; col++)
                 {
-                    long realCol = (col + image.raw.offset.Width) + realRow;
-                    CFAColor pixeltype = image.colorFilter.cfa[cfarow + (col % image.colorFilter.Size.Width)];
+                    long realCol = (col + image.raw.offset.width) + realRow;
+                    CFAColor pixeltype = image.colorFilter.cfa[cfarow + (col % image.colorFilter.Size.width)];
                     switch (pixeltype)
                     {
                         case CFAColor.Green:
-                            image.raw.green[(row * image.raw.dim.Width) + col] = image.raw.rawView[realCol];
+                            image.raw.green[(row * image.raw.dim.width) + col] = image.raw.rawView[realCol];
                             break;
                         case CFAColor.Red:
-                            image.raw.red[(row * image.raw.dim.Width) + col] = image.raw.rawView[realCol];
+                            image.raw.red[(row * image.raw.dim.width) + col] = image.raw.rawView[realCol];
                             break;
                         case CFAColor.Blue:
-                            image.raw.blue[(row * image.raw.dim.Width) + col] = image.raw.rawView[realCol];
+                            image.raw.blue[(row * image.raw.dim.width) + col] = image.raw.rawView[realCol];
                             break;
                     }
                 }

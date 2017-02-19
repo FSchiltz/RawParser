@@ -69,7 +69,7 @@ namespace RawNet.Decoder.Decompressor
             huff[0].bitPump = new BitPumpMSB(input, offset, size);
             int pLeft1 = 0, pLeft2 = 0;
             uint random = huff[0].bitPump.PeekBits(24);
-            for (int y = 0; y < raw.raw.dim.Height; y++)
+            for (int y = 0; y < raw.raw.dim.height; y++)
             {
                 if (split != 0 && (y == split))
                 {
@@ -79,10 +79,10 @@ namespace RawNet.Decoder.Decompressor
                 pUp2[y & 1] += huff[0].Decode();
                 pLeft1 = pUp1[y & 1];
                 pLeft2 = pUp2[y & 1];
-                long dest = y * raw.raw.dim.Width;
+                long dest = y * raw.raw.dim.width;
                 raw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), raw.raw.rawView, dest++, ref random);
                 raw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), raw.raw.rawView, dest++, ref random);
-                for (int x = 1; x < raw.raw.dim.Width / 2; x++)
+                for (int x = 1; x < raw.raw.dim.width / 2; x++)
                 {
                     huff[0].bitPump.CheckPos();
                     pLeft1 += huff[0].Decode();

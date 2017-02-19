@@ -49,7 +49,7 @@ namespace RawEditor.Effect
          */
         static void ChromaticMedian(int iter, int redx, int redy, double side, ImageComponent<ushort> image)
         {
-            uint size = image.dim.Height * image.dim.Width;
+            uint size = image.dim.height * image.dim.width;
             // Auxiliary variables for computing chromatic components
             float[] y = new float[size];
             float[] u = new float[size];
@@ -117,19 +117,19 @@ namespace RawEditor.Effect
             for (int i = 0; i < luttaille; i++) lut[i] = Math.Exp(-(float)i / LUTPRECISION);
 
             // for each pixel
-            for (int y = 2; y < image.dim.Height - 2; y++)
-                for (int x = 2; x < image.dim.Width - 2; x++)
+            for (int y = 2; y < image.dim.height - 2; y++)
+                for (int x = 2; x < image.dim.width - 2; x++)
                 {
                     // index of current pixel
-                    long l = y * image.dim.Width + x;
+                    long l = y * image.dim.width + x;
 
 
                     // Learning zone depending on the window size
                     int iMin = Max(x - bloc, 1);
                     int jMin = Max(y - bloc, 1);
 
-                    int iMax = Min(x + bloc, (int)image.dim.Width - 2);
-                    int jMax = Min(y + bloc, (int)image.dim.Height - 2);
+                    int iMax = Min(x + bloc, (int)image.dim.width - 2);
+                    int jMax = Min(y + bloc, (int)image.dim.height - 2);
 
 
                     // auxiliary variables for computing average
@@ -148,7 +148,7 @@ namespace RawEditor.Effect
                         {
 
                             // index of neighborhood pixel
-                            long l0 = j * image.dim.Width + i;
+                            long l0 = j * image.dim.width + i;
 
                             // We only interpolate channels differents of the current pixel channel
                             if (mask[l] != mask[l0])
@@ -160,15 +160,15 @@ namespace RawEditor.Effect
                                 {
                                     fixed (ushort* redPtr = image.red)
                                     {
-                                        some = L2DistanceR1(redPtr, x, y, i, j, image.dim.Width);
+                                        some = L2DistanceR1(redPtr, x, y, i, j, image.dim.width);
                                     }
                                     fixed (ushort* greenPtr = image.red)
                                     {
-                                        some += L2DistanceR1(greenPtr, x, y, i, j, image.dim.Width);
+                                        some += L2DistanceR1(greenPtr, x, y, i, j, image.dim.width);
                                     }
                                     fixed (ushort* bluePtr = image.red)
                                     {
-                                        some += L2DistanceR1(bluePtr, x, y, i, j, image.dim.Width);
+                                        some += L2DistanceR1(bluePtr, x, y, i, j, image.dim.width);
                                     }
                                 }
                                 // Compute weight

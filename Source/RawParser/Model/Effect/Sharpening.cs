@@ -12,13 +12,13 @@ namespace RawEditor.Effect
             int factor = 11 - sharpness;
             int mul = 8 + factor;
             //sharpen using a unsharp mask
-            Parallel.For(1, buffer.dim.Height - 1, y =>
+            Parallel.For(1, buffer.dim.height - 1, y =>
             {
-                var realY = y * buffer.dim.Width;
-                var beforeY = ((y - 1) * buffer.dim.Width);
-                var afterY = ((y + 1) * buffer.dim.Width);
+                var realY = y * buffer.dim.width;
+                var beforeY = ((y - 1) * buffer.dim.width);
+                var afterY = ((y + 1) * buffer.dim.width);
                 //TODO add cache for first column (loop 2 by 2 pixel)
-                for (int x = 1; x < buffer.dim.Width - 1; x++)
+                for (int x = 1; x < buffer.dim.width - 1; x++)
                 {
                     var realX = realY + x;
                     var beforeRow = beforeY + x;
@@ -57,22 +57,22 @@ namespace RawEditor.Effect
             });
 
             //fill in the edge
-            Parallel.For(0, buffer.dim.Height, y =>
+            Parallel.For(0, buffer.dim.height, y =>
             {
-                var pos = y * buffer.dim.Width;
+                var pos = y * buffer.dim.width;
 
                 buffer.red[pos] = image.red[pos];
                 buffer.green[pos] = image.green[pos];
                 buffer.blue[pos] = image.blue[pos];
 
-                pos += image.dim.Width - 1;
+                pos += image.dim.width - 1;
                 buffer.red[pos] = image.red[pos];
                 buffer.green[pos] = image.green[pos];
                 buffer.blue[pos] = image.blue[pos];
             });
 
-            var p = (buffer.dim.Height - 1) * buffer.dim.Width;
-            Parallel.For(0, buffer.dim.Width, x =>
+            var p = (buffer.dim.height - 1) * buffer.dim.width;
+            Parallel.For(0, buffer.dim.width, x =>
             {
                 buffer.red[x] = image.red[x];
                 buffer.green[x] = image.green[x];

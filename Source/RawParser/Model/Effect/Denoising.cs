@@ -13,12 +13,12 @@ namespace RawEditor.Effect
             int factor = 8 + mul;
 
             //apply a median filtering
-            Parallel.For(1, image.dim.Height - 1, y =>
+            Parallel.For(1, image.dim.height - 1, y =>
             {
-                long realY = y * image.dim.Width;
-                var beforeY = ((y - 1) * image.dim.Width);
-                var afterY = ((y + 1) * image.dim.Width);
-                for (int x = 1; x < image.dim.Width - 1; x++)
+                long realY = y * image.dim.width;
+                var beforeY = ((y - 1) * image.dim.width);
+                var afterY = ((y + 1) * image.dim.width);
+                for (int x = 1; x < image.dim.width - 1; x++)
                 {
                     long realX = realY + x;
                     var beforeRow = beforeY + x;
@@ -56,22 +56,22 @@ namespace RawEditor.Effect
             });
 
             //fill in the edge
-            Parallel.For(0, buffer.dim.Height, y =>
+            Parallel.For(0, buffer.dim.height, y =>
             {
-                var pos = y * buffer.dim.Width;
+                var pos = y * buffer.dim.width;
 
                 buffer.red[pos] = image.red[pos];
                 buffer.green[pos] = image.green[pos];
                 buffer.blue[pos] = image.blue[pos];
 
-                pos += image.dim.Width - 1;
+                pos += image.dim.width - 1;
                 buffer.red[pos] = image.red[pos];
                 buffer.green[pos] = image.green[pos];
                 buffer.blue[pos] = image.blue[pos];
             });
 
-            var p = (buffer.dim.Height - 1) * buffer.dim.Width;
-            Parallel.For(0, buffer.dim.Width, x =>
+            var p = (buffer.dim.height - 1) * buffer.dim.width;
+            Parallel.For(0, buffer.dim.width, x =>
             {
                 buffer.red[x] = image.red[x];
                 buffer.green[x] = image.green[x];

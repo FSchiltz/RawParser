@@ -174,11 +174,11 @@ namespace RawNet.Decoder
                     unsafe
                     {
                         ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                        for (int y = 0; y < rawImage.raw.dim.Height; y++)
+                        for (int y = 0; y < rawImage.raw.dim.height; y++)
                         {
-                            long realY = y * rawImage.raw.dim.Width;
-                            long bufferY = y * rawImage.raw.dim.Width * 4 + +bufferLayout.StartIndex;
-                            for (int x = 0; x < rawImage.raw.dim.Width; x++)
+                            long realY = y * rawImage.raw.dim.width;
+                            long bufferY = y * rawImage.raw.dim.width * 4 + +bufferLayout.StartIndex;
+                            for (int x = 0; x < rawImage.raw.dim.width; x++)
                             {
                                 long realPix = realY + x;
                                 long bufferPix = bufferY + (4 * x);
@@ -260,7 +260,7 @@ namespace RawNet.Decoder
                         break;
                 }
             }
-            rawImage.metadata.RawDim = new Point2D(rawImage.raw.UncroppedDim.Width, rawImage.raw.UncroppedDim.Height);
+            rawImage.metadata.RawDim = new Point2D(rawImage.raw.UncroppedDim.width, rawImage.raw.UncroppedDim.height);
             try
             {
                 //gps info

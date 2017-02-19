@@ -25,37 +25,37 @@ namespace RawEditor.Effect
  */
         static public void Demosaic(RawImage<ushort>  image)
         {
-            Parallel.For(1, image.raw.dim.Height - 1, row =>
+            Parallel.For(1, image.raw.dim.height - 1, row =>
             {
-                for (int col = 1; col < image.raw.dim.Width - 1; col++)
+                for (int col = 1; col < image.raw.dim.width - 1; col++)
                 {
                     CFAColor pixeltype = image.colorFilter.cfa[((row % 2) * 2) + col % 2];
                     if (pixeltype == CFAColor.Green)
                     {
                         //get the red                      
-                        image.raw.red[(row * image.raw.dim.Width) + col] =
-                  (ushort)(image.raw.red[((row - 1) * image.raw.dim.Width) + col] + image.raw.red[((row + 1) * image.raw.dim.Width) + col] >> 1);
+                        image.raw.red[(row * image.raw.dim.width) + col] =
+                  (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col] + image.raw.red[((row + 1) * image.raw.dim.width) + col] >> 1);
                         //get the blue (left) //get the red                      
-                        image.raw.blue[(row * image.raw.dim.Width) + col] =
-                  (ushort)(image.raw.blue[(row * image.raw.dim.Width) + col - 1] + image.raw.blue[(row * image.raw.dim.Width) + col + 1] >> 1);
+                        image.raw.blue[(row * image.raw.dim.width) + col] =
+                  (ushort)(image.raw.blue[(row * image.raw.dim.width) + col - 1] + image.raw.blue[(row * image.raw.dim.width) + col + 1] >> 1);
                     }
                     else
                     {
 
                         //get the red                      
-                        image.raw.green[(row * image.raw.dim.Width) + col] =
-                  (ushort)(image.raw.green[((row - 1) * image.raw.dim.Width) + col] + image.raw.green[((row + 1) * image.raw.dim.Width) + col] >> 1);
+                        image.raw.green[(row * image.raw.dim.width) + col] =
+                  (ushort)(image.raw.green[((row - 1) * image.raw.dim.width) + col] + image.raw.green[((row + 1) * image.raw.dim.width) + col] >> 1);
                         if (pixeltype == CFAColor.Blue)
                         {
                             //get the other value
-                            image.raw.red[(row * image.raw.dim.Width) + col] =
-                    (ushort)(image.raw.red[((row - 1) * image.raw.dim.Width) + col - 1] + image.raw.red[((row - 1) * image.raw.dim.Width) + col + 1] >> 1);
+                            image.raw.red[(row * image.raw.dim.width) + col] =
+                    (ushort)(image.raw.red[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.red[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
                         }
                         else
                         {
                             //get the other value
-                            image.raw.blue[(row * image.raw.dim.Width) + col] =
-                    (ushort)(image.raw.blue[((row - 1) * image.raw.dim.Width) + col - 1] + image.raw.blue[((row - 1) * image.raw.dim.Width) + col + 1] >> 1);
+                            image.raw.blue[(row * image.raw.dim.width) + col] =
+                    (ushort)(image.raw.blue[((row - 1) * image.raw.dim.width) + col - 1] + image.raw.blue[((row - 1) * image.raw.dim.width) + col + 1] >> 1);
 
                         }
                     }

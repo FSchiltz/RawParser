@@ -335,10 +335,10 @@ namespace RawEditor.Effect
             using (var reference = buff.CreateReference())
             {
                 ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                Parallel.For(0, buffer.dim.Height, y =>
+                Parallel.For(0, buffer.dim.height, y =>
                 {
-                    long realY = y * buffer.dim.Width;
-                    for (int x = 0; x < buffer.dim.Width; x++)
+                    long realY = y * buffer.dim.width;
+                    for (int x = 0; x < buffer.dim.width; x++)
                     {
                         long realPix = realY + x;
                         long bufferPix = realPix * 8;
@@ -382,10 +382,10 @@ namespace RawEditor.Effect
             using (var reference = buff.CreateReference())
             {
                 ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                Parallel.For(0, buffer.dim.Height, y =>
+                Parallel.For(0, buffer.dim.height, y =>
                 {
-                    long realY = y * buffer.dim.Width;
-                    for (int x = 0; x < buffer.dim.Width; x++)
+                    long realY = y * buffer.dim.width;
+                    for (int x = 0; x < buffer.dim.width; x++)
                     {
                         long realPix = realY + x;
                         long bufferPix = realPix * 4;
@@ -460,12 +460,12 @@ namespace RawEditor.Effect
             Debug.Assert(buffer.green != null);
             Debug.Assert(buffer.dim.Area == image.dim.Area);
 
-            Parallel.For(0, image.dim.Height, y =>
+            Parallel.For(0, image.dim.height, y =>
             {
-                long realY = (y + image.offset.Height) * image.UncroppedDim.Width;
-                for (int x = 0; x < image.dim.Width; x++)
+                long realY = (y + image.offset.height) * image.UncroppedDim.width;
+                for (int x = 0; x < image.dim.width; x++)
                 {
-                    long realPix = realY + x + image.offset.Width;
+                    long realPix = realY + x + image.offset.width;
                     double red = image.red[realPix] * rMul, green = image.green[realPix] * gMul, blue = image.blue[realPix] * bMul;
                     Luminance.Clip(ref red, ref green, ref blue, maxValue);
                     Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
@@ -473,7 +473,7 @@ namespace RawEditor.Effect
                     s *= saturation;
                     Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
 
-                    long bufferPix = Rotate(x, y, image.dim.Width, image.dim.Height);
+                    long bufferPix = Rotate(x, y, image.dim.width, image.dim.height);
                     buffer.red[bufferPix] = (int)red;
                     buffer.green[bufferPix] = (int)green;
                     buffer.blue[bufferPix] = (int)blue;

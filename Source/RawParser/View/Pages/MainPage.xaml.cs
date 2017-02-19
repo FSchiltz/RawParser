@@ -210,7 +210,6 @@ namespace RawEditor.View.Pages
 
                     if (rawImage.isCFA)
                     {
-
                         var watchDemos = Stopwatch.StartNew();
                         //get the algo from the settings
                         DemosaicAlgorithm algo;
@@ -237,7 +236,7 @@ namespace RawEditor.View.Pages
                     }
 
                     var watchPreview = Stopwatch.StartNew();
-                    ImageHelper.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth,rawImage);
+                    ImageHelper.CreatePreview(SettingStorage.PreviewFactor, ImageDisplay.ViewportHeight, ImageDisplay.ViewportWidth, rawImage);
                     watchPreview.Stop();
                     Debug.WriteLine("Preview done in " + watchPreview.ElapsedMilliseconds + " ms");
 
@@ -441,11 +440,11 @@ namespace RawEditor.View.Pages
             {
                 if (rotation == 1 || rotation == 3)
                 {
-                    bitmap = new SoftwareBitmap(format, (int)dim.Height, (int)dim.Width);
+                    bitmap = new SoftwareBitmap(format, (int)dim.height, (int)dim.width);
                 }
                 else
                 {
-                    bitmap = new SoftwareBitmap(format, (int)dim.Width, (int)dim.Height);
+                    bitmap = new SoftwareBitmap(format, (int)dim.width, (int)dim.height);
                 }
             }).AsTask().Wait();
             return bitmap;
@@ -593,13 +592,13 @@ namespace RawEditor.View.Pages
                 uint h, w;
                 if (EditionValue.Rotation == 1 || EditionValue.Rotation == 3)
                 {
-                    h = rawImage.preview.UncroppedDim.Width;
-                    w = rawImage.preview.UncroppedDim.Height;
+                    h = rawImage.preview.UncroppedDim.width;
+                    w = rawImage.preview.UncroppedDim.height;
                 }
                 else
                 {
-                    h = rawImage.preview.UncroppedDim.Height;
-                    w = rawImage.preview.UncroppedDim.Width;
+                    h = rawImage.preview.UncroppedDim.height;
+                    w = rawImage.preview.UncroppedDim.width;
                 }
                 double factor;
                 if (w > h)
@@ -632,10 +631,10 @@ namespace RawEditor.View.Pages
             double bottom = CropUI.Bottom;
             if (rawImage?.raw != null && rawImage?.preview != null)
             {
-                rawImage.raw.offset = new Point2D((uint)(rawImage.raw.UncroppedDim.Width * left), (uint)(rawImage.raw.UncroppedDim.Height * top));
-                rawImage.raw.dim = new Point2D((uint)(rawImage.raw.UncroppedDim.Width * right), (uint)(rawImage.raw.UncroppedDim.Height * bottom));
-                rawImage.preview.offset = new Point2D((uint)(rawImage.preview.UncroppedDim.Width * left), (uint)(rawImage.preview.UncroppedDim.Height * top));
-                rawImage.preview.dim = new Point2D((uint)(rawImage.preview.UncroppedDim.Width * right), (uint)(rawImage.preview.UncroppedDim.Height * bottom));
+                rawImage.raw.offset = new Point2D((uint)(rawImage.raw.UncroppedDim.width * left), (uint)(rawImage.raw.UncroppedDim.height * top));
+                rawImage.raw.dim = new Point2D((uint)(rawImage.raw.UncroppedDim.width * right), (uint)(rawImage.raw.UncroppedDim.height * bottom));
+                rawImage.preview.offset = new Point2D((uint)(rawImage.preview.UncroppedDim.width * left), (uint)(rawImage.preview.UncroppedDim.height * top));
+                rawImage.preview.dim = new Point2D((uint)(rawImage.preview.UncroppedDim.width * right), (uint)(rawImage.preview.UncroppedDim.height * bottom));
                 UpdatePreview(true);
                 //set the display size
                 SetImageSizeText();
@@ -648,8 +647,8 @@ namespace RawEditor.View.Pages
         //TODO replace by binding if possible
         private void SetImageSizeText()
         {
-            ImageHeight.Text = rawImage.raw.dim.Height + "px";
-            ImageWidth.Text = rawImage.raw.dim.Width + "px";
+            ImageHeight.Text = rawImage.raw.dim.height + "px";
+            ImageWidth.Text = rawImage.raw.dim.width + "px";
         }
 
         private void HideCropUI()
@@ -661,7 +660,7 @@ namespace RawEditor.View.Pages
                 CropUI.isRightDragging = CropUI.isTopDragging = false;
                 ControlVisibilty.Value = true;
             }
-        }        
+        }
 
         private void ListView_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
@@ -709,9 +708,9 @@ namespace RawEditor.View.Pages
             {
                 //get the correct pixel
                 var position = e.GetPosition(ImageBox);
-                uint width = (uint)((position.X / ImageBox.ActualWidth) * rawImage.raw.dim.Width) + rawImage.raw.offset.Width;
-                uint height = (uint)((position.Y / ImageBox.ActualHeight) * rawImage.raw.dim.Height) + rawImage.raw.offset.Height;
-                long pixelPos = height * rawImage.raw.UncroppedDim.Width + width;
+                uint width = (uint)((position.X / ImageBox.ActualWidth) * rawImage.raw.dim.width) + rawImage.raw.offset.width;
+                uint height = (uint)((position.Y / ImageBox.ActualHeight) * rawImage.raw.dim.height) + rawImage.raw.offset.height;
+                long pixelPos = height * rawImage.raw.UncroppedDim.width + width;
                 //Calculate the multiplier
                 double gMul = rawImage.raw.green[pixelPos] + 1;
                 double rMul = gMul / (rawImage.raw.red[pixelPos] + 1);
