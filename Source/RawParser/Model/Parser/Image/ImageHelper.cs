@@ -24,35 +24,35 @@ namespace RawNet
                 // Process horizontal area 
                 if (!area.IsVertical)
                 {
-                    if (area.Offset + area.Size > image.raw.UncroppedDim.Height)
+                    if (area.Offset + area.Size > image.raw.UncroppedDim.height)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than height of image");
                     for (uint y = area.Offset; y < area.Offset + area.Size; y++)
                     {
-                        ushort[] pixel = image.preview.rawView.Skip((int)(image.raw.offset.Width + image.raw.dim.Width * y)).ToArray();
+                        ushort[] pixel = image.preview.rawView.Skip((int)(image.raw.offset.width + image.raw.dim.width * y)).ToArray();
                         int[] localhist = histogram.Skip((int)(y & 1) * (65536 * 2)).ToArray();
-                        for (uint x = image.raw.offset.Width; x < image.raw.dim.Width + image.raw.offset.Width; x++)
+                        for (uint x = image.raw.offset.width; x < image.raw.dim.width + image.raw.offset.width; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
                     }
-                    totalpixels += area.Size * image.raw.dim.Width;
+                    totalpixels += area.Size * image.raw.dim.width;
                 }
 
                 // Process vertical area 
                 if (area.IsVertical)
                 {
-                    if (area.Offset + area.Size > image.raw.UncroppedDim.Width)
+                    if (area.Offset + area.Size > image.raw.UncroppedDim.width)
                         throw new RawDecoderException("RawImageData::calculateBlackAreas: Offset + size is larger than width of image");
-                    for (uint y = image.raw.offset.Height; y < image.raw.dim.Height + image.raw.offset.Height; y++)
+                    for (uint y = image.raw.offset.height; y < image.raw.dim.height + image.raw.offset.height; y++)
                     {
-                        ushort[] pixel = image.preview.rawView.Skip((int)(area.Offset + image.raw.dim.Width * y)).ToArray();
+                        ushort[] pixel = image.preview.rawView.Skip((int)(area.Offset + image.raw.dim.width * y)).ToArray();
                         int[] localhist = histogram.Skip((int)(y & 1) * (65536 * 2)).ToArray();
                         for (uint x = area.Offset; x < area.Size + area.Offset; x++)
                         {
                             localhist[((x & 1) << 16) + pixel[0]]++;
                         }
                     }
-                    totalpixels += area.Size * image.raw.dim.Height;
+                    totalpixels += area.Size * image.raw.dim.height;
                 }
             }
 
@@ -84,10 +84,10 @@ namespace RawNet
 
             if (image.black != 0 || image.whitePoint != maxValue)
             {
-                Parallel.For(image.raw.offset.Height, image.raw.dim.Height + image.raw.offset.Height, y =>
+                Parallel.For(image.raw.offset.height, image.raw.dim.height + image.raw.offset.height, y =>
                 {
-                    long pos = y * image.raw.UncroppedDim.Width;
-                    for (uint x = image.raw.offset.Width; x < (image.raw.offset.Width + image.raw.dim.Width) * image.raw.cpp; x++)
+                    long pos = y * image.raw.UncroppedDim.width;
+                    for (uint x = image.raw.offset.width; x < (image.raw.offset.width + image.raw.dim.width) * image.raw.cpp; x++)
                     {
                         long value = (long)((image.raw.rawView[pos + x] - image.black) * factor);
                         if (value > image.whitePoint) value = maxValue;
@@ -109,13 +109,13 @@ namespace RawNet
             uint previewFactor = 0;
             if (factor == FactorValue.Auto)
             {
-                if (image.raw.dim.Height > image.raw.dim.Width)
+                if (image.raw.dim.height > image.raw.dim.width)
                 {
-                    previewFactor = (uint)((image.raw.dim.Height / viewHeight) * 0.9);
+                    previewFactor = (uint)((image.raw.dim.height / viewHeight) * 0.9);
                 }
                 else
                 {
-                    previewFactor = (uint)((image.raw.dim.Width / viewWidth) * 0.9);
+                    previewFactor = (uint)((image.raw.dim.width / viewWidth) * 0.9);
                 }
                 if (previewFactor < 1)
                 {
@@ -127,15 +127,15 @@ namespace RawNet
                 previewFactor = (uint)factor;
             }
 
-            image.preview = new ImageComponent<ushort>(new Point2D(image.raw.dim.Width / previewFactor, image.raw.dim.Height / previewFactor), image.raw.ColorDepth);
+            image.preview = new ImageComponent<ushort>(new Point2D(image.raw.dim.width / previewFactor, image.raw.dim.height / previewFactor), image.raw.ColorDepth);
             uint doubleFactor = previewFactor * previewFactor;
             ushort maxValue = (ushort)((1 << image.raw.ColorDepth) - 1);
             //loop over each block
-            Parallel.For(0, image.preview.dim.Height, y =>
+            Parallel.For(0, image.preview.dim.height, y =>
             {
-                var posY = (y * image.preview.dim.Width);
+                var posY = (y * image.preview.dim.width);
                 var rY = (y * previewFactor);
-                for (int x = 0; x < image.preview.dim.Width; x++)
+                for (int x = 0; x < image.preview.dim.width; x++)
                 {
                     var posX = posY + x;
                     //find the mean of each block
@@ -143,7 +143,7 @@ namespace RawNet
                     var rX = (x * previewFactor);
                     for (int i = 0; i < previewFactor; i++)
                     {
-                        long realY = (image.raw.dim.Width * (rY + i)) + rX;
+                        long realY = (image.raw.dim.width * (rY + i)) + rX;
                         for (int k = 0; k < previewFactor; k++)
                         {
                             long realX = realY + k;

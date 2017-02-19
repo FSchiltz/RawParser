@@ -35,10 +35,10 @@ namespace RawNet
             Debug.Assert(raw?.rawView != null);
             if (tables != null && ntables > 0)
             {
-                Parallel.For(raw.offset.Height, raw.dim.Height + raw.offset.Height, y =>
+                Parallel.For(raw.offset.height, raw.dim.height + raw.offset.height, y =>
                 {
-                    long pos = y * raw.UncroppedDim.Width * raw.cpp;
-                    for (uint x = raw.offset.Width; x < (raw.offset.Width + raw.dim.Width) * raw.cpp; x++)
+                    long pos = y * raw.UncroppedDim.width * raw.cpp;
+                    for (uint x = raw.offset.width; x < (raw.offset.width + raw.dim.width) * raw.cpp; x++)
                     {
                         raw.rawView[x + pos] = tables[raw.rawView[x + pos]];
                     }

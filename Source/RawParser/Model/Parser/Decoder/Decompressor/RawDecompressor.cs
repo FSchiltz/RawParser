@@ -12,8 +12,8 @@ namespace RawNet.Decoder.Decompressor
         public static void ReadUncompressedRaw(TiffBinaryReader input, Point2D size, Point2D offset, long inputPitch, int bitPerPixel, BitOrder order, RawImage<ushort>  rawImage)
         {
             //uint outPitch = rawImage.pitch;
-            long w = size.Width;
-            long h = size.Height;
+            long w = size.width;
+            long h = size.height;
 
             if (input.RemainingSize < (inputPitch * h))
             {
@@ -29,13 +29,13 @@ namespace RawNet.Decoder.Decompressor
                 throw new RawDecoderException("Unsupported bit depth");
 
             int skipBits = (int)(inputPitch - w * rawImage.raw.cpp * bitPerPixel / 8);  // Skip per line
-            if (offset.Height > rawImage.raw.dim.Height)
+            if (offset.height > rawImage.raw.dim.height)
                 throw new RawDecoderException("Invalid y offset");
-            if (offset.Width + size.Width > rawImage.raw.dim.Width)
+            if (offset.width + size.width > rawImage.raw.dim.width)
                 throw new RawDecoderException("Invalid x offset");
 
-            uint y = offset.Height;
-            h = Math.Min(h + offset.Height, rawImage.raw.dim.Height);
+            uint y = offset.height;
+            h = Math.Min(h + offset.height, rawImage.raw.dim.height);
 
             /*if (mRaw.getDataType() == TYPE_FLOAT32)
             {
@@ -82,7 +82,7 @@ namespace RawNet.Decoder.Decompressor
             for (; y < h; y++)
             {
                 bits.CheckPos();
-                var skip = (offset.Width + y * rawImage.raw.dim.Width) * rawImage.raw.cpp;
+                var skip = (offset.width + y * rawImage.raw.dim.width) * rawImage.raw.cpp;
                 for (uint x = 0; x < w; x++)
                 {
                     rawImage.raw.rawView[x + skip] = (ushort)bits.GetBits(bitPerPixel); ;
@@ -119,7 +119,7 @@ namespace RawNet.Decoder.Decompressor
 
             for (int y = 0; y < height; y++)
             {
-                var skip = (y * rawImage.raw.UncroppedDim.Width);
+                var skip = (y * rawImage.raw.UncroppedDim.width);
                 for (int x = 0; x < width; x += 2)
                 {
                     uint g1 = input.ReadByte();
@@ -150,9 +150,9 @@ namespace RawNet.Decoder.Decompressor
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.dim.Width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.dim.Width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
+                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                     if ((x % 10) == 8) input.Position++;
                 }
             }
@@ -173,7 +173,7 @@ namespace RawNet.Decoder.Decompressor
 
             for (int y = 0; y < height; y++)
             {
-                var skip = (y * rawImage.raw.dim.Width);
+                var skip = (y * rawImage.raw.dim.width);
                 for (int x = 0; x < width; x += 2)
                 {
                     uint g1 = input.ReadByte();
@@ -200,9 +200,9 @@ namespace RawNet.Decoder.Decompressor
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
@@ -219,7 +219,7 @@ namespace RawNet.Decoder.Decompressor
             for (int row = 0; row < height; row++)
             {
                 y = row % half * 2 + row / half;
-                var skip = y * rawImage.raw.dim.Width;
+                var skip = y * rawImage.raw.dim.width;
                 if (y == 1)
                 {
                     // The second field starts at a 2048 byte aligment
@@ -251,7 +251,7 @@ namespace RawNet.Decoder.Decompressor
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
                 }
             }
         }
@@ -266,7 +266,7 @@ namespace RawNet.Decoder.Decompressor
 
             for (int y = 0; y < height; y++)
             {
-                var skip = y * rawImage.raw.dim.Width;
+                var skip = y * rawImage.raw.dim.width;
                 for (int x = 0; x < width; x += 1)
                 {
                     uint g1 = input.ReadByte();
@@ -286,7 +286,7 @@ namespace RawNet.Decoder.Decompressor
 
             for (int y = 0; y < height; y++)
             {
-                var skip = y * rawImage.raw.dim.Width;
+                var skip = y * rawImage.raw.dim.width;
                 for (int x = 0; x < width; x += 1)
                 {
                     uint g1 = input.ReadByte();
@@ -306,7 +306,7 @@ namespace RawNet.Decoder.Decompressor
 
             for (int y = 0; y < height; y++)
             {
-                var skip = y * rawImage.raw.dim.Width;
+                var skip = y * rawImage.raw.dim.width;
                 for (int x = 0; x < width; x += 1)
                 {
                     rawImage.raw.rawView[skip + x] = input.ReadUInt16();
@@ -327,7 +327,7 @@ namespace RawNet.Decoder.Decompressor
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.Width + x] = (ushort)(((g2 << 8) | g1) >> 4);
+                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g2 << 8) | g1) >> 4);
                 }
             }
         }

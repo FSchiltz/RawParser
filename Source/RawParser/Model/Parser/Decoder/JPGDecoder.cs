@@ -30,7 +30,7 @@ namespace RawNet.Decoder
             //fill useless metadata
             rawImage.IsGammaCorrected = false;
             rawImage.whitePoint = byte.MaxValue;
-            rawImage.metadata.RawDim = new Point2D(rawImage.raw.UncroppedDim.Width, rawImage.raw.UncroppedDim.Height);
+            rawImage.metadata.RawDim = new Point2D(rawImage.raw.UncroppedDim.width, rawImage.raw.UncroppedDim.height);
             rawImage.metadata.WbCoeffs = new WhiteBalance(1, 1, 1);
             /*List<string> list = new List<string>
             {
@@ -65,13 +65,13 @@ namespace RawNet.Decoder
                 unsafe
                 {
                     ((IMemoryBufferByteAccess)reference).GetBuffer(out var temp, out uint capacity);
-                    for (int y = 0; y < rawImage.raw.dim.Height; y++)
+                    for (int y = 0; y < rawImage.raw.dim.height; y++)
                     {
-                        long bufferY = y * rawImage.raw.dim.Width * 4 + bufferLayout.StartIndex;
-                        for (int x = 0; x < rawImage.raw.dim.Width; x++)
+                        long bufferY = y * rawImage.raw.dim.width * 4 + bufferLayout.StartIndex;
+                        for (int x = 0; x < rawImage.raw.dim.width; x++)
                         {
                             long bufferPix = bufferY + (4 * x);
-                            long position = (y * rawImage.raw.dim.Width) + x;
+                            long position = (y * rawImage.raw.dim.width) + x;
                             rawImage.raw.red[position] = temp[bufferPix + 2];
                             rawImage.raw.green[position] = temp[bufferPix + 1];
                             rawImage.raw.blue[position] = temp[bufferPix];

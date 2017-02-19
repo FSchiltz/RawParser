@@ -18,12 +18,12 @@ namespace RawEditor.Effect
                 green = new int[maxValue]
             };
 
-            for (int y = 0; y < image.dim.Height; y++)
+            for (int y = 0; y < image.dim.height; y++)
             {
-                long realY = (y + image.offset.Height) * image.UncroppedDim.Width;
-                for (int x = 0; x < image.dim.Width; x++)
+                long realY = (y + image.offset.height) * image.UncroppedDim.width;
+                for (int x = 0; x < image.dim.width; x++)
                 {
-                    long realPix = realY + x + image.offset.Width;
+                    long realPix = realY + x + image.offset.width;
                     histogram.luma[(int)(0.299 * image.red[realPix] + 0.587 * image.green[realPix] + 0.114 * image.blue[realPix])]++;
                     histogram.red[image.red[realPix]]++;
                     histogram.green[image.green[realPix]]++;
@@ -40,12 +40,12 @@ namespace RawEditor.Effect
                 luma = new int[1 << (int)image.ColorDepth]
             };
 
-            for (int y = 0; y < image.dim.Height; y++)
+            for (int y = 0; y < image.dim.height; y++)
             {
-                long realY = (y + image.offset.Height) * image.UncroppedDim.Width;
-                for (int x = 0; x < image.dim.Width; x++)
+                long realY = (y + image.offset.height) * image.UncroppedDim.width;
+                for (int x = 0; x < image.dim.width; x++)
                 {
-                    long realPix = realY + x + image.offset.Width;
+                    long realPix = realY + x + image.offset.width;
 
                     histogram.luma[(int)((Math.Max(Math.Max(image.red[realPix], image.green[realPix]), image.blue[realPix])
                         + Math.Min(Math.Min(image.red[realPix], image.green[realPix]), image.blue[realPix])) / 2.0)]++;
@@ -62,7 +62,7 @@ namespace RawEditor.Effect
             //apply histogram equalisation if needed using the histogram
             //create a lookup table
             var lut = new int[uint.MaxValue];
-            double pixelCount = image.dim.Height * image.dim.Width;
+            double pixelCount = image.dim.height * image.dim.width;
 
             int sum = 0;
             // build a LUT containing scale factor
@@ -72,10 +72,10 @@ namespace RawEditor.Effect
                 lut[i] = (int)(sum * 255 / pixelCount);
             }
             // transform image using sum histogram as a LUT
-            Parallel.For(0, image.dim.Height, y =>
+            Parallel.For(0, image.dim.height, y =>
             {
-                long realY = y * image.dim.Width;
-                for (int x = 0; x < image.dim.Width; x++)
+                long realY = y * image.dim.width;
+                for (int x = 0; x < image.dim.width; x++)
                 {
                     long realX = realY + x;
                     image.red[realX] = lut[image.red[realX]];

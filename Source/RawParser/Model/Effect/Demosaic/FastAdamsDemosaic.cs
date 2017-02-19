@@ -85,23 +85,23 @@ namespace RawEditor.Effect
         {
             // Interpolate the green channel by bilinear on the boundaries  
             // make the average of four neighbouring green pixels: Nourth, South, East, West
-            Parallel.For(0, image.dim.Height, row =>
+            Parallel.For(0, image.dim.height, row =>
             {
                 var cfapos = (row % 2) * 2;
-                var posRow = row * image.dim.Width;
+                var posRow = row * image.dim.width;
 
                 long gn = 1, gs;
                 if (row > 0) gn = row - 1;
-                if (row < image.dim.Height - 1) gs = row + 1; else gs = image.dim.Height - 2;
-                gs *= image.dim.Width;
-                gn *= image.dim.Width;
+                if (row < image.dim.height - 1) gs = row + 1; else gs = image.dim.height - 2;
+                gs *= image.dim.width;
+                gn *= image.dim.width;
 
-                for (long col = 0; col < image.dim.Width; col++)
+                for (long col = 0; col < image.dim.width; col++)
                 {
                     var pos = posRow + col;
                     var color = cfa.cfa[cfapos + (col % 2)];
                     long gw = 1, ge;
-                    if (col < image.dim.Width - 1) ge = col + 1; else ge = image.dim.Width - 2;
+                    if (col < image.dim.width - 1) ge = col + 1; else ge = image.dim.width - 2;
                     if (col > 0) gw = col - 1;
 
                     if ((color != CFAColor.Green))

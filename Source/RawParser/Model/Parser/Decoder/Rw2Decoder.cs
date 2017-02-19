@@ -105,15 +105,15 @@ namespace RawNet.Decoder
         {
             int i, j, sh = 0;
             int[] pred = new int[2], nonz = new int[2];
-            uint w = rawImage.raw.dim.Width / 14;
+            uint w = rawImage.raw.dim.width / 14;
 
             bool zero_is_bad = true;
 
             PanaBitpump bits = new PanaBitpump(input_start, load_flags);
             List<Int32> zero_pos = new List<int>();
-            for (int y = 0; y < rawImage.raw.dim.Height; y++)
+            for (int y = 0; y < rawImage.raw.dim.height; y++)
             {
-                fixed (UInt16* t = &rawImage.raw.rawView[y * rawImage.raw.dim.Width])
+                fixed (UInt16* t = &rawImage.raw.rawView[y * rawImage.raw.dim.width])
                 {
                     UInt16* dest = t;
                     for (int x = 0; x < w; x++)
@@ -259,7 +259,7 @@ namespace RawNet.Decoder
             if (rawImage.raw.rawView == null)
                 return "";
 
-            ratio = rawImage.raw.dim.Width / (float)rawImage.raw.dim.Height;
+            ratio = rawImage.raw.dim.width / (float)rawImage.raw.dim.height;
 
             float min_diff = Math.Abs(ratio - 16.0f / 9.0f);
             string closest_match = "16:9";

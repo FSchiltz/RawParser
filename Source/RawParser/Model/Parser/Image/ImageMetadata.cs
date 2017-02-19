@@ -70,7 +70,7 @@ namespace RawNet
 
         public ImageMetadata()
         {
-            Subsampling.Width = Subsampling.Height = 1;
+            Subsampling.width = Subsampling.height = 1;
             IsoSpeed = 0;
             PixelAspectRatio = 1;
             FujiRotationPos = 0;

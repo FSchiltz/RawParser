@@ -54,7 +54,7 @@ namespace RawNet
                 //Needs to run in UI thread
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)dim.Width, (int)dim.Height);
+                    bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, (int)dim.width, (int)dim.height);
                 }).AsTask().Wait();
 
                 using (BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write))

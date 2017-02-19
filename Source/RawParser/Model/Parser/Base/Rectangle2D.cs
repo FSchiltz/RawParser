@@ -7,12 +7,12 @@ namespace RawNet
     {
         public Point2D Position { get; set; }
         public Point2D Dimension { get; set; }
-        public uint Top { get { return Position.Height; } }
-        public uint Bottom { get { return Position.Height + Dimension.Height; } }
-        public uint Left { get { return Position.Width; } }
-        public uint Right { get { return Position.Width + Dimension.Width; } }
-        public uint Width { get { return Dimension.Width; } }
-        public uint Height { get { return Dimension.Height; } }
+        public uint Top { get { return Position.height; } }
+        public uint Bottom { get { return Position.height + Dimension.height; } }
+        public uint Left { get { return Position.width; } }
+        public uint Right { get { return Position.width + Dimension.width; } }
+        public uint Width { get { return Dimension.width; } }
+        public uint Height { get { return Dimension.height; } }
         public Point2D TopLeft { get { return Position; } set { Position = value; } }
         public Point2D BottomRight { get { return Dimension + Position; } set { Dimension = new Point2D(value) - Position; } }
 
@@ -35,13 +35,13 @@ namespace RawNet
         {
             Point2D br1 = BottomRight;
             Point2D br2 = otherPoint.BottomRight;
-            return Position.Width >= otherPoint.Position.Width && Position.Height >= otherPoint.Position.Height && br1.Width <= br2.Width && br1.Height <= br2.Height;
+            return Position.width >= otherPoint.Position.width && Position.height >= otherPoint.Position.height && br1.width <= br2.width && br1.height <= br2.height;
         }
 
         public bool IsPointInside(Point2D check)
         {
             Point2D br1 = BottomRight;
-            return Position.Width <= check.Width && Position.Height <= check.Height && br1.Width >= check.Width && br1.Height >= check.Height;
+            return Position.width <= check.width && Position.height <= check.height && br1.width >= check.width && br1.height >= check.height;
         }
 
 
@@ -56,14 +56,14 @@ namespace RawNet
             BottomRight = bottomRight;
         }
         public void SetSize(Point2D size) { Dimension = size; }
-        public bool HasPositiveArea() { return (Dimension.Width > 0) && (Dimension.Height > 0); }
+        public bool HasPositiveArea() { return (Dimension.width > 0) && (Dimension.height > 0); }
 
         /* Crop, so area is positive, and return true, if there is any area left */
         /* This will ensure that bottom right is never on the left/top of the offset */
         public bool CropArea()
         {
-            Dimension.Width = Math.Max(0, Dimension.Width);
-            Dimension.Height = Math.Max(0, Dimension.Height);
+            Dimension.width = Math.Max(0, Dimension.width);
+            Dimension.height = Math.Max(0, Dimension.height);
             return HasPositiveArea();
         }
 
