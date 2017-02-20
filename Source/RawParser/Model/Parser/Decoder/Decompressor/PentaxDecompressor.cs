@@ -105,7 +105,6 @@ namespace RawNet.Decoder.Decompressor
 
             for (int y = 0; y < raw.raw.dim.height; y++)
             {
-                huff[0].bitPump.CheckPos();
                 var realY = y * raw.raw.dim.width;
                 pUp1[y & 1] += huff[0].Decode();
                 pUp2[y & 1] += huff[0].Decode();

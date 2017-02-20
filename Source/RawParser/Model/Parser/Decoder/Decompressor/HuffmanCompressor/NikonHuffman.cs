@@ -51,21 +51,21 @@ namespace RawNet.Decoder.HuffmanCompressor
             int code, val;
 
             bitPump.Fill();
-            code = (int)bitPump.PeekBitsNoFill(14);
+            code = (int)bitPump.PeekBits(14);
             val = bigTable[code];
             if ((val & 0xff) != 0xff)
             {
-                bitPump.SkipBitsNoFill(val & 0xff);
+                bitPump.SkipBits(val & 0xff);
                 return val >> 8;
             }
 
             rv = 0;
-            code = (int)bitPump.PeekByteNoFill();
+            code = bitPump.PeekByte();
             val = (int)numbits[code];
             l = val & 15;
             if (l != 0)
             {
-                bitPump.SkipBitsNoFill(l);
+                bitPump.SkipBits(l);
                 rv = val >> 4;
             }
             else
@@ -74,7 +74,7 @@ namespace RawNet.Decoder.HuffmanCompressor
                 l = 8;
                 while (code > maxcode[l])
                 {
-                    temp = (int)bitPump.GetBitNoFill();
+                    temp = (int)bitPump.GetBit();
                     code = (code << 1) | temp;
                     l++;
                 }
