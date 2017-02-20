@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -9,7 +10,7 @@ namespace RawNet.Decoder.Decompressor
         /** Attempt to decode the image 
          * A RawDecoderException will be thrown if the image cannot be decoded
          */
-        public static void ReadUncompressedRaw(TiffBinaryReader input, Point2D size, Point2D offset, long inputPitch, int bitPerPixel, BitOrder order, RawImage<ushort>  rawImage)
+        public static void ReadUncompressedRaw(TiffBinaryReader input, Point2D size, Point2D offset, long inputPitch, int bitPerPixel, BitOrder order, RawImage<ushort> rawImage)
         {
             //uint outPitch = rawImage.pitch;
             long w = size.width;
@@ -55,7 +56,13 @@ namespace RawNet.Decoder.Decompressor
             switch (order)
             {
                 case BitOrder.Jpeg:
-                    bits = new BitPumpMSB(input);
+                    if (skipBits == 0)
+                    {
+                        DecodeMSBUncomrpessed(input, w, h, rawImage);
+                        return;
+                    }
+                    else
+                        bits = new BitPumpMSB(input);
                     break;
                 case BitOrder.Jpeg16:
                     bits = new BitPumpMSB16(input);
@@ -91,7 +98,32 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode8BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void DecodeMSBUncomrpessed(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        {
+            //find the fixed point
+            var fix = rawImage.raw.UncroppedDim.Area / (rawImage.raw.ColorDepth * 8);
+            Debug.Assert(rawImage.raw.UncroppedDim.Area % (rawImage.raw.ColorDepth * 8) == 0);
+            var pumps = new BitPump[fix];
+            var bitPerPixel = rawImage.raw.ColorDepth;
+            //calculate each offset
+            for (int i = 0; i < fix; i++)
+            {
+                //read the data
+                pumps[i] = new BitPumpMSB(input, input.BaseStream.Position, fix);
+            }
+
+            Parallel.For(0, fix, (offset) =>
+             {
+                 var pos = fix * offset;
+                 for (uint x = 0; x < fix; x++)
+                 {
+                     rawImage.raw.rawView[pos + x] = (ushort)pumps[offset].GetBits(bitPerPixel);
+                 }
+             });
+        }
+
+
+        public static void Decode8BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             var count = width * height;
             if (input.RemainingSize < count)
@@ -110,7 +142,7 @@ namespace RawNet.Decoder.Decompressor
             });
         }
 
-        public static void Decode12BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode12BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             if (input.RemainingSize < ((width * 12 / 8) * height) && input.RemainingSize > (width * 12 / 8))
             {
@@ -131,7 +163,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawWithControl(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode12BitRawWithControl(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             // Calulate expected bytes per line.
             long perline = (width * 12 / 8);
@@ -158,7 +190,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEWithControl(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode12BitRawBEWithControl(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             // Calulate expected bytes per line.
             long perline = (width * 12 / 8);
@@ -186,7 +218,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBE(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode12BitRawBE(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             if (width < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
 
@@ -207,7 +239,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEInterlaced(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode12BitRawBEInterlaced(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             if (input.RemainingSize < ((width * 12 / 8) * height))
             {
@@ -239,7 +271,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEunpacked(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode12BitRawBEunpacked(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             if (input.RemainingSize < width * height * 2)
             {
@@ -256,7 +288,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEunpackedLeftAligned(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode12BitRawBEunpackedLeftAligned(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             // uint pitch = rawImage.pitch;
             if (input.RemainingSize < width * height * 2)
@@ -276,7 +308,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode14BitRawBEunpacked(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode14BitRawBEunpacked(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             // uint pitch = rawImage.pitch;
             if (input.RemainingSize < width * height * 2)
@@ -296,7 +328,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode16BitRawUnpacked(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode16BitRawUnpacked(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             //uint pitch = rawImage.pitch;
             if (input.RemainingSize < width * height * 2)
@@ -314,7 +346,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawUnpacked(TiffBinaryReader input, long width, long height, RawImage<ushort>  rawImage)
+        public static void Decode12BitRawUnpacked(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             if (input.RemainingSize < width * height * 2)
             {
