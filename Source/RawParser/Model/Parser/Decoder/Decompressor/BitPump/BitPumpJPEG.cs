@@ -186,7 +186,9 @@ namespace RawNet.Decoder.Decompressor
 
         public override ushort GetLowBits(int nbits)
         {
-            throw new NotImplementedException();
+            ushort ret = (ushort)PeekBits(nbits);
+            left -= nbits;
+            return ret;
         }
     }
 }

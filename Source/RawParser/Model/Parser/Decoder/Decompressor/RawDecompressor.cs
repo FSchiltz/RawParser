@@ -52,18 +52,22 @@ namespace RawNet.Decoder.Decompressor
                 return;
             }
 
-            if (order == BitOrder.Plain)
+
+            if (order == BitOrder.Plain && bitPerPixel == 16 && Common.GetHostEndianness() == Endianness.Little)
             {
-                if (bitPerPixel == 16 && Common.GetHostEndianness() == Endianness.Little)
-                {
-                    Decode16BitRawUnpacked(input, width, height, rawImage);
-                    return;
-                }
-                if (bitPerPixel == 12 && width == inputPitch * 8 / 12 && Common.GetHostEndianness() == Endianness.Little)
-                {
-                    Decode12BitRaw(input, width, height, rawImage);
-                    return;
-                }
+                Decode16BitRawUnpacked(input, width, height, rawImage);
+                return;
+            }
+            else if (order == BitOrder.Plain && bitPerPixel == 12 && width == inputPitch * 8 / 12 && Common.GetHostEndianness() == Endianness.Little)
+            {
+                Decode12BitRaw(input, width, height, rawImage);
+                return;
+            }
+            else if (order == BitOrder.Jpeg && bitPerPixel == 10 && skipBits == 0)
+            {
+                //optimisation for DNG from windows phone
+                Decode10BitMSB(input, width, height, rawImage);
+                return;
             }
 
             width *= rawImage.raw.cpp;
@@ -93,10 +97,33 @@ namespace RawNet.Decoder.Decompressor
                 {
                     for (uint x = 0; x < width; x++)
                     {
-                        rawImage.raw.rawView[x + pos] = (ushort)pump.GetBits(10);
+                        rawImage.raw.rawView[x + pos] = pump.GetLowBits(bitPerPixel);
                     }
                 });
             }
+        }
+
+        public static void Decode10BitMSB(TiffBinaryReader input, uint width, uint height, RawImage<ushort> rawImage)
+        {
+            //read file by block of 32bits *10 (320)
+            Debug.Assert((width % 320) == 0);
+            //read input
+            byte[][] data = new byte[height][];
+            int count = ((int)width * 10) / 8;
+            for (int i = 0; i < height; i++)
+            {
+                data[i] = input.ReadBytes(count);
+            }
+            //loop over the image
+            Parallel.For(0, height, y =>
+            {
+                for (int x = 0; x < width; x += 320) {
+                    //process by 320 block of bits
+
+                }
+            });
+
+
         }
 
         public static void Decode8BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)

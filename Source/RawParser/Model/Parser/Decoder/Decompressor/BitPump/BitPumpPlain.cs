@@ -89,7 +89,7 @@ namespace RawNet.Decoder.Decompressor
         {
             fixed (byte* t = &buffer[off >> 3])
             {
-                var v = (ushort)(*(int*)t >> ((int)off & 7) & ((1 << nbits) - 1));
+                var v = (ushort)(*(int*)t >> (off & 7) & ((1 << nbits) - 1));
                 off += nbits;
                 return v;
             }

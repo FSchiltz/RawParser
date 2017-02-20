@@ -125,7 +125,8 @@ namespace RawNet.Decoder.Decompressor
 
         public override ushort GetLowBits(int nbits)
         {
-            throw new NotImplementedException();
+            if (left < nbits) Fill();
+            return (ushort)((int)(current >> (left -= (nbits))) & ((1 << nbits) - 1));
         }
     }
 }
