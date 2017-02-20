@@ -203,7 +203,7 @@
                                     <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="20" Value="{x:Bind EditionValue.Contrast, Mode=TwoWay}"
                                             Minimum="-20" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
                                     <ToggleSwitch x:Name="GammaToggle" x:Uid="GammaToggle" IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}"
-                                            IsOn="{x:Bind EditionValue.ReverseGamma, Mode=TwoWay}" Toggled="{x:Bind EditingControlChanged}" Margin="0,10,0,5"
+                                            IsOn="{x:Bind EditionValue.ReverseGamma, Mode=TwoWay}" Tapped="{x:Bind EditingControlChanged}" Margin="0,10,0,5"
                                             FontSize="14" HorizontalAlignment="Left" HorizontalContentAlignment="Left">Apply gamma curve</ToggleSwitch>
                                     <RadioButton x:Name="HighGamma" IsChecked="False" GroupName="Gamma"
                                             IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">High</RadioButton>
@@ -217,32 +217,32 @@
                         <uihelper:CollapsibleBox x:Uid="CropBox">
                             <uihelper:CollapsibleBox.MainContent>
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                        <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateLeftButton_Tapped" Margin="0,0,3,0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,6">
+                                        <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateLeftButton_Tapped" Margin="0,0,6,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <SymbolIcon Symbol="Undo"></SymbolIcon>
                                                 <TextBlock x:Uid="RotateLeft"></TextBlock>
                                             </StackPanel>
                                         </Button>
-                                        <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateRightButton_Tapped" Margin="3,0,0,0">
+                                        <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="RotateRightButton_Tapped" Margin="6,0,0,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <SymbolIcon Symbol="Redo"></SymbolIcon>
                                                 <TextBlock x:Uid="RotateRight"></TextBlock>
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                        <TextBlock>Width:</TextBlock>
-                                        <TextBlock Margin="0,0,5,0" x:Name="ImageWidth"></TextBlock>
-                                        <TextBlock>Height:</TextBlock>
-                                        <TextBlock x:Name="ImageHeight"></TextBlock>
-                                    </StackPanel>
-                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="CropButton_TappedAsync">
+                                    <Button IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Tapped="CropButton_TappedAsync" Margin="0,18,0,6">
                                         <StackPanel Orientation="Horizontal">
                                             <SymbolIcon Symbol="Crop"></SymbolIcon>
                                             <TextBlock x:Uid="Crop"></TextBlock>
                                         </StackPanel>
                                     </Button>
+                                    <StackPanel Orientation="Horizontal" >
+                                        <TextBlock>Width:</TextBlock>
+                                        <TextBlock Margin="0,0,5,0" x:Name="ImageWidth"></TextBlock>
+                                        <TextBlock>Height:</TextBlock>
+                                        <TextBlock x:Name="ImageHeight"></TextBlock>
+                                    </StackPanel>
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>

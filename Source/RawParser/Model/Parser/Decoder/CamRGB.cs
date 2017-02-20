@@ -6,13 +6,13 @@ namespace RawNet.Decoder
     {
         public CamRGB(string name, ushort black, ushort white, double[,] matrix) : this(name, black, white)
         {
-            Debug.Assert(matrix.Length == 9);
+            Debug.Assert(matrix.Length == 9 || matrix.Length == 12);
             this.matrix = matrix;
         }
 
         public CamRGB(string name, ushort black, ushort white, double[] matrix) : this(name, black, white)
         {
-            Debug.Assert(matrix.Length == 9);
+            Debug.Assert(matrix.Length == 9 || matrix.Length == 12);
             this.matrix = new double[,] { { matrix[0], matrix[1], matrix[2] }, { matrix[3], matrix[4], matrix[5] }, { matrix[6], matrix[7], matrix[8] } };
         }
 

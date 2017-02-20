@@ -49,6 +49,7 @@ namespace RawEditor.View.Pages
         public HistoryList History = new HistoryList();
         private Bindable<Boolean> selectManualWB = new Bindable<bool>(false);
         private int rotation;
+        private bool isBindingEnabled = true;
 
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
@@ -132,13 +133,12 @@ namespace RawEditor.View.Pages
         {
             ResetControls();
 
-            if (rawImage != null)
-            {
-                var old = new ImageEffect();
-                old.Copy(EditionValue);
-                History.Add(new HistoryObject(EffectType.Reset, EditionValue.GetCopy()) { oldValue = old });
-                UpdatePreview(true);
-            }
+            if (rawImage == null || isBindingEnabled == false) return;
+
+            var old = new ImageEffect();
+            old.Copy(EditionValue);
+            History.Add(new HistoryObject(EffectType.Reset, EditionValue.GetCopy()) { oldValue = old });
+            UpdatePreview(true);
         }
 
         private void SetWBUpdate()
@@ -172,6 +172,7 @@ namespace RawEditor.View.Pages
                 try
                 {
                     ImageSelected = true;
+                    isBindingEnabled = false;
                     var watchTotal = Stopwatch.StartNew();
                     using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                     {
@@ -281,6 +282,7 @@ namespace RawEditor.View.Pages
                         logger.Log("ErrorOnOpen " + file?.FileType.ToLower() + " " + rawImage?.metadata?.Make + " " + rawImage?.metadata?.Model + "" + rawImage.errors.Count);
 #endif
                     }
+                    isBindingEnabled = true;
                     thumbnail = null;
                 }
                 catch (Exception)
@@ -419,20 +421,24 @@ namespace RawEditor.View.Pages
             ImageDisplay.ChangeView(0, 0, ZeroFactor);
         }
 
+        public void TestFunc()
+        {
+            Debug.Assert(false);
+        }
+
         private void UpdatePreview(bool move)
         {
-            if (rawImage?.preview != null)
+            if (rawImage?.preview == null) return;
+
+            Task.Run(() =>
             {
-                Task.Run(() =>
-                {
-                    var watchScale = Stopwatch.StartNew();
-                    var result = ApplyImageEffect8bits(rawImage.preview, EditionValue);
-                    DisplayImage(result.Item2, move);
-                    Histo.FillAsync(result.Item1);
-                    watchScale.Stop();
-                    Debug.WriteLine("Update done in " + watchScale.ElapsedMilliseconds + " ms");
-                });
-            }
+                var watchScale = Stopwatch.StartNew();
+                var result = ApplyImageEffect8bits(rawImage.preview, EditionValue);
+                DisplayImage(result.Item2, move);
+                Histo.FillAsync(result.Item1);
+                watchScale.Stop();
+                Debug.WriteLine("Update done in " + watchScale.ElapsedMilliseconds + " ms");
+            });
         }
 
         private SoftwareBitmap CreateBitmap(BitmapPixelFormat format, int rotation, Point2D dim)
@@ -480,6 +486,8 @@ namespace RawEditor.View.Pages
         private void EditingControlChanged()
         {
             //find the changed value
+            //TODO remove this
+            if (!isBindingEnabled || rawImage?.raw == null || EditionValue == null) return;
             History.Add(OldValue.GetHistory(EditionValue));
             OldValue.Copy(EditionValue);
             if (LowGamma.IsChecked == true)
