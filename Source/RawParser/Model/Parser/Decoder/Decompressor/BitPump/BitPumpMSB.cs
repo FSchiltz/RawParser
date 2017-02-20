@@ -56,7 +56,6 @@ namespace RawNet.Decoder.Decompressor
 
         public override void Fill()
         {
-            /*
             if (left < 25)
             {
                 // Fill in 96 bits
@@ -117,7 +116,7 @@ namespace RawNet.Decoder.Decompressor
 
                 //convert back b to the current_buffer            
                 left += 96;
-            }*/
+            }
         }
 
         //get the nbits as an int32
@@ -182,7 +181,13 @@ namespace RawNet.Decoder.Decompressor
 
         public override ushort GetLowBits(int nbits)
         {
-            throw new NotImplementedException();
+            if (left < nbits) Fill();
+            int shift = left - nbits;
+            var shift2 = shift >> 3;
+            uint ret = current_buffer[shift2] | (uint)current_buffer[(shift2) + 1] << 8 | (uint)current_buffer[(shift2) + 2] << 16;
+            left -= nbits;
+            ret >>= shift & 7;
+            return (ushort)(ret & ((1 << nbits) - 1));
         }
     }
 }
