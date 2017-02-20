@@ -13,14 +13,14 @@ namespace RawNet.Decoder.Decompressor
         public static void ReadUncompressedRaw(TiffBinaryReader input, Point2D size, Point2D offset, long inputPitch, int bitPerPixel, BitOrder order, RawImage<ushort> rawImage)
         {
             //uint outPitch = rawImage.pitch;
-            long w = size.width;
-            long h = size.height;
+            long width = size.width;
+            long height = size.height;
 
-            if (input.RemainingSize < (inputPitch * h))
+            if (input.RemainingSize < (inputPitch * height))
             {
                 if (input.RemainingSize > inputPitch)
                 {
-                    h = input.RemainingSize / inputPitch - 1;
+                    height = input.RemainingSize / inputPitch - 1;
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
@@ -29,14 +29,14 @@ namespace RawNet.Decoder.Decompressor
             if (bitPerPixel > 16)
                 throw new RawDecoderException("Unsupported bit depth");
 
-            int skipBits = (int)(inputPitch - w * rawImage.raw.cpp * bitPerPixel / 8);  // Skip per line
+            int skipBits = (int)(inputPitch - width * rawImage.raw.cpp * bitPerPixel / 8);  // Skip per line
             if (offset.height > rawImage.raw.dim.height)
                 throw new RawDecoderException("Invalid y offset");
             if (offset.width + size.width > rawImage.raw.dim.width)
                 throw new RawDecoderException("Invalid x offset");
 
             uint y = offset.height;
-            h = Math.Min(h + offset.height, rawImage.raw.dim.height);
+            height = Math.Min(height + offset.height, rawImage.raw.dim.height);
 
             /*if (mRaw.getDataType() == TYPE_FLOAT32)
             {
@@ -48,80 +48,56 @@ namespace RawNet.Decoder.Decompressor
             }*/
             if (bitPerPixel == 8)
             {
-                Decode12BitRaw(input, w, h, rawImage);
+                Decode8BitRaw(input, width, height, rawImage);
                 return;
             }
 
-            BitPump bits;
-            switch (order)
+            if (order == BitOrder.Plain)
             {
-                case BitOrder.Jpeg:
-                    if (skipBits == 0)
-                    {
-                        DecodeMSBUncomrpessed(input, w, h, rawImage);
-                        return;
-                    }
-                    else
-                        bits = new BitPumpMSB(input);
-                    break;
-                case BitOrder.Jpeg16:
-                    bits = new BitPumpMSB16(input);
-                    break;
-                case BitOrder.Jpeg32:
-                    bits = new BitPumpMSB32(input);
-                    break;
-                default:
-                    if (bitPerPixel == 16 && Common.GetHostEndianness() == Endianness.Little)
-                    {
-                        Decode16BitRawUnpacked(input, w, h, rawImage);
-                        return;
-                    }
-                    if (bitPerPixel == 12 && w == inputPitch * 8 / 12 && Common.GetHostEndianness() == Endianness.Little)
-                    {
-                        Decode12BitRaw(input, w, h, rawImage);
-                        return;
-                    }
-                    bits = new BitPumpPlain(input);
-                    break;
-            }
-
-            w *= rawImage.raw.cpp;
-            for (; y < h; y++)
-            {
-                bits.CheckPos();
-                var skip = (offset.width + y * rawImage.raw.dim.width) * rawImage.raw.cpp;
-                for (uint x = 0; x < w; x++)
+                if (bitPerPixel == 16 && Common.GetHostEndianness() == Endianness.Little)
                 {
-                    rawImage.raw.rawView[x + skip] = (ushort)bits.GetBits(bitPerPixel); ;
+                    Decode16BitRawUnpacked(input, width, height, rawImage);
+                    return;
                 }
-                bits.SkipBits(skipBits);
+                if (bitPerPixel == 12 && width == inputPitch * 8 / 12 && Common.GetHostEndianness() == Endianness.Little)
+                {
+                    Decode12BitRaw(input, width, height, rawImage);
+                    return;
+                }
             }
-        }
 
-        public static void DecodeMSBUncomrpessed(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
-        {
-            //find the fixed point
-            var fix = rawImage.raw.UncroppedDim.Area / (rawImage.raw.ColorDepth * 8);
-            Debug.Assert(rawImage.raw.UncroppedDim.Area % (rawImage.raw.ColorDepth * 8) == 0);
-            var pumps = new BitPump[fix];
-            var bitPerPixel = rawImage.raw.ColorDepth;
-            //calculate each offset
-            for (int i = 0; i < fix; i++)
+            width *= rawImage.raw.cpp;
+            var off = ((width * 10) / 8) + skipBits;
+
+            for (int i = 0; i < height; i++)
             {
                 //read the data
-                pumps[i] = new BitPumpMSB(input, input.BaseStream.Position, fix);
+                BitPump pump;
+                switch (order)
+                {
+                    case BitOrder.Jpeg:
+                        pump = new BitPumpMSB(input, input.BaseStream.Position, off);
+                        break;
+                    case BitOrder.Jpeg16:
+                        pump = new BitPumpMSB16(input, input.BaseStream.Position, off);
+                        break;
+                    case BitOrder.Jpeg32:
+                        pump = new BitPumpMSB32(input, input.BaseStream.Position, off);
+                        break;
+                    default:
+                        pump = new BitPumpPlain(input, input.BaseStream.Position, off);
+                        break;
+                }
+                long pos = (offset.width + i) * rawImage.raw.dim.width * rawImage.raw.cpp;
+                Task.Run(() =>
+                {
+                    for (uint x = 0; x < width; x++)
+                    {
+                        rawImage.raw.rawView[x + pos] = (ushort)pump.GetBits(10);
+                    }
+                });
             }
-
-            Parallel.For(0, fix, (offset) =>
-             {
-                 var pos = fix * offset;
-                 for (uint x = 0; x < fix; x++)
-                 {
-                     rawImage.raw.rawView[pos + x] = (ushort)pumps[offset].GetBits(bitPerPixel);
-                 }
-             });
         }
-
 
         public static void Decode8BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {

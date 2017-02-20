@@ -124,14 +124,13 @@ namespace RawNet.Decoder
                 bool border = true;
                 for (int x = 0; x < w; x++)
                 {
-                    bits.CheckPos();
                     bits.Fill();
                     int i = 0;
                     if (acarry0[2] < 3) i = 2;
 
                     for (nbits = 2 + i; acarry0[0] >> (nbits + i) != 0; nbits++) ;
 
-                    uint b = bits.PeekBitsNoFill(15);
+                    uint b = bits.PeekBits(15);
                     sign = (b >> 14) * -1;
                     low = (b >> 12) & 3;
                     high = bittable[b & 4095];
@@ -139,12 +138,12 @@ namespace RawNet.Decoder
                     // Skip bytes used above or read bits
                     if (high == 12)
                     {
-                        bits.SkipBitsNoFill(15);
+                        bits.SkipBits(15);
                         high = bits.GetBits(16 - nbits) >> 1;
                     }
                     else
                     {
-                        bits.SkipBitsNoFill((int)high + 1 + 3);
+                        bits.SkipBits((int)high + 1 + 3);
                     }
 
                     acarry0[0] = (high << nbits) | bits.GetBits(nbits);
@@ -198,7 +197,7 @@ namespace RawNet.Decoder
                     if (acarry1[2] < 3) i = 2;
 
                     for (nbits = 2 + i; acarry1[0] >> (nbits + i) != 0; nbits++) ;
-                    b = bits.PeekBitsNoFill(15);
+                    b = bits.PeekBits(15);
                     sign = (b >> 14) * -1;
                     low = (b >> 12) & 3;
                     high = bittable[b & 4095];
@@ -206,12 +205,12 @@ namespace RawNet.Decoder
                     // Skip bytes used above or read bits
                     if (high == 12)
                     {
-                        bits.SkipBitsNoFill(15);
+                        bits.SkipBits(15);
                         high = bits.GetBits(16 - nbits) >> 1;
                     }
                     else
                     {
-                        bits.SkipBitsNoFill((int)high + 1 + 3);
+                        bits.SkipBits((int)high + 1 + 3);
                     }
 
                     acarry1[0] = (high << nbits) | bits.GetBits(nbits);
