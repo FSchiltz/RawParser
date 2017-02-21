@@ -21,6 +21,5 @@ namespace RawNet.Decoder.Decompressor
         public abstract void SkipBits(int nbits);
         public abstract uint GetBits(int nbits);
         public abstract uint PeekBits(int nbits);
-
     }
 }

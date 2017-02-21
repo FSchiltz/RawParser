@@ -126,10 +126,10 @@ namespace RawNet.Decoder.Decompressor
 
         public override uint PeekBits(int nbits)
         {
-            int shift = (int)(left - nbits);
+            int shift = (left - nbits);
             uint ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
             ret >>= shift & 7;
-            return (uint)(ret & ((1 << (int)nbits) - 1));
+            return (uint)(ret & ((1 << nbits) - 1));
         }
 
         public override uint GetBit()
@@ -159,7 +159,9 @@ namespace RawNet.Decoder.Decompressor
 
         public override uint GetBits(int nbits)
         {
-            throw new NotImplementedException();
+            uint ret = PeekBits(nbits);
+            left -= nbits;
+            return ret;
         }
     }
 }
