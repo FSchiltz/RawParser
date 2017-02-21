@@ -150,14 +150,22 @@ namespace RawNet.Decoder.Decompressor
             return ret;
         }
 
+<<<<<<< HEAD
+        public override uint PeekByte()
+=======
         public override byte PeekByte()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         {
             if (left < 8) Fill();
             int shift = left;
             uint ret = current_buffer[shift >> 3];
             ret >>= shift & 7;
 
+<<<<<<< HEAD
+            return ret & 0xff;
+=======
             return (byte)(ret & 0xff);
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         }
 
         public override void SkipBits(int nbits)
@@ -172,11 +180,17 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
+<<<<<<< HEAD
+        public override uint GetByte()
+=======
         public override byte GetByte()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         {
             var v = PeekByte();
             left -= 8;
             return v;
+<<<<<<< HEAD
+=======
         }
 
         public override ushort GetLowBits(int nbits)
@@ -188,6 +202,7 @@ namespace RawNet.Decoder.Decompressor
             left -= nbits;
             ret >>= shift & 7;
             return (ushort)(ret & ((1 << nbits) - 1));
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         }
     }
 }

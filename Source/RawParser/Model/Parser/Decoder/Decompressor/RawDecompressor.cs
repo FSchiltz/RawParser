@@ -57,10 +57,23 @@ namespace RawNet.Decoder.Decompressor
             {
                 Decode16BitRawUnpacked(input, width, height, rawImage);
                 return;
+<<<<<<< HEAD
             }
             else if (order == BitOrder.Plain && bitPerPixel == 12 && width == inputPitch * 8 / 12 && Common.GetHostEndianness() == Endianness.Little)
             {
                 Decode12BitRaw(input, width, height, rawImage);
+                return;
+=======
+            }
+            else if (order == BitOrder.Plain && bitPerPixel == 12 && width == inputPitch * 8 / 12 && Common.GetHostEndianness() == Endianness.Little)
+            {
+                Decode12BitRaw(input, width, height, rawImage);
+                return;
+            }
+            else if (order == BitOrder.Jpeg && bitPerPixel == 10 && skipBits == 0)
+            {
+                //optimisation for DNG from windows phone
+                Decode10BitMSB(input, width, height, rawImage);
                 return;
             }
 
@@ -94,9 +107,68 @@ namespace RawNet.Decoder.Decompressor
                         rawImage.raw.rawView[x + pos] = pump.GetLowBits(bitPerPixel);
                     }
                 });
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
+            }
+
+<<<<<<< HEAD
+            width *= rawImage.raw.cpp;
+            var off = ((width * 10) / 8) + skipBits;
+
+            for (int i = 0; i < height; i++)
+            {
+                //read the data
+                BitPump pump;
+                switch (order)
+                {
+                    case BitOrder.Jpeg:
+                        pump = new BitPumpMSB(input, input.BaseStream.Position, off);
+                        break;
+                    case BitOrder.Jpeg16:
+                        pump = new BitPumpMSB16(input, input.BaseStream.Position, off);
+                        break;
+                    case BitOrder.Jpeg32:
+                        pump = new BitPumpMSB32(input, input.BaseStream.Position, off);
+                        break;
+                    default:
+                        pump = new BitPumpPlain(input, input.BaseStream.Position, off);
+                        break;
+                }
+                long pos = (offset.width + i) * rawImage.raw.dim.width * rawImage.raw.cpp;
+                Task.Run(() =>
+                {
+                    for (uint x = 0; x < width; x++)
+                    {
+                        rawImage.raw.rawView[x + pos] = (ushort)pump.GetBits(bitPerPixel);
+                    }
+                });
             }
         }
 
+=======
+        public static void Decode10BitMSB(TiffBinaryReader input, uint width, uint height, RawImage<ushort> rawImage)
+        {
+            //read file by block of 32bits *10 (320)
+            Debug.Assert((width % 320) == 0);
+            //read input
+            byte[][] data = new byte[height][];
+            int count = ((int)width * 10) / 8;
+            for (int i = 0; i < height; i++)
+            {
+                data[i] = input.ReadBytes(count);
+            }
+            //loop over the image
+            Parallel.For(0, height, y =>
+            {
+                for (int x = 0; x < width; x += 320) {
+                    //process by 320 block of bits
+
+                }
+            });
+
+
+        }
+
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         public static void Decode8BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {
             var count = width * height;

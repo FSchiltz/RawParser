@@ -154,12 +154,20 @@ namespace RawNet.Decoder.Decompressor
             return (uint)(current_buffer[left >> 3] >> (left & 0x7)) & 1;
         }
 
+<<<<<<< HEAD
+        public override uint PeekByte()
+=======
         public override byte PeekByte()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         {
             int shift = left - 8;
             uint ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
             ret >>= shift & 7;
+<<<<<<< HEAD
+            return (ret & 0xff);
+=======
             return (byte)(ret & 0xff);
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         }
 
         public override void SkipBits(int nbits)
@@ -174,13 +182,20 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
+<<<<<<< HEAD
+        public override uint GetByte()
+=======
         public override byte GetByte()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         {
             Fill();
             left -= 8;
             int shift = left;
             uint ret = current_buffer[shift >> 3];
             ret >>= shift & 7;
+<<<<<<< HEAD
+            return (ret & 0xff);
+=======
             return (byte)(ret & 0xff);
         }
 
@@ -189,6 +204,7 @@ namespace RawNet.Decoder.Decompressor
             ushort ret = (ushort)PeekBits(nbits);
             left -= nbits;
             return ret;
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         }
     }
 }
