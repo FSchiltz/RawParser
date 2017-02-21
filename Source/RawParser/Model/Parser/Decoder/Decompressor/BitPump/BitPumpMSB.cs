@@ -1,10 +1,9 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace RawNet.Decoder.Decompressor
 {
-
-    // Note: Allocated buffer MUST be at least size+sizeof(uint) large.
     internal class BitPumpMSB : BitPump
     {
         public override int Offset
@@ -32,9 +31,9 @@ namespace RawNet.Decoder.Decompressor
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
             size = count + sizeof(uint);
-            base.buffer = new byte[size];
+            buffer = new byte[size];
             reader.BaseStream.Position = offset;
-            reader.BaseStream.Read(base.buffer, 0, (int)count);
+            reader.BaseStream.Read(buffer, 0, (int)count);
         }
 
         public BitPumpMSB(byte[] _buffer, uint _size)
@@ -57,9 +56,11 @@ namespace RawNet.Decoder.Decompressor
 
         public override uint GetBits(int nbits)
         {
-            uint ret = PeekBits(nbits);
+            int shift = left >> 3;
+            uint ret = buffer[shift + 3] | (uint)buffer[shift + 2] << 8 | (uint)buffer[shift + 1] << 16 | (uint)buffer[shift] << 24;
+            ret >>= 32 - nbits - (left & 7);
             left += nbits;
-            return ret;
+            return (uint)(ret & ((1 << nbits) - 1));
         }
 
         public override uint PeekBit()

@@ -36,7 +36,7 @@ namespace RawNet.Decoder.Decompressor
                 throw new RawDecoderException("Invalid x offset");
 
             uint y = offset.height;
-            
+
             if (bitPerPixel == 8)
             {
                 Decode12BitRaw(input, width, height, rawImage);
@@ -44,39 +44,46 @@ namespace RawNet.Decoder.Decompressor
             }
 
             width *= rawImage.raw.cpp;
-            var off = ((width * 10) / 8) + skipBits;
+            var off = ((width * bitPerPixel) / 8) + skipBits;
+            var pumps = new BitPump[height];
 
-            for (int i = 0; i < height; i++)
+            //read the data
+            switch (order)
             {
-                //read the data
-                BitPump pump;
-                switch (order)
-                {
-                    case BitOrder.Jpeg:
-                        pump = new BitPumpMSB(input, input.BaseStream.Position, off);
-                        break;
-                    case BitOrder.Jpeg16:
-                        pump = new BitPumpMSB16(input, input.BaseStream.Position, off);
-                        break;
-                    case BitOrder.Jpeg32:
-                        pump = new BitPumpMSB32(input, input.BaseStream.Position, off);
-                        break;
-                    default:
-                        pump = new BitPumpPlain(input, input.BaseStream.Position, off);
-                        break;
-                }
-                long pos = (offset.width + i) * rawImage.raw.dim.width * rawImage.raw.cpp;
-                Task.Run(() =>
-                {
-                    for (uint x = 0; x < width; x++)
+                case BitOrder.Jpeg:
+                    for (int i = 0; i < height; i++)
                     {
-                        rawImage.raw.rawView[x + pos] = (ushort)pump.GetBits(bitPerPixel);
+                        pumps[i] = new BitPumpMSB(input, input.BaseStream.Position, off);
                     }
-                });
+                    break;
+                case BitOrder.Jpeg16:
+                    for (int i = 0; i < height; i++)
+                    {
+                        pumps[i] = new BitPumpMSB16(input, input.BaseStream.Position, off);
+                    }
+                    break;
+                case BitOrder.Jpeg32:
+                    for (int i = 0; i < height; i++)
+                    {
+                        pumps[i] = new BitPumpMSB32(input, input.BaseStream.Position, off);
+                    }
+                    break;
+                default:
+                    for (int i = 0; i < height; i++)
+                    {
+                        pumps[i] = new BitPumpPlain(input, input.BaseStream.Position, off);
+                    }
+                    break;
             }
-
+            Parallel.For(0, height, i =>
+            {
+                long pos = (offset.width + i) * rawImage.raw.dim.width * rawImage.raw.cpp;
+                for (uint x = 0; x < width; x++)
+                {
+                    rawImage.raw.rawView[x + pos] = (ushort)pumps[i].GetBits(bitPerPixel);
+                }
+            });
         }
-
 
         public static void Decode8BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
         {

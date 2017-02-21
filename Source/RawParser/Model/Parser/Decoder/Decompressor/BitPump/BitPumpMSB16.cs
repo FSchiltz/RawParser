@@ -116,7 +116,8 @@ namespace RawNet.Decoder.Decompressor
 
         public override uint PeekBit()
         {
-            throw new NotImplementedException();
+            return PeekBits(1);
         }
+        
     }
 }
