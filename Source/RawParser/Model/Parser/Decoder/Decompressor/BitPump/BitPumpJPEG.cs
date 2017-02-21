@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace RawNet.Decoder.Decompressor
@@ -31,7 +30,6 @@ namespace RawNet.Decoder.Decompressor
         public BitPumpJPEG(TiffBinaryReader reader) : this(reader, (uint)reader.Position, (uint)reader.BaseStream.Length) { }
         public BitPumpJPEG(TiffBinaryReader reader, uint offset, uint count)
         {
-            Debug.Assert(false);
             MIN_GET_BITS = (BITS_PER_LONG - 7);
             size = (uint)(reader.RemainingSize + sizeof(uint));
             buffer = new byte[size];
@@ -42,23 +40,22 @@ namespace RawNet.Decoder.Decompressor
 
         public BitPumpJPEG(byte[] _buffer, uint _size)
         {
-            Debug.Assert(false);
             buffer = _buffer;
             size = _size + sizeof(uint);
             Init();
         }
 
-        private void Init()
+        public void Init()
         {
             Fill();
         }
 
+        // Fill the buffer with at least 24 bits
         public override void Fill()
         {
             if (left < 25)
-            {
-                // Fill in 96 bits
-                //int[] b = Common.convertByteToInt(current_buffer);
+            {  // Fill in 96 bits
+               //int[] b = Common.convertByteToInt(current_buffer);
                 if ((off + 12) >= size)
                 {
                     while (left <= 64 && off < size)
@@ -124,7 +121,7 @@ namespace RawNet.Decoder.Decompressor
                     current_buffer[11 - i] = val;
                 }
                 left += 96;
-            }
+            };
         }
 
         public override uint PeekBits(int nbits)
@@ -135,39 +132,17 @@ namespace RawNet.Decoder.Decompressor
             return (uint)(ret & ((1 << (int)nbits) - 1));
         }
 
-        public override uint GetBits(int nbits)
+        public override uint GetBit()
         {
-            uint ret = PeekBits(nbits);
-            left -= nbits;
-            return ret;
+            var t = PeekBit();
+            left--;
+            return t;
         }
 
         public override uint PeekBit()
         {
             if (left == 0) Fill();
             return (uint)(current_buffer[(left - 1) >> 3] >> ((left - 1) & 0x7)) & 1;
-        }
-
-        public override uint GetBit()
-        {
-            left--;
-            return (uint)(current_buffer[left >> 3] >> (left & 0x7)) & 1;
-        }
-
-<<<<<<< HEAD
-        public override uint PeekByte()
-=======
-        public override byte PeekByte()
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
-        {
-            int shift = left - 8;
-            uint ret = current_buffer[shift >> 3] | (uint)current_buffer[(shift >> 3) + 1] << 8 | (uint)current_buffer[(shift >> 3) + 2] << 16 | (uint)current_buffer[(shift >> 3) + 3] << 24;
-            ret >>= shift & 7;
-<<<<<<< HEAD
-            return (ret & 0xff);
-=======
-            return (byte)(ret & 0xff);
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         }
 
         public override void SkipBits(int nbits)
@@ -182,29 +157,9 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-<<<<<<< HEAD
-        public override uint GetByte()
-=======
-        public override byte GetByte()
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
+        public override uint GetBits(int nbits)
         {
-            Fill();
-            left -= 8;
-            int shift = left;
-            uint ret = current_buffer[shift >> 3];
-            ret >>= shift & 7;
-<<<<<<< HEAD
-            return (ret & 0xff);
-=======
-            return (byte)(ret & 0xff);
-        }
-
-        public override ushort GetLowBits(int nbits)
-        {
-            ushort ret = (ushort)PeekBits(nbits);
-            left -= nbits;
-            return ret;
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace RawNet.Decoder.Decompressor
@@ -26,6 +25,7 @@ namespace RawNet.Decoder.Decompressor
             reader.BaseStream.Position = offset;
             reader.BaseStream.Read(buffer, 0, (int)count);
         }
+
         public BitPumpPlain(byte[] _buffer, uint _size)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
@@ -33,34 +33,7 @@ namespace RawNet.Decoder.Decompressor
             size = (_size * 8);
         }
 
-        unsafe override public uint PeekBit()
-        {
-            fixed (byte* t = &buffer[off >> 3])
-            {
-                return (uint)(*(Int32*)t >> (int)(off & 7) & 1);
-            }
-        }
-
-<<<<<<< HEAD
-        unsafe override public uint GetByte()
-=======
-        unsafe override public byte GetByte()
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
-        {
-            uint v = PeekByte();
-            off += 8;
-            return (byte)v;
-        }
-
-        unsafe public override uint PeekBits(int nbits)
-        {
-            fixed (byte* t = &buffer[off >> 3])
-            {
-                return (uint)(*(int*)t >> ((int)off & 7) & ((1 << nbits) - 1));
-            }
-        }
-
-        public override uint GetBit()
+        unsafe override public uint GetBit()
         {
             uint v = PeekBit();
             off++;
@@ -74,19 +47,20 @@ namespace RawNet.Decoder.Decompressor
             return v;
         }
 
-<<<<<<< HEAD
-        public override uint PeekByte()
+        unsafe override public uint PeekBit()
         {
-            return (uint)(((buffer[off >> 3] << 8) | buffer[(off >> 3) + 1]) >> (off & 7) & 0xff);
+            fixed (byte* t = &buffer[off >> 3])
+            {
+                return (uint)(*(Int32*)t >> (int)(off & 7) & 1);
+            }
         }
 
-        public override void SkipBits(int nbits)
+        unsafe override public uint PeekBits(int nbits)
         {
-            off += nbits;
-=======
-        public override byte PeekByte()
-        {
-            return (byte)(((buffer[off >> 3] << 8) | buffer[(off >> 3) + 1]) >> (off & 7) & 0xff);
+            fixed (byte* t = &buffer[off >> 3])
+            {
+                return (uint)(*(int*)t >> ((int)off & 7) & ((1 << nbits) - 1));
+            }
         }
 
         public override void SkipBits(int nbits)
@@ -96,22 +70,7 @@ namespace RawNet.Decoder.Decompressor
 
         public override void Fill()
         {
-            Debug.Assert(false);
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
-        }
-
-        unsafe public override ushort GetLowBits(int nbits)
-        {
-<<<<<<< HEAD
-            Debug.Assert(false);
-=======
-            fixed (byte* t = &buffer[off >> 3])
-            {
-                var v = (ushort)(*(int*)t >> (off & 7) & ((1 << nbits) - 1));
-                off += nbits;
-                return v;
-            }
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
+            throw new NotImplementedException();
         }
     }
 }
