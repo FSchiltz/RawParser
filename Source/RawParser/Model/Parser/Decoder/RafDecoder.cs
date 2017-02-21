@@ -74,6 +74,98 @@ namespace RawNet.Decoder
             ParseFuji(third_ifd);
         }
 
+        public override Thumbnail DecodeThumb()
+        {
+            //find the preview IFD (usually the first if any)
+            List<IFD> potential = ifd.GetIFDsWithTag(TagType.NEWSUBFILETYPE);
+            IFD thumbIFD = null;
+            if (potential?.Count != 0)
+            {
+                for (int i = 0; i < potential.Count; i++)
+                {
+                    var subFile = potential[i].GetEntry(TagType.NEWSUBFILETYPE);
+                    if (subFile.GetInt(0) == 1)
+                    {
+                        thumbIFD = potential[i];
+                        break;
+                    }
+                }
+            }
+
+            if (thumbIFD != null)
+            {
+                //there is a thumbnail
+                uint bps = thumbIFD.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
+                Point2D dim = new Point2D(thumbIFD.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), thumbIFD.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
+
+                int compression = thumbIFD.GetEntry(TagType.COMPRESSION).GetShort(0);
+                // Now load the image
+                if (compression == 1)
+                {
+                    // Uncompressed
+                    uint cpp = thumbIFD.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                    if (cpp > 4)
+                        throw new RawDecoderException("DNG Decoder: More than 4 samples per pixel is not supported.");
+
+                    Tag offsets = thumbIFD.GetEntry(TagType.STRIPOFFSETS);
+                    Tag counts = thumbIFD.GetEntry(TagType.STRIPBYTECOUNTS);
+                    uint yPerSlice = thumbIFD.GetEntry(TagType.ROWSPERSTRIP).GetUInt(0);
+
+                    reader.BaseStream.Position = offsets.GetInt(0) + offsets.parent_offset;
+
+                    return new Thumbnail()
+                    {
+                        cpp = cpp,
+                        dim = dim,
+                        data = reader.ReadBytes(counts.GetInt(0)),
+                        Type = ThumbnailType.RAW
+                    };
+                }
+                else if (compression == 6)
+                {
+                    var offset = thumbIFD.GetEntry((TagType)0x0201);
+                    var size = thumbIFD.GetEntry((TagType)0x0202);
+                    if (size == null || offset == null) return null;
+
+                    //get the makernote offset
+                    List<IFD> exifs = ifd.GetIFDsWithTag((TagType)0x927C);
+
+                    if (exifs == null || exifs.Count == 0) return null;
+
+                    Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
+                    if (makerNoteOffsetTag == null) return null;
+                    reader.Position = offset.GetUInt(0) + 10 + makerNoteOffsetTag.dataOffset;
+                    return new Thumbnail()
+                    {
+                        data = reader.ReadBytes(size.GetInt(0)),
+                        Type = ThumbnailType.JPEG,
+                        dim = new Point2D()
+                    };
+                }
+                else return null;
+            }
+            else
+            {
+                var previews = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT);
+
+                //no thumbnail
+                if (previews?.Count == 0) return null;
+                var preview = previews[0];
+                var thumb = preview.GetEntry(TagType.JPEGINTERCHANGEFORMAT);
+                var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
+                if (size == null || thumb == null) return null;
+
+                reader.Position = thumb.GetUInt(0) + thumb.parent_offset;
+                Thumbnail temp = new Thumbnail()
+                {
+                    data = reader.ReadBytes(size.GetInt(0)),
+                    Type = ThumbnailType.JPEG,
+                    dim = new Point2D()
+                };
+                return temp;
+            }
+        }
+
         /* Parse FUJI information */
         /* It is a simpler form of Tiff IFD, so we add them as TiffEntries */
         void ParseFuji(uint offset)
