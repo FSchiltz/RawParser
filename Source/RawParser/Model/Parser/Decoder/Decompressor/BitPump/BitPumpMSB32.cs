@@ -97,7 +97,11 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
+<<<<<<< HEAD
+        public override uint PeekByte()
+=======
         public override byte PeekByte()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         {
             if (left < 8) Fill();
             return (byte)((current >> left - 8) & 0xff);
@@ -108,16 +112,23 @@ namespace RawNet.Decoder.Decompressor
             return 0;
         }
 
+<<<<<<< HEAD
+        public override uint GetByte()
+=======
         public override byte GetByte()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         {
             var v = PeekByte();
             left -= 8;
             return v;
+<<<<<<< HEAD
+=======
         }
 
         public override uint PeekBit()
         {
             throw new NotImplementedException();
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         }
 
         public override ushort GetLowBits(int nbits)

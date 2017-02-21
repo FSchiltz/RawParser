@@ -41,7 +41,11 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
+<<<<<<< HEAD
+        unsafe override public uint GetByte()
+=======
         unsafe override public byte GetByte()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         {
             uint v = PeekByte();
             off += 8;
@@ -70,6 +74,16 @@ namespace RawNet.Decoder.Decompressor
             return v;
         }
 
+<<<<<<< HEAD
+        public override uint PeekByte()
+        {
+            return (uint)(((buffer[off >> 3] << 8) | buffer[(off >> 3) + 1]) >> (off & 7) & 0xff);
+        }
+
+        public override void SkipBits(int nbits)
+        {
+            off += nbits;
+=======
         public override byte PeekByte()
         {
             return (byte)(((buffer[off >> 3] << 8) | buffer[(off >> 3) + 1]) >> (off & 7) & 0xff);
@@ -83,16 +97,21 @@ namespace RawNet.Decoder.Decompressor
         public override void Fill()
         {
             Debug.Assert(false);
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         }
 
         unsafe public override ushort GetLowBits(int nbits)
         {
+<<<<<<< HEAD
+            Debug.Assert(false);
+=======
             fixed (byte* t = &buffer[off >> 3])
             {
                 var v = (ushort)(*(int*)t >> (off & 7) & ((1 << nbits) - 1));
                 off += nbits;
                 return v;
             }
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         }
     }
 }
