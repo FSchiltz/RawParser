@@ -40,7 +40,7 @@ namespace RawNet.Decoder.HuffmanCompressor
             }
 
             rv = 0;
-            code = bitPump.PeekByte();
+            code = bitPump.PeekBits(8);
             val = (int)numbits[code];
             l = val & 15;
             if (l != 0)

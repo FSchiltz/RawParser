@@ -23,8 +23,6 @@ namespace RawNet.Decoder.Decompressor
 
         /*** Used for entropy encoded sections ***/
         public BitPumpMSB32(TiffBinaryReader reader) : this(reader, (uint)reader.Position, (uint)(reader.BaseStream.Length - reader.Position)) { }
-
-        /*** Used for entropy encoded sections ***/
         public BitPumpMSB32(TiffBinaryReader reader, long offset, long count)
         {
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
@@ -32,7 +30,7 @@ namespace RawNet.Decoder.Decompressor
             buffer = new byte[size];
             reader.BaseStream.Position = offset;
             reader.BaseStream.Read(buffer, 0, (int)count);
-            Fill();
+            Init();
         }
 
         public BitPumpMSB32(byte[] _buffer, uint _size)
@@ -40,11 +38,17 @@ namespace RawNet.Decoder.Decompressor
             buffer = _buffer;
             size = _size + sizeof(uint);
             MIN_GET_BITS = BITS_PER_LONG_LONG - 33;
+            Init();
+        }
+
+        public void Init()
+        {
             Fill();
         }
 
         public override void Fill()
         {
+            // Fill the buffer with at least 24 bits
             if (left < MIN_GET_BITS)
             {
                 uint c, c2, c3, c4;
@@ -82,7 +86,10 @@ namespace RawNet.Decoder.Decompressor
 
         public override uint GetBits(int nbits)
         {
-            if (left < nbits) Fill();
+            if (left < nbits)
+            {
+                Fill();
+            }
             return (uint)((int)(current >> (left -= (nbits))) & ((1 << nbits) - 1));
         }
 
@@ -97,44 +104,14 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-<<<<<<< HEAD
-        public override uint PeekByte()
-=======
-        public override byte PeekByte()
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
-        {
-            if (left < 8) Fill();
-            return (byte)((current >> left - 8) & 0xff);
-        }
-
         public override uint PeekBits(int v)
         {
             return 0;
         }
 
-<<<<<<< HEAD
-        public override uint GetByte()
-=======
-        public override byte GetByte()
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
-        {
-            var v = PeekByte();
-            left -= 8;
-            return v;
-<<<<<<< HEAD
-=======
-        }
-
         public override uint PeekBit()
         {
             throw new NotImplementedException();
->>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
-        }
-
-        public override ushort GetLowBits(int nbits)
-        {
-            if (left < nbits) Fill();
-            return (ushort)((int)(current >> (left -= (nbits))) & ((1 << nbits) - 1));
         }
     }
 }
