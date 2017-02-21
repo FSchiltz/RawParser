@@ -23,17 +23,22 @@ namespace RawNet.Decoder.Decompressor
                 left = 0;
                 current = 0;
                 off = value;
-                stuffed = 0;
                 Fill();
             }
         }
 
-        public BitPumpMSB16(TiffBinaryReader reader)
+        /*** Used for entropy encoded sections ***/
+        public BitPumpMSB16(TiffBinaryReader reader) : this(reader, (uint)reader.Position, (uint)(reader.BaseStream.Length - reader.Position)) { }
+
+        /*** Used for entropy encoded sections ***/
+        public BitPumpMSB16(TiffBinaryReader reader, long offset, long count)
         {
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
-            reader.Read(buffer, (int)reader.Position, (int)reader.BaseStream.Length);
-            size = (uint)(reader.RemainingSize + sizeof(uint));
-            Init();
+            size = count + sizeof(uint);
+            buffer = new byte[size];
+            reader.BaseStream.Position = offset;
+            reader.BaseStream.Read(buffer, 0, (int)count);
+            Fill();
         }
 
         public BitPumpMSB16(byte[] _buffer, uint _size)
@@ -41,144 +46,101 @@ namespace RawNet.Decoder.Decompressor
             MIN_GET_BITS = (BITS_PER_LONG_LONG - 33);
             buffer = (_buffer);
             size = (_size + sizeof(uint));
-            Init();
+            Fill();
         }
 
-        public override void Init()
+        public override void Fill()
         {
-            stuffed = 0;
-            FillNoCheck();
-        }
-
-        private void FillNoCheck()
-        {
-            uint c, c2;
-            if ((off + 4) > size)
+            if (left < MIN_GET_BITS)
             {
-                while (off < size)
+                uint c, c2;
+                if ((off + 4) > size)
                 {
-                    current <<= 8;
-                    c = buffer[off++];
-                    current |= c;
-                    left += 8;
+                    while (off < size)
+                    {
+                        current <<= 8;
+                        c = buffer[off++];
+                        current |= c;
+                        left += 8;
+                    }
+                    while (left < MIN_GET_BITS)
+                    {
+                        current <<= 8;
+                        left += 8;
+                    }
+                    return;
                 }
-                while (left < MIN_GET_BITS)
-                {
-                    current <<= 8;
-                    left += 8;
-                    stuffed++;
-                }
-                return;
+                c = buffer[off++];
+                c2 = buffer[off++];
+                current <<= 16;
+                current |= (c2 << 8) | c;
+                left += 16;
             }
-            c = buffer[off++];
-            c2 = buffer[off++];
-            current <<= 16;
-            current |= (c2 << 8) | c;
-            left += 16;
         }
-
-        public override void CheckPos()
-        {
-            if (stuffed > 3)
-                throw new IOException("Out of buffer read");
-        }        // Check if we have a valid position
-
-        // Fill the buffer with at least 24 bits
-        public override void Fill() { if (left < MIN_GET_BITS) Fill(); }
 
         public override uint GetBit()
         {
-            if (left == 0) FillNoCheck();
-            return (uint)((current >> --left) & 1);
-        }
-
-        public override uint GetBitNoFill()
-        {
+            if (left == 0) Fill();
             return (uint)((current >> --left) & 1);
         }
 
         public override uint GetBits(int nbits)
         {
-            if (left < nbits)
-            {
-                Fill();
-            }
-            return (uint)((int)(current >> (left -= (nbits))) & ((1 << nbits) - 1));
-        }
-
-        public override uint GetBitsNoFill(int nbits)
-        {
+            if (left < nbits) Fill();
             return (uint)((int)(current >> (left -= (nbits))) & ((1 << nbits) - 1));
         }
 
         public override void SkipBits(int nbits)
         {
+            if (left < nbits) Fill();
             while (nbits != 0)
             {
                 Fill();
-                CheckPos();
                 int n = Math.Min(nbits, left);
                 left -= n;
                 nbits -= n;
             }
         }
 
-        public override uint PeekByteNoFill()
+<<<<<<< HEAD
+        public override uint PeekByte()
+=======
+        public override byte PeekByte()
         {
-            return (uint)((current >> left - 8) & 0xff);
+            if (left < 8) Fill();
+            return (byte)((current >> left - 8) & 0xff);
         }
 
-        public override void SkipBitsNoFill(int nbits)
-        {
-            left -= nbits;
-        }
-
-        public override uint GetBitsSafe(int nbits)
-        {
-            if (nbits > MIN_GET_BITS)
-                throw new IOException("Too many bits requested");
-
-            if (left < nbits)
-            {
-                Fill();
-                CheckPos();
-            }
-            return (uint)((int)(current >> (left -= (nbits))) & ((1 << (int)nbits) - 1));
-        }
-
-        public override uint PeekBitsNoFill(int v)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override uint GetBitSafe()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override byte GetByteSafe()
+        public override uint PeekBits(int v)
         {
             throw new NotImplementedException();
         }
 
         public override byte GetByte()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
+        {
+            if (left < 8) Fill();
+            return (byte)((current >> left - 8) & 0xff);
+        }
+
+<<<<<<< HEAD
+        public override uint PeekBits(int v)
         {
             throw new NotImplementedException();
         }
 
-        public override uint PeekBits(int nbits)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override uint PeekByte()
-        {
-            throw new NotImplementedException();
-        }
-
+        public override uint GetByte()
+=======
         public override uint PeekBit()
+>>>>>>> b2ca1825590115767bd958f9ab327a4806fb4a92
         {
             throw new NotImplementedException();
+        }
+
+        public override ushort GetLowBits(int nbits)
+        {
+            if (left < nbits) Fill();
+            return (ushort)((int)(current >> (left -= (nbits))) & ((1 << nbits) - 1));
         }
     }
 }

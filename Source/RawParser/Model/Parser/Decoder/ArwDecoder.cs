@@ -230,13 +230,12 @@ namespace RawNet.Decoder
                 {
                     for (int y = 0; y < h + 1; y += 2)
                     {
-                        bits.CheckPos();
                         bits.Fill();
                         if (y == h) y = 1;
-                        int len = 4 - (int)bits.GetBitsNoFill(2);
-                        if (len == 3 && bits.GetBitNoFill() != 0) len = 0;
+                        int len = 4 - (int)bits.GetBits(2);
+                        if (len == 3 && bits.GetBit() != 0) len = 0;
                         if (len == 4)
-                            while (len < 17 && bits.GetBitNoFill() == 0) len++;
+                            while (len < 17 && bits.GetBit() == 0) len++;
                         uint diff = bits.GetBits(len);
                         if (len != 0 && (diff & (1 << (len - 1))) == 0)
                             diff -= (uint)(1 << len) - 1;
@@ -266,7 +265,6 @@ namespace RawNet.Decoder
                     // Process 32 pixels (16x2) per loop.
                     for (uint x = 0; x < rawImage.raw.dim.width - 30;)
                     {
-                        bits.CheckPos();
                         int _max = (int)bits.GetBits(11);
                         int _min = (int)bits.GetBits(11);
                         int _imax = (int)bits.GetBits(4);
