@@ -268,13 +268,13 @@ namespace RawNet.Decoder.HuffmanCompressor
             int l;
             //First attempt to do complete decode, by using the first 14 bits        
             bitPump.Fill();
-            code = (int)bitPump.PeekBitsNoFill(14);
+            code = (int)bitPump.PeekBits(14);
             if (bigTable != null)
             {
                 val = bigTable[code];
                 if ((val & 0xff) != 0xff)
                 {
-                    bitPump.SkipBitsNoFill(val & 0xff);
+                    bitPump.SkipBits(val & 0xff);
                     return val >> 8;
                 }
             }
@@ -288,16 +288,16 @@ namespace RawNet.Decoder.HuffmanCompressor
             l = val & 15;
             if (l != 0)
             {
-                bitPump.SkipBitsNoFill(l);
+                bitPump.SkipBits(l);
                 rv = val >> 4;
             }
             else
             {
-                bitPump.SkipBitsNoFill(8);
+                bitPump.SkipBits(8);
                 l = 8;
                 while (code > maxcode[l])
                 {
-                    temp = (int)bitPump.GetBitNoFill();
+                    temp = (int)bitPump.GetBit();
                     code = (code << 1) | temp;
                     l++;
                 }
@@ -316,7 +316,7 @@ namespace RawNet.Decoder.HuffmanCompressor
             if (rv == 16)
             {
                 if (DNGCompatible)
-                    bitPump.SkipBitsNoFill(16);
+                    bitPump.SkipBits(16);
                 return -32768;
             }
 
@@ -332,7 +332,7 @@ namespace RawNet.Decoder.HuffmanCompressor
             //Section F.2.2.1: decode the difference and  extend sign bit         
             if (rv != 0)
             {
-                int x = (int)bitPump.GetBitsNoFill(rv);
+                int x = (int)bitPump.GetBits(rv);
                 if ((x & (1 << (rv - 1))) == 0)
                     x -= (1 << rv) - 1;
                 return x;

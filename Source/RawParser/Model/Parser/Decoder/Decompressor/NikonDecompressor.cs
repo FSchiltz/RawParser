@@ -84,7 +84,6 @@ namespace RawNet.Decoder.Decompressor
                 raw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), raw.raw.rawView, dest++, ref random);
                 for (int x = 1; x < raw.raw.dim.width / 2; x++)
                 {
-                    huff[0].bitPump.CheckPos();
                     pLeft1 += huff[0].Decode();
                     pLeft2 += huff[0].Decode();
                     raw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), raw.raw.rawView, dest++, ref random);
