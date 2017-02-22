@@ -613,8 +613,6 @@ namespace RawNet.Decoder
                 rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
             }
 
-            if (rawImage.whitePoint > (1 << rawImage.raw.ColorDepth) - 1)
-                rawImage.whitePoint = (1 << rawImage.raw.ColorDepth) - 1;
 
             //GPS data
             var gpsTag = ifd.GetEntry((TagType)0x0039);
@@ -628,6 +626,15 @@ namespace RawNet.Decoder
                     int encoding = stream.ReadByte();
                     //the data are in 70 bytes at index 9
                 }
+            }
+
+            //get non Exif balck and white level         
+            if (rawImage.whitePoint > (1 << rawImage.raw.ColorDepth) - 1)
+                rawImage.whitePoint = (1 << rawImage.raw.ColorDepth) - 1;
+
+            if (rawImage.black == 0)
+            {
+                rawImage.black = ifd.GetEntryRecursive((TagType)0x003d)?.GetUInt(0) ?? 0;
             }
         }
 
