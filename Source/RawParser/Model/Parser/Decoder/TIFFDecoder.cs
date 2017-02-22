@@ -209,6 +209,12 @@ namespace RawNet.Decoder
                 rawImage.whitePoint = ifd.GetEntryRecursive(TagType.WHITELEVEL)?.GetUShort(0) ?? ifd.GetEntryRecursive(TagType.WHITEPOINT)?.GetUShort(0) ?? 0;
 
             }
+
+            if (rawImage.black == 0)
+            {
+                rawImage.black = ifd.GetEntryRecursive(TagType.BLACKLEVEL)?.GetUShort(0) ?? 0;
+            }
+
             rawImage.metadata.TimeTake = ifd.GetEntryRecursive(TagType.DATETIMEORIGINAL)?.DataAsString;
             rawImage.metadata.TimeModify = ifd.GetEntryRecursive(TagType.DATETIMEDIGITIZED)?.DataAsString;
             // Set the make and model
