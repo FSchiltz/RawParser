@@ -12,28 +12,6 @@ namespace RawNet.Decoder
         internal ArwDecoder(Stream file) : base(file) { }
         int shiftDown = 0;
 
-        public override Thumbnail DecodeThumb()
-        {
-            //find the preview ifd Preview is in the rootIFD (smaller preview in subiFD use those)
-            List<IFD> possible = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT);
-            //no thumbnail
-            if (possible == null || possible.Count == 0) return null;
-            IFD preview = possible[possible.Count - 1];
-
-            var thumb = preview.GetEntry(TagType.JPEGINTERCHANGEFORMAT);
-            var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
-            if (size == null || thumb == null) return null;
-
-            reader.Position = thumb.GetUInt(0);
-            Thumbnail temp = new Thumbnail()
-            {
-                data = reader.ReadBytes(size.GetInt(0)),
-                Type = ThumbnailType.JPEG,
-                dim = new Point2D()
-            };
-            return temp;
-        }
-
         public override void DecodeRaw()
         {
             List<IFD> data = ifd.GetIFDsWithTag(TagType.STRIPOFFSETS);
