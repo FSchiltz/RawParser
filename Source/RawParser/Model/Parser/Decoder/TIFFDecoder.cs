@@ -289,24 +289,44 @@ namespace RawNet.Decoder
 
         public override Thumbnail DecodeThumb()
         {
-            //find the preview IFD (usually the first if any)
-            List<IFD> potential = ifd.GetIFDsWithTag(TagType.NEWSUBFILETYPE);
-            IFD thumbIFD = null;
-            if (potential?.Count != 0)
+            List<IFD> previews;
+            if ((previews = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)) != null)
             {
-                for (int i = 0; i < potential.Count; i++)
+                //there is a jpeg preview
+                if (previews?.Count == 0) return null;
+                var preview = previews[0];
+                var thumb = preview.GetEntry(TagType.JPEGINTERCHANGEFORMAT);
+                var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
+                if (size == null || thumb == null) return null;
+
+                reader.Position = thumb.GetUInt(0);
+                Thumbnail temp = new Thumbnail()
                 {
-                    var subFile = potential[i].GetEntry(TagType.NEWSUBFILETYPE);
-                    if (subFile.GetInt(0) == 1)
+                    data = reader.ReadBytes(size.GetInt(0)),
+                    Type = ThumbnailType.JPEG,
+                    dim = new Point2D()
+                };
+                return temp;
+            }
+            else
+            {
+                //find the preview IFD (usually the first if any)
+                previews = ifd.GetIFDsWithTag(TagType.NEWSUBFILETYPE);
+                IFD thumbIFD = null;
+                if (previews?.Count != 0)
+                {
+                    for (int i = 0; i < previews.Count; i++)
                     {
-                        thumbIFD = potential[i];
-                        break;
+                        var subFile = previews[i].GetEntry(TagType.NEWSUBFILETYPE);
+                        if (subFile.GetInt(0) == 1)
+                        {
+                            thumbIFD = previews[i];
+                            break;
+                        }
                     }
                 }
-            }
+                if (thumbIFD == null) return null;
 
-            if (thumbIFD != null)
-            {
                 //there is a thumbnail
                 uint bps = thumbIFD.GetEntry(TagType.BITSPERSAMPLE).GetUInt(0);
                 Point2D dim = new Point2D(thumbIFD.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), thumbIFD.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
@@ -356,26 +376,6 @@ namespace RawNet.Decoder
                     };
                 }
                 else return null;
-            }
-            else
-            {
-                var previews = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT);
-
-                //no thumbnail
-                if (previews?.Count == 0) return null;
-                var preview = previews[0];
-                var thumb = preview.GetEntry(TagType.JPEGINTERCHANGEFORMAT);
-                var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
-                if (size == null || thumb == null) return null;
-
-                reader.Position = thumb.GetUInt(0);
-                Thumbnail temp = new Thumbnail()
-                {
-                    data = reader.ReadBytes(size.GetInt(0)),
-                    Type = ThumbnailType.JPEG,
-                    dim = new Point2D()
-                };
-                return temp;
             }
         }
 
