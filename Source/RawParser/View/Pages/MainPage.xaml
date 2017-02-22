@@ -203,7 +203,7 @@
                                     <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" Maximum="20" Value="{x:Bind EditionValue.Contrast, Mode=TwoWay}"
                                             Minimum="-20" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
                                     <ToggleSwitch x:Name="GammaToggle" x:Uid="GammaToggle" IsEnabled="{x:Bind ControlVisibilty.Value, Mode=OneWay}"
-                                            IsOn="{x:Bind EditionValue.ReverseGamma, Mode=TwoWay}" Tapped="{x:Bind EditingControlChanged}" Margin="0,10,0,5"
+                                            IsOn="{x:Bind EditionValue.ReverseGamma, Mode=TwoWay}" Toggled="{x:Bind EditingControlChanged}" Margin="0,10,0,5"
                                             FontSize="14" HorizontalAlignment="Left" HorizontalContentAlignment="Left">Apply gamma curve</ToggleSwitch>
                                     <RadioButton x:Name="HighGamma" IsChecked="False" GroupName="Gamma"
                                             IsEnabled="{x:Bind (x:Boolean)GammaToggle.IsOn, Mode=OneWay}" Tapped="{x:Bind EditingControlChanged}" FontSize="12">High</RadioButton>

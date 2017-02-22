@@ -132,17 +132,17 @@ namespace RawNet.Decoder.Decompressor
             return (uint)(ret & ((1 << nbits) - 1));
         }
 
-        public override uint GetBit()
+        public override int GetBit()
         {
             var t = PeekBit();
             left--;
             return t;
         }
 
-        public override uint PeekBit()
+        public override int PeekBit()
         {
             if (left == 0) Fill();
-            return (uint)(current_buffer[(left - 1) >> 3] >> ((left - 1) & 0x7)) & 1;
+            return (current_buffer[(left - 1) >> 3] >> ((left - 1) & 0x7)) & 1;
         }
 
         public override void SkipBits(int nbits)

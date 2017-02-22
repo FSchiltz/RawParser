@@ -23,7 +23,6 @@ namespace RawNet.Decoder.HuffmanCompressor
         {
             int rv;
             int l;
-            uint code, temp;
             int val;
             /*
             * If the huffman code is less than 8 bits, we can use the fast
@@ -31,7 +30,7 @@ namespace RawNet.Decoder.HuffmanCompressor
             * 3-4% of the time.
             */
             bitPump.Fill();
-            code = bitPump.PeekBits(14);
+            var code = bitPump.PeekBits(14);
             val = bigTable[code];
             if ((val & 0xff) != 0xff)
             {
@@ -54,8 +53,8 @@ namespace RawNet.Decoder.HuffmanCompressor
                 l = 8;
                 while (code > maxcode[l])
                 {
-                    temp = bitPump.GetBit();
-                    code = (code << 1) | temp;
+                    var temp = bitPump.GetBit();
+                    code = (code << 1) | (uint)temp;
                     l++;
                 }
 

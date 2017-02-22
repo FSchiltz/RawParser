@@ -33,11 +33,11 @@ namespace RawNet.Decoder.Decompressor
             size = (_size * 8);
         }
 
-        unsafe override public uint PeekBit()
+        unsafe override public int PeekBit()
         {
             fixed (byte* t = &buffer[off >> 3])
             {
-                return (uint)(*(Int32*)t >> (int)(off & 7) & 1);
+                return *(Int32*)t >> (off & 7) & 1;
             }
         }
 
@@ -49,9 +49,9 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public override uint GetBit()
+        public override int GetBit()
         {
-            uint v = PeekBit();
+            var v = PeekBit();
             off++;
             return v;
         }

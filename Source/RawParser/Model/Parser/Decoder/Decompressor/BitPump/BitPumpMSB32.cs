@@ -51,7 +51,7 @@ namespace RawNet.Decoder.Decompressor
             // Fill the buffer with at least 24 bits
             if (left < MIN_GET_BITS)
             {
-                uint c, c2, c3, c4;
+                int c, c2, c3, c4;
                 if ((off + 4) > size)
                 {
                     while (off < size)
@@ -78,10 +78,10 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public override uint GetBit()
+        public override int GetBit()
         {
             if (left == 0) Fill();
-            return (uint)((current >> --left) & 1);
+            return (current >> --left) & 1;
         }
 
         public override uint GetBits(int nbits)
@@ -109,7 +109,7 @@ namespace RawNet.Decoder.Decompressor
             return 0;
         }
 
-        public override uint PeekBit()
+        public override int PeekBit()
         {
             throw new NotImplementedException();
         }

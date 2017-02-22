@@ -30,16 +30,17 @@ namespace RawNet.Decoder.Decompressor
         public BitPumpMSB(TiffBinaryReader reader, long offset, long count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
-            size = count + sizeof(uint);
-            buffer = new byte[size];
+            size = count;
+            buffer = new byte[size + 8];
             reader.BaseStream.Position = offset;
             reader.BaseStream.Read(buffer, 0, (int)count);
         }
 
+        //Buffer need to be a round number of int32
         public BitPumpMSB(byte[] _buffer, uint _size)
         {
             buffer = _buffer;
-            size = _size + sizeof(uint);
+            size = _size;
         }
 
         // Fill the buffer with at least 24 bits
@@ -63,14 +64,14 @@ namespace RawNet.Decoder.Decompressor
             return (uint)(ret & ((1 << nbits) - 1));
         }
 
-        public override uint PeekBit()
+        public override int PeekBit()
         {
-            return (uint)(buffer[(left - 1) >> 3] >> ((left - 1) & 0x7)) & 1;
+            return (buffer[left >> 3] >> (7 - (left & 7))) & 1;
         }
 
-        public override uint GetBit()
+        public override int GetBit()
         {
-            uint ret = PeekBit();
+            int ret = PeekBit();
             left++;
             return ret;
         }

@@ -24,7 +24,7 @@ namespace RawEditor.Effect
         static double threshold = 2.0;
 
 
-        public static unsafe void Demosaic(RawImage<ushort> image)
+        public static void Demosaic(RawImage<ushort> image)
         {
             // Mask of color per pixel
             byte[] mask = new byte[image.raw.dim.width * image.raw.dim.height];
@@ -127,7 +127,7 @@ namespace RawEditor.Effect
 
         }
 
-        static unsafe void demosaicking_bilinearSimple_red_blue(ImageComponent<ushort> image, byte[] mask, ushort[] input, int COLORPOSITION)
+        static void demosaicking_bilinearSimple_red_blue(ImageComponent<ushort> image, byte[] mask, ushort[] input, int COLORPOSITION)
         {
             // Interpolate the red differences making the average of possible values depending on the CFA structure
             Parallel.For(0, image.dim.width, x =>

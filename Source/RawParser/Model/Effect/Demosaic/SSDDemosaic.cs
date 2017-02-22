@@ -155,7 +155,7 @@ namespace RawEditor.Effect
                             {
                                 // Distances computed on color
                                 double some = 0.0;
-
+                                /*
                                 unsafe
                                 {
                                     fixed (ushort* redPtr = image.red)
@@ -170,7 +170,7 @@ namespace RawEditor.Effect
                                     {
                                         some += L2DistanceR1(bluePtr, x, y, i, j, image.dim.width);
                                     }
-                                }
+                                }*/
                                 // Compute weight
                                 some = some / (27.0 * h);
                                 double weight = LUT(some, lut);
@@ -219,43 +219,44 @@ namespace RawEditor.Effect
          * @param[in]  width    width of the image
          *
          */
-        unsafe static double L2DistanceR1(ushort* u0, int i0, int j0, int i1, int j1, uint width)
-        {
-            double diff, dist = 0.0;
-            ushort* ptr0, ptr1;
+        /*
+       static double L2DistanceR1(ushort* u0, int i0, int j0, int i1, int j1, uint width)
+       {
+           double diff, dist = 0.0;
+           ushort* ptr0, ptr1;
 
-            ptr0 = u0 + (j0 - 1) * width + i0 - 1;
-            ptr1 = u0 + (j1 - 1) * width + i1 - 1;
+           ptr0 = u0 + (j0 - 1) * width + i0 - 1;
+           ptr1 = u0 + (j1 - 1) * width + i1 - 1;
 
-            /* first line */
-            diff = *ptr0++ - *ptr1++;
-            dist += diff * diff;
-            diff = *ptr0++ - *ptr1++;
-            dist += diff * diff;
-            diff = *ptr0 - *ptr1;
-            dist += diff * diff;
+           /* first line 
+           diff = *ptr0++ - *ptr1++;
+           dist += diff * diff;
+           diff = *ptr0++ - *ptr1++;
+           dist += diff * diff;
+           diff = *ptr0 - *ptr1;
+           dist += diff * diff;
 
-            /* second line */
-            ptr0 += width - 2;
-            ptr1 += width - 2;
-            diff = *ptr0++ - *ptr1++;
-            dist += diff * diff;
-            diff = *ptr0++ - *ptr1++;
-            dist += diff * diff;
-            diff = *ptr0 - *ptr1;
-            dist += diff * diff;
+           /* second line 
+           ptr0 += width - 2;
+           ptr1 += width - 2;
+           diff = *ptr0++ - *ptr1++;
+           dist += diff * diff;
+           diff = *ptr0++ - *ptr1++;
+           dist += diff * diff;
+           diff = *ptr0 - *ptr1;
+           dist += diff * diff;
 
-            /* third line */
-            ptr0 += width - 2;
-            ptr1 += width - 2;
-            diff = *ptr0++ - *ptr1++;
-            dist += diff * diff;
-            diff = *ptr0++ - *ptr1++;
-            dist += diff * diff;
-            diff = *ptr0 - *ptr1;
-            dist += diff * diff;
+           /* third line 
+           ptr0 += width - 2;
+           ptr1 += width - 2;
+           diff = *ptr0++ - *ptr1++;
+           dist += diff * diff;
+           diff = *ptr0++ - *ptr1++;
+           dist += diff * diff;
+           diff = *ptr0 - *ptr1;
+           dist += diff * diff;
 
-            return dist;
-        }
+           return dist;
+       }*/
     }
 }

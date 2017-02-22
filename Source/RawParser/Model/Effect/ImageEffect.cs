@@ -405,7 +405,7 @@ namespace RawEditor.Effect
             return histo;
         }
 
-        protected unsafe ImageComponent<int> Apply(ImageComponent<ushort> image)
+        protected ImageComponent<int> Apply(ImageComponent<ushort> image)
         {
             Debug.Assert(image.red != null);
             Debug.Assert(image.blue != null);
@@ -454,7 +454,7 @@ namespace RawEditor.Effect
             return buffer;
         }
 
-        protected unsafe void SinglePixelProcessing(ImageComponent<ushort> image, ImageComponent<int> buffer, double[] curve)
+        protected void SinglePixelProcessing(ImageComponent<ushort> image, ImageComponent<int> buffer, double[] curve)
         {
             Debug.Assert(image.red != null);
             Debug.Assert(image.blue != null);
