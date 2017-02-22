@@ -107,31 +107,6 @@ namespace RawNet
             dst[offset] = table.tables[value];
         }
 
-        // setWithLookUp will set a single pixel by using the lookup table if supplied,
-        // You must supply the destination where the value should be written, and a pointer to
-        // a value that will be used to store a random counter that can be reused between calls.
-        // this needs to be inline to speed up tight decompressor loops
-        internal unsafe void SetWithLookUp(ushort value, ushort* dest, ref uint random)
-        {
-            if (table == null)
-            {
-                *dest = value;
-                return;
-            }
-            if (table.Dither)
-            {
-                int basevalue = table.tables[value * 2];
-                uint delta = table.tables[value * 2 + 1];
-
-                uint r = random;
-                uint pix = (uint)basevalue + ((delta * (r & 2047) + 1024) >> 12);
-                random = 15700 * (r & 65535) + (r >> 16);
-                *dest = (ushort)pix;
-                return;
-            }
-            *dest = table.tables[value];
-        }
-
         internal void ConvertRGB()
         {
             Debug.Assert(convertionM?.Length == 9);

@@ -155,7 +155,7 @@ namespace RawNet.Decoder
                 else
                     metastream = new TiffBinaryReader(meta.data, meta.dataType);
 
-                decompressor.DecompressNikon(metastream, offsets.GetUInt(0), counts.GetUInt(0));
+                decompressor.Decompress(metastream, offsets.GetUInt(0), counts.GetUInt(0));
                 metastream.Dispose();
             }
             catch (IOException e)

@@ -17,15 +17,15 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public void DecompressNikon(TiffBinaryReader metadata, uint offset, uint size)
+        public void Decompress(TiffBinaryReader metadata, uint offset, uint size)
         {
             metadata.Position = 0;
             byte v0 = metadata.ReadByte();
             byte v1 = metadata.ReadByte();
             int huffSelect = 0;
             uint split = 0;
-            int[] pUp1 = new int[2];
-            int[] pUp2 = new int[2];
+            var pUp1 = new int[2];
+            var pUp2 = new int[2];
             huff[0].UseBigTable = true;
 
             if (v0 == 73 || v1 == 88)
@@ -80,14 +80,14 @@ namespace RawNet.Decoder.Decompressor
                 pLeft1 = pUp1[y & 1];
                 pLeft2 = pUp2[y & 1];
                 long dest = y * raw.raw.dim.width;
-                raw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), raw.raw.rawView, dest++, ref random);
-                raw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), raw.raw.rawView, dest++, ref random);
+                raw.SetWithLookUp((ushort)pLeft1, raw.raw.rawView, dest++, ref random);
+                raw.SetWithLookUp((ushort)pLeft2, raw.raw.rawView, dest++, ref random);
                 for (int x = 1; x < raw.raw.dim.width / 2; x++)
                 {
                     pLeft1 += huff[0].Decode();
                     pLeft2 += huff[0].Decode();
-                    raw.SetWithLookUp((ushort)Common.Clampbits(pLeft1, 15), raw.raw.rawView, dest++, ref random);
-                    raw.SetWithLookUp((ushort)Common.Clampbits(pLeft2, 15), raw.raw.rawView, dest++, ref random);
+                    raw.SetWithLookUp((ushort)pLeft1, raw.raw.rawView, dest++, ref random);
+                    raw.SetWithLookUp((ushort)pLeft2, raw.raw.rawView, dest++, ref random);
                 }
             }
             raw.table = null;

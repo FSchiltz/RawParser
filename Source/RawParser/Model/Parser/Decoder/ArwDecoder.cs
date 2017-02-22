@@ -10,6 +10,7 @@ namespace RawNet.Decoder
     class ArwDecoder : TIFFDecoder
     {
         internal ArwDecoder(Stream file) : base(file) { }
+        int shiftDown = 0;
 
         public override Thumbnail DecodeThumb()
         {
@@ -219,30 +220,27 @@ namespace RawNet.Decoder
             RawDecompressor.Decode16BitRawUnpacked(input, width, height, rawImage);
         }
 
-        unsafe void DecodeARW(TiffBinaryReader input, long w, long h)
+        void DecodeARW(TiffBinaryReader input, long w, long h)
         {
             BitPumpMSB bits = new BitPumpMSB(input);
-            fixed (UInt16* dest = rawImage.raw.rawView)
+
+            int sum = 0;
+            for (long x = w; (x--) != 0;)
             {
-                //uint pitch = rawImage.pitch / sizeof(UInt16);
-                int sum = 0;
-                for (long x = w; (x--) != 0;)
+                for (int y = 0; y < h + 1; y += 2)
                 {
-                    for (int y = 0; y < h + 1; y += 2)
-                    {
-                        bits.Fill();
-                        if (y == h) y = 1;
-                        int len = 4 - (int)bits.GetBits(2);
-                        if (len == 3 && bits.GetBit() != 0) len = 0;
-                        if (len == 4)
-                            while (len < 17 && bits.GetBit() == 0) len++;
-                        uint diff = bits.GetBits(len);
-                        if (len != 0 && (diff & (1 << (len - 1))) == 0)
-                            diff -= (uint)(1 << len) - 1;
-                        sum += (int)diff;
-                        Debug.Assert((sum >> 12) == 0);
-                        if (y < h) dest[x + y * rawImage.raw.dim.width] = (ushort)sum;
-                    }
+                    bits.Fill();
+                    if (y == h) y = 1;
+                    int len = 4 - (int)bits.GetBits(2);
+                    if (len == 3 && bits.GetBit() != 0) len = 0;
+                    if (len == 4)
+                        while (len < 17 && bits.GetBit() == 0) len++;
+                    int diff = (int)bits.GetBits(len);
+                    if (len != 0 && (diff & (1 << (len - 1))) == 0)
+                        diff -= (1 << len) - 1;
+                    sum += diff;
+                    Debug.Assert((sum >> 12) == 0);
+                    if (y < h) rawImage.raw.rawView[x + y * rawImage.raw.dim.width] = (ushort)sum;
                 }
             }
         }
@@ -283,7 +281,6 @@ namespace RawNet.Decoder
                                     p = 0x7ff;
                             }
                             rawImage.SetWithLookUp((ushort)(p << 1), rawImage.raw.rawView, (int)((y * rawImage.raw.dim.width) + x + i * 2), ref random);
-
                         }
                         x += (x & 1) != 0 ? (uint)31 : 1;  // Skip to next 32 pixels
                     }
@@ -291,34 +288,26 @@ namespace RawNet.Decoder
             }
             else if (bpp == 12)
             {
-                unsafe
+                byte[] inputTempArray = input.ReadBytes((int)input.BaseStream.Length);
+
+                if (input.RemainingSize < (w * 3 / 2))
+                    throw new RawDecoderException("Sony Decoder: Image data section too small, file probably truncated");
+
+                if (input.RemainingSize < (w * h * 3 / 2))
+                    h = input.RemainingSize / (w * 3 / 2) - 1;
+                int i = 0;
+                for (uint y = 0; y < h; y++)
                 {
-                    byte[] inputTempArray = input.ReadBytes((int)input.BaseStream.Length);
-                    fixed (byte* inputTemp = inputTempArray)
+                    for (uint x = 0; x < w; x += 2)
                     {
-                        byte* t2 = inputTemp;
-                        if (input.RemainingSize < (w * 3 / 2))
-                            throw new RawDecoderException("Sony Decoder: Image data section too small, file probably truncated");
-
-                        if (input.RemainingSize < (w * h * 3 / 2))
-                            h = input.RemainingSize / (w * 3 / 2) - 1;
-
-                        for (uint y = 0; y < h; y++)
-                        {
-                            for (uint x = 0; x < w; x += 2)
-                            {
-                                uint g1 = *(t2++);
-                                uint g2 = *(t2++);
-                                rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
-                                uint g3 = *(t2++);
-                                rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
-                            }
-
-                        }
+                        uint g1 = inputTempArray[i++];
+                        uint g2 = inputTempArray[i++];
+                        rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
+                        uint g3 = inputTempArray[i++];
+                        rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                     }
+
                 }
-                // Shift scales, since black and white are the same as compressed precision
-                //shiftDownScale = 2;
             }
             else
                 throw new RawDecoderException("Unsupported bit depth");
@@ -389,8 +378,6 @@ namespace RawNet.Decoder
                 }
             }
             SetMetadata(rawImage.metadata.Model);
-            // rawImage.whitePoint >>= 14 - rawImage.raw.ColorDepth;
-            // rawImage.black >>= 14 - rawImage.raw.ColorDepth;
         }
 
         protected void SetMetadata(string model)
@@ -487,7 +474,7 @@ namespace RawNet.Decoder
             }
         }
 
-        unsafe void GetWB()
+        void GetWB()
         {
             // Set the whitebalance for all the modern ARW formats (everything after A100)
             Tag priv = ifd.GetEntryRecursive(TagType.DNGPRIVATEDATA);
@@ -529,6 +516,9 @@ namespace RawNet.Decoder
                         throw new RawDecoderException("White balance has " + wb.dataCount + " entries instead of 4");
                     rawImage.metadata.WbCoeffs = new WhiteBalance(wb.GetInt(0), wb.GetInt(1), wb.GetInt(3), rawImage.raw.ColorDepth);
                 }
+
+                //TODO read the color matrix 0x7800
+
                 Tag black = sony_private.GetEntry((TagType)0x7300) ?? sony_private.GetEntry((TagType)0x7310);
                 if (black != null) rawImage.black = black.GetLong(0);
 

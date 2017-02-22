@@ -115,7 +115,7 @@ namespace RawNet.Decoder
             {
                 fixed (UInt16* t = &rawImage.raw.rawView[y * rawImage.raw.dim.width])
                 {
-                    UInt16* dest = t;
+                    var dest = t;
                     for (int x = 0; x < w; x++)
                     {
                         pred[0] = pred[1] = nonz[0] = nonz[1] = 0;
