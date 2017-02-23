@@ -125,9 +125,8 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("ARW: SRF format, couldn't find width/height");
             var raw = data[0];
 
-            uint w = raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0);
-            uint h = raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0);
-            uint len = (w * h * 2);
+            var size = new Point2D(raw.GetEntry(TagType.IMAGEWIDTH).GetUInt(0), raw.GetEntry(TagType.IMAGELENGTH).GetUInt(0));
+            uint len = (size.Area * 2);
 
             // Constants taken from dcraw
             uint offtemp = 862144;
@@ -155,11 +154,11 @@ namespace RawNet.Decoder
             SonyDecrypt(imageData, len / 4, key);
 
             // And now decode as a normal 16bit raw
-            rawImage.raw.dim = new Point2D(w, h);
+            rawImage.raw.dim = new Point2D(size);
             rawImage.Init(false);
             using (TiffBinaryReader reader = new TiffBinaryReader(imageData, len))
             {
-                RawDecompressor.Decode16BitRawUnpacked(reader, w, h, rawImage);
+                RawDecompressor.Decode16BitRawUnpacked(reader, size, new Point2D(), rawImage);
             }
         }
 
@@ -195,7 +194,7 @@ namespace RawNet.Decoder
             /*
                 RawDecompressor.Decode14BitRawBEunpacked(input, width, height, rawImage);
            */
-            RawDecompressor.Decode16BitRawUnpacked(input, width, height, rawImage);
+            RawDecompressor.Decode16BitRawUnpacked(input, new Point2D(width, height), new Point2D(), rawImage);
         }
 
         void DecodeARW(TiffBinaryReader input, long w, long h)

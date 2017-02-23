@@ -388,7 +388,7 @@ namespace RawNet.Decoder
             rawImage.raw.ColorDepth = 12;
             rawImage.raw.dim = new Point2D(w, h);
             TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, offset);
-            RawDecompressor.Decode12BitRawBEWithControl(input, w, h, rawImage);
+            RawDecompressor.Decode12BitRawBEWithControl(input, new Point2D(w, h), new Point2D(), rawImage);
         }
 
         void DecodeSNefUncompressed()
