@@ -39,6 +39,22 @@ namespace RawNet.Decoder.Decompressor
 
             if (bitPerPixel == 8)
             {
+                Decode8BitRaw(input, width, height, rawImage);
+                return;
+            }
+            else if (bitPerPixel == 10 && order == BitOrder.Jpeg && skipBits == 0 && offset.Area == 0)
+            {
+                //Optimisation for windows phone DNG
+                Decode10BitRaw(input, width, height, rawImage);
+                return;
+            }
+            else if (bitPerPixel == 16 && Common.GetHostEndianness() == Endianness.Little)
+            {
+                Decode16BitRawUnpacked(input, width, height, rawImage);
+                return;
+            }
+            else if (bitPerPixel == 12 && width == inputPitch * 8 / 12 && Common.GetHostEndianness() == Endianness.Little)
+            {
                 Decode12BitRaw(input, width, height, rawImage);
                 return;
             }
@@ -100,6 +116,35 @@ namespace RawNet.Decoder.Decompressor
                 for (int x = 0; x < width; x++)
                 {
                     rawImage.raw.rawView[skip + x] = temp[skip + x];
+                }
+            });
+        }
+
+        public static void Decode10BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        {
+            int off = (int)(width * 10) / 8;
+            var pumps = new byte[height][];
+
+            //read the data
+            for (int i = 0; i < height; i++)
+            {
+                pumps[i] = input.ReadBytes(off);
+            }
+
+            Parallel.For(0, height, i =>
+            {
+                long pos = i * rawImage.raw.dim.width * rawImage.raw.cpp;
+                var data = pumps[i];
+                var bytePos = 0;
+                for (uint x = 0; x < width;)
+                {
+                    rawImage.raw.rawView[pos + x++] = (ushort)((data[bytePos++] << 2) + (data[bytePos] >> 6));
+
+                    rawImage.raw.rawView[pos + x++] = (ushort)(((data[bytePos++] & 63) << 4) + (data[bytePos] >> 4));
+
+                    rawImage.raw.rawView[pos + x++] = (ushort)(((data[bytePos++] & 15) << 6) + (data[bytePos] >> 2));
+
+                    rawImage.raw.rawView[pos + x++] = (ushort)(((data[bytePos++] & 3) << 8) + data[bytePos++]);
                 }
             });
         }

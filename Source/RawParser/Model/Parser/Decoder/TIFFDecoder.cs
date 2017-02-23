@@ -290,7 +290,7 @@ namespace RawNet.Decoder
         public override Thumbnail DecodeThumb()
         {
             List<IFD> previews;
-            if ((previews = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)) != null)
+            if ((previews = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT))?.Count > 0)
             {
                 //there is a jpeg preview
                 if (previews?.Count == 0) return null;
