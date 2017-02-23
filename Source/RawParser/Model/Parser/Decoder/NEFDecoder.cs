@@ -1,4 +1,4 @@
-﻿using RawNet.Decoder.Decompressor;
+using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,66 @@ namespace RawNet.Decoder
         public NefDecoder(Stream file) : base(file)
         {
             ScaleValue = true;
-        }       
+        }
+        public override Thumbnail DecodeThumb()
+        {
+            //find the preview ifd inside the makernote
+            List<IFD> makernote = ifd.GetIFDsWithTag((TagType)0x011);
+            if (makernote.Count != 0)
+            {
+                IFD preview = makernote[0].GetIFDsWithTag((TagType)0x0201)[0];
+                //no thumbnail
+                if (preview == null) return null;
+
+                var thumb = preview.GetEntry((TagType)0x0201)?.GetUInt(0) ?? 0;
+                var size = preview.GetEntry((TagType)0x0202)?.GetInt(0) ?? 0;
+                if (size == 0 || thumb == 0) return null;
+
+                //get the makernote offset
+                List<IFD> exifs = ifd.GetIFDsWithTag((TagType)0x927C);
+
+                if (exifs == null || exifs.Count == 0) return null;
+
+                Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
+                if (makerNoteOffsetTag == null) return null;
+                reader.Position = thumb + 10 + makerNoteOffsetTag.dataOffset;
+                Thumbnail temp = new Thumbnail()
+                {
+                    data = reader.ReadBytes(size),
+                    Type = ThumbnailType.JPEG,
+                    dim = new Point2D()
+                };
+                return temp;
+            }
+            else
+            {
+                //no preview in the makernote, use the ifd0 preview
+                uint bps = ifd.GetEntry(TagType.BITSPERSAMPLE)?.GetUInt(0) ?? 8;
+                Point2D dim = new Point2D()
+                {
+                    width = ifd.GetEntry(TagType.IMAGEWIDTH)?.GetUInt(0) ?? 0,
+                    height = ifd.GetEntry(TagType.IMAGELENGTH)?.GetUInt(0) ?? 0
+                };
+
+                // Uncompressed
+                uint cpp = ifd.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                if (cpp > 4)
+                    throw new RawDecoderException();
+
+                var offset = ifd.GetEntry(TagType.STRIPOFFSETS).GetInt(0);
+                var count = ifd.GetEntry(TagType.STRIPBYTECOUNTS).GetInt(0);
+                reader.BaseStream.Position = offset;
+
+                Thumbnail thumb = new Thumbnail()
+                {
+                    cpp = cpp,
+                    dim = dim,
+                    data = reader.ReadBytes(count),
+                    Type = ThumbnailType.RAW
+                };
+                return thumb;
+            }
+        }
 
         public override void DecodeRaw()
         {
@@ -864,6 +923,7 @@ namespace RawNet.Decoder
     { "Nikon D4S", 0, 0,    { 8598,-2848,-857,-5618,13606,2195,-1002,1773,7137 } },
     { "Nikon D4", 0, 0,    { 8598,-2848,-857,-5618,13606,2195,-1002,1773,7137 } },
     { "Nikon Df", 0, 0,    { 8598,-2848,-857,-5618,13606,2195,-1002,1773,7137 } },*/
+    new CamRGB( "Nikon D500", 0, 0, new double[]   { 8813,-3210,-1036,-4703,12868,2021,-1054,1940,6129 } ),
      new CamRGB( "Nikon D5000", 0, 0xf00,   new double[]{  7309,-1403,-519,-8474,16008,2622,-2433,2826,8064  }),
     new CamRGB( "Nikon D5100", 0, 0x3de6,  new double[]{   8198,-2239,-724,-4871,12389,2798,-1043,2050,7181  }),/*
     { "Nikon D5200", 0, 0,
@@ -871,9 +931,7 @@ namespace RawNet.Decoder
     { "Nikon D5300", 0, 0,
     { 6988,-1384,-714,-5631,13410,2447,-1485,2204,7318 } },
     { "Nikon D5500", 0, 0,
-    { 8821,-2938,-785,-4178,12142,2287,-824,1651,6860 } },
-    { "Nikon D500", 0, 0,
-    { 8813,-3210,-1036,-4703,12868,2021,-1054,1940,6129 } },
+    { 8821,-2938,-785,-4178,12142,2287,-824,1651,6860 } },,
     { "Nikon D50", 0, 0,
     { 7732,-2422,-789,-8238,15884,2498,-859,783,7330 } },
     { "Nikon D5", 0, 0,
@@ -959,4 +1017,3 @@ namespace RawNet.Decoder
 	{ 8994,-2667,-865,-4594,12324,2552,-699,1786,6260 } }*/};
     }
 }
-
