@@ -77,7 +77,7 @@ namespace RawNet.Decoder.Decompressor
             }
             Parallel.For(0, height, i =>
             {
-                long pos = (offset.width + i) * rawImage.raw.dim.width * rawImage.raw.cpp;
+                long pos = ((offset.height + i) * rawImage.raw.dim.width + offset.width) * rawImage.raw.cpp;
                 for (uint x = 0; x < width; x++)
                 {
                     rawImage.raw.rawView[x + pos] = (ushort)pumps[i].GetBits(bitPerPixel);

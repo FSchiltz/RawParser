@@ -255,11 +255,11 @@ namespace RawNet.Decoder
             if (0 == slices.Count)
                 throw new RawDecoderException("NEF Decoder: No valid slices found. File probably truncated.");
 
+            rawImage.raw.ColorDepth = (ushort)bitPerPixel;
             rawImage.raw.dim = new Point2D(width, offY);
             if (bitPerPixel == 14 && width * slices[0].h * 2 == slices[0].count)
                 bitPerPixel = 16; // D3 & D810
 
-            rawImage.raw.ColorDepth = (ushort)bitPerPixel;
             bool bitorder = true;
 
             offY = 0;
