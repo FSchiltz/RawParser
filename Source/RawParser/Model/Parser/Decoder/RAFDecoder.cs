@@ -307,12 +307,12 @@ namespace RawNet.Decoder
             }
             else if (ifd.endian == Endianness.Big)
             {
-                RawDecompressor.Decode16BitRawUnpacked(input, width, height, rawImage);
+                RawDecompressor.Decode16BitRawUnpacked(input, new Point2D(width, height), pos, rawImage);
             }
             else
             {
                 //       RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Jpeg32, rawImage);
-                RawDecompressor.ReadUncompressedRaw(input, rawImage.raw.dim, pos, width * bps / 8, bps, BitOrder.Plain, rawImage);
+                RawDecompressor.ReadUncompressedRaw(input, new Point2D(width, height), pos, width * bps / 8, bps, BitOrder.Plain, rawImage);
             }
         }
 

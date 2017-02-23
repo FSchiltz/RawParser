@@ -58,7 +58,7 @@ namespace RawNet.Decoder
             }
         }
 
-        private void DecodeUncompressed(TiffBinaryReader s, uint w, uint h, long size, Endianness endian)
+        private void DecodeUncompressed(TiffBinaryReader input, uint width, uint height, long size, Endianness endian)
         {
             /*
                  RawDecompressor.Decode12BitRawWithControl(s, w, h, rawImage);
@@ -68,16 +68,16 @@ namespace RawNet.Decoder
                  RawDecompressor.ReadUncompressedRaw(s, dim, pos, w * 12 / 8, 12, BitOrder.Jpeg32, rawImage);
              }
              else*/
-            if (size >= w * h * 2)
+            if (size >= width * height * 2)
             { // We're in an unpacked raw
                 if (endian == Endianness.Little)
-                    RawDecompressor.Decode12BitRawUnpacked(s, w, h, rawImage);
+                    RawDecompressor.Decode12BitRawUnpacked(input, new Point2D(width, height), new Point2D(), rawImage);
                 else
-                    RawDecompressor.Decode12BitRawBEunpackedLeftAligned(s, w, h, rawImage);
+                    RawDecompressor.Decode12BitRawBEunpackedLeftAligned(input, new Point2D(width, height), new Point2D(), rawImage);
             }
-            else if (size >= w * h * 3 / 2)
+            else if (size >= width * height * 3 / 2)
             { // We're in one of those weird interlaced packed raws
-                RawDecompressor.Decode12BitRawBEInterlaced(s, w, h, rawImage);
+                RawDecompressor.Decode12BitRawBEInterlaced(input, new Point2D(width, height), new Point2D(), rawImage);
             }
             else
             {
@@ -91,7 +91,7 @@ namespace RawNet.Decoder
          * Also there is no way to multithread this code, since prediction
          * is based on the output of all previous pixel (bar the first four)
          */
-        private void DecodeCompressed(TiffBinaryReader s, uint w, uint h)
+        private void DecodeCompressed(TiffBinaryReader s, uint width, uint height)
         {
             int nbits;
             long left0, nw0, left1, nw1;
@@ -115,14 +115,14 @@ namespace RawNet.Decoder
             s.ReadBytes(7);
             BitPumpMSB bits = new BitPumpMSB(s);
 
-            for (int y = 0; y < h; y++)
+            for (int y = 0; y < height; y++)
             {
                 var pos = y * rawImage.raw.UncroppedDim.width;
                 acarry0 = new long[3];
                 acarry1 = new long[3];
                 bool y_border = y < 2;
                 bool border = true;
-                for (int x = 0; x < w; x++)
+                for (int x = 0; x < width; x++)
                 {
                     bits.Fill();
                     int i = 0;

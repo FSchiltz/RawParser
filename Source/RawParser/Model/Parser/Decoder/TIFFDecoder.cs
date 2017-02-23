@@ -290,13 +290,11 @@ namespace RawNet.Decoder
         public override Thumbnail DecodeThumb()
         {
             List<IFD> previews;
-            if ((previews = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT)) != null)
+            if ((previews = ifd.GetIFDsWithTag(TagType.JPEGINTERCHANGEFORMAT))?.Count > 0)
             {
                 //there is a jpeg preview
-                if (previews?.Count == 0) return null;
-                var preview = previews[0];
-                var thumb = preview.GetEntry(TagType.JPEGINTERCHANGEFORMAT);
-                var size = preview.GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
+                var thumb = previews[0].GetEntry(TagType.JPEGINTERCHANGEFORMAT);
+                var size = previews[0].GetEntry(TagType.JPEGINTERCHANGEFORMATLENGTH);
                 if (size == null || thumb == null) return null;
 
                 reader.Position = thumb.GetUInt(0);

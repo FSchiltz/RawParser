@@ -13,14 +13,13 @@ namespace RawNet.Decoder.Decompressor
         public static void ReadUncompressedRaw(TiffBinaryReader input, Point2D size, Point2D offset, long inputPitch, int bitPerPixel, BitOrder order, RawImage<ushort> rawImage)
         {
             //uint outPitch = rawImage.pitch;
-            long width = size.width;
-            long height = size.height;
+            var pos = new Point2D(size);//to avoid rewriting the image pos
 
-            if (input.RemainingSize < (inputPitch * height))
+            if (input.RemainingSize < (inputPitch * pos.height))
             {
                 if (input.RemainingSize > inputPitch)
                 {
-                    height = input.RemainingSize / inputPitch - 1;
+                    pos.height = (uint)(input.RemainingSize / inputPitch - 1);
                     rawImage.errors.Add("Image truncated (file is too short)");
                 }
                 else
@@ -29,7 +28,7 @@ namespace RawNet.Decoder.Decompressor
             if (bitPerPixel > 16)
                 throw new RawDecoderException("Unsupported bit depth");
 
-            int skipBits = (int)(inputPitch - width * rawImage.raw.cpp * bitPerPixel / 8);  // Skip per line
+            int skipBits = (int)(inputPitch - pos.width * rawImage.raw.cpp * bitPerPixel / 8);  // Skip per line
             if (offset.height > rawImage.raw.dim.height)
                 throw new RawDecoderException("Invalid y offset");
             if (offset.width + size.width > rawImage.raw.dim.width)
@@ -39,136 +38,158 @@ namespace RawNet.Decoder.Decompressor
 
             if (bitPerPixel == 8)
             {
-                Decode12BitRaw(input, width, height, rawImage);
+                Decode8BitRaw(input, pos, offset, rawImage);
                 return;
             }
+            else if (bitPerPixel == 10 && order == BitOrder.Jpeg && skipBits == 0)
+            {
+                //Optimisation for windows phone DNG
+                Decode10BitRaw(input, pos, offset, rawImage);
+                return;
+            } /*
+            else if (bitPerPixel == 16 && Common.GetHostEndianness() == Endianness.Little)
+            {
+                Decode16BitRawUnpacked(input, pos, offset, rawImage);
+                return;
+            }
+            else if (bitPerPixel == 12 && pos.width == inputPitch * 8 / 12 && Common.GetHostEndianness() == Endianness.Little)
+            {
+                Decode12BitRaw(input, pos, offset, rawImage);
+                return;
+            }*/
 
-            width *= rawImage.raw.cpp;
-            var off = ((width * bitPerPixel) / 8) + skipBits;
-            var pumps = new BitPump[height];
+            pos.width *= rawImage.raw.cpp;
+            var off = ((pos.width * bitPerPixel) / 8) + skipBits;
+            var pumps = new BitPump[pos.height];
 
             //read the data
             switch (order)
             {
                 case BitOrder.Jpeg:
-                    for (int i = 0; i < height; i++)
+                    for (int i = 0; i < pos.height; i++)
                     {
                         pumps[i] = new BitPumpMSB(input, input.BaseStream.Position, off);
                     }
                     break;
                 case BitOrder.Jpeg16:
-                    for (int i = 0; i < height; i++)
+                    for (int i = 0; i < pos.height; i++)
                     {
                         pumps[i] = new BitPumpMSB16(input, input.BaseStream.Position, off);
                     }
                     break;
                 case BitOrder.Jpeg32:
-                    for (int i = 0; i < height; i++)
+                    for (int i = 0; i < pos.height; i++)
                     {
                         pumps[i] = new BitPumpMSB32(input, input.BaseStream.Position, off);
                     }
                     break;
                 default:
-                    for (int i = 0; i < height; i++)
+                    for (int i = 0; i < pos.height; i++)
                     {
                         pumps[i] = new BitPumpPlain(input, input.BaseStream.Position, off);
                     }
                     break;
             }
-            Parallel.For(0, height, i =>
+            Parallel.For(0, pos.height, i =>
             {
-                long pos = (offset.width + i) * rawImage.raw.dim.width * rawImage.raw.cpp;
-                for (uint x = 0; x < width; x++)
+                long p = ((offset.height + i) * rawImage.raw.dim.width + offset.width) * rawImage.raw.cpp;
+                for (uint x = 0; x < pos.width; x++)
                 {
-                    rawImage.raw.rawView[x + pos] = (ushort)pumps[i].GetBits(bitPerPixel);
+                    rawImage.raw.rawView[x + p] = (ushort)pumps[i].GetBits(bitPerPixel);
                 }
             });
         }
 
-        public static void Decode8BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode8BitRaw(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            var count = width * height;
-            if (input.RemainingSize < count)
-            {
-                throw new IOException("Decode8BitRaw: Not enough data to decode a single line. Image file truncated.");
-            }
 
-            var temp = input.ReadBytes((int)count);
-            Parallel.For(0, height, y =>
+            var temp = input.ReadBytes((int)size.Area);
+            Parallel.For(0, size.height, y =>
             {
-                var skip = y * width;
-                for (int x = 0; x < width; x++)
+                var skip = (y + offset.height) * rawImage.raw.UncroppedDim.width + offset.width;
+                for (int x = 0; x < size.width; x++)
                 {
                     rawImage.raw.rawView[skip + x] = temp[skip + x];
                 }
             });
         }
 
-        public static void Decode12BitRaw(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode10BitRaw(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            if (input.RemainingSize < ((width * 12 / 8) * height) && input.RemainingSize > (width * 12 / 8))
+            int off = (int)(size.width * 10) / 8;
+            var pumps = new byte[size.height][];
+
+            //read the data
+            for (int i = 0; i < size.height; i++)
             {
-                throw new IOException("Not enough data to decode a single line. Image file truncated.");
+                pumps[i] = input.ReadBytes(off);
             }
 
-            for (int y = 0; y < height; y++)
+            Parallel.For(0, size.height, i =>
             {
-                var skip = (y * rawImage.raw.UncroppedDim.width);
-                for (int x = 0; x < width; x += 2)
+                long pos = (i + offset.height) * rawImage.raw.dim.width + offset.width;
+                var data = pumps[i];
+                var bytePos = 0;
+                for (uint x = 0; x < size.width;)
+                {
+                    rawImage.raw.rawView[pos + x++] = (ushort)((data[bytePos++] << 2) + (data[bytePos] >> 6));
+                    rawImage.raw.rawView[pos + x++] = (ushort)(((data[bytePos++] & 63) << 4) + (data[bytePos] >> 4));
+                    rawImage.raw.rawView[pos + x++] = (ushort)(((data[bytePos++] & 15) << 6) + (data[bytePos] >> 2));
+                    rawImage.raw.rawView[pos + x++] = (ushort)(((data[bytePos++] & 3) << 8) + data[bytePos++]);
+                }
+                pumps[i] = null;
+            });
+        }
+
+        public static void Decode12BitRaw(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
+        {
+            for (int y = 0; y < size.height; y++)
+            {
+                var skip = (y + offset.height) * rawImage.raw.UncroppedDim.width + offset.width;
+                for (int x = 0; x < size.width; x += 2)
+                {
+                    uint g1 = input.ReadByte();
+                    uint g2 = input.ReadByte();
+                    rawImage.raw.rawView[skip + x] = (ushort)((g1 << 4) | (g2 & 0xf));
+                    uint g3 = input.ReadByte();
+                    rawImage.raw.rawView[skip + x + 1] = (ushort)(((g2 & 0xf) >> 4) | g3);
+                }
+            }
+        }
+
+        public static void Decode12BitRawWithControl(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
+        {
+            // Calulate expected bytes per line.
+            long perline = (size.width * 12 / 8);
+            // Add skips every 10 pixels
+            perline += ((size.width + 2) / 10);
+
+            for (int y = 0; y < size.height; y++)
+            {
+                var skip = (y + offset.height) * rawImage.raw.dim.width + offset.width;
+                for (int x = 0; x < size.width; x += 2)
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
                     rawImage.raw.rawView[skip + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     uint g3 = input.ReadByte();
                     rawImage.raw.rawView[skip + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
-                }
-            }
-        }
-
-        public static void Decode12BitRawWithControl(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
-        {
-            // Calulate expected bytes per line.
-            long perline = (width * 12 / 8);
-            // Add skips every 10 pixels
-            perline += ((width + 2) / 10);
-
-            // If file is too short, only decode as many lines as we have
-            if (input.RemainingSize < (perline * height))
-            {
-                throw new IOException("Decode12BitRawBEWithControl: Not enough data to decode a single line. Image file truncated.");
-            }
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x += 2)
-                {
-                    uint g1 = input.ReadByte();
-                    uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
-                    uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[(y * rawImage.raw.dim.width) + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
                     if ((x % 10) == 8) input.Position++;
                 }
             }
         }
 
-        public static void Decode12BitRawBEWithControl(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode12BitRawBEWithControl(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
             // Calulate expected bytes per line.
-            long perline = (width * 12 / 8);
+            long perline = (size.width * 12 / 8);
             // Add skips every 10 pixels
-            perline += ((width + 2) / 10);
+            perline += ((size.width + 2) / 10);
 
-            // If file is too short, only decode as many lines as we have
-            if (input.RemainingSize < (perline * height))
+            for (int y = 0; y < size.height; y++)
             {
-                throw new IOException("Decode12BitRawBEWithControl: Not enough data to decode a single line. Image file truncated.");
-            }
-
-            for (int y = 0; y < height; y++)
-            {
-                var skip = (y * rawImage.raw.dim.width);
-                for (int x = 0; x < width; x += 2)
+                var skip = (y + offset.height) * rawImage.raw.dim.width + offset.width;
+                for (int x = 0; x < size.width; x += 2)
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
@@ -180,49 +201,39 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBE(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode12BitRawBE(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            if (width < 2) throw new IOException("Are you mad? 1 pixel wide raw images are no fun");
-
-            if (input.RemainingSize < ((width * 12 / 8) * height))
+            for (int y = 0; y < size.height; y++)
             {
-                throw new IOException("Not enough data to decode a single line. Image file truncated.");
-            }
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x += 2)
+                var pos = (y + offset.height) * rawImage.raw.dim.width + offset.width;
+                for (int x = 0; x < size.width; x += 2)
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)((g1 << 4) | (g2 >> 4));
+                    rawImage.raw.rawView[pos + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
+                    rawImage.raw.rawView[pos + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
                 }
             }
         }
 
-        public static void Decode12BitRawBEInterlaced(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode12BitRawBEInterlaced(TiffBinaryReader input, Point2D size, Point2D off, RawImage<ushort> rawImage)
         {
-            if (input.RemainingSize < ((width * 12 / 8) * height))
-            {
-                throw new IOException("Not enough data to decode a single line. Image file truncated.");
-            }
-
-            long half = (height + 1) >> 1;
+            long half = (size.height + 1) >> 1;
             long y = 0;
-            for (int row = 0; row < height; row++)
+            for (int row = 0; row < size.height; row++)
             {
                 y = row % half * 2 + row / half;
-                var skip = y * rawImage.raw.dim.width;
+                var skip = (y + off.height) * rawImage.raw.dim.width + off.width;
                 if (y == 1)
                 {
                     // The second field starts at a 2048 byte aligment
-                    long offset = ((half * width * 3 / 2 >> 11) + 1) << 11;
+                    long offset = ((half * size.width * 3 / 2 >> 11) + 1) << 11;
                     if (offset > input.RemainingSize)
                         throw new IOException("Decode12BitSplitRaw: Trying to jump to invalid offset " + offset);
                     input.Position = offset;
                 }
-                for (int x = 0; x < width; x += 2)
+                for (int x = 0; x < size.width; x += 2)
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
@@ -233,35 +244,26 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEunpacked(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode12BitRawBEunpacked(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            if (input.RemainingSize < width * height * 2)
+            for (int y = 0; y < size.height; y++)
             {
-                throw new IOException("Not enough data to decode a single line. Image file truncated.");
-            }
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x += 1)
+                var pos = (y + offset.height) * rawImage.raw.dim.width + offset.width;
+                for (int x = 0; x < size.width; x += 1)
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
+                    rawImage.raw.rawView[pos + x] = (ushort)(((g1 & 0x0f) << 8) | g2);
                 }
             }
         }
 
-        public static void Decode12BitRawBEunpackedLeftAligned(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode12BitRawBEunpackedLeftAligned(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            // uint pitch = rawImage.pitch;
-            if (input.RemainingSize < width * height * 2)
+            for (int y = 0; y < size.height; y++)
             {
-                throw new IOException("Not enough data to decode a single line. Image file truncated.");
-            }
-
-            for (int y = 0; y < height; y++)
-            {
-                var skip = y * rawImage.raw.dim.width;
-                for (int x = 0; x < width; x += 1)
+                var skip = (y + offset.height) * rawImage.raw.dim.width + offset.height;
+                for (int x = 0; x < size.width; x += 1)
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
@@ -270,18 +272,12 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode14BitRawBEunpacked(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode14BitRawBEunpacked(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            // uint pitch = rawImage.pitch;
-            if (input.RemainingSize < width * height * 2)
+            for (int y = 0; y < size.height; y++)
             {
-                throw new IOException("Not enough data to decode a single line. Image file truncated.");
-            }
-
-            for (int y = 0; y < height; y++)
-            {
-                var skip = y * rawImage.raw.dim.width;
-                for (int x = 0; x < width; x += 1)
+                var skip = (y + offset.height) * rawImage.raw.dim.width + offset.width;
+                for (int x = 0; x < size.width; x += 1)
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
@@ -290,38 +286,28 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode16BitRawUnpacked(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode16BitRawUnpacked(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            //uint pitch = rawImage.pitch;
-            if (input.RemainingSize < width * height * 2)
+            for (int y = 0; y < size.height; y++)
             {
-                throw new IOException("Not enough data to decode a single line. Image file truncated.");
-            }
-
-            for (int y = 0; y < height; y++)
-            {
-                var skip = y * rawImage.raw.dim.width;
-                for (int x = 0; x < width; x += 1)
+                var skip = (y + offset.height) * rawImage.raw.dim.width + offset.width;
+                for (int x = 0; x < size.width; x += 1)
                 {
                     rawImage.raw.rawView[skip + x] = input.ReadUInt16();
                 }
             }
         }
 
-        public static void Decode12BitRawUnpacked(TiffBinaryReader input, long width, long height, RawImage<ushort> rawImage)
+        public static void Decode12BitRawUnpacked(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            if (input.RemainingSize < width * height * 2)
+            for (int y = 0; y < size.height; y++)
             {
-                throw new IOException("Not enough data to decode a single line. Image file truncated.");
-            }
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x += 1)
+                var pos = (y + offset.height) * rawImage.raw.dim.width + offset.width;
+                for (int x = 0; x < size.width; x += 1)
                 {
                     uint g1 = input.ReadByte();
                     uint g2 = input.ReadByte();
-                    rawImage.raw.rawView[y * rawImage.raw.dim.width + x] = (ushort)(((g2 << 8) | g1) >> 4);
+                    rawImage.raw.rawView[pos + x] = (ushort)(((g2 << 8) | g1) >> 4);
                 }
             }
         }

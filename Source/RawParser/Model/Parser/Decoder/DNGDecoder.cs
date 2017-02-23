@@ -1,12 +1,9 @@
-using RawEditor.Effect;
-using RawNet.Decoder.Decompressor;
 using RawNet.Dng;
 using RawNet.Format.Tiff;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace RawNet.Decoder
 {

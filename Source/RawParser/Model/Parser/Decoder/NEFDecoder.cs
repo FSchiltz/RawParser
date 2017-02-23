@@ -1,4 +1,4 @@
-﻿using RawNet.Decoder.Decompressor;
+using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,65 @@ namespace RawNet.Decoder
         public NefDecoder(Stream file) : base(file)
         {
             ScaleValue = true;
+        }
+        public override Thumbnail DecodeThumb()
+        {
+            //find the preview ifd inside the makernote
+            List<IFD> makernote = ifd.GetIFDsWithTag((TagType)0x011);
+            if (makernote.Count != 0)
+            {
+                IFD preview = makernote[0].GetIFDsWithTag((TagType)0x0201)[0];
+                //no thumbnail
+                if (preview == null) return null;
+
+                var thumb = preview.GetEntry((TagType)0x0201)?.GetUInt(0) ?? 0;
+                var size = preview.GetEntry((TagType)0x0202)?.GetInt(0) ?? 0;
+                if (size == 0 || thumb == 0) return null;
+
+                //get the makernote offset
+                List<IFD> exifs = ifd.GetIFDsWithTag((TagType)0x927C);
+
+                if (exifs == null || exifs.Count == 0) return null;
+
+                Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
+                if (makerNoteOffsetTag == null) return null;
+                reader.Position = thumb + 10 + makerNoteOffsetTag.dataOffset;
+                Thumbnail temp = new Thumbnail()
+                {
+                    data = reader.ReadBytes(size),
+                    Type = ThumbnailType.JPEG,
+                    dim = new Point2D()
+                };
+                return temp;
+            }
+            else
+            {
+                //no preview in the makernote, use the ifd0 preview
+                uint bps = ifd.GetEntry(TagType.BITSPERSAMPLE)?.GetUInt(0) ?? 8;
+                Point2D dim = new Point2D()
+                {
+                    width = ifd.GetEntry(TagType.IMAGEWIDTH)?.GetUInt(0) ?? 0,
+                    height = ifd.GetEntry(TagType.IMAGELENGTH)?.GetUInt(0) ?? 0
+                };
+
+                // Uncompressed
+                uint cpp = ifd.GetEntry(TagType.SAMPLESPERPIXEL).GetUInt(0);
+                if (cpp > 4)
+                    throw new RawDecoderException();
+
+                var offset = ifd.GetEntry(TagType.STRIPOFFSETS).GetInt(0);
+                var count = ifd.GetEntry(TagType.STRIPBYTECOUNTS).GetInt(0);
+                reader.BaseStream.Position = offset;
+
+                Thumbnail thumb = new Thumbnail()
+                {
+                    cpp = cpp,
+                    dim = dim,
+                    data = reader.ReadBytes(count),
+                    Type = ThumbnailType.RAW
+                };
+                return thumb;
+            }
         }
 
         public override void DecodeRaw()
@@ -196,11 +255,11 @@ namespace RawNet.Decoder
             if (0 == slices.Count)
                 throw new RawDecoderException("NEF Decoder: No valid slices found. File probably truncated.");
 
+            rawImage.raw.ColorDepth = (ushort)bitPerPixel;
             rawImage.raw.dim = new Point2D(width, offY);
             if (bitPerPixel == 14 && width * slices[0].h * 2 == slices[0].count)
                 bitPerPixel = 16; // D3 & D810
 
-            rawImage.raw.ColorDepth = (ushort)bitPerPixel;
             bool bitorder = true;
 
             offY = 0;
@@ -329,7 +388,7 @@ namespace RawNet.Decoder
             rawImage.raw.ColorDepth = 12;
             rawImage.raw.dim = new Point2D(w, h);
             TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, offset);
-            RawDecompressor.Decode12BitRawBEWithControl(input, w, h, rawImage);
+            RawDecompressor.Decode12BitRawBEWithControl(input, new Point2D(w, h), new Point2D(), rawImage);
         }
 
         void DecodeSNefUncompressed()
@@ -958,4 +1017,3 @@ namespace RawNet.Decoder
 	{ 8994,-2667,-865,-4594,12324,2552,-699,1786,6260 } }*/};
     }
 }
-
