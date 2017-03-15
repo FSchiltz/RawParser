@@ -1,6 +1,7 @@
 ﻿using Microsoft.Services.Store.Engagement;
 using RawEditor.Base;
 using RawEditor.Effect;
+using RawEditor.Model;
 using RawEditor.Settings;
 using RawEditor.View.UIHelper;
 using RawNet;
@@ -35,7 +36,6 @@ namespace RawEditor.View.Pages
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        public RawImage<ushort> rawImage;
         public bool ImageSelected { set; get; } = false;
         public Thumbnail thumbnail;
         public Bindable<bool> ResetButtonVisibility = new Bindable<bool>(false);
@@ -51,6 +51,7 @@ namespace RawEditor.View.Pages
         private int rotation;
         private bool isBindingEnabled = true;
 
+        public static RawImage<ushort> rawImage;
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
@@ -115,14 +116,8 @@ namespace RawEditor.View.Pages
             EditionValue.Copy(DefaultValue);
             CropUI.ResetCrop();
             CropUI.SetThumbAsync(null);
-            if (rawImage != null)
-            {
-                rawImage.raw.offset = new Point2D(0, 0);
-                rawImage.raw.dim = new Point2D(rawImage.raw.UncroppedDim);
-                rawImage.preview.offset = new Point2D(0, 0);
-                rawImage.preview.dim = new Point2D(rawImage.preview.UncroppedDim);
-                SetImageSizeText();
-            }
+            rawImage?.ResetCrop();
+            SetImageSizeText();
             ImageBoxPlain.Visibility = Visibility.Collapsed;
             ResetButtonVisibility.Value = false;
             BeforeToggle.IsChecked = false;
@@ -158,6 +153,24 @@ namespace RawEditor.View.Pages
             }
         }
 
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            var args = e.Parameter as Windows.ApplicationModel.Activation.IActivatedEventArgs;
+            if (args?.Kind == Windows.ApplicationModel.Activation.ActivationKind.File)
+            {
+                var fileArgs = args as Windows.ApplicationModel.Activation.FileActivatedEventArgs;
+                var file = (StorageFile)fileArgs.Files[0];
+                args = null;
+                RawHelper.OpenFile(file);
+            }
+        }
+
+        private void SettingClick(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(SettingsView), null);
+        }
+
         private void OpenFile(StorageFile file)
         {
             //Add a loading screen
@@ -166,13 +179,13 @@ namespace RawEditor.View.Pages
                 EmptyImage();
             }
             Load.Show();
-            // Blur(true);
+            ImageSelected = true;
+            isBindingEnabled = false;
+
             Task.Run(async () =>
             {
                 try
                 {
-                    ImageSelected = true;
-                    isBindingEnabled = false;
                     var watchTotal = Stopwatch.StartNew();
                     using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                     {
@@ -208,9 +221,7 @@ namespace RawEditor.View.Pages
                         Debug.WriteLine("Scale done in " + watchScale.ElapsedMilliseconds + " ms");
                     }
 
-                    rawImage.metadata.FileName = file.DisplayName;
-                    rawImage.metadata.FileNameComplete = file.Name;
-                    rawImage.metadata.FileExtension = file.FileType;
+                    rawImage.metadata.SetFileMetatdata(file);
 
                     if (rawImage.isCFA)
                     {
@@ -248,7 +259,7 @@ namespace RawEditor.View.Pages
                     rawImage.metadata.ParsingTime = watchTotal.ElapsedMilliseconds;
                     GC.Collect();
                     //check if enough memory
-                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)rawImage.raw.green.Length * 3) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
+                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)rawImage.raw.green.Length * 6) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                     {
                         TextDisplay.DisplayWarning("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                     }
@@ -308,24 +319,6 @@ namespace RawEditor.View.Pages
                 });
                 ImageSelected = false;
             });
-        }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-            var args = e.Parameter as Windows.ApplicationModel.Activation.IActivatedEventArgs;
-            if (args?.Kind == Windows.ApplicationModel.Activation.ActivationKind.File)
-            {
-                var fileArgs = args as Windows.ApplicationModel.Activation.FileActivatedEventArgs;
-                var file = (StorageFile)fileArgs.Files[0];
-                args = null;
-                OpenFile(file);
-            }
-        }
-
-        private void SettingClick(object sender, RoutedEventArgs e)
-        {
-            Frame.Navigate(typeof(SettingsView), null);
         }
 
         private async void SaveButtonClickAsync(object sender, RoutedEventArgs e)
@@ -481,14 +474,6 @@ namespace RawEditor.View.Pages
         {
             SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Bgra8, edition.Rotation, image.dim);
             edition.ApplyTo8Bits(image, bitmap, false);
-            return bitmap;
-        }
-
-        //Apply the change over the image preview       
-        private SoftwareBitmap ApplyImageEffect16bitsAsync(ImageComponent<ushort> image, ImageEffect edition)
-        {
-            SoftwareBitmap bitmap = CreateBitmap(BitmapPixelFormat.Rgba16, edition.Rotation, image.dim);
-            edition.ApplyTo16Bits(image, bitmap, false);
             return bitmap;
         }
 

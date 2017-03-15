@@ -178,6 +178,7 @@
     <Compile Include="Model\Parser\Image\ImageComponent.cs" />
     <Compile Include="Model\Parser\Image\ImageHelper.cs" />
     <Compile Include="Model\Parser\Image\WhiteBalance.cs" />
+    <Compile Include="Model\RawHelper.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="Model\Parser\Base\Common.cs" />
