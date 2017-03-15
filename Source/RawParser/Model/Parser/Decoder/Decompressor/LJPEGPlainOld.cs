@@ -5,14 +5,14 @@ using System.Diagnostics;
 namespace RawNet.Decoder.Decompressor
 {
     //Decompresses Lossless non subsampled JPEGs, with 2-4 components
-    class LJPEGPlainOld : JPEGDecompressor
+    class LJPEGPlain : JPEGDecompressor
     {
         public bool CanonFlipDim { get; set; }    // Fix Canon 6D mRaw where width/height is flipped
         public bool CanonDoubleHeight { get; set; }  // Fix Canon double height on 4 components (EOS 5DS R)
         public bool WrappedCr2Slices { get; set; } // Fix Canon 80D mRaw where the slices are wrapped
 
-        public LJPEGPlainOld(byte[] data, RawImage img, bool UseBigTable, bool DNGCompatible) : this(new TIFFBinaryReader(data), img, UseBigTable, DNGCompatible) { }
-        public LJPEGPlainOld(TIFFBinaryReader file, RawImage img, bool UseBigTable, bool DNGCompatible) : base(file, img, DNGCompatible, UseBigTable)
+        public LJPEGPlain(byte[] data, RawImage<ushort> img, bool UseBigTable, bool DNGCompatible) : this(new TiffBinaryReader(data), img, UseBigTable, DNGCompatible) { }
+        public LJPEGPlain(TiffBinaryReader file, RawImage<ushort> img, bool DNGCompatible, bool UseBigTable) : base(file, img, DNGCompatible, UseBigTable)
         {
             CanonFlipDim = false;
             CanonDoubleHeight = false;
@@ -36,8 +36,8 @@ namespace RawNet.Decoder.Decompressor
             }
 
             // If image attempts to decode beyond the image bounds, strip it.
-            if ((frame.width * frame.numComponents + offX * raw.cpp) > raw.raw.dim.width * raw.cpp)
-                skipX = ((frame.width * frame.numComponents + offX * raw.cpp) - raw.raw.dim.width * raw.cpp) / frame.numComponents;
+            if ((frame.width * frame.numComponents + offX * raw.raw.cpp) > raw.raw.dim.width * raw.raw.cpp)
+                skipX = ((frame.width * frame.numComponents + offX * raw.raw.cpp) - raw.raw.dim.width * raw.raw.cpp) / frame.numComponents;
             if (frame.height + offY > raw.raw.dim.height)
                 skipY = frame.height + offY - raw.raw.dim.height;
 
@@ -66,7 +66,7 @@ namespace RawNet.Decoder.Decompressor
                     if (raw.isCFA)
                         throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot decode subsampled image to CFA data");
 
-                    if (raw.cpp != frame.numComponents)
+                    if (raw.raw.cpp != frame.numComponents)
                         throw new RawDecoderException("LJpegDecompressor::decodeScan: Subsampled component count does not match image.");
 
                     if (predictor == 1)
@@ -104,15 +104,13 @@ namespace RawNet.Decoder.Decompressor
 
             if (predictor == 1)
             {
-                DecodeScanLeftGeneric();
-                return;
                 if (CanonFlipDim)
                     throw new RawDecoderException("LJpegDecompressor::decodeScan: Cannot flip non subsampled images.");
-                if (raw.raw.dim.height * raw.pitch >= 1 << 28)
+                /*if (raw.raw.dim.height * raw.pitch >= 1 << 28)
                 {
                     DecodeScanLeftGeneric();
                     return;
-                }
+                }*/
                 if (frame.numComponents == 2)
                     DecodeScanLeft2Comps();
                 else if (frame.numComponents == 3)
@@ -312,8 +310,6 @@ namespace RawNet.Decoder.Decompressor
                     if (!(pixInSlice == 0 || maxSuperV == 1))
                         throw new RawDecoderException("decodeScanLeftGeneric: Slice not placed at new line");
                 }
-                // Check if we are still within the file.
-                bits.CheckPos();
                 predict = dest;
                 x = 0;
             }
@@ -462,9 +458,7 @@ namespace RawNet.Decoder.Decompressor
                     p1 = predict[0];
                     p2 = predict[1];
                     p3 = predict[2];
-                    Debug.Assert(pixInSlice == 0);  // Ensure, that there is a slice shift at new line
-                    // Check if we are still within the file.
-                    bits.CheckPos();
+                    Debug.Assert(pixInSlice == 0);  // Ensure, that there is a slice shift at new line           
 
                     x = 0;
                 }
@@ -604,8 +598,6 @@ namespace RawNet.Decoder.Decompressor
                     p3 = predict[2];
                     predict = dest;
                     x = 0;
-                    // Check if we are still within the file.
-                    bits.CheckPos();
                 }
             }
         }
@@ -678,7 +670,7 @@ namespace RawNet.Decoder.Decompressor
                         p1 += dctbl1.Decode();
                         *dest++ = (ushort)p1;
                         //    Debug.Assert(p1 >= 0 && p1 < 65536);
-                        
+
                         p2 += dctbl2.Decode();
                         *dest++ = (ushort)p2;
                         //      Debug.Assert(p2 >= 0 && p2 < 65536);
@@ -708,7 +700,6 @@ namespace RawNet.Decoder.Decompressor
                     p2 = predict[1];
                     predict = dest;  // Adjust destination for next prediction
                     x = 0;
-                    bits.CheckPos();
                 }
             }
         }
@@ -821,7 +812,6 @@ namespace RawNet.Decoder.Decompressor
                     p3 = predict[2];  // Predictors for next row
                     predict = dest;  // Adjust destination for next prediction
                     x = 0;
-                    bits.CheckPos();
                 }
             }
 
@@ -944,7 +934,6 @@ namespace RawNet.Decoder.Decompressor
                             dctbl4.Decode();
                         }
                     }
-                    bits.CheckPos();
                     p1 = predict[0];  // Predictors for next row
                     p2 = predict[1];
                     p3 = predict[2];  // Predictors for next row

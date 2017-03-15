@@ -332,7 +332,6 @@ namespace RawEditor.View.Pages
         {
             if (rawImage?.raw != null)
             {
-                //Blur(true);
                 var savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
@@ -358,8 +357,18 @@ namespace RawEditor.View.Pages
                 {
                     try
                     {
+                        var watchPreview = Stopwatch.StartNew();
                         var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.raw, EditionValue);
+                        watchPreview.Stop();
+                        Debug.WriteLine("Apply done in " + watchPreview.ElapsedMilliseconds + " ms");
+
+
+                        watchPreview = Stopwatch.StartNew();
+                        //call GC here (GC does not empty automatically native object)
+                        GC.Collect();
                         FormatHelper.SaveAsync(file, result);
+                        watchPreview.Stop();
+                        Debug.WriteLine("Save done in " + watchPreview.ElapsedMilliseconds + " ms");
                     }
                     catch (Exception ex)
                     {
