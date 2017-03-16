@@ -1,8 +1,10 @@
 ﻿using RawEditor.Settings;
 using RawEditor.View.Pages;
 using RawEditor.View.UIHelper;
+using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -30,6 +32,14 @@ namespace RawEditor
 #if !DEBUG
             this.UnhandledException += App_UnhandledException;
 #endif
+            MemoryManager.AppMemoryUsageIncreased += (object e, object d) =>
+            {
+                if (MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.OverLimit)
+                {
+                    GC.Collect();
+                }
+            };
+
             SettingStorage.Init();
             var theme = SettingStorage.SelectedTheme;
             switch (theme)

@@ -326,7 +326,7 @@ namespace RawEditor.Effect
 
             var buffer = Apply(image);
             //Clip the image
-            Luminance.Clip(buffer, 16);
+            //Luminance.Clip(buffer, 16);
 
             HistoRaw histo = null;
             //calculate the new histogram (create a 8 bits histogram)
@@ -447,9 +447,7 @@ namespace RawEditor.Effect
             //apply sharpening (always last step)
             if (sharpness != 0)
                 buffer = Sharpening.Apply(buffer, (int)sharpness);
-
-            //Not working yet
-            //Luminance.Clip(buffer,image);
+            
             //return the final histogram
             return buffer;
         }

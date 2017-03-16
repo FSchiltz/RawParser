@@ -1,4 +1,5 @@
 ﻿using System;
+using Windows.Storage;
 
 namespace RawNet
 {
@@ -77,5 +78,12 @@ namespace RawNet
         }
 
         public string ExposureAsString => (Exposure >= 1) ? Exposure + "s" : "1/" + (1 / Exposure).ToString("F0") + "s";
+
+        public void SetFileMetatdata(StorageFile file)
+        {
+            FileName = file.DisplayName;
+            FileNameComplete = file.Name;
+            FileExtension = file.FileType;
+        }
     }
 }

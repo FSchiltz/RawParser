@@ -22,7 +22,7 @@
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <PackageCertificateThumbprint>8555196F52612800F9F665D82E1EBAF7F7A5100D</PackageCertificateThumbprint>
-    <AppxPackageDir>..\AppPackages\</AppxPackageDir>
+    <AppxPackageDir>..\..\..\AppPackages\</AppxPackageDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -178,6 +178,7 @@
     <Compile Include="Model\Parser\Image\ImageComponent.cs" />
     <Compile Include="Model\Parser\Image\ImageHelper.cs" />
     <Compile Include="Model\Parser\Image\WhiteBalance.cs" />
+    <Compile Include="Model\RawHelper.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
     <Compile Include="Model\Parser\Base\Common.cs" />

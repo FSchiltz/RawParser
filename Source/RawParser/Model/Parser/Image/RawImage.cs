@@ -190,6 +190,14 @@ namespace RawNet
             ScaleValues();
         }*/
 
+        public void ResetCrop()
+        {
+            raw.offset = new Point2D(0, 0);
+            raw.dim = new Point2D(raw.UncroppedDim);
+            preview.offset = new Point2D(0, 0);
+            preview.dim = new Point2D(preview.UncroppedDim);
+        }
+
         public List<ExifValue> ParseExif()
         {
             List<ExifValue> exif = new List<ExifValue>
