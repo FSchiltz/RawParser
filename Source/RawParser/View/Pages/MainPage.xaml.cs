@@ -652,8 +652,8 @@ namespace RawEditor.View.Pages
         //TODO replace by binding if possible
         private void SetImageSizeText()
         {
-            ImageHeight.Text = rawImage.raw.dim.height + "px";
-            ImageWidth.Text = rawImage.raw.dim.width + "px";
+            ImageHeight.Text = rawImage?.raw?.dim.height + "px";
+            ImageWidth.Text = rawImage?.raw?.dim.width + "px";
         }
 
         private void HideCropUI()
