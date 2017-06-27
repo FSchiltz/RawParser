@@ -15,7 +15,8 @@ namespace RawEditor.Effect
         protected CFAColor[] mask;
         public void Demosaic(RawImage<ushort> image)
         {
-            switch (image.colorFilter.ToString())
+            string t = image.colorFilter.ToString().Remove(4);
+            switch (t)
             {
                 case "RGGB":
                     redx = 0;
@@ -57,6 +58,7 @@ namespace RawEditor.Effect
             {
                 for (long col = 0; col < image.dim.width; col++)
                 {
+
                     if (!(col < 3 || row < 3 || col >= image.dim.width - 3 || row >= image.dim.height - 3))
                     {
                         //skip to the end of line to reduce calculation

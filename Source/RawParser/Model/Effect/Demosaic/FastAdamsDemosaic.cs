@@ -87,7 +87,7 @@ namespace RawEditor.Effect
             // make the average of four neighbouring green pixels: Nourth, South, East, West
             Parallel.For(0, image.dim.height, row =>
             {
-                var cfapos = (row % 2) * 2;
+                var cfapos = (row % cfa.Size.height) * cfa.Size.width;
                 var posRow = row * image.dim.width;
 
                 long gn = 1, gs;
@@ -99,7 +99,7 @@ namespace RawEditor.Effect
                 for (long col = 0; col < image.dim.width; col++)
                 {
                     var pos = posRow + col;
-                    var color = cfa.cfa[cfapos + (col % 2)];
+                    var color = cfa.cfa[cfapos + (col % cfa.Size.width)];
                     long gw = 1, ge;
                     if (col < image.dim.width - 1) ge = col + 1; else ge = image.dim.width - 2;
                     if (col > 0) gw = col - 1;

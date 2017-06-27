@@ -17,19 +17,17 @@ namespace RawEditor.Effect
             image.raw.blue = new ushort[image.raw.dim.width * image.raw.dim.height];
             Deflate(image);
             image.raw.rawView = null;
+            if (algorithm == DemosaicAlgorithm.None) return;
             if (image.isFujiTrans)
             {
                 switch (algorithm)
                 {
-                    case DemosaicAlgorithm.None:
-                        break;
                     case DemosaicAlgorithm.FastAdams:
                     case DemosaicAlgorithm.Adams:
                     case DemosaicAlgorithm.SSDD:
-                        FujiSSDD.Demosaic(image);
-                        break;
                     default:
-                        FujiDemos.Demosaic(image);
+                        new FastAdamsDemosaic().Demosaic(image);
+                        //new FujiDemos().Demosaic(image);
                         break;
                 }
             }
@@ -37,9 +35,6 @@ namespace RawEditor.Effect
             {
                 switch (algorithm)
                 {
-                    case DemosaicAlgorithm.None:
-                        //Deflate(image);
-                        break;
                     case DemosaicAlgorithm.Bilinear:
                         Bilinear.Demosaic(image);
                         break;
