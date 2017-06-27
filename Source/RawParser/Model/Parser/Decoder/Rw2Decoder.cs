@@ -13,6 +13,23 @@ namespace RawNet.Decoder
         TiffBinaryReader input_start;
         IFD raw;
 
+        public override Thumbnail DecodeThumb() {
+            var thumb = base.DecodeThumb();
+            if (thumb == null) {
+                var jpegTag = ifd.GetEntryRecursive((TagType)33);
+                if (jpegTag == null) return null;
+
+                
+                thumb = new Thumbnail()
+                {
+                    data = jpegTag.GetByteArray(),
+                    Type = ThumbnailType.JPEG,
+                    dim = new Point2D()
+                };
+            }
+            return thumb;
+        }
+
         internal RW2Decoder(Stream reader) : base(reader) { }
 
         public override void DecodeRaw()
@@ -118,56 +135,63 @@ namespace RawNet.Decoder
                     var dest = t;
                     for (int x = 0; x < w; x++)
                     {
-                        pred[0] = pred[1] = nonz[0] = nonz[1] = 0;
-                        int u = 0;
-                        for (i = 0; i < 14; i++)
+                        try
                         {
-                            // Even pixels
-                            if (u == 2)
+                            pred[0] = pred[1] = nonz[0] = nonz[1] = 0;
+                            int u = 0;
+                            for (i = 0; i < 14; i++)
                             {
-                                sh = 4 >> (int)(3 - bits.GetBits(2));
-                                u = -1;
-                            }
-                            if (nonz[0] != 0)
-                            {
-                                if (0 != (j = (int)bits.GetBits(8)))
+                                // Even pixels
+                                if (u == 2)
                                 {
-                                    if ((pred[0] -= 0x80 << sh) < 0 || sh == 4)
-                                        pred[0] &= ~(-1 << sh);
-                                    pred[0] += j << sh;
+                                    sh = 4 >> (int)(3 - bits.GetBits(2));
+                                    u = -1;
                                 }
-                            }
-                            else if ((nonz[0] = (int)bits.GetBits(8)) != 0 || i > 11)
-                                pred[0] = nonz[0] << 4 | (int)bits.GetBits(4);
-                            *dest = (ushort)pred[0];
-                            dest = dest + 1;
-                            if (zero_is_bad && 0 == pred[0])
-                                zero_pos.Add((y << 16) | (x * 14 + i));
+                                if (nonz[0] != 0)
+                                {
+                                    if (0 != (j = (int)bits.GetBits(8)))
+                                    {
+                                        if ((pred[0] -= 0x80 << sh) < 0 || sh == 4)
+                                            pred[0] &= ~(-1 << sh);
+                                        pred[0] += j << sh;
+                                    }
+                                }
+                                else if ((nonz[0] = (int)bits.GetBits(8)) != 0 || i > 11)
+                                    pred[0] = nonz[0] << 4 | (int)bits.GetBits(4);
+                                *dest = (ushort)pred[0];
+                                dest = dest + 1;
+                                if (zero_is_bad && 0 == pred[0])
+                                    zero_pos.Add((y << 16) | (x * 14 + i));
 
-                            // Odd pixels
-                            i++;
-                            u++;
-                            if (u == 2)
-                            {
-                                sh = 4 >> (int)(3 - bits.GetBits(2));
-                                u = -1;
-                            }
-                            if (nonz[1] != 0)
-                            {
-                                if ((j = (int)bits.GetBits(8)) != 0)
+                                // Odd pixels
+                                i++;
+                                u++;
+                                if (u == 2)
                                 {
-                                    if ((pred[1] -= 0x80 << sh) < 0 || sh == 4)
-                                        pred[1] &= ~(-1 << sh);
-                                    pred[1] += j << sh;
+                                    sh = 4 >> (int)(3 - bits.GetBits(2));
+                                    u = -1;
                                 }
+                                if (nonz[1] != 0)
+                                {
+                                    if ((j = (int)bits.GetBits(8)) != 0)
+                                    {
+                                        if ((pred[1] -= 0x80 << sh) < 0 || sh == 4)
+                                            pred[1] &= ~(-1 << sh);
+                                        pred[1] += j << sh;
+                                    }
+                                }
+                                else if ((nonz[1] = (int)bits.GetBits(8)) != 0 || i > 11)
+                                    pred[1] = nonz[1] << 4 | (int)bits.GetBits(4);
+                                *dest = (ushort)pred[1];
+                                dest++;
+                                if (zero_is_bad && 0 == pred[1])
+                                    zero_pos.Add((y << 16) | (x * 14 + i));
+                                u++;
                             }
-                            else if ((nonz[1] = (int)bits.GetBits(8)) != 0 || i > 11)
-                                pred[1] = nonz[1] << 4 | (int)bits.GetBits(4);
-                            *dest = (ushort)pred[1];
-                            dest++;
-                            if (zero_is_bad && 0 == pred[1])
-                                zero_pos.Add((y << 16) | (x * 14 + i));
-                            u++;
+                        }
+                        catch (Exception e) {
+
+
                         }
                     }
                 }
@@ -190,14 +214,21 @@ namespace RawNet.Decoder
             SetMetadata(rawImage.metadata.Model);
             rawImage.metadata.Mode = mode;
 
+            //in panasonic, exif are in ifd 0
+            if (rawImage.raw.ColorDepth == 16) {
+                rawImage.raw.ColorDepth = 12;
+            }
+
             //panasonic iso is in a special tag
             if (rawImage.metadata.IsoSpeed == 0)
             {
-                var t = ifd.GetEntryRecursive(TagType.PANASONIC_ISO_SPEED);
+                var t = raw.GetEntryRecursive(TagType.PANASONIC_ISO_SPEED);
                 if (t != null) rawImage.metadata.IsoSpeed = t.GetInt(0);
             }
 
             // Read blacklevels
+            var bias = raw.GetEntry((TagType)0x08).GetInt(0) + raw.GetEntry((TagType)0x09).GetInt(0) + raw.GetEntry((TagType)0x0a).GetInt(0);
+
             var rTag = raw.GetEntry((TagType)0x1c);
             var gTag = raw.GetEntry((TagType)0x1d);
             var bTag = raw.GetEntry((TagType)0x1e);
@@ -205,7 +236,7 @@ namespace RawNet.Decoder
             {
                 Debug.Assert(bTag.GetInt(0) + 15 == rTag.GetInt(0) + 15);
                 Debug.Assert(bTag.GetInt(0) + 15 == gTag.GetInt(0) + 15);
-                rawImage.black = rTag.GetInt(0) + 15; ;
+                rawImage.black = rTag.GetInt(0) + bias;
                 /*
                 rawImage.blackLevelSeparate[0] = rTag.GetInt(0) + 15;
                 rawImage.blackLevelSeparate[1] = rawImage.blackLevelSeparate[2] = gTag.GetInt(0) + 15;

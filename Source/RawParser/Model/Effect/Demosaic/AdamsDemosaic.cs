@@ -15,7 +15,7 @@ namespace RawEditor.Effect
         protected CFAColor[] mask;
         public void Demosaic(RawImage<ushort> image)
         {
-            string t = image.colorFilter.ToString().Remove(4);
+            string t = image.colorFilter.ToString();
             switch (t)
             {
                 case "RGGB":

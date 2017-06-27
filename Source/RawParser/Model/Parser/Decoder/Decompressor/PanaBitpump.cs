@@ -4,59 +4,56 @@ namespace RawNet.Decoder.Decompressor
 {
     class PanaBitpump
     {
+        static int BufSize = 0x4000;
+
         TiffBinaryReader input;
-        byte[] buf = new byte[0x4000];
-        int vbits;
+
+        byte[] buf = new byte[0x4001];
+        int vbits = 0;
         int load_flags;
+
         internal PanaBitpump(TiffBinaryReader _input, uint load)
         {
-            input = _input;
+            var temp = _input.ReadBytes((int)_input.RemainingSize);
+            Array.Resize(ref temp, temp.Length + 32);
+            input = new TiffBinaryReader(temp);
             vbits = 0;
             load_flags = (int)load;
         }
 
         public void SkipBytes(int bytes)
         {
-            int blocks = (bytes / 0x4000) * 0x4000;
+            int blocks = (bytes / BufSize) * BufSize;
             input.ReadBytes(blocks);
             for (int i = blocks; i < bytes; i++)
                 GetBits(8);
         }
 
-        public UInt32 GetBits(int nbits)
+        public int GetBits(int nbits)
         {
-            int vbyte;
+            
+                if (vbits == 0)
+                {
+                    /* On truncated files this routine will just return just for the truncated
+                    * part of the file. Since there is no chance of affecting output buffer
+                    * size we allow the decoder to decode this
+                    */
+                    int size = (int)Math.Min(input.RemainingSize, BufSize - load_flags);
+                    Common.Memcopy(buf, input.ReadBytes(size), (uint)size, load_flags, 0);
 
-            if (vbits == 0)
+                    size = (int)Math.Min(input.RemainingSize, load_flags);
+                    if (size != 0)
+                        Common.Memcopy(buf, input.ReadBytes(size), (uint)size);
+                }
+                vbits = (vbits - nbits) & 0x1ffff;
+                int b = vbits >> 3 ^ 0x3ff0;
+            try
             {
-                /* On truncated readers this routine will just return just for the truncated
-                * part of the reader. Since there is no chance of affecting output buffer
-                * size we allow the decoder to decode this
-                */
-                if (input.RemainingSize < 0x4000 - load_flags)
-                {
-                    Common.Memcopy(buf, input.ReadBytes((int)input.RemainingSize), (uint)input.RemainingSize, load_flags, 0);
-                    input.ReadBytes((int)input.RemainingSize);
-                }
-                else
-                {
-                    Common.Memcopy(buf, input.ReadBytes(0x4000 - load_flags), (uint)(0x4000 - load_flags), load_flags, 0);
-                    input.ReadBytes(0x4000 - load_flags);
-                    if (input.RemainingSize < load_flags)
-                    {
-                        Common.Memcopy(buf, input.ReadBytes((int)input.RemainingSize), (uint)input.RemainingSize);
-                        input.ReadBytes((int)input.RemainingSize);
-                    }
-                    else
-                    {
-                        Common.Memcopy(buf, input.ReadBytes(load_flags), (uint)load_flags);
-                        input.ReadBytes(load_flags);
-                    }
-                }
+                return (buf[b] | buf[b + 1] << 8) >> (vbits & 7) & ~(-(1 << nbits));
             }
-            vbits = (vbits - nbits) & 0x1ffff;
-            vbyte = vbits >> 3 ^ 0x3ff0;
-            return (uint)((buf[vbyte] | buf[vbyte + 1] << 8) >> (vbits & 7) & ~(-1 << nbits));
+            catch (Exception e) {
+                return 0;
+            }
         }
-    }
+    };
 }

@@ -40,7 +40,7 @@ namespace RawNet
         {
             //Set for 16bit image non demos           
             raw.cpp = 1;
-            raw.ColorDepth = 16;
+            raw.ColorDepth = 0;
         }
 
         internal void Init(bool RGB)

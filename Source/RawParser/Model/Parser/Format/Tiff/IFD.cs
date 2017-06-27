@@ -163,6 +163,9 @@ namespace RawNet.Format.Tiff
             if (data[6 + offset] == 0x45 && data[7 + offset] == 0x78 && data[8 + offset] == 0x69 && data[9 + offset] == 0x66)
             {
                 return new PanasonicMakernote(data.Skip(12).ToArray(), parentEndian, Depth);
+            } else if ( Common.Strncmp(data, "Panasonic", 9)) {
+
+                data = data.Skip(12).ToArray();
             }
 
             // Olympus starts the makernote with their own name, sometimes truncated

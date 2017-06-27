@@ -196,7 +196,7 @@ namespace RawNet.Decoder
         {
             if (rawImage.raw.ColorDepth == 0)
             {
-                rawImage.raw.ColorDepth = ifd.GetEntryRecursive(TagType.BITSPERSAMPLE)?.GetUShort(0) ?? 0;
+                rawImage.raw.ColorDepth = ifd.GetEntryRecursive(TagType.BITSPERSAMPLE)?.GetUShort(0) ?? 16;
             }
             rawImage.metadata.IsoSpeed = ifd.GetEntryRecursive(TagType.ISOSPEEDRATINGS)?.GetInt(0) ?? 0;
             rawImage.metadata.Aperture = ifd.GetEntryRecursive(TagType.APERTUREVALUE)?.GetFloat(0) ?? ifd.GetEntryRecursive(TagType.FNUMBER)?.GetFloat(0) ?? 0;

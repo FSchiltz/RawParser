@@ -201,7 +201,7 @@ namespace RawEditor.View.Pages
                             });
                         }
                         //since thumbnail are optionnal, we ignore all errors           
-                        catch (Exception) { }
+                        catch (Exception ex) { }
 
                         decoder.DecodeRaw();
                         decoder.DecodeMetadata();
@@ -296,7 +296,7 @@ namespace RawEditor.View.Pages
                     isBindingEnabled = true;
                     thumbnail = null;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
 #if !DEBUG
                     //send an event with file extension and camera model and make if any                   
