@@ -95,6 +95,7 @@ namespace RawNet.Format.Tiff
                             break;
                         case TagType.MAKERNOTE:
                         case TagType.MAKERNOTE_ALT:
+                        case (TagType)288:
                             Makernote makernote = ParseMakerNote(fileStream, tag, endian);
                             if (makernote != null) subIFD.Add(makernote);
                             break;
@@ -164,6 +165,11 @@ namespace RawNet.Format.Tiff
             {
                 return new PanasonicMakernote(data.Skip(12).ToArray(), parentEndian, Depth);
             }
+            else if (Common.Strncmp(data, "Panasonic", 9))
+            {
+
+                data = data.Skip(12).ToArray();
+            }
 
             // Olympus starts the makernote with their own name, sometimes truncated
             if (Common.Strncmp(data, "OLYMP", 5))
@@ -183,15 +189,23 @@ namespace RawNet.Format.Tiff
             }
 
             // Some have MM or II to indicate endianness - read that
-            if (data[offset] == 0x49 && data[1 + offset] == 0x49)
+            if (data[offset] == 0x49 && data[offset + 1] == 0x49)
             {
                 offset += 2;
                 parentEndian = Endianness.Little;
+                if (data[offset] == 42 && data[offset + 1] == 0 && data[offset + 2] == 8)
+                {
+                    offset += 6;
+                }
             }
             else if (data[offset] == 0x4D && data[offset + 1] == 0x4D)
             {
-                parentEndian = Endianness.Big;
+                parentEndian = Endianness.Big;                
                 offset += 2;
+                if (data[offset] == 42 && data[offset + 1] == 0 && data[offset + 2] == 8)
+                {
+                    offset += 6;
+                }
             }
 
             // Attempt to parse the rest as an IFD

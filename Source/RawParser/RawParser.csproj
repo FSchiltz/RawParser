@@ -11,8 +11,8 @@
     <AssemblyName>RawEditor</AssemblyName>
     <DefaultLanguage>en</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.14393.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.15063.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.15063.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -177,6 +177,9 @@
     <Compile Include="Model\Parser\Image\ExifValue.cs" />
     <Compile Include="Model\Parser\Image\ImageComponent.cs" />
     <Compile Include="Model\Parser\Image\ImageHelper.cs" />
+    <Compile Include="Model\Parser\Image\Thumbnail\IThumbnail.cs" />
+    <Compile Include="Model\Parser\Image\Thumbnail\JPEGThumbnail.cs" />
+    <Compile Include="Model\Parser\Image\Thumbnail\RAWThumbnail.cs" />
     <Compile Include="Model\Parser\Image\WhiteBalance.cs" />
     <Compile Include="Model\RawHelper.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
@@ -208,7 +211,6 @@
     <Compile Include="Model\Parser\Image\ImageMetadata.cs" />
     <Compile Include="Model\Parser\Image\RawImage.cs" />
     <Compile Include="Model\Parser\Image\TableLookUp.cs" />
-    <Compile Include="Model\Parser\Image\Thumbnail.cs" />
     <Compile Include="Model\Parser\Format\TIFF\IFD.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Makernote\NokiaMakernote.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Tag.cs" />

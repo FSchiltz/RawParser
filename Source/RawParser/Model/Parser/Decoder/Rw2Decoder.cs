@@ -13,6 +13,19 @@ namespace RawNet.Decoder
         TiffBinaryReader input_start;
         IFD raw;
 
+        public override Thumbnail DecodeThumb()
+        {
+            var thumb = base.DecodeThumb();
+            if (thumb == null)
+            {
+                var jpegTag = ifd.GetEntryRecursive(TagType.MAKERNOTE_ALT);
+                if (jpegTag == null) return null;
+                reader.BaseStream.Position = jpegTag.dataOffset;
+                return new JPEGThumbnail(reader.ReadBytes((int)jpegTag.dataCount));
+            }
+            else return thumb;
+        }
+
         internal RW2Decoder(Stream reader) : base(reader) { }
 
         public override void DecodeRaw()
@@ -106,69 +119,64 @@ namespace RawNet.Decoder
             int i, j, sh = 0;
             int[] pred = new int[2], nonz = new int[2];
             uint w = rawImage.raw.dim.width / 14;
-
             bool zero_is_bad = true;
 
             PanaBitpump bits = new PanaBitpump(input_start, load_flags);
             List<Int32> zero_pos = new List<int>();
             for (int y = 0; y < rawImage.raw.dim.height; y++)
             {
-                fixed (UInt16* t = &rawImage.raw.rawView[y * rawImage.raw.dim.width])
+                for (int x = 0, dest = 0; x < w; x++)
                 {
-                    var dest = t;
-                    for (int x = 0; x < w; x++)
+                    pred[0] = pred[1] = nonz[0] = nonz[1] = 0;
+                    int u = 0;
+                    for (i = 0; i < 14; i++)
                     {
-                        pred[0] = pred[1] = nonz[0] = nonz[1] = 0;
-                        int u = 0;
-                        for (i = 0; i < 14; i++)
+                        // Even pixels
+                        if (u == 2)
                         {
-                            // Even pixels
-                            if (u == 2)
-                            {
-                                sh = 4 >> (int)(3 - bits.GetBits(2));
-                                u = -1;
-                            }
-                            if (nonz[0] != 0)
-                            {
-                                if (0 != (j = (int)bits.GetBits(8)))
-                                {
-                                    if ((pred[0] -= 0x80 << sh) < 0 || sh == 4)
-                                        pred[0] &= ~(-1 << sh);
-                                    pred[0] += j << sh;
-                                }
-                            }
-                            else if ((nonz[0] = (int)bits.GetBits(8)) != 0 || i > 11)
-                                pred[0] = nonz[0] << 4 | (int)bits.GetBits(4);
-                            *dest = (ushort)pred[0];
-                            dest = dest + 1;
-                            if (zero_is_bad && 0 == pred[0])
-                                zero_pos.Add((y << 16) | (x * 14 + i));
-
-                            // Odd pixels
-                            i++;
-                            u++;
-                            if (u == 2)
-                            {
-                                sh = 4 >> (int)(3 - bits.GetBits(2));
-                                u = -1;
-                            }
-                            if (nonz[1] != 0)
-                            {
-                                if ((j = (int)bits.GetBits(8)) != 0)
-                                {
-                                    if ((pred[1] -= 0x80 << sh) < 0 || sh == 4)
-                                        pred[1] &= ~(-1 << sh);
-                                    pred[1] += j << sh;
-                                }
-                            }
-                            else if ((nonz[1] = (int)bits.GetBits(8)) != 0 || i > 11)
-                                pred[1] = nonz[1] << 4 | (int)bits.GetBits(4);
-                            *dest = (ushort)pred[1];
-                            dest++;
-                            if (zero_is_bad && 0 == pred[1])
-                                zero_pos.Add((y << 16) | (x * 14 + i));
-                            u++;
+                            sh = 4 >> 3 - bits.GetBits(2);
+                            u = -1;
                         }
+                        if (nonz[0] != 0)
+                        {
+                            if (0 != (j = bits.GetBits(8)))
+                            {
+                                if ((pred[0] -= 0x80 << sh) < 0 || sh == 4)
+                                    pred[0] &= ~(-1 << sh);
+                                pred[0] += j << sh;
+                            }
+                        }
+                        else if ((nonz[0] = bits.GetBits(8)) != 0 || i > 11)
+                            pred[0] = nonz[0] << 4 | bits.GetBits(4);
+                        rawImage.raw.rawView[y * rawImage.raw.dim.width + (dest++)] = (ushort)pred[0];
+
+                        if (zero_is_bad && 0 == pred[0])
+                            zero_pos.Add((y << 16) | (x * 14 + i));
+
+                        // Odd pixels
+                        i++;
+                        u++;
+                        if (u == 2)
+                        {
+                            sh = 4 >> 3 - bits.GetBits(2);
+                            u = -1;
+                        }
+                        if (nonz[1] != 0)
+                        {
+                            if ((j = bits.GetBits(8)) != 0)
+                            {
+                                if ((pred[1] -= 0x80 << sh) < 0 || sh == 4)
+                                    pred[1] &= ~(-1 << sh);
+                                pred[1] += j << sh;
+                            }
+                        }
+                        else if ((nonz[1] = bits.GetBits(8)) != 0 || i > 11)
+                            pred[1] = nonz[1] << 4 | bits.GetBits(4);
+                        rawImage.raw.rawView[y * rawImage.raw.dim.width + (dest++)] = (ushort)pred[1];
+
+                        if (zero_is_bad && 0 == pred[1])
+                            zero_pos.Add((y << 16) | (x * 14 + i));
+                        u++;
                     }
                 }
             }
@@ -176,8 +184,6 @@ namespace RawNet.Decoder
 
         public override void DecodeMetadata()
         {
-            rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Blue, CFAColor.Green, CFAColor.Green, CFAColor.Red);
-
             base.DecodeMetadata();
 
             if (rawImage.metadata.Model == null)
@@ -190,14 +196,22 @@ namespace RawNet.Decoder
             SetMetadata(rawImage.metadata.Model);
             rawImage.metadata.Mode = mode;
 
+            //in panasonic, exif are in ifd 0
+            if (rawImage.raw.ColorDepth == 16)
+            {
+                rawImage.raw.ColorDepth = 12;
+            }
+
             //panasonic iso is in a special tag
             if (rawImage.metadata.IsoSpeed == 0)
             {
-                var t = ifd.GetEntryRecursive(TagType.PANASONIC_ISO_SPEED);
+                var t = raw.GetEntryRecursive(TagType.PANASONIC_ISO_SPEED);
                 if (t != null) rawImage.metadata.IsoSpeed = t.GetInt(0);
             }
 
             // Read blacklevels
+            var bias = raw.GetEntry((TagType)0x08).GetInt(0) + raw.GetEntry((TagType)0x09).GetInt(0) + raw.GetEntry((TagType)0x0a).GetInt(0);
+
             var rTag = raw.GetEntry((TagType)0x1c);
             var gTag = raw.GetEntry((TagType)0x1d);
             var bTag = raw.GetEntry((TagType)0x1e);
@@ -205,7 +219,7 @@ namespace RawNet.Decoder
             {
                 Debug.Assert(bTag.GetInt(0) + 15 == rTag.GetInt(0) + 15);
                 Debug.Assert(bTag.GetInt(0) + 15 == gTag.GetInt(0) + 15);
-                rawImage.black = rTag.GetInt(0) + 15; ;
+                rawImage.black = rTag.GetInt(0) + bias;
                 /*
                 rawImage.blackLevelSeparate[0] = rTag.GetInt(0) + 15;
                 rawImage.blackLevelSeparate[1] = rawImage.blackLevelSeparate[2] = gTag.GetInt(0) + 15;

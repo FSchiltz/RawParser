@@ -1,9 +1,4 @@
-﻿using RawNet.Jpeg;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace RawNet.Decoder.HuffmanCompressor
 {
@@ -74,7 +69,7 @@ namespace RawNet.Decoder.HuffmanCompressor
                 l = 8;
                 while (code > maxcode[l])
                 {
-                    temp = (int)bitPump.GetBit();
+                    temp = bitPump.GetBit();
                     code = (code << 1) | temp;
                     l++;
                 }

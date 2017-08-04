@@ -1,6 +1,5 @@
 using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -54,17 +53,7 @@ namespace RawNet.Decoder
         public override void DecodeMetadata()
         {
             base.DecodeMetadata();
-            //get cfa
-            var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
-            if (cfa == null)
-            {
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
-            }
-            else
-            {
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
-            }
-
+          
             SetMetadata(rawImage.metadata.Model);
 
             // Read black level

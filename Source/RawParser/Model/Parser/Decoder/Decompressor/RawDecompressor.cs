@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Threading.Tasks;
 
 namespace RawNet.Decoder.Decompressor
@@ -159,11 +157,6 @@ namespace RawNet.Decoder.Decompressor
 
         public static void Decode12BitRawWithControl(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            // Calulate expected bytes per line.
-            long perline = (size.width * 12 / 8);
-            // Add skips every 10 pixels
-            perline += ((size.width + 2) / 10);
-
             for (int y = 0; y < size.height; y++)
             {
                 var skip = (y + offset.height) * rawImage.raw.dim.width + offset.width;
@@ -174,18 +167,12 @@ namespace RawNet.Decoder.Decompressor
                     rawImage.raw.rawView[skip + x] = (ushort)(g1 | ((g2 & 0xf) << 8));
                     uint g3 = input.ReadByte();
                     rawImage.raw.rawView[skip + x + 1] = (ushort)((g2 >> 4) | (g3 << 4));
-                    if ((x % 10) == 8) input.Position++;
                 }
             }
         }
 
         public static void Decode12BitRawBEWithControl(TiffBinaryReader input, Point2D size, Point2D offset, RawImage<ushort> rawImage)
         {
-            // Calulate expected bytes per line.
-            long perline = (size.width * 12 / 8);
-            // Add skips every 10 pixels
-            perline += ((size.width + 2) / 10);
-
             for (int y = 0; y < size.height; y++)
             {
                 var skip = (y + offset.height) * rawImage.raw.dim.width + offset.width;
@@ -196,7 +183,6 @@ namespace RawNet.Decoder.Decompressor
                     rawImage.raw.rawView[skip + x] = (ushort)((g1 << 4) | (g2 >> 4));
                     uint g3 = input.ReadByte();
                     rawImage.raw.rawView[skip + x + 1] = (ushort)(((g2 & 0x0f) << 8) | g3);
-                    if ((x % 10) == 8) input.Position++;
                 }
             }
         }

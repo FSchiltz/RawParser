@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Linq;
 
 namespace RawNet
 {
@@ -40,7 +38,7 @@ namespace RawNet
         {
             //Set for 16bit image non demos           
             raw.cpp = 1;
-            raw.ColorDepth = 16;
+            raw.ColorDepth = 0;
         }
 
         internal void Init(bool RGB)
@@ -230,7 +228,7 @@ namespace RawNet
 
             //Shot settings
             if (metadata.IsoSpeed > 0)
-                exif.Add(new ExifValue("ISO", "" + (int)metadata.IsoSpeed, ExifGroup.Shot));
+                exif.Add(new ExifValue("ISO", "" + metadata.IsoSpeed, ExifGroup.Shot));
             if (metadata.Exposure > 0)
                 exif.Add(new ExifValue("Exposure time", "" + metadata.ExposureAsString, ExifGroup.Shot));
             //Lens

@@ -50,8 +50,9 @@ namespace RawEditor.View.Pages
         private Bindable<Boolean> selectManualWB = new Bindable<bool>(false);
         private int rotation;
         private bool isBindingEnabled = true;
+        
+        public RawImage<ushort> rawImage;
 
-        public static RawImage<ushort> rawImage;
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
@@ -196,12 +197,12 @@ namespace RawEditor.View.Pages
                             thumbnail = decoder.DecodeThumb();
                             Task.Run(() =>
                             {
-                                var result = thumbnail?.GetSoftwareBitmap();
+                                var result = thumbnail?.GetBitmap();
                                 DisplayImage(result, true);
                             });
                         }
                         //since thumbnail are optionnal, we ignore all errors           
-                        catch (Exception) { }
+                        catch (Exception ex) { }
 
                         decoder.DecodeRaw();
                         decoder.DecodeMetadata();
@@ -296,7 +297,7 @@ namespace RawEditor.View.Pages
                     isBindingEnabled = true;
                     thumbnail = null;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
 #if !DEBUG
                     //send an event with file extension and camera model and make if any                   
@@ -652,8 +653,8 @@ namespace RawEditor.View.Pages
         //TODO replace by binding if possible
         private void SetImageSizeText()
         {
-            ImageHeight.Text = rawImage.raw.dim.height + "px";
-            ImageWidth.Text = rawImage.raw.dim.width + "px";
+            ImageHeight.Text = rawImage?.raw?.dim.height + "px";
+            ImageWidth.Text = rawImage?.raw?.dim.width + "px";
         }
 
         private void HideCropUI()

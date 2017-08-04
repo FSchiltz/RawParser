@@ -47,13 +47,7 @@ namespace RawNet.Decoder
                         rawImage.convertionM[i, k] = matrix.GetDouble(i * 3 + k);
                     }
                 }
-            }
-
-            //get cfa
-            if (rawImage.isCFA)
-            {
-                ReadCFA(raw);
-            }
+            }       
 
             // Linearization
             Tag lintable = raw.GetEntry(TagType.LINEARIZATIONTABLE);
@@ -408,33 +402,6 @@ namespace RawNet.Decoder
                     return;
             if (raw.GetEntry(TagType.BLACKLEVEL) != null)
                 Decodeblacks(raw);
-        }
-
-        protected void ReadCFA(IFD raw)
-        {
-            // Check if layout is OK, if present
-            if (raw.tags.ContainsKey(TagType.CFALAYOUT))
-                if (raw.GetEntry(TagType.CFALAYOUT).GetUShort(0) > 2)
-                    throw new RawDecoderException("Unsupported CFA Layout.");
-
-            Tag cfadim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM);
-            if (cfadim.dataCount != 2)
-                throw new RawDecoderException("Couldn't read CFA pattern dimension");
-            Tag pDim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
-            var cPat = raw.GetEntry(TagType.CFAPATTERN).GetIntArray();     // Does NOT contain dimensions as some documents state
-
-            Point2D cfaSize = new Point2D(pDim.GetUInt(1), pDim.GetUInt(0));
-            rawImage.colorFilter.SetSize(cfaSize);
-            if (cfaSize.Area != raw.GetEntry(TagType.CFAPATTERN).dataCount)
-                throw new RawDecoderException("CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
-
-            for (uint y = 0; y < cfaSize.height; y++)
-            {
-                for (uint x = 0; x < cfaSize.width; x++)
-                {
-                    rawImage.colorFilter.SetColorAt(new Point2D(x, y), (CFAColor)cPat[x + y * cfaSize.width]);
-                }
-            }
         }
     };
 }

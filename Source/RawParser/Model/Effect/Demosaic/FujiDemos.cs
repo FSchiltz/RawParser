@@ -1,92 +1,168 @@
 ﻿using RawNet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace RawEditor.Effect
 {
-    static class FujiDemos
+    class FujiDemos
     {
-        static public void Demosaic(RawImage<ushort>  image)
+        protected int redx, redy, bluex, bluey;
+        protected CFAColor[] mask;
+        public void Demosaic(RawImage<ushort> image)
         {
-            //short[,] greenPosition = new short[,] { { 0, 0 }, { 0, 2 }, { 2, 0 }, { 2, 2 } };//position for green whithout the center
-            //short[,] colorPosition = new short[,] { { 0, 1 }, { 2, 1 }, { 1, 0 }, { 1, 2 } };
-
-            //demosaic by group of 3x3
-            Parallel.For(0, image.raw.dim.height / 3, t =>
+            // Mask of color per pixel
+            mask = new CFAColor[image.raw.dim.width * image.raw.dim.height];
+            Parallel.For(0, image.raw.dim.height, row =>
             {
-                long top = t * 3;
-                for (long left = 0; left < image.raw.dim.width - 19; left += 3)
+                for (long col = 0; col < image.raw.dim.width; col++)
                 {
-                    //interpolate the green
-                    long pos = (top * image.raw.dim.width) + left;
-                    image.raw.green[pos + 1] = (ushort)((image.raw.green[pos + 2] + image.raw.green[pos]) / 2);
-                    pos = ((top + 2) * image.raw.dim.width) + left;
-                    image.raw.green[pos + 1] = (ushort)((image.raw.green[pos + 2] + image.raw.green[pos]) / 2);
+                    mask[row * image.raw.dim.width + col] = image.colorFilter.cfa[((row % image.colorFilter.Size.width) * image.colorFilter.Size.height) + (col % image.colorFilter.Size.height)];
+                }
+            });
+            DemosaickingAdams(image.raw, image.colorFilter);
+            // compute the bilinear on the differences of the red and blue with the already interpolated green
+            //DemosaickingBilinearRedBlue(redx, redy, image.raw, image.raw.red, CFAColor.Red);
+            //DemosaickingBilinearRedBlue(bluex, bluey, image.raw, image.raw.blue, CFAColor.Blue);
+        }
 
-                    pos = ((top + 1) * image.raw.dim.width) + left;
-                    image.raw.green[pos] = (ushort)(
-                         (image.raw.green[((top) * image.raw.dim.width) + left] + image.raw.green[((top + 2) * image.raw.dim.width) + left]) / 2);
-                    image.raw.green[pos] = (ushort)(
-                         (image.raw.green[((top) * image.raw.dim.width) + left + 2] + image.raw.green[((top + 2) * image.raw.dim.width) + left + 2]) / 2);
+        protected virtual void DemosaickingAdams(ImageComponent<ushort> image, ColorFilterArray cfa)
+        {
+            // Interpolate the green channel by bilinear on the boundaries  
+            // make the average of four neighbouring green pixels: Nourth, South, East, West
+            Parallel.For(0, image.dim.height, row =>
+            {
+                for (long col = 0; col < image.dim.width; col++)
+                {
+                    var color = mask[row * image.dim.width + col];
 
-                    //interpolate the red and blue for the center pixel
-                    pos = ((top + 1) * image.raw.dim.width) + left + 1;
-                    long topcolor = ((top) * image.raw.dim.width) + left + 1;
-                    long bottomcolor = ((top + 2) * image.raw.dim.width) + left + 1;
-                    long leftcolor = ((top + 1) * image.raw.dim.width) + left;
-                    long rightcolor = ((top + 1) * image.raw.dim.width) + left + 2;
-                    if (image.colorFilter.cfa[((top % 6) * 6) + ((left + 1) % 6)] == CFAColor.Red)
+
+                    //take the pixel and put it around
+                    if (color == CFAColor.Green)
                     {
-                        //top pixel is red
-                        image.raw.red[pos] = (ushort)((image.raw.red[topcolor] + image.raw.red[bottomcolor]) / 2);
-                        image.raw.blue[pos] = (ushort)((image.raw.blue[leftcolor] + image.raw.blue[rightcolor]) / 2);
-
-                        //interpolate the red and blue for the other pixel
-                        pos = top * image.raw.dim.width + left;
-                        image.raw.red[pos] = image.raw.red[topcolor];
-                        image.raw.blue[pos] = image.raw.blue[leftcolor];
-
-                        pos += 2;
-                        image.raw.red[pos] = image.raw.red[topcolor];
-                        image.raw.blue[pos] = image.raw.blue[rightcolor];
-
-                        pos = (top + 2) * image.raw.dim.width + left;
-                        image.raw.red[pos] = image.raw.red[bottomcolor];
-                        image.raw.blue[pos] = image.raw.blue[leftcolor];
-
-                        pos += 2;
-                        image.raw.red[pos] = image.raw.red[bottomcolor];
-                        image.raw.blue[pos] = image.raw.blue[rightcolor];
-
+                        Interpolate(CFAColor.Green, image.green, col, row, image.dim);
+                    }
+                    else if (color == CFAColor.Red)
+                    {
+                        Interpolate(CFAColor.Red, image.red, col, row, image.dim);
                     }
                     else
                     {
-                        //top pixel is blue
-                        image.raw.blue[pos] = (ushort)((image.raw.blue[topcolor] + image.raw.blue[bottomcolor]) / 2);
-                        image.raw.red[pos] = (ushort)((image.raw.red[leftcolor] + image.raw.red[rightcolor]) / 2);
+                        Interpolate(CFAColor.Blue, image.blue, col, row, image.dim);
+                    }
+                    /*if (!(col < 3 || row < 3 || col >= image.dim.width - 3 || row >= image.dim.height - 3))
+                    {
+                        //skip to the end of line to reduce calculation
+                        col = image.dim.width - 4;
+                    }
+                    else if (((mask[row * image.dim.width + col] = cfa.cfa[((row % cfa.Size.width) * cfa.Size.height) + (col % cfa.Size.height)]) != CFAColor.Green))
+                    {
+                        long gn, gs, ge, gw;
+                        if (row > 0) gn = row - 1; else gn = 1;
+                        if (row < image.dim.height - 1) gs = row + 1; else gs = image.dim.height - 2;
+                        if (col < image.dim.width - 1) ge = col + 1; else ge = image.dim.width - 2;
+                        if (col > 0) gw = col - 1; else gw = 1;
 
-                        //interpolate the red and blue for the other pixel
-                        pos = top * image.raw.dim.width + left;
-                        image.raw.blue[pos] = image.raw.blue[topcolor];
-                        image.raw.red[pos] = image.raw.red[leftcolor];
+                        image.green[row * image.dim.width + col] = (ushort)((
+                            image.green[gn * image.dim.width + col] +
+                            image.green[gs * image.dim.width + col] +
+                            image.green[row * image.dim.width + gw] +
+                            image.green[row * image.dim.width + ge]) / 4.0);
+                    }*/
+                }
+            });
+        }
 
-                        pos += 2;
-                        image.raw.blue[pos] = image.raw.blue[topcolor];
-                        image.raw.red[pos] = image.raw.red[rightcolor];
+        private void Interpolate(CFAColor color, ushort[] output, long x, long y, Point2D dim)
+        {
+            long gn, gs, ge, gw, pos = y * dim.width + x;
+            // Compute north, south, west, east positions
+            // taking a mirror symmetry at the boundaries
+            if (y > 0) gn = y - 1; else gn = 1;
+            if (y < dim.height - 1) gs = y + 1; else gs = dim.height - 2;
+            if (x < dim.width - 1) ge = x + 1; else ge = dim.width - 2;
+            if (x > 0) gw = x - 1; else gw = 1;
 
-                        pos = (top + 2) * image.raw.dim.width + left;
-                        image.raw.blue[pos] = image.raw.blue[bottomcolor];
-                        image.raw.red[pos] = image.raw.red[leftcolor];
+            if (mask[gn * dim.width + ge] != color) output[gn * dim.width + ge] = output[pos];
+            if (mask[gn * dim.width + gw] != color) output[gn * dim.width + gw] = output[pos];
+            if (mask[gn * dim.width + x] != color) output[gn * dim.width + x] = output[pos];
+            if (mask[gs * dim.width + ge] != color) output[gs * dim.width + ge] = output[pos];
+            if (mask[gs * dim.width + gw] != color) output[gs * dim.width + gw] = output[pos];
+            if (mask[gs * dim.width + x] != color) output[gs * dim.width + x] = output[pos];
+            if (mask[y * dim.width + gw] != color) output[y * dim.width + gw] = output[pos];
+            if (mask[y * dim.width + ge] != color) output[y * dim.width + ge] = output[pos];
+        }
 
-                        pos += 2;
-                        image.raw.blue[pos] = image.raw.blue[bottomcolor];
-                        image.raw.red[pos] = image.raw.red[rightcolor];
+        protected virtual void DemosaickingBilinearRedBlue(int colorX, int colorY, ImageComponent<ushort> image, ushort[] output, CFAColor COLORPOSITION)
+        {
+            var dim = image.dim;
+            var red = new ushort[image.dim.Area];
+            // Interpolate the red differences making the average of possible values depending on the CFA structure
+            Parallel.For(0, dim.width, x =>
+            {
+                for (int y = 0; y < dim.height; y++)
+                {
+                    if (mask[y * dim.width + x] != COLORPOSITION)
+                    {
+                        long gn, gs, ge, gw;
+                        // Compute north, south, west, east positions
+                        // taking a mirror symmetry at the boundaries
+                        if (y > 0) gn = y - 1; else gn = 1;
+                        if (y < dim.height - 1) gs = y + 1; else gs = dim.height - 2;
+                        if (x < dim.width - 1) ge = x + 1; else ge = dim.width - 2;
+                        if (x > 0) gw = x - 1; else gw = 1;
+
+                        //if green take all pixel around (there are 2 of each color around)
+                        if (mask[y * dim.width + x] == CFAColor.Green)
+                        {
+                            int nb = 0;
+                            if (COLORPOSITION == mask[gn * dim.width + ge]) nb++;
+                            if (COLORPOSITION == mask[gn * dim.width + gw]) nb++;
+                            if (COLORPOSITION == mask[gn * dim.width + x]) nb++;
+                            if (COLORPOSITION == mask[gs * dim.width + ge]) nb++;
+                            if (COLORPOSITION == mask[gs * dim.width + gw]) nb++;
+                            if (COLORPOSITION == mask[gs * dim.width + x]) nb++;
+                            if (COLORPOSITION == mask[y * dim.width + gw]) nb++;
+                            if (COLORPOSITION == mask[y * dim.width + ge]) nb++;
+                            Debug.Assert(nb == 2);
+
+                            red[y * dim.width + x] = (ushort)((
+                                output[gn * dim.width + ge] +
+                                output[gn * dim.width + gw] +
+                                output[gn * dim.width + x] +
+                                output[gs * dim.width + ge] +
+                                output[gs * dim.width + gw] +
+                                output[gs * dim.width + x] +
+                                output[y * dim.width + gw] +
+                               output[y * dim.width + ge]) / 2.0);
+                        }
+                        else
+                        {
+                            int nb = 0;
+                            if (COLORPOSITION == mask[gn * dim.width + ge]) nb++;
+                            if (COLORPOSITION == mask[gn * dim.width + gw]) nb++;
+                            if (COLORPOSITION == mask[gn * dim.width + x]) nb++;
+                            if (COLORPOSITION == mask[gs * dim.width + ge]) nb++;
+                            if (COLORPOSITION == mask[gs * dim.width + gw]) nb++;
+                            if (COLORPOSITION == mask[gs * dim.width + x]) nb++;
+                            if (COLORPOSITION == mask[y * dim.width + gw]) nb++;
+                            if (COLORPOSITION == mask[y * dim.width + ge]) nb++;
+                            Debug.Assert(nb == 3);
+
+                            //else take all pixel around (there are 3 of the other color around)
+                            red[y * dim.width + x] = (ushort)((
+                                output[gn * dim.width + ge] +
+                               output[gn * dim.width + gw] +
+                               output[gn * dim.width + x] +
+                               output[gs * dim.width + ge] +
+                               output[gs * dim.width + gw] +
+                              output[gs * dim.width + x] +
+                               output[y * dim.width + gw] +
+                               output[y * dim.width + ge]) / 3.0);
+                        }
                     }
                 }
             });
+            output = red;
         }
     }
 }

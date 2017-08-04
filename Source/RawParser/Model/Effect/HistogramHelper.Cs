@@ -37,7 +37,7 @@ namespace RawEditor.Effect
         {
             HistoRaw histogram = new HistoRaw()
             {
-                luma = new int[1 << (int)image.ColorDepth]
+                luma = new int[(1 << image.ColorDepth)]
             };
 
             for (int y = 0; y < image.dim.height; y++)

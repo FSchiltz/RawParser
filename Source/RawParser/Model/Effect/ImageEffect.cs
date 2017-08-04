@@ -3,7 +3,6 @@ using RawNet;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using RawEditor.Settings;

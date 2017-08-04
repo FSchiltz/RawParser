@@ -1,4 +1,3 @@
-using RawEditor.Effect;
 using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
 using RawNet.Jpeg;

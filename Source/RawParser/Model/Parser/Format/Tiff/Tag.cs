@@ -2,7 +2,6 @@
 using System;
 using System.Text;
 using System.Linq;
-using System.Diagnostics;
 
 namespace RawNet.Format.Tiff
 {

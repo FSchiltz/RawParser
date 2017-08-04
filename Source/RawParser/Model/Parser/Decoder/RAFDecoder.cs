@@ -113,13 +113,7 @@ namespace RawNet.Decoder
 
                     reader.BaseStream.Position = offsets.GetInt(0) + offsets.parent_offset;
 
-                    return new Thumbnail()
-                    {
-                        cpp = cpp,
-                        dim = dim,
-                        data = reader.ReadBytes(counts.GetInt(0)),
-                        Type = ThumbnailType.RAW
-                    };
+                    return new JPEGThumbnail(reader.ReadBytes(counts.GetInt(0)));
                 }
                 else if (compression == 6)
                 {
@@ -135,12 +129,7 @@ namespace RawNet.Decoder
                     Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
                     if (makerNoteOffsetTag == null) return null;
                     reader.Position = offset.GetUInt(0) + 10 + makerNoteOffsetTag.dataOffset;
-                    return new Thumbnail()
-                    {
-                        data = reader.ReadBytes(size.GetInt(0)),
-                        Type = ThumbnailType.JPEG,
-                        dim = new Point2D()
-                    };
+                    return new JPEGThumbnail(reader.ReadBytes(size.GetInt(0)));
                 }
                 else return null;
             }
@@ -156,13 +145,7 @@ namespace RawNet.Decoder
                 if (size == null || thumb == null) return null;
 
                 reader.Position = thumb.GetUInt(0) + thumb.parent_offset;
-                Thumbnail temp = new Thumbnail()
-                {
-                    data = reader.ReadBytes(size.GetInt(0)),
-                    Type = ThumbnailType.JPEG,
-                    dim = new Point2D()
-                };
-                return temp;
+                return new JPEGThumbnail(reader.ReadBytes(size.GetInt(0)));
             }
         }
 
