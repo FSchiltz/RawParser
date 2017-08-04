@@ -1,5 +1,3 @@
-using System;
-
 namespace RawNet
 {
     public class BlackArea

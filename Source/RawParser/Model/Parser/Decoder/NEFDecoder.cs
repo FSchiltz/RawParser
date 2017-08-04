@@ -43,13 +43,7 @@ namespace RawNet.Decoder
                 Tag makerNoteOffsetTag = exifs[0].GetEntryRecursive((TagType)0x927C);
                 if (makerNoteOffsetTag == null) return null;
                 reader.Position = thumb + 10 + makerNoteOffsetTag.dataOffset;
-                Thumbnail temp = new Thumbnail()
-                {
-                    data = reader.ReadBytes(size),
-                    Type = ThumbnailType.JPEG,
-                    dim = new Point2D()
-                };
-                return temp;
+                return new JPEGThumbnail(reader.ReadBytes(size));                
             }
             else
             {
@@ -70,12 +64,11 @@ namespace RawNet.Decoder
                 var count = ifd.GetEntry(TagType.STRIPBYTECOUNTS).GetInt(0);
                 reader.BaseStream.Position = offset;
 
-                Thumbnail thumb = new Thumbnail()
+                Thumbnail thumb = new RAWThumbnail()
                 {
                     cpp = cpp,
                     dim = dim,
-                    data = reader.ReadBytes(count),
-                    Type = ThumbnailType.RAW
+                    data = reader.ReadBytes(count)
                 };
                 return thumb;
             }

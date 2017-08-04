@@ -1,9 +1,5 @@
 ﻿using RawNet;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RawEditor.Effect
@@ -14,7 +10,6 @@ namespace RawEditor.Effect
         protected CFAColor[] mask;
         public void Demosaic(RawImage<ushort> image)
         {
-
             // Mask of color per pixel
             mask = new CFAColor[image.raw.dim.width * image.raw.dim.height];
             Parallel.For(0, image.raw.dim.height, row =>

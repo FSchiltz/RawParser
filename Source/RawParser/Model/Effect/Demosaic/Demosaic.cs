@@ -1,6 +1,5 @@
 ﻿using RawNet;
 using System.Threading.Tasks;
-using System;
 using System.Diagnostics;
 
 namespace RawEditor.Effect

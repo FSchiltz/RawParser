@@ -1,9 +1,4 @@
-using RawNet.Decoder.Decompressor;
-using RawNet.Format.Tiff;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using Windows.Storage;
 
 namespace RawNet
 {

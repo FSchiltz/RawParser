@@ -1,9 +1,6 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using RawNet;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Linq;
 
 namespace RawEditor.Effect
 {

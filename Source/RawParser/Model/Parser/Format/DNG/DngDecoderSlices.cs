@@ -1,6 +1,5 @@
 using RawNet.Decoder.Decompressor;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace RawNet.Dng

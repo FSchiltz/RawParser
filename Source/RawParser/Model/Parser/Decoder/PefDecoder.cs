@@ -1,6 +1,5 @@
 using RawNet.Decoder.Decompressor;
 using RawNet.Format.Tiff;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;

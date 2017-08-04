@@ -1,9 +1,7 @@
 using RawNet.Decoder.HuffmanCompressor;
 using RawNet.Jpeg;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 
 namespace RawNet.Decoder.Decompressor
 {

@@ -1,5 +1,4 @@
 using RawNet.Decoder.HuffmanCompressor;
-using RawNet.Jpeg;
 using System;
 
 namespace RawNet.Decoder.Decompressor

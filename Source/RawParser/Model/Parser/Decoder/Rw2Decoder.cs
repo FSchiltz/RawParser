@@ -16,18 +16,11 @@ namespace RawNet.Decoder
         public override Thumbnail DecodeThumb() {
             var thumb = base.DecodeThumb();
             if (thumb == null) {
-                var jpegTag = ifd.GetEntryRecursive((TagType)33);
+                var jpegTag = ifd.GetEntryRecursive(TagType.MAKERNOTE_ALT);              
                 if (jpegTag == null) return null;
-
-                
-                thumb = new Thumbnail()
-                {
-                    data = jpegTag.GetByteArray(),
-                    Type = ThumbnailType.JPEG,
-                    dim = new Point2D()
-                };
-            }
-            return thumb;
+                reader.BaseStream.Position = jpegTag.dataOffset;
+                return new JPEGThumbnail(reader.ReadBytes((int)jpegTag.dataCount));        
+            }else return thumb;
         }
 
         internal RW2Decoder(Stream reader) : base(reader) { }

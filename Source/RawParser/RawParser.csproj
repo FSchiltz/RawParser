@@ -177,6 +177,9 @@
     <Compile Include="Model\Parser\Image\ExifValue.cs" />
     <Compile Include="Model\Parser\Image\ImageComponent.cs" />
     <Compile Include="Model\Parser\Image\ImageHelper.cs" />
+    <Compile Include="Model\Parser\Image\Thumbnail\IThumbnail.cs" />
+    <Compile Include="Model\Parser\Image\Thumbnail\JPEGThumbnail.cs" />
+    <Compile Include="Model\Parser\Image\Thumbnail\RAWThumbnail.cs" />
     <Compile Include="Model\Parser\Image\WhiteBalance.cs" />
     <Compile Include="Model\RawHelper.cs" />
     <Compile Include="Model\Settings\HistoryObject.cs" />
@@ -208,7 +211,6 @@
     <Compile Include="Model\Parser\Image\ImageMetadata.cs" />
     <Compile Include="Model\Parser\Image\RawImage.cs" />
     <Compile Include="Model\Parser\Image\TableLookUp.cs" />
-    <Compile Include="Model\Parser\Image\Thumbnail.cs" />
     <Compile Include="Model\Parser\Format\TIFF\IFD.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Makernote\NokiaMakernote.cs" />
     <Compile Include="Model\Parser\Format\TIFF\Tag.cs" />
