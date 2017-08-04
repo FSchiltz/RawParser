@@ -43,7 +43,7 @@ namespace RawNet.Decoder.Decompressor
         {
             fixed (byte* t = &buffer[off >> 3])
             {
-                return (uint)(*(int*)t >> ((int)off & 7) & ((1 << nbits) - 1));
+                return (uint)(*(int*)t >> (off & 7) & ((1 << nbits) - 1));
             }
         }
 

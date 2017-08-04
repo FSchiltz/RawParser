@@ -594,18 +594,6 @@ namespace RawNet.Decoder
             SetMetadata(rawImage.metadata.Model);
             rawImage.metadata.Mode = mode;
 
-            //get cfa
-            var cfa = ifd.GetEntryRecursive(TagType.CFAPATTERN);
-            if (cfa == null)
-            {
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
-            }
-            else
-            {
-                rawImage.colorFilter.SetCFA(new Point2D(2, 2), (CFAColor)cfa.GetInt(0), (CFAColor)cfa.GetInt(1), (CFAColor)cfa.GetInt(2), (CFAColor)cfa.GetInt(3));
-            }
-
-
             //GPS data
             var gpsTag = ifd.GetEntry((TagType)0x0039);
             if (gpsTag != null)

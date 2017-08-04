@@ -83,7 +83,7 @@ namespace RawEditor.Effect
         static double LUT(double dif, double[] lut)
         {
             if (dif >= (float)LUTMAXM1) return 0.0;
-            int x = (int)Math.Floor((double)dif * (float)LUTPRECISION);
+            int x = (int)Math.Floor(dif * (float)LUTPRECISION);
             double y1 = lut[x];
             double y2 = lut[x + 1];
             return y1 + (y2 - y1) * (dif * LUTPRECISION - x);

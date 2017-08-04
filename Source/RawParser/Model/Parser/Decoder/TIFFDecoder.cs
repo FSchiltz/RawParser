@@ -265,6 +265,10 @@ namespace RawNet.Decoder
                         break;
                 }
             }
+
+            //get cfa
+            ReadCFA();
+
             rawImage.metadata.RawDim = new Point2D(rawImage.raw.UncroppedDim.width, rawImage.raw.UncroppedDim.height);
             try
             {
@@ -412,6 +416,43 @@ namespace RawNet.Decoder
                 bitPerPixel = (ushort)(slice.count * 8u / (slice.h * width));
                 RawDecompressor.ReadUncompressedRaw(reader, new Point2D(width, slice.h), new Point2D(0, slice.offsetY), rawImage.raw.cpp * width * bitPerPixel / 8, bitPerPixel, order, rawImage);
                 offY += slice.h;
+            }
+        }
+
+        protected void ReadCFA()
+        {
+            var temp = ifd.GetIFDsWithTag(TagType.CFAPATTERN) ?? ifd.GetIFDsWithTag(TagType.EXIFCFAPATTERN);
+            if (temp == null || temp.Count == 0)
+            {
+                rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
+                return;
+            }
+            var raw = temp[0];
+
+            // Check if layout is OK, if present
+            if (raw.tags.ContainsKey(TagType.CFALAYOUT))
+                if (raw.GetEntry(TagType.CFALAYOUT).GetUShort(0) > 2)
+                    throw new RawDecoderException("Unsupported CFA Layout.");
+
+            Tag pDim = raw.GetEntry(TagType.CFAREPEATPATTERNDIM); // Get the size
+            var cPat = raw.GetEntry(TagType.CFAPATTERN).GetIntArray();     // Does NOT contain dimensions as some documents state
+
+            Point2D cfaSize = new Point2D(2, 2);
+            if (pDim.dataCount == 2)
+            {
+                cfaSize = new Point2D(pDim.GetUInt(1), pDim.GetUInt(0));
+            }
+
+            rawImage.colorFilter.SetSize(cfaSize);
+            if (cfaSize.Area != raw.GetEntry(TagType.CFAPATTERN).dataCount)
+                throw new RawDecoderException("CFA pattern dimension and pattern count does not match: " + raw.GetEntry(TagType.CFAPATTERN).dataCount);
+
+            for (uint y = 0; y < cfaSize.height; y++)
+            {
+                for (uint x = 0; x < cfaSize.width; x++)
+                {
+                    rawImage.colorFilter.SetColorAt(new Point2D(x, y), (CFAColor)cPat[x + y * cfaSize.width]);
+                }
             }
         }
     }

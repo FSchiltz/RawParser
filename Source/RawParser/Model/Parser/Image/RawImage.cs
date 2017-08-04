@@ -228,7 +228,7 @@ namespace RawNet
 
             //Shot settings
             if (metadata.IsoSpeed > 0)
-                exif.Add(new ExifValue("ISO", "" + (int)metadata.IsoSpeed, ExifGroup.Shot));
+                exif.Add(new ExifValue("ISO", "" + metadata.IsoSpeed, ExifGroup.Shot));
             if (metadata.Exposure > 0)
                 exif.Add(new ExifValue("Exposure time", "" + metadata.ExposureAsString, ExifGroup.Shot));
             //Lens

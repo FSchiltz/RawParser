@@ -297,7 +297,7 @@ namespace RawNet.Decoder.HuffmanCompressor
                 l = 8;
                 while (code > maxcode[l])
                 {
-                    temp = (int)bitPump.GetBit();
+                    temp = bitPump.GetBit();
                     code = (code << 1) | temp;
                     l++;
                 }

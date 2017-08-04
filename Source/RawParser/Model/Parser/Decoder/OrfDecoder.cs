@@ -258,7 +258,6 @@ namespace RawNet.Decoder
 
         public override void DecodeMetadata()
         {
-            rawImage.colorFilter.SetCFA(new Point2D(2, 2), CFAColor.Red, CFAColor.Green, CFAColor.Green, CFAColor.Blue);
             base.DecodeMetadata();
             if (rawImage.metadata.Model == null)
                 throw new RawDecoderException("ORF Meta Decoder: Model name found");

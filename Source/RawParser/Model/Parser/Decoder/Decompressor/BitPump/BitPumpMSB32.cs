@@ -90,7 +90,7 @@ namespace RawNet.Decoder.Decompressor
             {
                 Fill();
             }
-            return (uint)((int)(current >> (left -= (nbits))) & ((1 << nbits) - 1));
+            return (uint)(current >> (left -= (nbits)) & ((1 << nbits) - 1));
         }
 
         public override void SkipBits(int nbits)
