@@ -51,7 +51,7 @@ namespace RawEditor.View.Pages
         private int rotation;
         private bool isBindingEnabled = true;
 
-        public static RawImage<ushort> rawImage;
+        public RawImage<ushort> rawImage;
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
