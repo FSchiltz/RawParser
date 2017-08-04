@@ -65,7 +65,6 @@ namespace RawNet
             }
             image.black = pixel_value;
             Debug.Assert(image.black <= image.whitePoint);
-
         }
 
         //TODO Move to the RawNet Namespace
