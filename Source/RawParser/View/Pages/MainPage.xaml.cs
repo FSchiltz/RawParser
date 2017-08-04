@@ -50,8 +50,9 @@ namespace RawEditor.View.Pages
         private Bindable<Boolean> selectManualWB = new Bindable<bool>(false);
         private int rotation;
         private bool isBindingEnabled = true;
-
+        
         public RawImage<ushort> rawImage;
+
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif

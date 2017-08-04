@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Core;
+using Windows.ApplicationModel.Store;
 using Windows.Data.Pdf;
 using Windows.Services.Store;
 using Windows.Storage;
