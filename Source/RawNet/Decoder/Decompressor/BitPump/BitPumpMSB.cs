@@ -23,10 +23,10 @@ namespace RawNet.Decoder.Decompressor
         }
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpMSB(TiffBinaryReader reader) : this(reader, (uint)reader.Position, (uint)(reader.BaseStream.Length - reader.Position)) { }
+        public BitPumpMSB(ImageBinaryReader reader) : this(reader, (uint)reader.Position, (uint)(reader.BaseStream.Length - reader.Position)) { }
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpMSB(TiffBinaryReader reader, long offset, long count)
+        public BitPumpMSB(ImageBinaryReader reader, long offset, long count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
             size = count;

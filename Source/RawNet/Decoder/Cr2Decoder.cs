@@ -146,7 +146,7 @@ namespace RawNet.Decoder
                 }
             }
 
-            var b = new TiffBinaryReader(reader.BaseStream, off + 41);
+            var b = new ImageBinaryReader(reader.BaseStream, off + 41);
 
             uint height = b.ReadUInt16();
             uint width = b.ReadUInt16();

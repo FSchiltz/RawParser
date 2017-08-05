@@ -11,7 +11,7 @@ namespace RawNet.Decoder
     class RW2Decoder : TIFFDecoder
     {
         UInt32 load_flags;
-        TiffBinaryReader input_start;
+        ImageBinaryReader input_start;
         IFD raw;
 
         public override Thumbnail DecodeThumb()
@@ -63,7 +63,7 @@ namespace RawNet.Decoder
                 rawImage.Init(false);
 
                 UInt32 size = (uint)(reader.BaseStream.Length - off);
-                input_start = new TiffBinaryReader(stream, off);
+                input_start = new ImageBinaryReader(stream, off);
 
                 if (size >= width * height * 2)
                 {
@@ -110,7 +110,7 @@ namespace RawNet.Decoder
                 if (!reader.IsValid(off))
                     throw new RawDecoderException("Invalid image data offset, cannot decode.");
 
-                input_start = new TiffBinaryReader(stream, off);
+                input_start = new ImageBinaryReader(stream, off);
                 DecodeRw2();
             }
         }

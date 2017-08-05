@@ -19,7 +19,7 @@ namespace RawNet
         public bool ScaleValue { get; set; } = false;
 
         /* The Raw input file to be decoded */
-        protected TiffBinaryReader reader;
+        protected ImageBinaryReader reader;
         protected Stream stream;
 
         /* Construct decoder instance - FileMap is a filemap of the file to be decoded */

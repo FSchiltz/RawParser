@@ -44,7 +44,7 @@ namespace RawNet.Decoder
             rawImage.Init(false);
 
             // We add 3 bytes slack, since the bitpump might be a few bytes ahead.
-            TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, off);
+            ImageBinaryReader input = new ImageBinaryReader(reader.BaseStream, off);
             input.BaseStream.Position = off;
             try
             {
@@ -59,7 +59,7 @@ namespace RawNet.Decoder
             }
         }
 
-        private void DecodeUncompressed(TiffBinaryReader input, uint width, uint height, long size, Endianness endian)
+        private void DecodeUncompressed(ImageBinaryReader input, uint width, uint height, long size, Endianness endian)
         {
             /*
                  RawDecompressor.Decode12BitRawWithControl(s, w, h, rawImage);
@@ -92,7 +92,7 @@ namespace RawNet.Decoder
          * Also there is no way to multithread this code, since prediction
          * is based on the output of all previous pixel (bar the first four)
          */
-        private void DecodeCompressed(TiffBinaryReader s, uint width, uint height)
+        private void DecodeCompressed(ImageBinaryReader s, uint width, uint height)
         {
             int nbits;
             long left0, nw0, left1, nw1;

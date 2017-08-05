@@ -16,8 +16,8 @@ namespace RawNet.Decoder.Decompressor
         }
 
         /*** Used for entropy encoded sections ***/
-        public BitPumpPlain(TiffBinaryReader reader) : this(reader, (uint)reader.Position, (uint)reader.RemainingSize) { }
-        public BitPumpPlain(TiffBinaryReader reader, long offset, long count)
+        public BitPumpPlain(ImageBinaryReader reader) : this(reader, (uint)reader.Position, (uint)reader.RemainingSize) { }
+        public BitPumpPlain(ImageBinaryReader reader, long offset, long count)
         {
             MIN_GET_BITS = (BITS_PER_LONG - 7);
             size = 8 * count;

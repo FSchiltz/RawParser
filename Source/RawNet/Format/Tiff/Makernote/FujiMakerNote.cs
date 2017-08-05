@@ -6,15 +6,15 @@ namespace RawNet.Format.Tiff
     {
         public FujiMakerNote(byte[] data, Endianness endian,int depth):base(endian, depth)
         {
-            TiffBinaryReader file;
+            ImageBinaryReader file;
 
             if (endian == Endianness.Little)
             {
-                file = new TiffBinaryReader(data);
+                file = new ImageBinaryReader(data);
             }
             else if (endian == Endianness.Big)
             {
-                file = new TiffBinaryReaderBigEndian(data);
+                file = new ImageBinaryReaderBigEndian(data);
             }
             else
             {

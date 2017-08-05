@@ -34,11 +34,11 @@ namespace RawNet.Format.Tiff
             Depth = depth + 1;
         }
 
-        public IFD(TiffBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(IFDType.Plain, fileStream, offset, endian, depth, 0) { }
-        public IFD(TiffBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset) : this(IFDType.Plain, fileStream, offset, endian, depth, relativeOffset) { }
-        public IFD(IFDType type, TiffBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(type, fileStream, offset, endian, depth, 0) { }
+        public IFD(ImageBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(IFDType.Plain, fileStream, offset, endian, depth, 0) { }
+        public IFD(ImageBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset) : this(IFDType.Plain, fileStream, offset, endian, depth, relativeOffset) { }
+        public IFD(IFDType type, ImageBinaryReader fileStream, uint offset, Endianness endian, int depth) : this(type, fileStream, offset, endian, depth, 0) { }
 
-        public IFD(IFDType type, TiffBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset) : this(endian, depth)
+        public IFD(IFDType type, ImageBinaryReader fileStream, uint offset, Endianness endian, int depth, int relativeOffset) : this(endian, depth)
         {
             this.type = type;
 
@@ -57,7 +57,7 @@ namespace RawNet.Format.Tiff
             Parse(fileStream);
         }
 
-        protected void Parse(TiffBinaryReader fileStream)
+        protected void Parse(ImageBinaryReader fileStream)
         {
             tagNumber = fileStream.ReadUInt16();
             Debug.Assert(tagNumber < UInt16.MaxValue);
@@ -122,7 +122,7 @@ namespace RawNet.Format.Tiff
 
         /* This will attempt to parse makernotes and return it as an IFD */
         //makernote should be self contained
-        Makernote ParseMakerNote(TiffBinaryReader reader, Tag tag, Endianness parentEndian)
+        Makernote ParseMakerNote(ImageBinaryReader reader, Tag tag, Endianness parentEndian)
         {
             //read twice the makernote lenght, should be enough
             reader.BaseStream.Position = tag.dataOffset + RelativeOffset;

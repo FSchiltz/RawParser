@@ -7,17 +7,17 @@ namespace RawNet.Decoder.Decompressor
     {
         static int BufSize = 0x4000;
 
-        TiffBinaryReader input;
+        ImageBinaryReader input;
 
         byte[] buf = new byte[0x4001];
         int vbits = 0;
         int load_flags;
 
-        internal PanaBitpump(TiffBinaryReader _input, uint load)
+        internal PanaBitpump(ImageBinaryReader _input, uint load)
         {
             var temp = _input.ReadBytes((int)_input.RemainingSize);
             Array.Resize(ref temp, temp.Length + 32);
-            input = new TiffBinaryReader(temp);
+            input = new ImageBinaryReader(temp);
             vbits = 0;
             load_flags = (int)load;
         }

@@ -8,7 +8,7 @@ namespace RawNet.Decoder.Decompressor
     {
         private UInt16[] curve = new UInt16[65536];
 
-        public NikonDecompressor(TiffBinaryReader file, RawImage img) : base(file, img, false, false)
+        public NikonDecompressor(ImageBinaryReader file, RawImage img) : base(file, img, false, false)
         {
             huff[0] = new NikonHuffman();
             for (int i = 0; i < 0x8000; i++)
@@ -17,7 +17,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public void Decompress(TiffBinaryReader metadata, uint offset, uint size)
+        public void Decompress(ImageBinaryReader metadata, uint offset, uint size)
         {
             metadata.Position = 0;
             byte v0 = metadata.ReadByte();

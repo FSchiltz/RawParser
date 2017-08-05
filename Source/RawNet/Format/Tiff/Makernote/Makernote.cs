@@ -12,14 +12,14 @@ namespace RawNet.Format.Tiff
         public Makernote(byte[] data, uint offset, Endianness endian, int depth, int parentOffset) : base(endian, depth)
         {
             type = IFDType.Makernote;
-            TiffBinaryReader file;
+            ImageBinaryReader file;
             if (endian == Endianness.Little)
             {
-                file = new TiffBinaryReader(data);
+                file = new ImageBinaryReader(data);
             }
             else if (endian == Endianness.Big)
             {
-                file = new TiffBinaryReaderBigEndian(data);
+                file = new ImageBinaryReaderBigEndian(data);
             }
             else
             {

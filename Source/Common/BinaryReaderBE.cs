@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PhotoNet.Common
 {
-    public class TiffBinaryReader : BinaryReader
+    public class ImageBinaryReader : BinaryReader
     {
         private uint offset;
         public long Position
@@ -14,19 +14,19 @@ namespace PhotoNet.Common
             set { BaseStream.Position = value + offset; }
         }
 
-        public TiffBinaryReader(Stream data) : base(data, Encoding.ASCII) { }
-        public TiffBinaryReader(Stream data, uint offset) : base(data, Encoding.ASCII)
+        public ImageBinaryReader(Stream data) : base(data, Encoding.ASCII) { }
+        public ImageBinaryReader(Stream data, uint offset) : base(data, Encoding.ASCII)
         {
             this.offset = offset;
             if (data == null) throw new ArgumentNullException();
             data.Position = offset;
         }
 
-        public TiffBinaryReader(byte[] data, uint offset) : this(StreamFromArray(data), offset) { }
-        public TiffBinaryReader(byte[] data) : this(StreamFromArray(data)) { }
+        public ImageBinaryReader(byte[] data, uint offset) : this(StreamFromArray(data), offset) { }
+        public ImageBinaryReader(byte[] data) : this(StreamFromArray(data)) { }
 
-        public TiffBinaryReader(object[] data, TiffDataType dataType) : this(StreamFromArray(data, dataType)) { }
-        public TiffBinaryReader(object[] data, TiffDataType dataType, uint offset) : this(StreamFromArray(data, dataType), offset) { }
+        public ImageBinaryReader(object[] data, TiffDataType dataType) : this(StreamFromArray(data, dataType)) { }
+        public ImageBinaryReader(object[] data, TiffDataType dataType, uint offset) : this(StreamFromArray(data, dataType), offset) { }
 
         public void SkipToMarker()
         {
@@ -138,13 +138,13 @@ namespace PhotoNet.Common
         }
     }
 
-    public class TiffBinaryReaderBigEndian : TiffBinaryReader
+    public class ImageBinaryReaderBigEndian : ImageBinaryReader
     {
-        public TiffBinaryReaderBigEndian(Stream data) : base(data) { }
-        public TiffBinaryReaderBigEndian(Stream data, uint offset) : base(data, offset) { }
-        public TiffBinaryReaderBigEndian(byte[] data, uint offset) : base(StreamFromArray(data), offset) { }
-        public TiffBinaryReaderBigEndian(byte[] data) : base(StreamFromArray(data)) { }
-        public TiffBinaryReaderBigEndian(object[] data, TiffDataType dataType) : base(StreamFromArray(data, dataType)) { }
+        public ImageBinaryReaderBigEndian(Stream data) : base(data) { }
+        public ImageBinaryReaderBigEndian(Stream data, uint offset) : base(data, offset) { }
+        public ImageBinaryReaderBigEndian(byte[] data, uint offset) : base(StreamFromArray(data), offset) { }
+        public ImageBinaryReaderBigEndian(byte[] data) : base(StreamFromArray(data)) { }
+        public ImageBinaryReaderBigEndian(object[] data, TiffDataType dataType) : base(StreamFromArray(data, dataType)) { }
 
         public override ushort ReadUInt16()
         {

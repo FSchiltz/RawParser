@@ -28,11 +28,11 @@ namespace RawNet.Dng
     internal class DngDecoderSlices
     {
         public List<DngSliceElement> slices = new List<DngSliceElement>();
-        TiffBinaryReader file;
+        ImageBinaryReader file;
         RawImage raw;
         public bool FixLjpeg { get; set; }
 
-        public DngDecoderSlices(TiffBinaryReader file, RawImage img)
+        public DngDecoderSlices(ImageBinaryReader file, RawImage img)
         {
             this.file = file;
             raw = img;

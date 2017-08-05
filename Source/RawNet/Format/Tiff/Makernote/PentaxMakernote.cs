@@ -6,14 +6,14 @@ namespace RawNet.Format.Tiff
     {
         public PentaxMakernote(byte[] data, int offset, int parentOffset, Endianness endian, int depth) : base(endian, depth)
         {
-            TiffBinaryReader buffer;
+            ImageBinaryReader buffer;
             if (data[offset] == 0x4D && data[offset + 1] == 0x4D)
             {
-                buffer = new TiffBinaryReaderBigEndian(data);
+                buffer = new ImageBinaryReaderBigEndian(data);
             }
             else if (data[offset] == 0x49 && data[offset + 1] == 0x49)
             {
-                buffer = new TiffBinaryReaderBigEndian(data);
+                buffer = new ImageBinaryReaderBigEndian(data);
             }
             else
             {

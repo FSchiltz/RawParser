@@ -9,14 +9,14 @@ namespace RawNet.Format.Tiff
             //start wth a tiff headder
 
             this.type = IFDType.Makernote;
-            TiffBinaryReader file;
+            ImageBinaryReader file;
             if (endian == Endianness.Little)
             {
-                file = new TiffBinaryReader(data);
+                file = new ImageBinaryReader(data);
             }
             else if (endian == Endianness.Big)
             {
-                file = new TiffBinaryReaderBigEndian(data);
+                file = new ImageBinaryReaderBigEndian(data);
             }
             else
             {

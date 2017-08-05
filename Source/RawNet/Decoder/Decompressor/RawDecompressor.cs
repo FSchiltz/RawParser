@@ -9,7 +9,7 @@ namespace RawNet.Decoder.Decompressor
         /** Attempt to decode the image 
          * A RawDecoderException will be thrown if the image cannot be decoded
          */
-        public static void ReadUncompressedRaw(TiffBinaryReader input, Point2D size, Point2D offset, long inputPitch, int bitPerPixel, BitOrder order, Image<ushort> rawImage)
+        public static void ReadUncompressedRaw(ImageBinaryReader input, Point2D size, Point2D offset, long inputPitch, int bitPerPixel, BitOrder order, Image<ushort> rawImage)
         {
             //uint outPitch = rawImage.pitch;
             var pos = new Point2D(size);//to avoid rewriting the image pos
@@ -99,7 +99,7 @@ namespace RawNet.Decoder.Decompressor
             });
         }
 
-        public static void Decode8BitRaw(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode8BitRaw(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
 
             var temp = input.ReadBytes((int)size.Area);
@@ -113,7 +113,7 @@ namespace RawNet.Decoder.Decompressor
             });
         }
 
-        public static void Decode10BitRaw(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode10BitRaw(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             int off = (int)(size.width * 10) / 8;
             var pumps = new byte[size.height][];
@@ -140,7 +140,7 @@ namespace RawNet.Decoder.Decompressor
             });
         }
 
-        public static void Decode12BitRaw(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode12BitRaw(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {
@@ -156,7 +156,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawWithControl(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode12BitRawWithControl(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {
@@ -172,7 +172,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEWithControl(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode12BitRawBEWithControl(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {
@@ -188,7 +188,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBE(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode12BitRawBE(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {
@@ -204,7 +204,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEInterlaced(TiffBinaryReader input, Point2D size, Point2D off, Image<ushort> rawImage)
+        public static void Decode12BitRawBEInterlaced(ImageBinaryReader input, Point2D size, Point2D off, Image<ushort> rawImage)
         {
             long half = (size.height + 1) >> 1;
             long y = 0;
@@ -231,7 +231,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEunpacked(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode12BitRawBEunpacked(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {
@@ -245,7 +245,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawBEunpackedLeftAligned(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode12BitRawBEunpackedLeftAligned(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {
@@ -259,7 +259,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode14BitRawBEunpacked(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode14BitRawBEunpacked(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {
@@ -273,7 +273,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode16BitRawUnpacked(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode16BitRawUnpacked(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {
@@ -285,7 +285,7 @@ namespace RawNet.Decoder.Decompressor
             }
         }
 
-        public static void Decode12BitRawUnpacked(TiffBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
+        public static void Decode12BitRawUnpacked(ImageBinaryReader input, Point2D size, Point2D offset, Image<ushort> rawImage)
         {
             for (int y = 0; y < size.height; y++)
             {

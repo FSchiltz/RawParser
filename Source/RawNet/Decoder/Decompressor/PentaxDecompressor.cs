@@ -7,7 +7,7 @@ namespace RawNet.Decoder.Decompressor
 
     class PentaxDecompressor : JPEGDecompressor
     {
-        public PentaxDecompressor(TiffBinaryReader file, RawImage img) : base(file, img, false, false)
+        public PentaxDecompressor(ImageBinaryReader file, RawImage img) : base(file, img, false, false)
         {
             huff[0] = new PentaxHuffman();
         }
@@ -26,11 +26,11 @@ namespace RawNet.Decoder.Decompressor
             {
                 if (t.dataType == TiffDataType.UNDEFINED)
                 {
-                    TiffBinaryReader stream;
+                    ImageBinaryReader stream;
                     if (root.endian == Common.GetHostEndianness())
-                        stream = new TiffBinaryReader(t.GetByteArray());
+                        stream = new ImageBinaryReader(t.GetByteArray());
                     else
-                        stream = new TiffBinaryReaderBigEndian(t.GetByteArray());
+                        stream = new ImageBinaryReaderBigEndian(t.GetByteArray());
 
                     int depth = (stream.ReadUInt16() + 12) & 0xf;
 

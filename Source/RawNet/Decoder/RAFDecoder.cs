@@ -29,7 +29,7 @@ namespace RawNet.Decoder
                 throw new RawDecoderException("Header is wrong");
             }
             //Fuji is indexer reverse endian
-            reader = new TiffBinaryReaderBigEndian(file);
+            reader = new ImageBinaryReaderBigEndian(file);
             reader.BaseStream.Position = 8;
             //read next 8 byte
             dataAsString = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(8).ToArray()).Trim();
@@ -157,7 +157,7 @@ namespace RawNet.Decoder
             try
             {
                 IFD tempIFD = new IFD(ifd.endian, ifd.Depth);
-                TiffBinaryReaderBigEndian bytes = new TiffBinaryReaderBigEndian(stream, offset);
+                ImageBinaryReaderBigEndian bytes = new ImageBinaryReaderBigEndian(stream, offset);
                 uint entries = bytes.ReadUInt32();
 
                 if (entries > 255)
@@ -282,7 +282,7 @@ namespace RawNet.Decoder
 
             rawImage.fullSize.dim = new Point2D(width, height);
             rawImage.Init(false);
-            TiffBinaryReader input = new TiffBinaryReader(stream, (uint)(off + raw.RelativeOffset));
+            ImageBinaryReader input = new ImageBinaryReader(stream, (uint)(off + raw.RelativeOffset));
             Point2D pos = new Point2D(0, 0);
 
             if (count * 8 / (width * height) < 10)

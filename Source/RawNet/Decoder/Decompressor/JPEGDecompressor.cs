@@ -8,7 +8,7 @@ namespace RawNet.Decoder.Decompressor
 {
     internal abstract class JPEGDecompressor
     {
-        public TiffBinaryReader input;
+        public ImageBinaryReader input;
         public BitPump bits;
         public RawImage raw;
         public SOFInfo frame = new SOFInfo();
@@ -59,7 +59,7 @@ namespace RawNet.Decoder.Decompressor
         * ON AN "AS IS" BASIS, AND CORNELL UNIVERSITY HAS NO OBLIGATION TO
         * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
         */
-        public JPEGDecompressor(TiffBinaryReader file, RawImage img, bool DNGCompatible, bool UseBigTable)
+        public JPEGDecompressor(ImageBinaryReader file, RawImage img, bool DNGCompatible, bool UseBigTable)
         {
             raw = img;
             input = file;
@@ -72,9 +72,9 @@ namespace RawNet.Decoder.Decompressor
         {
             // JPEG is big endian
             if (Common.GetHostEndianness() == Endianness.Big)
-                input = new TiffBinaryReader(input.BaseStream, offset);
+                input = new ImageBinaryReader(input.BaseStream, offset);
             else
-                input = new TiffBinaryReaderBigEndian(input.BaseStream, offset);
+                input = new ImageBinaryReaderBigEndian(input.BaseStream, offset);
 
             if (GetNextMarker(false) != JpegMarker.SOI)
                 throw new RawDecoderException("Image did not start with SOI. Probably not an LJPEG");
@@ -106,9 +106,9 @@ namespace RawNet.Decoder.Decompressor
 
             // JPEG is big endian
             if (Common.GetHostEndianness() == Endianness.Big)
-                input = new TiffBinaryReader(input.BaseStream, offset);
+                input = new ImageBinaryReader(input.BaseStream, offset);
             else
-                input = new TiffBinaryReaderBigEndian(input.BaseStream, offset);
+                input = new ImageBinaryReaderBigEndian(input.BaseStream, offset);
 
             if (GetNextMarker(false) != JpegMarker.SOI)
                 throw new RawDecoderException("Image did not start with SOI. Probably not an LJPEG");

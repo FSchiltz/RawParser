@@ -108,7 +108,7 @@ namespace RawNet.Decoder
             if (!reader.IsValid(off, c2))
                 c2 = reader.BaseStream.Length - off;
 
-            TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, off);
+            ImageBinaryReader input = new ImageBinaryReader(reader.BaseStream, off);
             if (arw1)
                 DecodeARW(input, width, height);
             else
@@ -156,7 +156,7 @@ namespace RawNet.Decoder
             // And now decode as a normal 16bit raw
             rawImage.fullSize.dim = new Point2D(size);
             rawImage.Init(false);
-            using (TiffBinaryReader reader = new TiffBinaryReader(imageData, len))
+            using (ImageBinaryReader reader = new ImageBinaryReader(imageData, len))
             {
                 RawDecompressor.Decode16BitRawUnpacked(reader, size, new Point2D(), rawImage);
             }
@@ -177,7 +177,7 @@ namespace RawNet.Decoder
 
             rawImage.fullSize.dim = new Point2D(w, h);
             rawImage.Init(false);
-            reader = new TiffBinaryReader(reader.BaseStream, offset);
+            reader = new ImageBinaryReader(reader.BaseStream, offset);
 
             DecodeARW(reader, w, h);
         }
@@ -190,14 +190,14 @@ namespace RawNet.Decoder
 
             rawImage.fullSize.dim = new Point2D(width, height);
             rawImage.Init(false);
-            TiffBinaryReader input = new TiffBinaryReader(reader.BaseStream, off);
+            ImageBinaryReader input = new ImageBinaryReader(reader.BaseStream, off);
             /*
                 RawDecompressor.Decode14BitRawBEunpacked(input, width, height, rawImage);
            */
             RawDecompressor.Decode16BitRawUnpacked(input, new Point2D(width, height), new Point2D(), rawImage);
         }
 
-        void DecodeARW(TiffBinaryReader input, long w, long h)
+        void DecodeARW(ImageBinaryReader input, long w, long h)
         {
             BitPumpMSB bits = new BitPumpMSB(input);
 
@@ -222,7 +222,7 @@ namespace RawNet.Decoder
             }
         }
 
-        void DecodeARW2(TiffBinaryReader input, long w, long h, int bpp)
+        void DecodeARW2(ImageBinaryReader input, long w, long h, int bpp)
         {
             input.Position = 0;
             if (bpp == 8)
@@ -475,7 +475,7 @@ namespace RawNet.Decoder
                 reader.BaseStream.Position = off;
                 byte[] ifp_data = reader.ReadBytes((int)len);
                 SonyDecrypt(ifp_data, len / 4, key);
-                using (var reader = new TiffBinaryReader(ifp_data))
+                using (var reader = new ImageBinaryReader(ifp_data))
                 {
                     sony_private = new IFD(reader, 0, ifd.endian, 0, -(int)off);
                 }

@@ -31,7 +31,7 @@ namespace RawNet.Format.Tiff
             data = new Object[dataCount];
         }
 
-        public Tag(TiffBinaryReader fileStream, int baseOffset)
+        public Tag(ImageBinaryReader fileStream, int baseOffset)
         {
             parent_offset = baseOffset;
             TagId = (TagType)fileStream.ReadUInt16();
@@ -64,7 +64,7 @@ namespace RawNet.Format.Tiff
             ¨*/
         }
 
-        public void ReadData(TiffBinaryReader fileStream)
+        public void ReadData(ImageBinaryReader fileStream)
         {
             if (data == null && dataOffset + parent_offset < fileStream.BaseStream.Length && dataOffset > 1)
             {
@@ -75,7 +75,7 @@ namespace RawNet.Format.Tiff
             }
         }
 
-        private void GetData(TiffBinaryReader fileStream)
+        private void GetData(ImageBinaryReader fileStream)
         {
             data = new Object[dataCount];
             for (int j = 0; j < dataCount; j++)
