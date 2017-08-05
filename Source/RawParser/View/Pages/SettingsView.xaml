@@ -11,7 +11,7 @@
             </NavigationThemeTransition>
         </TransitionCollection>
     </Page.Transitions>
-    <StackPanel Padding="10,0,10,5" Margin="10,0">
+    <StackPanel Padding="10,20,10,5" Margin="10,0">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="wideState">
