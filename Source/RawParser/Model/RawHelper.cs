@@ -1,4 +1,4 @@
-﻿using Windows.Storage;
+using Windows.Storage;
 
 namespace RawEditor.Model
 {
