@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PhotoNet;
+using System;
 using System.Linq;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
@@ -7,14 +8,6 @@ using Windows.UI.Xaml.Media;
 
 namespace RawEditor.View.UIHelper
 {
-    public class HistoRaw
-    {
-        public int[] red;
-        public int[] blue;
-        public int[] green;
-        public int[] luma;
-    }
-
     public class Histogram
     {
         public PointCollection PointsL { get; } = new PointCollection();

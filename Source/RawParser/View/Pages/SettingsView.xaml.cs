@@ -1,6 +1,6 @@
-﻿using RawEditor.Effect;
+﻿using PhotoNet;
+using PhotoNet.Common;
 using RawEditor.Settings;
-using RawNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;

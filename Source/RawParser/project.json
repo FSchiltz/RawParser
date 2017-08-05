@@ -1,11 +1,9 @@
 ﻿{
   "dependencies": {
-    "MathNet.Numerics": "3.20.0",
     "Microsoft.ApplicationInsights.PersistenceChannel": "1.2.3",
     "Microsoft.ApplicationInsights.WindowsApps": "1.1.1",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.3.4",
-    "Microsoft.Services.Store.SDK": "10.1705.16001",
-    "Win2D.uwp": "1.21.0"
+    "Microsoft.Services.Store.SDK": "10.1705.16001"
   },
   "frameworks": {
     "uap10.0": {}

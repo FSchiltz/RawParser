@@ -1,6 +1,7 @@
 ﻿using Microsoft.Services.Store.Engagement;
+using PhotoNet;
+using PhotoNet.Common;
 using RawEditor.Base;
-using RawEditor.Effect;
 using RawEditor.Model;
 using RawEditor.Settings;
 using RawEditor.View.UIHelper;
@@ -51,7 +52,7 @@ namespace RawEditor.View.Pages
         private int rotation;
         private bool isBindingEnabled = true;
 
-        public RawImage<ushort> rawImage;
+        public RawImage rawImage;
 #if !DEBUG
         private StoreServicesCustomEventLogger logger = StoreServicesCustomEventLogger.GetDefault();
 #endif
@@ -211,7 +212,7 @@ namespace RawEditor.View.Pages
                         Debug.WriteLine("Decoding done in " + watchdecode.ElapsedMilliseconds + " ms");
 
                         var watchLook = Stopwatch.StartNew();
-                        rawImage.table?.ApplyTableLookUp(rawImage.raw);
+                        rawImage.ApplyTableLookUp();
                         watchLook.Stop();
                         Debug.WriteLine("Lookup done in " + watchLook.ElapsedMilliseconds + " ms");
 
@@ -259,7 +260,7 @@ namespace RawEditor.View.Pages
                     rawImage.metadata.ParsingTime = watchTotal.ElapsedMilliseconds;
                     GC.Collect();
                     //check if enough memory
-                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)rawImage.raw.green.Length * 6) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
+                    if (MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage < ((ulong)rawImage.fullSize.green.Length * 6) || MemoryManager.AppMemoryUsageLevel == AppMemoryUsageLevel.High)
                     {
                         TextDisplay.DisplayWarning("The image is bigger than what your device support, this application may fail when saving. Only " + ((MemoryManager.AppMemoryUsageLimit - MemoryManager.AppMemoryUsage) / (1024 * 1024)) + "Mb left of memory for this app to use");
                     }
@@ -323,7 +324,7 @@ namespace RawEditor.View.Pages
 
         private async void SaveButtonClickAsync(object sender, RoutedEventArgs e)
         {
-            if (rawImage?.raw != null)
+            if (rawImage?.fullSize != null)
             {
                 var savePicker = new FileSavePicker
                 {
@@ -351,7 +352,7 @@ namespace RawEditor.View.Pages
                     try
                     {
                         var watchPreview = Stopwatch.StartNew();
-                        var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.raw, EditionValue);
+                        var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.fullSize, EditionValue);
                         watchPreview.Stop();
                         Debug.WriteLine("Apply done in " + watchPreview.ElapsedMilliseconds + " ms");
 
@@ -481,7 +482,7 @@ namespace RawEditor.View.Pages
         {
             //find the changed value
             //TODO remove this
-            if (!isBindingEnabled || rawImage?.raw == null || EditionValue == null) return;
+            if (!isBindingEnabled || rawImage?.fullSize == null || EditionValue == null) return;
             History.Add(OldValue.GetHistory(EditionValue));
             OldValue.Copy(EditionValue);
             if (LowGamma.IsChecked == true)
@@ -549,7 +550,7 @@ namespace RawEditor.View.Pages
                 //TODO regionalise text
                 //generate the bitmap
                 Load.Show();
-                var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.raw, EditionValue);
+                var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.fullSize, EditionValue);
                 InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
                 BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
 
@@ -584,7 +585,7 @@ namespace RawEditor.View.Pages
 
         private async void CropButton_TappedAsync(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            if (rawImage?.raw != null)
+            if (rawImage?.fullSize != null)
             {
                 CropUI.SetThumbAsync(null);
                 Load.Show();
@@ -634,10 +635,10 @@ namespace RawEditor.View.Pages
             double left = CropUI.Left;
             double right = CropUI.Right;
             double bottom = CropUI.Bottom;
-            if (rawImage?.raw != null && rawImage?.preview != null)
+            if (rawImage?.fullSize != null && rawImage?.preview != null)
             {
-                rawImage.raw.offset = new Point2D((uint)(rawImage.raw.UncroppedDim.width * left), (uint)(rawImage.raw.UncroppedDim.height * top));
-                rawImage.raw.dim = new Point2D((uint)(rawImage.raw.UncroppedDim.width * right), (uint)(rawImage.raw.UncroppedDim.height * bottom));
+                rawImage.fullSize.offset = new Point2D((uint)(rawImage.fullSize.UncroppedDim.width * left), (uint)(rawImage.fullSize.UncroppedDim.height * top));
+                rawImage.fullSize.dim = new Point2D((uint)(rawImage.fullSize.UncroppedDim.width * right), (uint)(rawImage.fullSize.UncroppedDim.height * bottom));
                 rawImage.preview.offset = new Point2D((uint)(rawImage.preview.UncroppedDim.width * left), (uint)(rawImage.preview.UncroppedDim.height * top));
                 rawImage.preview.dim = new Point2D((uint)(rawImage.preview.UncroppedDim.width * right), (uint)(rawImage.preview.UncroppedDim.height * bottom));
                 UpdatePreview(true);
@@ -652,8 +653,8 @@ namespace RawEditor.View.Pages
         //TODO replace by binding if possible
         private void SetImageSizeText()
         {
-            ImageHeight.Text = rawImage?.raw?.dim.height + "px";
-            ImageWidth.Text = rawImage?.raw?.dim.width + "px";
+            ImageHeight.Text = rawImage?.fullSize?.dim.height + "px";
+            ImageWidth.Text = rawImage?.fullSize?.dim.width + "px";
         }
 
         private void HideCropUI()
@@ -713,13 +714,13 @@ namespace RawEditor.View.Pages
             {
                 //get the correct pixel
                 var position = e.GetPosition(ImageBox);
-                uint width = (uint)((position.X / ImageBox.ActualWidth) * rawImage.raw.dim.width) + rawImage.raw.offset.width;
-                uint height = (uint)((position.Y / ImageBox.ActualHeight) * rawImage.raw.dim.height) + rawImage.raw.offset.height;
-                long pixelPos = height * rawImage.raw.UncroppedDim.width + width;
+                uint width = (uint)((position.X / ImageBox.ActualWidth) * rawImage.fullSize.dim.width) + rawImage.fullSize.offset.width;
+                uint height = (uint)((position.Y / ImageBox.ActualHeight) * rawImage.fullSize.dim.height) + rawImage.fullSize.offset.height;
+                long pixelPos = height * rawImage.fullSize.UncroppedDim.width + width;
                 //Calculate the multiplier
-                double gMul = rawImage.raw.green[pixelPos] + 1;
-                double rMul = gMul / (rawImage.raw.red[pixelPos] + 1);
-                double bMul = gMul / (rawImage.raw.blue[pixelPos] + 1);
+                double gMul = rawImage.fullSize.green[pixelPos] + 1;
+                double rMul = gMul / (rawImage.fullSize.red[pixelPos] + 1);
+                double bMul = gMul / (rawImage.fullSize.blue[pixelPos] + 1);
 
                 //apply them
                 EditionValue.RMul = rMul;

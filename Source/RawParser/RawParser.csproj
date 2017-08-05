@@ -136,91 +136,8 @@
     </Compile>
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Model\Base\Bindable.cs" />
-    <Compile Include="Model\Effect\AutoExposure.cs" />
-    <Compile Include="Model\Effect\Color.cs" />
-    <Compile Include="Model\Effect\Curve.cs" />
-    <Compile Include="Model\Effect\Demosaic\AdamsDemosaic.cs" />
-    <Compile Include="Model\Effect\Demosaic\Bilinear.cs" />
-    <Compile Include="Model\Effect\Demosaic\DemosaicAlgorithm.cs" />
-    <Compile Include="Model\Effect\Demosaic\FastAdamsDemosaic.cs" />
-    <Compile Include="Model\Effect\Demosaic\FujiDemos.cs" />
-    <Compile Include="Model\Effect\Demosaic\FujiSSDD.cs" />
-    <Compile Include="Model\Effect\Demosaic\Malvar.cs" />
-    <Compile Include="Model\Effect\Demosaic\SSDDemosaic.cs" />
-    <Compile Include="Model\Effect\Denoising.cs" />
-    <Compile Include="Model\Effect\HistogramHelper.Cs" />
-    <Compile Include="Model\Effect\Luminance.cs" />
-    <Compile Include="Model\Effect\Demosaic\Demosaic.cs" />
-    <Compile Include="Model\Effect\ImageEffect.cs" />
-    <Compile Include="Model\Effect\Sharpening.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\BitPump\BitPump.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\HuffmanCompressor\NikonHuffman.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\HuffmanCompressor\PentaxHuffman.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\LJPEGPlain.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\RawDecompressor.cs" />
-    <Compile Include="Model\Parser\Decoder\RawSlice.cs" />
-    <Compile Include="Model\Parser\Format\JPEG\CosineTable.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\JPEGDecompressor.cs" />
-    <Compile Include="Model\Parser\Decoder\DNGDecoder.cs" />
-    <Compile Include="Model\Parser\Decoder\ORFDecoder.cs" />
-    <Compile Include="Model\Parser\Decoder\PEFDecoder.cs" />
-    <Compile Include="Model\Parser\Decoder\RAFDecoder.cs" />
-    <Compile Include="Model\Parser\Decoder\RW2Decoder.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\HuffmanCompressor\HuffmanTable.cs" />
-    <Compile Include="Model\Parser\Format\JPEG\SOFInfo.cs" />
-    <Compile Include="Model\Parser\Format\JPEG\JpegComponentInfo.cs" />
-    <Compile Include="Model\Parser\Format\JPEG\JpegMarker.cs" />
-    <Compile Include="Model\Parser\Encoder\SaveHelper.cs" />
-    <Compile Include="Model\Parser\Base\Endianness.cs" />
-    <Compile Include="Model\Parser\Decoder\CamRGB.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\IFDType.cs" />
-    <Compile Include="Model\Parser\Image\ExifValue.cs" />
-    <Compile Include="Model\Parser\Image\ImageComponent.cs" />
-    <Compile Include="Model\Parser\Image\ImageHelper.cs" />
-    <Compile Include="Model\Parser\Image\Thumbnail\IThumbnail.cs" />
-    <Compile Include="Model\Parser\Image\Thumbnail\JPEGThumbnail.cs" />
-    <Compile Include="Model\Parser\Image\Thumbnail\RAWThumbnail.cs" />
-    <Compile Include="Model\Parser\Image\WhiteBalance.cs" />
     <Compile Include="Model\RawHelper.cs" />
-    <Compile Include="Model\Settings\HistoryObject.cs" />
     <Compile Include="Model\Settings\SettingStorage.cs" />
-    <Compile Include="Model\Parser\Base\Common.cs" />
-    <Compile Include="Model\Parser\Base\Point2D.cs" />
-    <Compile Include="Model\Parser\Base\Rectangle2D.cs" />
-    <Compile Include="Model\Parser\Decoder\ArwDecoder.cs" />
-    <Compile Include="Model\Parser\Decoder\Cr2Decoder.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\BitPump\BitPumpJPEG.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\BitPump\BitPumpMSB.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\BitPump\BitPumpMSB16.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\BitPump\BitPumpMSB32.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\BitPump\BitPumpPlain.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\NikonDecompressor.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\PanaBitpump.cs" />
-    <Compile Include="Model\Parser\Decoder\Decompressor\PentaxDecompressor.cs" />
-    <Compile Include="Model\Parser\Base\BinaryReaderBE.cs" />
-    <Compile Include="Model\Parser\Base\BitOrder.cs" />
-    <Compile Include="Model\Parser\Decoder\JPGDecoder.cs" />
-    <Compile Include="Model\Parser\Decoder\NEFDecoder.cs" />
-    <Compile Include="Model\Parser\Decoder\RawDecoder.cs" />
-    <Compile Include="Model\Parser\Decoder\TIFFDecoder.cs" />
-    <Compile Include="Model\Parser\Exception\RawDecoderException.cs" />
-    <Compile Include="Model\Parser\Format\DNG\DngDecoderSlices.cs" />
-    <Compile Include="Model\Parser\Image\BlackArea.cs" />
-    <Compile Include="Model\Parser\Image\ColorFilterArray.cs" />
-    <Compile Include="Model\Parser\Image\FactorValue.cs" />
-    <Compile Include="Model\Parser\Image\ImageMetadata.cs" />
-    <Compile Include="Model\Parser\Image\RawImage.cs" />
-    <Compile Include="Model\Parser\Image\TableLookUp.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\IFD.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\Makernote\NokiaMakernote.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\Tag.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\TagType.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\Makernote\FujiMakerNote.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\Makernote\Makernote.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\Makernote\NikonMakerNote.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\Makernote\PanasonicMakernote.cs" />
-    <Compile Include="Model\Parser\Format\TIFF\Makernote\PentaxMakernote.cs" />
-    <Compile Include="Model\Parser\RawParser.cs" />
     <Compile Include="Model\Settings\HistoryList.cs" />
     <Compile Include="View\Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -338,7 +255,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Model\Image\" />
+  </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
@@ -349,6 +268,20 @@
     <SDKReference Include="Microsoft.VCLibs, Version=14.0">
       <Name>Visual C++ 2015 Runtime for Universal Windows Platform Apps</Name>
     </SDKReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\PhotoNet.Common.csproj">
+      <Project>{103885F6-286B-464F-BD5B-0C4A917EE295}</Project>
+      <Name>PhotoNet.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PhotoEdit\PhotoNet.csproj">
+      <Project>{8CFCD0F0-D75F-46F1-8F3C-5CD954B7FACF}</Project>
+      <Name>PhotoNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RawNet\RawNet.csproj">
+      <Project>{A0345A48-D340-41BE-8C05-D326377AE58B}</Project>
+      <Name>RawNet</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

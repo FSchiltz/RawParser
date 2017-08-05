@@ -7,6 +7,5 @@ namespace RawEditor.Model
         public static void OpenFile(StorageFile file)
         {
         }
-
     }
 }

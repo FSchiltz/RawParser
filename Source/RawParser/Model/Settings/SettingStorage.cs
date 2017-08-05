@@ -1,5 +1,5 @@
-﻿using RawEditor.Effect;
-using RawNet;
+﻿using PhotoNet;
+using PhotoNet.Common;
 using System;
 using Windows.Storage;
 
