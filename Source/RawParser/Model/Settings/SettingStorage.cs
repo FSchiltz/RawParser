@@ -35,6 +35,7 @@ namespace RawEditor.Settings
             }
             set { localSettings.Values["previewFactor"] = value.ToString(); }
         }
+
         public static string SaveFormat
         {
             get { return GetStringSetting("saveFormat"); }

@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace RawEditor.Settings
 {
-    public class HistoryList : ObservableCollection<HistoryObject>
+    public class HistoryCollection : ObservableCollection<HistoryObject>
     {
         private int CurrentIndex
         {
@@ -76,22 +76,25 @@ namespace RawEditor.Settings
             }
         }
 
-        public void SetCurrent(int i)
+        public void SetCurrent(int indice)
         {
-            if (i >= 0 && i < Count)
+            if (indice >= 0 && indice < Count)
             {
-                CurrentIndex = i;
+                CurrentIndex = indice;
                 OnHistoryChanged();
             }
         }
 
-        public HistoryObject GetCurrent()
+        public HistoryObject Current
         {
-            if (CurrentIndex >= 0)
+            get
             {
-                return this[CurrentIndex];
+                if (CurrentIndex >= 0)
+                {
+                    return this[CurrentIndex];
+                }
+                else return Default;
             }
-            else return Default;
         }
     }
 }

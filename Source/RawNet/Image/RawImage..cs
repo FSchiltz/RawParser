@@ -89,9 +89,9 @@ namespace RawNet
 
         public void ApplyTableLookUp()
         {
-            Debug.Assert(fullSize?.rawView != null);
             if (table?.tables != null && table.ntables > 0)
             {
+                Debug.Assert(fullSize?.rawView != null);
                 Parallel.For(fullSize.offset.height, fullSize.dim.height + fullSize.offset.height, y =>
                 {
                     long pos = y * fullSize.UncroppedDim.width * fullSize.cpp;

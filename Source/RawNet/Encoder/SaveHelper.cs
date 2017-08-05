@@ -66,39 +66,40 @@ namespace RawNet
                 var propertySet = new BitmapPropertySet();
                 BitmapEncoder encoder = null;
                 // write to file
-                if (file.FileType == ".jxr")
+                switch (file.FileType.ToLower())
                 {
-                    type = BitmapEncoder.JpegXREncoderId;
+                    case ".jxr":
+                        type = BitmapEncoder.JpegXREncoderId;
+                        break;
+                    case ".jpg":
+                    case ".jpeg":
+                        type = BitmapEncoder.JpegEncoderId;
+                        break;
+                    case ".png":
+                        type = BitmapEncoder.PngEncoderId;
+                        break;
+                    case ".bmp":
+                        type = BitmapEncoder.BmpEncoderId;
+                        break;
+                    case ".tiff":
+                    case ".tif":
+                        var compressionValue = new BitmapTypedValue(
+                            TiffCompressionMode.None, // no compression
+                            PropertyType.UInt8
+                            );
+                        propertySet.Add("TiffCompressionMethod", compressionValue);
+                        type = BitmapEncoder.TiffEncoderId;
+                        break;
+                    default:
+                        throw new FormatException("Format not supported: " + file.FileType);
                 }
-                else if (file.FileType == ".jpg" || file.FileType == ".jpeg")
-                {
-                    type = BitmapEncoder.JpegEncoderId;
-                }
-                else if (file.FileType == ".png")
-                {
-                    type = BitmapEncoder.PngEncoderId;
-                }
-                else if (file.FileType == ".bmp")
-                {
-                    type = BitmapEncoder.BmpEncoderId;
-                }
-                else if (file.FileType == ".tiff" || file.FileType == ".tif")
-                {
-                    var compressionValue = new BitmapTypedValue(
-                        TiffCompressionMode.None, // no compression
-                        PropertyType.UInt8
-                        );
-                    propertySet.Add("TiffCompressionMethod", compressionValue);
-                    type = BitmapEncoder.TiffEncoderId;
-                }
-                else throw new FormatException("Format not supported: " + file.FileType);
 
                 encoder = await BitmapEncoder.CreateAsync(type, filestream, propertySet);
                 //Needs to run in the UI thread because fuck performance
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    //Do some UI-code that must be run on the UI thread.
-                    encoder.SetSoftwareBitmap(bitmap);
+                //Do some UI-code that must be run on the UI thread.
+                encoder.SetSoftwareBitmap(bitmap);
                 });
                 await encoder.FlushAsync();
                 encoder = null;

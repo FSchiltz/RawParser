@@ -2,7 +2,6 @@
 using PhotoNet;
 using PhotoNet.Common;
 using RawEditor.Base;
-using RawEditor.Model;
 using RawEditor.Settings;
 using RawEditor.View.UIHelper;
 using RawNet;
@@ -47,7 +46,7 @@ namespace RawEditor.View.Pages
         public ImageEffect EditionValue = new ImageEffect();
         public ImageEffect DefaultValue = new ImageEffect();
         public ImageEffect OldValue = new ImageEffect();
-        public HistoryList History = new HistoryList();
+        public HistoryCollection History = new HistoryCollection();
         private Bindable<Boolean> selectManualWB = new Bindable<bool>(false);
         private int rotation;
         private bool isBindingEnabled = true;
@@ -64,7 +63,7 @@ namespace RawEditor.View.Pages
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(200, 100));
             History.HistoryChanged += new PropertyChangedEventHandler((e, d) =>
             {
-                EditionValue.Copy(History.GetCurrent().effect);
+                EditionValue.Copy(History.Current.effect);
                 UpdatePreview(false);
             });
             History.Default = new HistoryObject(EffectType.Unkown, DefaultValue);
@@ -163,7 +162,7 @@ namespace RawEditor.View.Pages
                 var fileArgs = args as Windows.ApplicationModel.Activation.FileActivatedEventArgs;
                 var file = (StorageFile)fileArgs.Files[0];
                 args = null;
-                RawHelper.OpenFile(file);
+                OpenFile(file);
             }
         }
 
@@ -326,59 +325,67 @@ namespace RawEditor.View.Pages
         {
             if (rawImage?.fullSize != null)
             {
-                var savePicker = new FileSavePicker
+                try
                 {
-                    SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                    SuggestedFileName = rawImage.metadata.FileName
-                };
-
-                foreach (KeyValuePair<string, List<string>> format in FormatHelper.SaveSupportedFormat)
-                {
-                    savePicker.FileTypeChoices.Add(format.Key, format.Value);
-                }
-                StorageFile file = await savePicker.PickSaveFileAsync();
-                if (file == null) return;
-
-                Load.Show();
-
-                //TODO
-                //show an option Ui
-                //when user click ok save the properties to a bitmapProperies
-                //check isuser chose 16bits or not
-                //save
-
-                var task = Task.Run(() =>
-                {
-                    try
+                    var savePicker = new FileSavePicker
                     {
-                        var watchPreview = Stopwatch.StartNew();
-                        var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.fullSize, EditionValue);
-                        watchPreview.Stop();
-                        Debug.WriteLine("Apply done in " + watchPreview.ElapsedMilliseconds + " ms");
-
-
-                        watchPreview = Stopwatch.StartNew();
-                        //call GC here (GC does not empty automatically native object)
-                        GC.Collect();
-                        FormatHelper.SaveAsync(file, result);
-                        watchPreview.Stop();
-                        Debug.WriteLine("Save done in " + watchPreview.ElapsedMilliseconds + " ms");
+                        SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                        SuggestedFileName = rawImage.metadata.FileName
+                    };
+                    foreach (KeyValuePair<string, List<string>> format in FormatHelper.SaveSupportedFormat)
+                    {
+                        savePicker.FileTypeChoices.Add(format.Key, format.Value);
                     }
-                    catch (Exception ex)
+                    StorageFile file = await savePicker.PickSaveFileAsync();
+                    if (file == null) return;
+
+                    Load.Show();
+
+                    //TODO
+                    //show an option Ui
+                    //when user click ok save the properties to a bitmapProperies
+                    //check isuser chose 16bits or not
+                    //save
+                    var task = Task.Run(() =>
                     {
+                        try
+                        {
+                            var watchPreview = Stopwatch.StartNew();
+                            var result = ApplyImageEffect8bitsNoHistoAsync(rawImage.fullSize, EditionValue);
+                            watchPreview.Stop();
+                            Debug.WriteLine("Apply done in " + watchPreview.ElapsedMilliseconds + " ms");
+
+                            watchPreview = Stopwatch.StartNew();
+                            //call GC here (GC does not empty automatically native object)
+                            GC.Collect();
+                            FormatHelper.SaveAsync(file, result);
+                            watchPreview.Stop();
+                            Debug.WriteLine("Save done in " + watchPreview.ElapsedMilliseconds + " ms");
+                        }
+                        catch (Exception ex)
+                        {
 #if DEBUG
                         TextDisplay.DisplayError(ex.Message);
 #else
-                        TextDisplay.DisplayError("An error occured while saving");
+                            TextDisplay.DisplayError("An error occured while saving");
 #endif
-                    }
+                        }
 
-                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        //Blur(false);
-                        Load.Hide();
+                        CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            //Blur(false);
+                            Load.Hide();
+                        });
                     });
-                });
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                        TextDisplay.DisplayError(ex.Message);
+#else
+                    TextDisplay.DisplayError("An error occured while saving");
+#endif
+                }
             }
         }
 
@@ -422,11 +429,6 @@ namespace RawEditor.View.Pages
             ImageDisplay.MaxZoomFactor = 10;
             ZoomSlider.Value = ZeroFactor;
             ImageDisplay.ChangeView(0, 0, ZeroFactor);
-        }
-
-        public void TestFunc()
-        {
-            Debug.Assert(false);
         }
 
         private void UpdatePreview(bool move)
@@ -706,7 +708,6 @@ namespace RawEditor.View.Pages
             //save old editing value
             OldValue.Copy(EditionValue);
         }
-
 
         private void ImageBox_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
