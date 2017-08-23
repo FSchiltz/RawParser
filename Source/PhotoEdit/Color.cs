@@ -1,10 +1,41 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using PhotoNet.Common;
+using System.Threading.Tasks;
 
 namespace PhotoNet
 {
     static public class Color
     {
+        public static void SplitTone(ImageComponent<int> image, Pixel splitShadow, Pixel splitHighlight, double splitBalance, uint maxValue)
+        {
+            if (splitShadow.IsZero() && splitHighlight.IsZero()) return;
+            //scale the value
+            var coeff = (double)maxValue / byte.MaxValue;
+            splitShadow.R *= coeff * splitShadow.balance;
+            splitShadow.G *= coeff * splitShadow.balance;
+            splitShadow.B *= coeff * splitShadow.balance;
+            splitHighlight.R *= coeff * splitHighlight.balance;
+            splitHighlight.G *= coeff * splitHighlight.balance;
+            splitHighlight.B *= coeff * splitHighlight.balance;
+
+            //loop and apply
+            Parallel.For(0, image.dim.height, y =>
+            {
+                long realY = (y + image.offset.height) * image.UncroppedDim.width;
+                for (int x = 0; x < image.dim.width; x++)
+                {
+                    long realPix = realY + x + image.offset.width;
+                    image.red[realPix] += (int)(splitShadow.R - image.red[realPix]);
+                    image.green[realPix] += (int)(splitShadow.G - image.red[realPix]);
+                    image.blue[realPix] += (int)(splitShadow.B - image.red[realPix]);
+                    image.red[realPix] += (int)(splitHighlight.R - image.red[realPix]);
+                    image.green[realPix] += (int)(splitHighlight.G - image.red[realPix]);
+                    image.blue[realPix] += (int)(splitHighlight.B - image.red[realPix]);
+                }
+            });
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RgbToHsv(double red, double green, double blue, uint maxValue, out double h, out double s, out double v)
         {

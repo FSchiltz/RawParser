@@ -17,7 +17,7 @@
             </ResourceDictionary.ThemeDictionaries>
             <Flyout x:Key="FlyoutColorPickerShadow">
                 <RelativePanel>
-                    <ColorPicker x:Name="ColorPickerShadow" IsColorChannelTextInputVisible="False" IsHexInputVisible="False" />
+                    <ColorPicker x:Name="ColorPickerShadow" IsColorChannelTextInputVisible="False" IsHexInputVisible="False" IsAlphaEnabled="False" IsColorSliderVisible="False"/>
                     <Grid RelativePanel.Below="ColorPickerShadow" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
@@ -30,7 +30,7 @@
             </Flyout>
             <Flyout x:Key="FlyoutColorPickerHighlight">
                 <RelativePanel>
-                    <ColorPicker x:Name="ColorPickerHighlight" IsColorChannelTextInputVisible="False" IsHexInputVisible="False" />
+                    <ColorPicker x:Name="ColorPickerHighlight" IsColorChannelTextInputVisible="False" IsHexInputVisible="False" IsAlphaEnabled="False" IsColorSliderVisible="False"/>
                     <Grid RelativePanel.Below="ColorPickerHighlight" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
@@ -262,7 +262,7 @@
                                     <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" StepFrequency="0.1" Maximum="1" Minimum="0" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Value="{x:Bind EditionValue.SplitBalance, Mode=TwoWay}" />
                                     <TextBlock FontSize="12">Highlight</TextBlock>
                                     <Button x:Name="SplitHighlightPicker" Content="Pick a color" Flyout="{StaticResource FlyoutColorPickerHighlight}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
-                                  
+
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>

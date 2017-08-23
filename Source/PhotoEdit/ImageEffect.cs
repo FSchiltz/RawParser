@@ -109,8 +109,8 @@ namespace PhotoNet
             }
         }
 
-        public PixelHSL SplitShadow { get; set; }
-        public PixelHSL SplitHighlight { get; set; }
+        public Pixel SplitShadow { get; set; }
+        public Pixel SplitHighlight { get; set; }
 
         private double splitBalance = 0.5;
         public double SplitBalance
@@ -439,6 +439,8 @@ namespace PhotoNet
             //apply the single pixel processing 
             SinglePixelProcessing(image, buffer, CreateCurve());
 
+            Color.SplitTone(buffer, new Pixel(SplitShadow), new Pixel(SplitHighlight), SplitBalance, maxValue);
+
             if (Rotation == 1 || Rotation == 3)
             {
                 buffer.dim.Flip();
@@ -491,11 +493,6 @@ namespace PhotoNet
                     Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                     l = curve[(int)(l * maxValue)];
                     s *= saturation;
-
-                    //aply split toning here (whe need to know luminance value)
-                    double b = (SplitShadow.H - h) * splitBalance;
-                    double f = (SplitHighlight.H - h) * (1 - splitBalance);
-                    h += b + f + h;
 
                     Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
 

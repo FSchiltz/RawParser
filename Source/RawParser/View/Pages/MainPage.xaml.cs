@@ -788,9 +788,16 @@ namespace RawEditor.View.Pages
                 oldValue = 0
             });
 
+            PhotoNet.Color.RgbToHsl(ColorPickerHighlight.Color.R, ColorPickerHighlight.Color.R, ColorPickerHighlight.Color.R, byte.MaxValue, out _, out double s, out _);
+
             //add to object
-            PhotoNet.Color.RgbToHsl(ColorPickerHighlight.Color.R, ColorPickerHighlight.Color.G, ColorPickerHighlight.Color.B, byte.MaxValue, out double h, out double s, out double l);
-            EditionValue.SplitHighlight = new PixelHSL() { H = h, S = s, L = s };
+            EditionValue.SplitHighlight = new Pixel()
+            {
+                R = ColorPickerHighlight.Color.R,
+                G = ColorPickerHighlight.Color.G,
+                B = ColorPickerHighlight.Color.B,
+                balance = s
+            };
             UpdatePreview(false);
             // Close the Flyout.
             SplitHighlightPicker.Flyout.Hide();
@@ -805,9 +812,16 @@ namespace RawEditor.View.Pages
                 oldValue = 0
             });
 
+            PhotoNet.Color.RgbToHsl(ColorPickerShadow.Color.R, ColorPickerShadow.Color.R, ColorPickerShadow.Color.R,byte.MaxValue,out _,out double s, out _);
+
             //add to object
-            PhotoNet.Color.RgbToHsl(ColorPickerShadow.Color.R, ColorPickerShadow.Color.G, ColorPickerShadow.Color.B, byte.MaxValue, out double h, out double s, out double l);
-            EditionValue.SplitShadow = new PixelHSL() { H = h, S = s, L = s };
+            EditionValue.SplitShadow = new Pixel()
+            {
+                R = ColorPickerShadow.Color.R,
+                G = ColorPickerShadow.Color.G,
+                B = ColorPickerShadow.Color.B,
+                balance = s
+            };
             UpdatePreview(false);
             // Close the Flyout.
             SplitShadowPicker.Flyout.Hide();

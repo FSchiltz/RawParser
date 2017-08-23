@@ -82,7 +82,6 @@ namespace RawEditor.Settings
             if (localSettings.Values["version"] == null || (uint)localSettings.Values["version"] < version)
                 Reset();
             localSettings.Values["version"] = version;
-
         }
 
         //ToDO replace by getonread member
