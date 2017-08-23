@@ -30,8 +30,10 @@ namespace RawEditor.Settings
         {
             get
             {
-                Enum.TryParse(GetStringSetting("previewFactor"), out FactorValue res);
-                return res;
+                if (Enum.TryParse(GetStringSetting("previewFactor"), out FactorValue res)){
+                    return res;
+                }
+                else return FactorValue.Auto;
             }
             set { localSettings.Values["previewFactor"] = value.ToString(); }
         }
@@ -46,8 +48,11 @@ namespace RawEditor.Settings
         {
             get
             {
-                Enum.TryParse(GetStringSetting("demosAlgo"), out DemosaicAlgorithm res);
-                return res;
+                if (Enum.TryParse(GetStringSetting("demosAlgo"), out DemosaicAlgorithm res))
+                {
+                    return res;
+                }
+                else return DemosaicAlgorithm.FastAdams;
             }
             set { localSettings.Values["demosAlgo"] = value.ToString(); }
         }

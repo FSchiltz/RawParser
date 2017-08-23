@@ -47,7 +47,12 @@ namespace RawEditor.View.Pages
             var enumval3 = Enum.GetValues(typeof(ThemeEnum)).Cast<ThemeEnum>();
             ThemeComboBox.ItemsSource = enumval3.ToList();
 
-            UpdateView();
+            try
+            {
+                UpdateView();
+            }
+            catch (NullReferenceException e) { }
+
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
             SystemNavigationManager.GetForCurrentView().BackRequested += (s, a) =>
             {
@@ -137,7 +142,7 @@ namespace RawEditor.View.Pages
 
         private void UpdateView()
         {
-            //set value of allcombox to current choosen settings
+            //set value of all combobox to current choosen settings
             //for scale
             ScaleComboBox.SelectedItem = SettingStorage.PreviewFactor;
             //for demos
