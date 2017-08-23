@@ -109,6 +109,24 @@ namespace PhotoNet
             }
         }
 
+        public PixelHSL SplitShadow { get; set; }
+        public PixelHSL SplitHighlight { get; set; }
+
+        private double splitBalance = 0.5;
+        public double SplitBalance
+        {
+            get { return splitBalance; }
+            set
+            {
+                if (splitBalance != value)
+                {
+                    splitBalance = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+
         private double denoise = 0;
         public double Denoise
         {
@@ -259,6 +277,7 @@ namespace PhotoNet
                 }
             }
         }
+
         #endregion
 
         public ImageEffect GetCopy()
@@ -444,7 +463,7 @@ namespace PhotoNet
             //apply sharpening (always last step)
             if (sharpness != 0)
                 buffer = Sharpening.Apply(buffer, (int)sharpness);
-            
+
             //return the final histogram
             return buffer;
         }
@@ -472,6 +491,12 @@ namespace PhotoNet
                     Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                     l = curve[(int)(l * maxValue)];
                     s *= saturation;
+
+                    //aply split toning here (whe need to know luminance value)
+                    double b = (SplitShadow.H - h) * splitBalance;
+                    double f = (SplitHighlight.H - h) * (1 - splitBalance);
+                    h += b + f + h;
+
                     Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
 
                     long bufferPix = Rotate(x, y, image.dim.width, image.dim.height);
@@ -499,6 +524,9 @@ namespace PhotoNet
             Gamma = effect.Gamma;
             Denoise = effect.Denoise;
             Sharpness = effect.Sharpness;
+            SplitShadow = effect.SplitShadow;
+            SplitHighlight = effect.SplitHighlight;
+            SplitBalance = effect.SplitBalance;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -514,9 +542,10 @@ namespace PhotoNet
             }
         }
 
+
         public HistoryObject GetHistory(ImageEffect effect)
         {
-            //gettge first change
+            //get the first change
             HistoryObject history = new HistoryObject(EffectType.Unkown, effect.GetCopy());
             if (Exposure != effect.Exposure)
             {

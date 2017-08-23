@@ -270,4 +270,7 @@
   <data name="Warning" xml:space="preserve">
     <value>Warning</value>
   </data>
+  <data name="SplitTone.Text" xml:space="preserve">
+    <value>Split toning</value>
+  </data>
 </root>

@@ -373,7 +373,7 @@ namespace RawEditor.View.Pages
                         catch (Exception ex)
                         {
 #if DEBUG
-                        TextDisplay.DisplayError(ex.Message);
+                            TextDisplay.DisplayError(ex.Message);
 #else
                             TextDisplay.DisplayError("An error occured while saving");
 #endif
@@ -389,7 +389,7 @@ namespace RawEditor.View.Pages
                 catch (Exception ex)
                 {
 #if DEBUG
-                        TextDisplay.DisplayError(ex.Message);
+                    TextDisplay.DisplayError(ex.Message);
 #else
                     TextDisplay.DisplayError("An error occured while saving");
 #endif
@@ -775,6 +775,42 @@ namespace RawEditor.View.Pages
             //apply it
             EditionValue.Copy(autoval);
             UpdatePreview(false);
+        }
+
+        void SplitToneSelectHighlight()
+        {
+
+            //add an history object
+            //TODO
+            History.Add(new HistoryObject(EffectType.SplitTone, EditionValue.GetCopy())
+            {
+                value = 0,
+                oldValue = 0
+            });
+
+            //add to object
+            PhotoNet.Color.RgbToHsl(ColorPickerHighlight.Color.R, ColorPickerHighlight.Color.G, ColorPickerHighlight.Color.B, byte.MaxValue, out double h, out double s, out double l);
+            EditionValue.SplitHighlight = new PixelHSL() { H = h, S = s, L = s };
+            UpdatePreview(false);
+            // Close the Flyout.
+            SplitHighlightPicker.Flyout.Hide();
+        }
+
+        void SplitToneSelectShadow()
+        {
+            //TODO
+            History.Add(new HistoryObject(EffectType.SplitTone, EditionValue.GetCopy())
+            {
+                value = 0,
+                oldValue = 0
+            });
+
+            //add to object
+            PhotoNet.Color.RgbToHsl(ColorPickerShadow.Color.R, ColorPickerShadow.Color.G, ColorPickerShadow.Color.B, byte.MaxValue, out double h, out double s, out double l);
+            EditionValue.SplitShadow = new PixelHSL() { H = h, S = s, L = s };
+            UpdatePreview(false);
+            // Close the Flyout.
+            SplitShadowPicker.Flyout.Hide();
         }
     }
 }

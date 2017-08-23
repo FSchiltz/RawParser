@@ -118,6 +118,7 @@
     <Compile Include="Image\Image.cs" />
     <Compile Include="Image\ImageComponent.cs" />
     <Compile Include="Image\ImageMetadata.cs" />
+    <Compile Include="Image\Pixel.cs" />
     <Compile Include="Image\Thumbnail\IThumbnail.cs" />
     <Compile Include="Image\Thumbnail\JPEGThumbnail.cs" />
     <Compile Include="Image\WhiteBalance.cs" />

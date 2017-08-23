@@ -15,6 +15,32 @@
                     <AcrylicBrush x:Key="MyAcrylicBrushLow" BackgroundSource="HostBackdrop" TintColor="White" TintOpacity="0.9" FallbackColor="White" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
+            <Flyout x:Key="FlyoutColorPickerShadow">
+                <RelativePanel>
+                    <ColorPicker x:Name="ColorPickerShadow" IsColorChannelTextInputVisible="False" IsHexInputVisible="False" />
+                    <Grid RelativePanel.Below="ColorPickerShadow" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="OK" Click="{x:Bind SplitToneSelectShadow}" Margin="0,12,2,0" HorizontalAlignment="Stretch" />
+                        <Button Content="Cancel" Click="{x:Bind SplitShadowPicker.Flyout.Hide}" Margin="2,12,0,0" HorizontalAlignment="Stretch" Grid.Column="1" />
+                    </Grid>
+                </RelativePanel>
+            </Flyout>
+            <Flyout x:Key="FlyoutColorPickerHighlight">
+                <RelativePanel>
+                    <ColorPicker x:Name="ColorPickerHighlight" IsColorChannelTextInputVisible="False" IsHexInputVisible="False" />
+                    <Grid RelativePanel.Below="ColorPickerHighlight" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="OK" Click="{x:Bind SplitToneSelectHighlight}" Margin="0,12,2,0" HorizontalAlignment="Stretch" />
+                        <Button Content="Cancel" Click="{x:Bind SplitHighlightPicker.Flyout.Hide}" Margin="2,12,0,0" HorizontalAlignment="Stretch" Grid.Column="1" />
+                    </Grid>
+                </RelativePanel>
+            </Flyout>
         </ResourceDictionary>
     </Page.Resources>
     <Page.BottomAppBar>
@@ -103,7 +129,7 @@
             </Grid>
         </ScrollViewer>
         <Slider x:Name="ZoomSlider" Visibility="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Minimum="0.1" Maximum="2" SmallChange="0.1" StepFrequency="0.1" Canvas.ZIndex="3" Margin="10,0,0,10" Value="{x:Bind ImageDisplay.ZoomFactor, Mode=OneWay}" ValueChanged="Slider_ValueChanged" Orientation="Vertical" HorizontalAlignment="Left" Height="200" VerticalAlignment="Bottom" />
-        <Grid x:Name="CropGrid" Visibility="Collapsed" Canvas.ZIndex="5" Background="{ThemeResource MyAcrylicBrushLow}" >
+        <Grid x:Name="CropGrid" Visibility="Collapsed" Canvas.ZIndex="5" Background="{ThemeResource MyAcrylicBrushLow}">
             <uihelper:CropUIHelper x:Name="CropUI"></uihelper:CropUIHelper>
             <Button VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,-80,10" Background="{ThemeResource ButtonForeground}" Tapped="{x:Bind CropUI.ResetCrop}">
                 <SymbolIcon Symbol="Refresh" Foreground="{ThemeResource AppBarBorderThemeBrush}" Width="20" Height="20" />
@@ -223,6 +249,20 @@
                                         <TextBlock>Height:</TextBlock>
                                         <TextBlock x:Name="ImageHeight"></TextBlock>
                                     </StackPanel>
+                                </StackPanel>
+                            </uihelper:CollapsibleBox.MainContent>
+                        </uihelper:CollapsibleBox>
+                        <uihelper:CollapsibleBox x:Uid="SplitTone">
+                            <uihelper:CollapsibleBox.MainContent>
+                                <StackPanel>
+                                    <TextBlock FontSize="14">Toning</TextBlock>
+                                    <TextBlock FontSize="12">Shadow</TextBlock>
+                                    <Button x:Name="SplitShadowPicker" Content="Pick a color" Flyout="{StaticResource FlyoutColorPickerShadow}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+                                    <TextBlock FontSize="12">Balance</TextBlock>
+                                    <Slider PointerCaptureLost="{x:Bind EditingControlChanged}" StepFrequency="0.1" Maximum="1" Minimum="0" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" Value="{x:Bind EditionValue.SplitBalance, Mode=TwoWay}" />
+                                    <TextBlock FontSize="12">Highlight</TextBlock>
+                                    <Button x:Name="SplitHighlightPicker" Content="Pick a color" Flyout="{StaticResource FlyoutColorPickerHighlight}" IsEnabled="{x:Bind ControlVisibilty.Value,Mode=OneWay}" />
+                                  
                                 </StackPanel>
                             </uihelper:CollapsibleBox.MainContent>
                         </uihelper:CollapsibleBox>

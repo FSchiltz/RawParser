@@ -121,10 +121,10 @@
     <value>A propos</value>
   </data>
   <data name="BorderText.Text" xml:space="preserve">
-    <value>Taille de marge à l&apos;affichage de la preview</value>
+    <value>Taille de marge à l'affichage de la preview</value>
   </data>
   <data name="CameraProfile.Text" xml:space="preserve">
-    <value>Correction de l&apos;appareil</value>
+    <value>Correction de l'appareil</value>
   </data>
   <data name="ColorBalance.Text" xml:space="preserve">
     <value>Balance des couleurs</value>
@@ -139,16 +139,16 @@
     <value>Algorithme de dématriçage</value>
   </data>
   <data name="DemosWarningText.Text" xml:space="preserve">
-    <value>Attention, ne pas changer sauf si vous savez ce que vous faites. Certain des algorithmes peuvent ne pas etre fonctionnels et ne feront donc rien. Deflate ne dématrice pas et transforme l&apos;image en une image RGB sans remplir les pixels manquants.</value>
+    <value>Attention, ne pas changer sauf si vous savez ce que vous faites. Certain des algorithmes peuvent ne pas etre fonctionnels et ne feront donc rien. Deflate ne dématrice pas et transforme l'image en une image RGB sans remplir les pixels manquants.</value>
   </data>
   <data name="Display.Text" xml:space="preserve">
     <value>Affichage</value>
   </data>
   <data name="DisplayHeader.Header" xml:space="preserve">
-    <value>Options d&apos;affichage</value>
+    <value>Options d'affichage</value>
   </data>
   <data name="ExceptionText" xml:space="preserve">
-    <value>L&apos;image n&apos;est pas un format supporté, vous pouvez signaler un problème sur le github.</value>
+    <value>L'image n'est pas un format supporté, vous pouvez signaler un problème sur le github.</value>
   </data>
   <data name="Exifs.Header" xml:space="preserve">
     <value>Exifs</value>
@@ -160,7 +160,7 @@
     <value>Exposition</value>
   </data>
   <data name="ExposureSettings.Text" xml:space="preserve">
-    <value>Correction de l&apos;exposition</value>
+    <value>Correction de l'exposition</value>
   </data>
   <data name="Histogram.Text" xml:space="preserve">
     <value>Histogramme</value>
@@ -196,7 +196,7 @@
     <value>Sauvegarder</value>
   </data>
   <data name="ScalingFactor.Text" xml:space="preserve">
-    <value>Niveau de mise à l&apos;échelle de l&apos;aperçu</value>
+    <value>Niveau de mise à l'échelle de l'aperçu</value>
   </data>
   <data name="Setting.Label" xml:space="preserve">
     <value>Options</value>
@@ -214,16 +214,16 @@
     <value>Température</value>
   </data>
   <data name="Theme.Text" xml:space="preserve">
-    <value>Thème de l&apos;application</value>
+    <value>Thème de l'application</value>
   </data>
   <data name="Tools.Header" xml:space="preserve">
     <value>Outils</value>
   </data>
   <data name="WBButton.Content" xml:space="preserve">
-    <value>Balance des blancs de l&apos;appareil</value>
+    <value>Balance des blancs de l'appareil</value>
   </data>
   <data name="WelcomeText" xml:space="preserve">
-    <value>Bonjour, Ceci est une version beta et il se peut qu&apos;elle ne fonctionne pas encore.</value>
+    <value>Bonjour, Ceci est une version beta et il se peut qu'elle ne fonctionne pas encore.</value>
   </data>
   <data name="Crop.Text" xml:space="preserve">
     <value>Crop</value>
@@ -255,5 +255,7 @@
   <data name="AutoExposureButton.Content" xml:space="preserve">
     <value>Auto</value>
   </data>
-
+  <data name="SplitTone.Text" xml:space="preserve">
+    <value>Split toning</value>
+  </data>
 </root>

@@ -2,6 +2,7 @@
 {
     public enum EffectType
     {
+        Unkown = 0,
         Reset,
         Exposure,
         Red, Blue, Green,
@@ -14,12 +15,13 @@
         Crop,
         WhiteBalance,
         ReverseGamma,
-        HistoEqualisation,
-        Unkown = 0,
-        AutoExposure = 15,
-        Gamma = 16,
-        Sharpness = 17,
-        Denoise = 18
+        HistoEqualisation,        
+        AutoExposure,
+        Gamma ,
+        Sharpness ,
+        Denoise ,
+        SplitTone
+
     }
 
     public class HistoryObject

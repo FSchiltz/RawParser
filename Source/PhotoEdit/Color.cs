@@ -45,7 +45,6 @@ namespace PhotoNet
             h /= 6;
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void HsvToRgb(double h, double s, double v, uint maxValue, ref double red, ref double green, ref double blue)
         {
@@ -177,4 +176,3 @@ namespace PhotoNet
         }
     }
 }
-
