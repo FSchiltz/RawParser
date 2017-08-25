@@ -15,11 +15,11 @@
         Crop,
         WhiteBalance,
         ReverseGamma,
-        HistoEqualisation,        
+        HistoEqualisation,
         AutoExposure,
-        Gamma ,
-        Sharpness ,
-        Denoise ,
+        Gamma,
+        Sharpness,
+        Denoise,
         SplitTone
 
     }
@@ -35,6 +35,8 @@
         {
             this.target = target;
             this.effect = effect;
+            value = 0.0;
+            oldValue = 0.0;
         }
 
         public string Target
