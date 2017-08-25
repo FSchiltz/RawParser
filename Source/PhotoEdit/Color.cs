@@ -28,8 +28,9 @@ namespace PhotoNet
                 {
                     long realPix = realY + x + image.offset.width;
                     //compute luminance
-                    var l = ((image.red[realPix] + image.green[realPix] + image.blue[realPix]) / 3.0 / maxValue) * splitBalance;
-                    double invL = (1 - l);
+                    var l = ((image.red[realPix] + image.green[realPix] + image.blue[realPix]) / 3.0 / maxValue);
+                    double invL = (1 - l) * (1 - splitBalance);
+                    l *= splitBalance;
 
                     image.red[realPix] += (int)(splitShadow.R * invL);
                     image.green[realPix] += (int)(splitShadow.G * invL);
