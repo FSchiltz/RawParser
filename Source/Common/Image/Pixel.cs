@@ -7,14 +7,12 @@ namespace PhotoNet.Common
         public double R;
         public double G;
         public double B;
-        public double balance;
 
         public Pixel(Pixel p)
         {
             R = p.R;
             G = p.G;
             B = p.B;
-            balance = 1;
         }
 
         public bool IsZero()

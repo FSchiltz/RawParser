@@ -439,7 +439,7 @@ namespace PhotoNet
             //apply the single pixel processing 
             SinglePixelProcessing(image, buffer, CreateCurve());
 
-            Color.SplitTone(buffer, new Pixel(SplitShadow), new Pixel(SplitHighlight), SplitBalance, maxValue);
+            ColorManipulation.SplitTone(buffer, new Pixel(SplitShadow), new Pixel(SplitHighlight), SplitBalance, maxValue);
 
             if (Rotation == 1 || Rotation == 3)
             {
@@ -490,11 +490,11 @@ namespace PhotoNet
                     long realPix = realY + x + image.offset.width;
                     double red = image.red[realPix] * rMul, green = image.green[realPix] * gMul, blue = image.blue[realPix] * bMul;
                     Luminance.Clip(ref red, ref green, ref blue, maxValue);
-                    Color.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
+                    ColorManipulation.RgbToHsl(red, green, blue, maxValue, out double h, out double s, out double l);
                     l = curve[(int)(l * maxValue)];
                     s *= saturation;
 
-                    Color.HslToRgb(h, s, l, maxValue, ref red, ref green, ref blue);
+                    ColorManipulation.HslToRgb(h, s, l, maxValue, out red, out green, out blue);
 
                     long bufferPix = Rotate(x, y, image.dim.width, image.dim.height);
                     buffer.red[bufferPix] = (int)red;

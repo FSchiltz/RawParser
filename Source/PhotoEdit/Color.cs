@@ -5,19 +5,20 @@ using System.Threading.Tasks;
 
 namespace PhotoNet
 {
-    static public class Color
+    static public class ColorManipulation
     {
         public static void SplitTone(ImageComponent<int> image, Pixel splitShadow, Pixel splitHighlight, double splitBalance, uint maxValue)
         {
             if (splitShadow.IsZero() && splitHighlight.IsZero()) return;
             //scale the value
-            var coeff = (double)maxValue / byte.MaxValue;
-            splitShadow.R *= coeff * splitShadow.balance;
-            splitShadow.G *= coeff * splitShadow.balance;
-            splitShadow.B *= coeff * splitShadow.balance;
-            splitHighlight.R *= coeff * splitHighlight.balance;
-            splitHighlight.G *= coeff * splitHighlight.balance;
-            splitHighlight.B *= coeff * splitHighlight.balance;
+            var coeff = maxValue / (double)byte.MaxValue;
+            splitShadow.R *= coeff;
+            splitShadow.G *= coeff;
+            splitShadow.B *= coeff;
+            splitHighlight.R *= coeff;
+            splitHighlight.G *= coeff;
+            splitHighlight.B *= coeff;
+
 
             //loop and apply
             Parallel.For(0, image.dim.height, y =>
@@ -26,12 +27,17 @@ namespace PhotoNet
                 for (int x = 0; x < image.dim.width; x++)
                 {
                     long realPix = realY + x + image.offset.width;
-                    image.red[realPix] += (int)(splitShadow.R - image.red[realPix]);
-                    image.green[realPix] += (int)(splitShadow.G - image.red[realPix]);
-                    image.blue[realPix] += (int)(splitShadow.B - image.red[realPix]);
-                    image.red[realPix] += (int)(splitHighlight.R - image.red[realPix]);
-                    image.green[realPix] += (int)(splitHighlight.G - image.red[realPix]);
-                    image.blue[realPix] += (int)(splitHighlight.B - image.red[realPix]);
+                    //compute luminance
+                    var l = ((image.red[realPix] + image.green[realPix] + image.blue[realPix]) / 3.0 / maxValue) * splitBalance;
+                    double invL = (1 - l);
+
+                    image.red[realPix] += (int)(splitShadow.R * invL);
+                    image.green[realPix] += (int)(splitShadow.G * invL);
+                    image.blue[realPix] += (int)(splitShadow.B * invL);
+
+                    image.red[realPix] += (int)(splitHighlight.R * l);
+                    image.green[realPix] += (int)(splitHighlight.G * l);
+                    image.blue[realPix] += (int)(splitHighlight.B * l);
                 }
             });
         }
@@ -77,7 +83,7 @@ namespace PhotoNet
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void HsvToRgb(double h, double s, double v, uint maxValue, ref double red, ref double green, ref double blue)
+        public static void HsvToRgb(double h, double s, double v, uint maxValue, out double red, out double green, out double blue)
         {
             if (s == 0)
             {
@@ -175,7 +181,7 @@ namespace PhotoNet
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void HslToRgb(double h, double s, double l, uint maxValue, ref double red, ref double green, ref double blue)
+        public static void HslToRgb(double h, double s, double l, uint maxValue, out double red, out double green, out double blue)
         {
             if (s == 0)
             {

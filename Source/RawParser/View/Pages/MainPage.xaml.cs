@@ -27,7 +27,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
@@ -130,6 +129,8 @@ namespace RawEditor.View.Pages
             ResetButtonVisibility.Value = false;
             BeforeToggle.IsChecked = false;
             HideCropUI();
+            //reset color picker
+            ColorPickerShadow.Color = ColorPickerHighlight.Color = Colors.White;
         }
 
         private void ResetUpdateControls()
@@ -779,50 +780,43 @@ namespace RawEditor.View.Pages
 
         void SplitToneSelectHighlight()
         {
+            //get as HSL
+            ColorManipulation.RgbToHsl(ColorPickerHighlight.Color.R, ColorPickerHighlight.Color.G, ColorPickerHighlight.Color.B, Byte.MaxValue, out var h, out var s, out var l);
+            //invert luminance
+            l = 1 - l;
+            //get as rgb
+            ColorManipulation.HslToRgb(h, s, l, byte.MaxValue, out var r, out var g, out var b);
 
-            //add an history object
-            //TODO
-            History.Add(new HistoryObject(EffectType.SplitTone, EditionValue.GetCopy())
-            {
-                value = 0,
-                oldValue = 0
-            });
+            ResetButtonVisibility.Value = true;
 
-            PhotoNet.Color.RgbToHsl(ColorPickerHighlight.Color.R, ColorPickerHighlight.Color.R, ColorPickerHighlight.Color.R, byte.MaxValue, out _, out double s, out _);
-
-            //add to object
             EditionValue.SplitHighlight = new Pixel()
             {
-                R = ColorPickerHighlight.Color.R,
-                G = ColorPickerHighlight.Color.G,
-                B = ColorPickerHighlight.Color.B,
-                balance = s
+                R = r,
+                G = b,
+                B = b
             };
-            UpdatePreview(false);
+            EditingControlChanged();
             // Close the Flyout.
             SplitHighlightPicker.Flyout.Hide();
         }
 
         void SplitToneSelectShadow()
         {
-            //TODO
-            History.Add(new HistoryObject(EffectType.SplitTone, EditionValue.GetCopy())
-            {
-                value = 0,
-                oldValue = 0
-            });
+            //get as HSL
+            ColorManipulation.RgbToHsl(ColorPickerShadow.Color.R, ColorPickerShadow.Color.G, ColorPickerShadow.Color.B, Byte.MaxValue, out var h, out var s, out var l);
+            //invert luminance
+            l = 1 - l;
+            //get as rgb
+            ColorManipulation.HslToRgb(h, s, l, byte.MaxValue, out var r, out var g, out var b);
 
-            PhotoNet.Color.RgbToHsl(ColorPickerShadow.Color.R, ColorPickerShadow.Color.R, ColorPickerShadow.Color.R,byte.MaxValue,out _,out double s, out _);
-
-            //add to object
+            ResetButtonVisibility.Value = true;
             EditionValue.SplitShadow = new Pixel()
             {
-                R = ColorPickerShadow.Color.R,
-                G = ColorPickerShadow.Color.G,
-                B = ColorPickerShadow.Color.B,
-                balance = s
+                R = r,
+                G = g,
+                B = b
             };
-            UpdatePreview(false);
+            EditingControlChanged();
             // Close the Flyout.
             SplitShadowPicker.Flyout.Hide();
         }
