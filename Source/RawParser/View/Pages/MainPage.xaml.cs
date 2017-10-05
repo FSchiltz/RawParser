@@ -586,7 +586,7 @@ namespace RawEditor.View.Pages
 
         private void ReportButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            Launcher.LaunchUriAsync(new Uri(@"https://github.com/arimhan/RawParser/issues"));
+            Launcher.LaunchUriAsync(new Uri(@"https://github.com/FSchiltz/RawParser/issues"));
         }
 
         private void GitterButton_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)

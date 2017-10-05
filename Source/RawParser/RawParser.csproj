@@ -11,8 +11,8 @@
     <AssemblyName>RawEditor</AssemblyName>
     <DefaultLanguage>en</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.16232.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.16232.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.15063.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.15063.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -289,6 +289,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Coding4Fun.Toolkit.Controls">
+      <Version>2.1.8</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.ApplicationInsights.PersistenceChannel">
       <Version>1.2.3</Version>
     </PackageReference>

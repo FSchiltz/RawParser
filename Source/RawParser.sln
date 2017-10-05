@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawParser", "RawParser\RawParser.csproj", "{B48F638D-E18B-48E6-8008-C2C2CDC7CBED}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoNet", "PhotoEdit\Photo
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoNet.Common", "Common\PhotoNet.Common.csproj", "{103885F6-286B-464F-BD5B-0C4A917EE295}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RawSpeed", "RawSpeed\RawSpeed.vcxproj", "{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -98,8 +100,25 @@ Global
 		{103885F6-286B-464F-BD5B-0C4A917EE295}.Release|x64.Build.0 = Release|x64
 		{103885F6-286B-464F-BD5B-0C4A917EE295}.Release|x86.ActiveCfg = Release|x86
 		{103885F6-286B-464F-BD5B-0C4A917EE295}.Release|x86.Build.0 = Release|x86
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Debug|ARM.ActiveCfg = Debug|ARM
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Debug|ARM.Build.0 = Debug|ARM
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Debug|x64.ActiveCfg = Debug|x64
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Debug|x64.Build.0 = Debug|x64
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Debug|x86.ActiveCfg = Debug|Win32
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Debug|x86.Build.0 = Debug|Win32
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Release|Any CPU.ActiveCfg = Release|Win32
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Release|ARM.ActiveCfg = Release|ARM
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Release|ARM.Build.0 = Release|ARM
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Release|x64.ActiveCfg = Release|x64
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Release|x64.Build.0 = Release|x64
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Release|x86.ActiveCfg = Release|Win32
+		{D45B6E55-2F96-4892-8649-80B5E4EDF1ED}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {869D39EA-5862-44BE-970E-D463AD109CA2}
 	EndGlobalSection
 EndGlobal
