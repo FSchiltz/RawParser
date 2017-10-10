@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "rawspeedconfig.h"
+
 namespace rawspeed {
 
 class Cpuid final {

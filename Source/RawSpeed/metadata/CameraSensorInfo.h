@@ -21,7 +21,7 @@
 #pragma once
 
 #include <vector> // for vector
-#define __attribute__(x) 
+#include "rawspeedconfig.h"
 
 namespace rawspeed {
 

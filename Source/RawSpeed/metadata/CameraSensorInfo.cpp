@@ -22,8 +22,6 @@
 #include <algorithm> // for move
 #include <vector>    // for vector
 
-#define __attribute__(x) 
-
 using std::vector;
 
 namespace rawspeed {

@@ -5,6 +5,7 @@ using RawEditor.Base;
 using RawEditor.Settings;
 using RawEditor.View.UIHelper;
 using RawNet;
+using RawSpeedWrapper;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -198,36 +199,51 @@ namespace RawEditor.View.Pages
                     var watchTotal = Stopwatch.StartNew();
                     using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                     {
-                        var watchdecode = Stopwatch.StartNew();
-                        RawDecoder decoder = RawParser.GetDecoder(stream, file);
-                        try
+                        if (file.FileType.ToLower() == ".nef")
                         {
-                            thumbnail = decoder.DecodeThumb();
-                            Task.Run(() =>
-                            {
-                                var result = thumbnail?.GetBitmap();
-                                DisplayImage(result, true);
-                            });
+                            //read the metatada file
+
+                            var meta = new CameraMetadataWrapper();
+                            //for all node add a camera
+                            //for () { }
+
+                            //read the file as a buffer
+                            var decoder = new DecoderWrapper();
+                            if (decoder.failed() == true) throw new RawDecoderException("Error with the metadata file");
                         }
-                        //since thumbnail are optionnal, we ignore all errors           
-                        catch (Exception ex) { }
+                        else
+                        {
+                            var watchdecode = Stopwatch.StartNew();
+                            RawDecoder decoder = RawParser.GetDecoder(stream, file);
+                            try
+                            {
+                                thumbnail = decoder.DecodeThumb();
+                                Task.Run(() =>
+                                {
+                                    var result = thumbnail?.GetBitmap();
+                                    DisplayImage(result, true);
+                                });
+                            }
+                            //since thumbnail are optionnal, we ignore all errors           
+                            catch (Exception ex) { }
 
-                        decoder.DecodeRaw();
-                        decoder.DecodeMetadata();
-                        rawImage = decoder.rawImage;
+                            decoder.DecodeRaw();
+                            decoder.DecodeMetadata();
+                            rawImage = decoder.rawImage;
 
-                        watchdecode.Stop();
-                        Debug.WriteLine("Decoding done in " + watchdecode.ElapsedMilliseconds + " ms");
+                            watchdecode.Stop();
+                            Debug.WriteLine("Decoding done in " + watchdecode.ElapsedMilliseconds + " ms");
 
-                        var watchLook = Stopwatch.StartNew();
-                        rawImage.ApplyTableLookUp();
-                        watchLook.Stop();
-                        Debug.WriteLine("Lookup done in " + watchLook.ElapsedMilliseconds + " ms");
+                            var watchLook = Stopwatch.StartNew();
+                            rawImage.ApplyTableLookUp();
+                            watchLook.Stop();
+                            Debug.WriteLine("Lookup done in " + watchLook.ElapsedMilliseconds + " ms");
 
-                        var watchScale = Stopwatch.StartNew();
-                        ImageHelper.ScaleValues(rawImage);
-                        watchScale.Stop();
-                        Debug.WriteLine("Scale done in " + watchScale.ElapsedMilliseconds + " ms");
+                            var watchScale = Stopwatch.StartNew();
+                            ImageHelper.ScaleValues(rawImage);
+                            watchScale.Stop();
+                            Debug.WriteLine("Scale done in " + watchScale.ElapsedMilliseconds + " ms");
+                        }
                     }
 
                     rawImage.metadata.SetFileMetatdata(file);

@@ -226,7 +226,7 @@ void OrfDecoder::decodeCompressed(ByteStream* s, uint32 w, uint32 h) {
         int leftMinusNw = left0 - nw0;
         int upMinusNw = up - nw0;
         // Check if sign is different, and they are both not zero
-        if ((signbit(leftMinusNw) ^ signbit(upMinusNw)) &&
+        if ((signbit((float)leftMinusNw) ^ signbit((float)upMinusNw)) &&
             (leftMinusNw != 0 && upMinusNw != 0)) {
           if (abs(leftMinusNw) > 32 || abs(upMinusNw) > 32)
             pred = left0 + upMinusNw;
@@ -284,7 +284,7 @@ void OrfDecoder::decodeCompressed(ByteStream* s, uint32 w, uint32 h) {
         int upMinusNw = up - nw1;
 
         // Check if sign is different, and they are both not zero
-        if ((signbit(leftMinusNw) ^ signbit(upMinusNw)) &&
+        if ((signbit((float)leftMinusNw) ^ signbit((float)upMinusNw)) &&
             (leftMinusNw != 0 && upMinusNw != 0)) {
           if (abs(leftMinusNw) > 32 || abs(upMinusNw) > 32)
             pred = left1 + upMinusNw;

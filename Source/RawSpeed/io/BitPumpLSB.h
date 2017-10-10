@@ -36,7 +36,7 @@ using BitPumpLSB = BitStream<PlainBitPumpTag, BitStreamCacheLeftInRightOut>;
 
 template <>
 inline BitPumpLSB::size_type BitPumpLSB::fillCache(const uchar8* input) {
- // static_assert(BitStreamCacheBase::MaxGetBits >= 32, "check implementation");
+  static_assert(BitStreamCacheBase::MaxGetBits >= 32, "check implementation");
 
   cache.push(getLE<uint32>(input), 32);
   return 4;

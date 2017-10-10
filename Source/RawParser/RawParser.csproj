@@ -121,6 +121,9 @@
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
     <Content Include="ApplicationInsights.config" />
+    <Content Include="Assets\data\cameras.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\PrivacyPolicy.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -276,16 +279,20 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\PhotoNet.Common.csproj">
-      <Project>{103885F6-286B-464F-BD5B-0C4A917EE295}</Project>
+      <Project>{103885f6-286b-464f-bd5b-0c4a917ee295}</Project>
       <Name>PhotoNet.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\PhotoEdit\PhotoNet.csproj">
-      <Project>{8CFCD0F0-D75F-46F1-8F3C-5CD954B7FACF}</Project>
+      <Project>{8cfcd0f0-d75f-46f1-8f3c-5cd954b7facf}</Project>
       <Name>PhotoNet</Name>
     </ProjectReference>
     <ProjectReference Include="..\RawNet\RawNet.csproj">
-      <Project>{A0345A48-D340-41BE-8C05-D326377AE58B}</Project>
+      <Project>{a0345a48-d340-41be-8c05-d326377ae58b}</Project>
       <Name>RawNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RawSpeed\RawSpeed.vcxproj">
+      <Project>{34b65431-27b2-4ee2-8bbf-c121c6821564}</Project>
+      <Name>RawSpeed</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

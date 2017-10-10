@@ -19,6 +19,8 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
+#include "rawspeedconfig.h"
+
 #include "io/FileReader.h"
 #include "io/Buffer.h"          // for Buffer
 #include "io/FileIOException.h" // for FileIOException (ptr only), ThrowFIE

@@ -42,14 +42,14 @@ template <typename T, size_t alignment>
 // coverity[+alloc]
 inline T* __attribute__((malloc, warn_unused_result, alloc_size(1)))
 alignedMalloc(size_t size) {
-  /*static_assert(alignment >= alignof(T), "unsufficient alignment");
+  static_assert(alignment >= alignof(T), "unsufficient alignment");
   static_assert(isPowerOfTwo(alignment), "not power-of-two");
   static_assert(isAligned(alignment, sizeof(void*)),
-                "not multiple of sizeof(void*)");*/
+                "not multiple of sizeof(void*)");
 
 #if !(defined(HAVE_POSIX_MEMALIGN) || defined(HAVE_ALIGNED_ALLOC) ||           \
       defined(HAVE_MM_MALLOC) || defined(HAVE_ALIGNED_MALLOC))
- // static_assert(alignment <= alignof(std::max_align_t), "too high alignment");
+  //static_assert(alignment <= alignof(std::max_align_t), "too high alignment");
 #if defined(__APPLE__)
   // apple malloc() aligns to 16 by default. can not expect any more
   static_assert(alignment <= 16, "on OSX, plain malloc() aligns to 16");

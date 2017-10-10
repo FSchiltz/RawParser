@@ -32,8 +32,6 @@
 
 extern "C" int rawspeed_get_number_of_processor_cores();
 
-int rawspeed_get_number_of_processor_cores() { return 4; }
-
 namespace rawspeed {
 
 using char8 = signed char;
