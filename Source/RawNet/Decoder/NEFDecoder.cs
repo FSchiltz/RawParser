@@ -65,12 +65,7 @@ namespace RawNet.Decoder
                 var count = ifd.GetEntry(TagType.STRIPBYTECOUNTS).GetInt(0);
                 reader.BaseStream.Position = offset;
 
-                Thumbnail thumb = new RAWThumbnail()
-                {
-                    cpp = cpp,
-                    dim = dim,
-                    data = reader.ReadBytes(count)
-                };
+                Thumbnail thumb = new RAWThumbnail(reader.ReadBytes(count), dim, cpp);
                 return thumb;
             }
         }

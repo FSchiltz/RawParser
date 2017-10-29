@@ -2,6 +2,7 @@
 using PhotoNet;
 using PhotoNet.Common;
 using RawEditor.Base;
+using RawEditor.Model;
 using RawEditor.Settings;
 using RawEditor.View.UIHelper;
 using RawNet;
@@ -75,8 +76,6 @@ namespace RawEditor.View.Pages
                 UpdatePreview(false);
             });
             History.Default = new HistoryObject(EffectType.Unkown, DefaultValue);
-
-            if (!SettingStorage.EnableDebug) PivotGrid.Items.Remove(ToolsPivot); //Super ugly (visibilty.collapsed no work for pivot..
         }
 
         private async void ImageChooseClickAsync(object sender, RoutedEventArgs e)
@@ -88,6 +87,7 @@ namespace RawEditor.View.Pages
                     ViewMode = PickerViewMode.Thumbnail,
                     SuggestedStartLocation = PickerLocationId.ComputerFolder
                 };
+
                 // Dropdown of file types the user can open
                 foreach (string format in FormatHelper.ReadSupportedFormat)
                 {
@@ -196,19 +196,52 @@ namespace RawEditor.View.Pages
             {
                 try
                 {
+                    StorageFolder appInstalledFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+                    StorageFolder assets = await appInstalledFolder.GetFolderAsync("Assets");
+                    var files = await assets.GetFolderAsync("data");
+                    var file2 = await files.GetFileAsync("cameras.xml");
+
                     var watchTotal = Stopwatch.StartNew();
                     using (Stream stream = (await file.OpenReadAsync()).AsStreamForRead())
                     {
-                        if (file.FileType.ToLower() == ".nef")
+                        if (file.FileType.ToLower() == ".arw")
                         {
-                            //read the metatada file
-
-                            var meta = new CameraMetadataWrapper();
-                            //for all node add a camera
-                            //for () { }
-
                             //read the file as a buffer
                             var decoder = new DecoderWrapper();
+                            var buffer = new byte[stream.Length];
+                            stream.Position = 0;
+                            stream.Read(buffer, 0, (int)stream.Length);
+
+
+                            if (!decoder.Init(buffer, file2.Path)) throw new RawDecoderException(decoder.errorMessage);
+
+                            try
+                            {
+                                var thumb = decoder.GetThumbnail();
+                                var thumbdata = decoder.thumbImage;
+                                //convert to a thumbnail
+                                switch (thumbdata.type)
+                                {
+                                    case 1:
+                                        thumbnail = new JPEGThumbnail(thumb);
+                                        break;
+                                    case 2:
+                                        thumbnail = new RAWThumbnail(thumb, new Point2D((uint)thumbdata.size.x, (uint)thumbdata.size.y), (uint)thumbdata.cpp);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                Task.Run(() =>
+                                {
+                                    var result = thumbnail?.GetBitmap();
+                                    DisplayImage(result, true);
+                                });
+                            }
+                            //since thumbnail are optionnal, we ignore all errors           
+                            catch (Exception ex) { }
+
+                            var imageWrappedData = decoder.GetImage();
+                            rawImage = WrapperConverter.Convert(imageWrappedData, null, decoder.rawImage);
                             if (decoder.failed() == true) throw new RawDecoderException("Error with the metadata file");
                         }
                         else

@@ -1,5 +1,6 @@
 #pragma once
 
+#define HAVE_PUGIXML
 #define __attribute__(x) 
 #define __builtin_unreachable(x)
 //#define assert(x)

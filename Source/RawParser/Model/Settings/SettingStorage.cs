@@ -20,12 +20,6 @@ namespace RawEditor.Settings
             set { localSettings.Values["imageBoxBorder"] = value; }
         }
 
-        public static bool EnableDebug
-        {
-            get { return GetBoolSetting("enableDebug"); }
-            set { localSettings.Values["enableDebug"] = value; }
-        }
-
         public static FactorValue PreviewFactor
         {
             get

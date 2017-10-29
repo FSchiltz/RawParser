@@ -342,12 +342,7 @@ namespace RawNet.Decoder
 
                     reader.BaseStream.Position = offsets.GetInt(0);
 
-                    return new RAWThumbnail()
-                    {
-                        cpp = cpp,
-                        dim = dim,
-                        data = reader.ReadBytes(counts.GetInt(0))
-                    };
+                    return new RAWThumbnail(reader.ReadBytes(counts.GetInt(0)), dim, cpp);
                 }
                 else if (compression == 6)
                 {

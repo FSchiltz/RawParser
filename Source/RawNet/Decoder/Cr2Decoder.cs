@@ -835,6 +835,7 @@ namespace RawNet.Decoder
             new CamRGB(    "Canon EOS D30", 0, 0,new double[,]    { { 9805, -2689, -1312 },{ -5803, 13064, 3068 },{ -2438, 3075, 8775 } }  ),
             new CamRGB(    "Canon EOS D60", 0, 0xfa0,    new double[,] { { 6188, -1341, -890, -7168, 14489, 2937, -2640, 3228, 8483 } }        ),
             new CamRGB(    "Canon EOS 5DS", 0, 0x3c96,    new double[,] { { 6250, -711, -808 },{ -5153, 12794, 2636 },{ -1249, 2198, 5610 } }        ),
+            new CamRGB(    "Canon EOS 5D Mark IV", 512, 14448,   new double[,] { { 6722, -635, -963 }, { -4287, 12460, 2028 },{ -908, 2162, 5668 } }),
             new CamRGB(    "Canon EOS 5D Mark III", 0, 0x3c80,   new double[,] { { 6722, -635, -963 }, { -4287, 12460, 2028 },{ -908, 2162, 5668 } }),
             new CamRGB(    "Canon EOS 5D Mark II", 0, 0x3cf0,    new double[,] { { 4716, 603, -830 }, { -7798, 15474, 2480 },{ -1496, 1937, 6651 } } ),
             new CamRGB( "Canon EOS 5D", 0, 0xe6c,    new double[,] { { 6347, -479, -972 },{ -8297, 15954, 2480 },{ -1968, 2131, 7649 } }) ,

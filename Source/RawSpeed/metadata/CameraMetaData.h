@@ -47,7 +47,7 @@ public:
   CameraMetaData() = default;
 
 #ifdef HAVE_PUGIXML
-  explicit CameraMetaData(const char* docname);
+  explicit CameraMetaData(const wchar_t* docname);
 #endif
 
   std::map<CameraId, std::unique_ptr<Camera>> cameras;

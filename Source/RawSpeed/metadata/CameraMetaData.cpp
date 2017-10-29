@@ -40,7 +40,7 @@ using std::string;
 namespace rawspeed {
 
 #ifdef HAVE_PUGIXML
-CameraMetaData::CameraMetaData(const char *docname) {
+CameraMetaData::CameraMetaData(const wchar_t* docname) {
   xml_document doc;
 
 #if defined(__unix__) || defined(__APPLE__)

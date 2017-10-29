@@ -7,11 +7,18 @@ using Windows.UI.Core;
 
 namespace RawNet
 {
-    class RAWThumbnail : Thumbnail
+    public class RAWThumbnail : Thumbnail
     {
         public byte[] data;
         public Point2D dim;
         public uint cpp;
+
+        public RAWThumbnail(byte[] d, Point2D s, uint c)
+        {
+            data = d;
+            dim = new Point2D(s);
+            cpp = c;
+        }
 
         public SoftwareBitmap GetBitmap()
         {
